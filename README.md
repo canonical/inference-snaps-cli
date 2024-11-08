@@ -4,4 +4,7 @@ This program detects system hardware and provides a summary in JSON format.
 
 ## Required dependencies
 
+```
 golang.org/x/sys/unix
+github.com/klauspost/cpuid/v2
+```
