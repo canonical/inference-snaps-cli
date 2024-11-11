@@ -7,50 +7,16 @@ import (
 	"strings"
 )
 
-type LscpuContainer struct {
-	Lscpu []LscpuObject `json:"lscpu"`
-}
-
-type LscpuObject struct {
-	Field    string        `json:"field"`
-	Data     string        `json:"data"`
-	Children []LscpuObject `json:"children"`
-}
-
-type LsCpuInfo struct {
-	Architecture string
-	CpuCount     int
-	Vendor       string
-	Models       []LsCpuModel
-}
-
-type LsCpuModel struct {
-	Name            string
-	Family          *int
-	Id              int
-	ThreadsPerCore  *int
-	Sockets         *int
-	CoresPerSocket  *int
-	Clusters        *int
-	CoresPerCluster *int
-	//CpuCount int // sockets * cores-per-socket * clusters * cores-per-cluster * threads-per-core
-	MaxFreq  float64
-	MinFreq  float64
-	BogoMips float64
-	Flags    []string
-}
-
-func GetInfo() (LsCpuInfo, error) {
-	localLscpu, err := GetLocalLscpu()
+func GetInfo() (Info, error) {
+	hostLsCpu, err := GetHostLsCpu()
 	if err != nil {
-		return LsCpuInfo{}, err
+		return Info{}, err
 	}
 
-	return ParseLscpu(localLscpu), nil
-
+	return ParseLsCpu(hostLsCpu), nil
 }
 
-func GetLocalLscpu() ([]byte, error) {
+func GetHostLsCpu() ([]byte, error) {
 	out, err := exec.Command("lscpu", "--json", "--hierarchic").Output()
 	if err != nil {
 		return nil, err
@@ -58,18 +24,18 @@ func GetLocalLscpu() ([]byte, error) {
 	return out, nil
 }
 
-func ParseLscpu(input []byte) LsCpuInfo {
-	cpuInfo := LsCpuInfo{}
+func ParseLsCpu(input []byte) Info {
+	cpuInfo := Info{}
 
-	var lscpuJson LscpuContainer
-	err := json.Unmarshal(input, &lscpuJson)
+	var lsCpuJson LsCpuContainer
+	err := json.Unmarshal(input, &lsCpuJson)
 	if err != nil {
-		return LsCpuInfo{}
+		return Info{}
 	}
 
-	for _, line := range lscpuJson.Lscpu {
-		label := line.Field
-		value := line.Data
+	for _, lsCpuObject := range lsCpuJson.LsCpu {
+		label := lsCpuObject.Field
+		value := lsCpuObject.Data
 
 		switch label {
 		case "Architecture:":
@@ -81,61 +47,61 @@ func ParseLscpu(input []byte) LsCpuInfo {
 		case "Vendor ID:":
 			cpuInfo.Vendor = value
 
-			for _, vendorChild := range line.Children {
+			for _, vendorChild := range lsCpuObject.Children {
 				switch vendorChild.Field {
 
 				case "Model name:":
-					modelOutput := LsCpuModel{Name: value}
-					modelOutput.Name = vendorChild.Data
+					cpuModel := Model{Name: value}
+					cpuModel.Name = vendorChild.Data
 
 					for _, modelNameChild := range vendorChild.Children {
 						switch modelNameChild.Field {
 						case "CPU family:":
 							if familyId, err := strconv.Atoi(modelNameChild.Data); err == nil {
-								modelOutput.Family = &familyId
+								cpuModel.Family = &familyId
 							}
 						case "Model:":
 							if modelId, err := strconv.Atoi(modelNameChild.Data); err == nil {
-								modelOutput.Id = modelId
+								cpuModel.Id = modelId
 							}
 						case "Thread(s) per core:":
 							if threads, err := strconv.Atoi(modelNameChild.Data); err == nil {
-								modelOutput.ThreadsPerCore = &threads
+								cpuModel.ThreadsPerCore = &threads
 							}
 						case "Core(s) per socket:":
 							if cores, err := strconv.Atoi(modelNameChild.Data); err == nil {
-								modelOutput.CoresPerSocket = &cores
+								cpuModel.CoresPerSocket = &cores
 							}
 						case "Core(s) per cluster:":
 							if cores, err := strconv.Atoi(modelNameChild.Data); err == nil {
-								modelOutput.CoresPerCluster = &cores
+								cpuModel.CoresPerCluster = &cores
 							}
 						case "Socket(s):":
 							if sockets, err := strconv.Atoi(modelNameChild.Data); err == nil {
-								modelOutput.Sockets = &sockets
+								cpuModel.Sockets = &sockets
 							}
 						case "Cluster(s):":
 							if clusters, err := strconv.Atoi(modelNameChild.Data); err == nil {
-								modelOutput.Clusters = &clusters
+								cpuModel.Clusters = &clusters
 							}
 						case "CPU max MHz:":
 							if maxFreq, err := strconv.ParseFloat(modelNameChild.Data, 64); err == nil {
-								modelOutput.MaxFreq = maxFreq
+								cpuModel.MaxFreq = maxFreq
 							}
 						case "CPU min MHz:":
 							if minFreq, err := strconv.ParseFloat(modelNameChild.Data, 64); err == nil {
-								modelOutput.MinFreq = minFreq
+								cpuModel.MinFreq = minFreq
 							}
 						case "BogoMIPS:":
 							if bogoMips, err := strconv.ParseFloat(modelNameChild.Data, 64); err == nil {
-								modelOutput.BogoMips = bogoMips
+								cpuModel.BogoMips = bogoMips
 							}
 						case "Flags:":
 							flags := strings.Fields(modelNameChild.Data)
-							modelOutput.Flags = flags
+							cpuModel.Flags = flags
 						}
 					}
-					cpuInfo.Models = append(cpuInfo.Models, modelOutput)
+					cpuInfo.Models = append(cpuInfo.Models, cpuModel)
 				}
 			}
 		}

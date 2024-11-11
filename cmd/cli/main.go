@@ -8,19 +8,14 @@ import (
 
 	"hardware-info/pkg/cpu"
 	"hardware-info/pkg/disk"
+	"hardware-info/pkg/gpu"
 	"hardware-info/pkg/memory"
 )
 
-var prettyOutput bool
-var fileOutput string
-
-type HwInfo struct {
-	Cpu    *cpu.LsCpuInfo
-	Memory *memory.Info
-	Disk   *disk.SystemDirsInfo
-}
-
 func main() {
+	var prettyOutput bool
+	var fileOutput string
+
 	flag.BoolVar(&prettyOutput, "pretty", false, "Output pretty json. Default is compact json.")
 	flag.StringVar(&fileOutput, "file", "", "Output json to this file. Default output is to stdout.")
 	flag.Parse()
@@ -44,7 +39,13 @@ func main() {
 		_, _ = fmt.Fprintf(os.Stderr, "failed to get disk info: %s\n", err)
 	}
 	hwInfo.Disk = &diskInfo
-	
+
+	gpuInfo, err := gpu.GetInfo()
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "failed to get gpu info: %s\n", err)
+	}
+	hwInfo.Gpu = &gpuInfo
+
 	var jsonString []byte
 	if prettyOutput {
 		jsonString, err = json.MarshalIndent(hwInfo, "", "  ")

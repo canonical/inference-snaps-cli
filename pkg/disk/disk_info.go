@@ -1,10 +1,5 @@
 package disk
 
-type SystemDirsInfo struct {
-	Root  *DirStats
-	Snaps *DirStats
-}
-
 func GetInfo() (SystemDirsInfo, error) {
 	info := SystemDirsInfo{}
 

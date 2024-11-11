@@ -4,13 +4,6 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-type DirStats struct {
-	Total uint64
-	Used  uint64
-	Free  uint64
-	Avail uint64
-}
-
 // GetDirStats returns a struct with the total, used, free and available bytes for a given directory.
 func GetDirStats(path string) (DirStats, error) {
 	dirStats := DirStats{}
