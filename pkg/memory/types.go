@@ -1,6 +1,6 @@
 package memory
 
 type Info struct {
-	ramTotal  uint64
-	swapTotal uint64
+	RamTotal  uint64
+	SwapTotal uint64
 }

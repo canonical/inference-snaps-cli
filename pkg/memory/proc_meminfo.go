@@ -62,7 +62,7 @@ func GetInfoFromProc() (Info, error) {
 
 	log.Printf("Memory total: %f, used: %f, available: %f", float64(memTotal)/1024/1024, float64(memUsed)/1024/1024, float64(memAvailable)/1024/1024)
 
-	memoryInfo.ramTotal = memTotal
-	memoryInfo.swapTotal = swapTotal
+	memoryInfo.RamTotal = memTotal
+	memoryInfo.SwapTotal = swapTotal
 	return memoryInfo, nil
 }

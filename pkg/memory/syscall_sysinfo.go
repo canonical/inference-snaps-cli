@@ -13,7 +13,8 @@ func GetInfo() (Info, error) {
 		return memoryInfo, err
 	}
 
-	memoryInfo.ramTotal = sysInfo.Totalram
-	memoryInfo.swapTotal = sysInfo.Totalswap
+	// The memory size fields need to be multiplied by the unit to get to bytes
+	memoryInfo.RamTotal = sysInfo.Totalram * uint64(sysInfo.Unit)
+	memoryInfo.SwapTotal = sysInfo.Totalswap * uint64(sysInfo.Unit)
 	return memoryInfo, nil
 }
