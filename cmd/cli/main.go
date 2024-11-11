@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"hardware-info/pkg/cpu"
+	"hardware-info/pkg/disk"
 	"hardware-info/pkg/memory"
 )
 
@@ -16,6 +17,7 @@ var fileOutput string
 type HwInfo struct {
 	Cpu    *cpu.LsCpuInfo
 	Memory *memory.Info
+	Disk   *disk.SystemDirsInfo
 }
 
 func main() {
@@ -37,8 +39,13 @@ func main() {
 	}
 	hwInfo.Cpu = &cpuInfo
 
+	diskInfo, err := disk.GetInfo()
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "failed to get disk info: %s\n", err)
+	}
+	hwInfo.Disk = &diskInfo
+	
 	var jsonString []byte
-
 	if prettyOutput {
 		jsonString, err = json.MarshalIndent(hwInfo, "", "  ")
 	} else {
