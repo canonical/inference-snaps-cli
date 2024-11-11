@@ -13,7 +13,13 @@ func TestGetLocalLscpu(t *testing.T) {
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
-	log.Println(output)
+	log.Println(string(output))
+
+	//var lscpuJson LscpuContainer
+	//_ = json.Unmarshal(output, &lscpuJson)
+	//
+	//jsonData, _ := json.MarshalIndent(lscpuJson, "", "  ")
+	//fmt.Println(string(jsonData))
 }
 
 func TestParseLscpu(t *testing.T) {
@@ -25,40 +31,40 @@ func TestParseLscpu(t *testing.T) {
 }
 
 func TestParseLscpuR430(t *testing.T) {
-	lscpu, _ := os.ReadFile("test_data/dell-r430-lscpu")
-	cpuInfo := ParseLscpu(string(lscpu))
+	lscpu, _ := os.ReadFile("test_data/dell-r430-lscpu.json")
+	cpuInfo := ParseLscpu(lscpu)
 
 	jsonData, _ := json.MarshalIndent(cpuInfo, "", "  ")
 	fmt.Println(string(jsonData))
 }
 
 func TestParseLscpuDl380p(t *testing.T) {
-	lscpu, _ := os.ReadFile("test_data/hp-dl380p-gen8-lscpu")
-	cpuInfo := ParseLscpu(string(lscpu))
+	lscpu, _ := os.ReadFile("test_data/hp-dl380p-gen8-lscpu.json")
+	cpuInfo := ParseLscpu(lscpu)
 
 	jsonData, _ := json.MarshalIndent(cpuInfo, "", "  ")
 	fmt.Println(string(jsonData))
 }
 
 func TestParseLscpuRpi5(t *testing.T) {
-	lscpu, _ := os.ReadFile("test_data/rpi5-lscpu")
-	cpuInfo := ParseLscpu(string(lscpu))
+	lscpu, _ := os.ReadFile("test_data/rpi5-lscpu.json")
+	cpuInfo := ParseLscpu(lscpu)
 
 	jsonData, _ := json.MarshalIndent(cpuInfo, "", "  ")
 	fmt.Println(string(jsonData))
 }
 
 func TestParseLscpuMtG1200(t *testing.T) {
-	lscpu, _ := os.ReadFile("test_data/mediatek-genio-1200-lscpu")
-	cpuInfo := ParseLscpu(string(lscpu))
+	lscpu, _ := os.ReadFile("test_data/mediatek-genio-1200-lscpu.json")
+	cpuInfo := ParseLscpu(lscpu)
 
 	jsonData, _ := json.MarshalIndent(cpuInfo, "", "  ")
 	fmt.Println(string(jsonData))
 }
 
 func TestParseLscpuMtG350(t *testing.T) {
-	lscpu, _ := os.ReadFile("test_data/mediatek-g350-lscpu")
-	cpuInfo := ParseLscpu(string(lscpu))
+	lscpu, _ := os.ReadFile("test_data/mediatek-g350-lscpu.json")
+	cpuInfo := ParseLscpu(lscpu)
 
 	jsonData, _ := json.MarshalIndent(cpuInfo, "", "  ")
 	fmt.Println(string(jsonData))

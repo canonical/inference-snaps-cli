@@ -9,7 +9,7 @@ import (
 
 var procCpuInfoPath = "/proc/cpuinfo"
 
-func GetInfo() {
+func GetProcCpuInfo() {
 	cpuInfo, err := linuxproc.ReadCPUInfo(procCpuInfoPath)
 	if err != nil {
 		log.Fatal("stat read fail")
