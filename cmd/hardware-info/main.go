@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
-	"hardware-info/pkg/cpu"
-	"hardware-info/pkg/disk"
-	"hardware-info/pkg/gpu"
-	"hardware-info/pkg/memory"
+	"hardware-info/cpu"
+	"hardware-info/disk"
+	"hardware-info/gpu"
+	"hardware-info/memory"
 )
 
 func main() {
@@ -24,37 +25,46 @@ func main() {
 
 	memoryInfo, err := memory.GetInfo()
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "failed to get memory info: %s\n", err)
+		log.Println("Failed to get memory info:", err)
 	}
-	hwInfo.Memory = &memoryInfo
+	hwInfo.Memory = memoryInfo
 
 	cpuInfo, err := cpu.GetInfo()
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "failed to get cpu info: %s\n", err)
+		log.Println("Failed to get CPU info:", err)
 	}
-	hwInfo.Cpu = &cpuInfo
+	hwInfo.Cpu = cpuInfo
 
 	diskInfo, err := disk.GetInfo()
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "failed to get disk info: %s\n", err)
+		log.Println("Failed to get disk info:", err)
 	}
-	hwInfo.Disk = &diskInfo
+	hwInfo.Disk = diskInfo
 
 	gpuInfo, err := gpu.GetInfo()
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "failed to get gpu info: %s\n", err)
+		log.Println("Failed to get GPU info:", err)
 	}
 	hwInfo.Gpu = &gpuInfo
 
 	var jsonString []byte
 	if prettyOutput {
 		jsonString, err = json.MarshalIndent(hwInfo, "", "  ")
+		if err != nil {
+			log.Fatal("Failed to marshal to JSON:", err)
+		}
 	} else {
-		jsonString, _ = json.Marshal(hwInfo)
+		jsonString, err = json.Marshal(hwInfo)
+		if err != nil {
+			log.Fatal("Failed to marshal to JSON:", err)
+		}
 	}
 
 	if fileOutput != "" {
 		err = os.WriteFile(fileOutput, jsonString, 0644)
+		if err != nil {
+			log.Fatal("Failed to write to file:", err)
+		}
 	} else {
 		fmt.Println(string(jsonString))
 	}

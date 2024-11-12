@@ -1,6 +1,6 @@
 name: hardware-info
 base: core24
-adopt-info: cli
+adopt-info: hardware-info-cli
 summary: Prints a summary of host hardware
 description: |
   This application scans the host system and creates a summary of the available hardware.
@@ -19,7 +19,7 @@ layout:
     bind-file: $SNAP/pci.ids
 
 parts:
-  cli:
+  hardware-info-cli:
     plugin: go
     build-snaps:
       - go/latest/stable
@@ -46,4 +46,4 @@ apps:
 #      - home
 #      - mount-observe
 #      - network
-    command: bin/cli
+    command: bin/hardware-info

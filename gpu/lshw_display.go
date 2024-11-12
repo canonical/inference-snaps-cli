@@ -14,7 +14,7 @@ func GetHostLsHw() ([]byte, error) {
 }
 
 func ParseLsHw(input []byte) ([]Display, error) {
-	displays := make([]Display, 0)
+	var displays []Display
 
 	var lsHwParsed []map[string]interface{}
 	err := json.Unmarshal(input, &lsHwParsed)
@@ -23,7 +23,7 @@ func ParseLsHw(input []byte) ([]Display, error) {
 	}
 
 	for _, lsHwDisplay := range lsHwParsed {
-		display := Display{}
+		var display Display
 
 		// We use the Vendor and Product IDs reported by `lshw`
 		// What will happen if a vendor introduces a new ID/Name?

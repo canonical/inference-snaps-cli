@@ -2,7 +2,6 @@ package memory
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 )
 
@@ -11,8 +10,11 @@ func TestGetInfo(t *testing.T) {
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
-	t.Logf("%+v", info)
 
-	jsonData, _ := json.MarshalIndent(info, "", "  ")
-	fmt.Println(string(jsonData))
+	jsonData, err := json.MarshalIndent(info, "", "  ")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	t.Log(string(jsonData))
 }

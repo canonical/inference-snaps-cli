@@ -8,15 +8,6 @@ import (
 	"strings"
 )
 
-func GetInfo() (Info, error) {
-	hostLsCpu, err := GetHostLsCpu()
-	if err != nil {
-		return Info{}, err
-	}
-
-	return ParseLsCpu(hostLsCpu)
-}
-
 func GetHostLsCpu() ([]byte, error) {
 	out, err := exec.Command("lscpu", "--json", "--hierarchic").Output()
 	if err != nil {
@@ -25,13 +16,13 @@ func GetHostLsCpu() ([]byte, error) {
 	return out, nil
 }
 
-func ParseLsCpu(input []byte) (Info, error) {
+func ParseLsCpu(input []byte) (*Info, error) {
 	cpuInfo := Info{}
 
 	var lsCpuJson LsCpuContainer
 	err := json.Unmarshal(input, &lsCpuJson)
 	if err != nil {
-		return cpuInfo, errors.New("error parsing lscpu")
+		return nil, errors.New("error parsing lscpu")
 	}
 
 	for _, lsCpuObject := range lsCpuJson.LsCpu {
@@ -108,5 +99,5 @@ func ParseLsCpu(input []byte) (Info, error) {
 		}
 	}
 
-	return cpuInfo, nil
+	return &cpuInfo, nil
 }

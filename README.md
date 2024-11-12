@@ -17,7 +17,7 @@ go get golang.org/x/sys/unix
 To build the CLI for hardware-info, run the following command in the root of this repository:
 
 ```bash
-go build -o build/hardware-info ./cmd/cli
+go build -o build/hardware-info ./cmd/hardware-info
 ```
 
 To build a snap for this application, run:
@@ -46,11 +46,11 @@ Usage of build/hardware-info:
 
 # Snap
 $ hardware-info -h
-Usage of /snap/hardware-info/x1/bin/cli:
+Usage of /snap/hardware-info/x1/bin/hardware-info:
   -file string
-    	Output json to this file. Default output is to stdout.
+        Output json to this file. Default output is to stdout.
   -pretty
-    	Output pretty json. Default is compact json.
+        Output pretty json. Default is compact json.
 ```
 
 By default, the `hardware-info` application will print out a summary of the host system to `STDOUT` in compact JSON format.
