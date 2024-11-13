@@ -3,7 +3,7 @@ package disk
 import (
 	"testing"
 
-	"hardware-info/utils"
+	"github.com/canonical/hardware-info/utils"
 )
 
 var testDirs = []string{

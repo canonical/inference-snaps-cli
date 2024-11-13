@@ -1,4 +1,4 @@
-module hardware-info
+module github.com/canonical/hardware-info
 
 go 1.23.2
 
