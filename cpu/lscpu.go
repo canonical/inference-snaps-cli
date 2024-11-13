@@ -2,7 +2,6 @@ package cpu
 
 import (
 	"encoding/json"
-	"errors"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -22,7 +21,7 @@ func ParseLsCpu(input []byte) (*Info, error) {
 	var lsCpuJson LsCpuContainer
 	err := json.Unmarshal(input, &lsCpuJson)
 	if err != nil {
-		return nil, errors.New("error parsing lscpu")
+		return nil, err
 	}
 
 	for _, lsCpuObject := range lsCpuJson.LsCpu {

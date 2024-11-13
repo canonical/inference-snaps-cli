@@ -16,7 +16,7 @@ func TestGetDirStats(t *testing.T) {
 		t.Run(dir, func(t *testing.T) {
 			diskStats, err := GetDirStats(dir)
 			if err != nil {
-				t.Fatalf("GetDirStats() failed: %v", err)
+				t.Fatalf(err.Error())
 			}
 
 			t.Log("Total:", utils.FmtGigabytes(diskStats.Total))

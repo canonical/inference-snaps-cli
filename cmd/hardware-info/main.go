@@ -21,7 +21,7 @@ func main() {
 	flag.StringVar(&fileOutput, "file", "", "Output json to this file. Default output is to stdout.")
 	flag.Parse()
 
-	hwInfo := HwInfo{}
+	var hwInfo HwInfo
 
 	memoryInfo, err := memory.GetInfo()
 	if err != nil {
@@ -45,7 +45,7 @@ func main() {
 	if err != nil {
 		log.Println("Failed to get GPU info:", err)
 	}
-	hwInfo.Gpu = &gpuInfo
+	hwInfo.Gpus = gpuInfo
 
 	var jsonString []byte
 	if prettyOutput {

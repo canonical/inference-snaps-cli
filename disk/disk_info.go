@@ -1,7 +1,7 @@
 package disk
 
-func GetInfo() (*map[string]DirStats, error) {
-	var info = make(map[string]DirStats)
+func GetInfo() (map[string]*DirStats, error) {
+	var info = make(map[string]*DirStats)
 
 	directories := []string{
 		"/",
@@ -16,5 +16,5 @@ func GetInfo() (*map[string]DirStats, error) {
 		info[dir] = dirInfo
 	}
 
-	return &info, nil
+	return info, nil
 }

@@ -2,7 +2,6 @@ package cpu
 
 import (
 	"encoding/json"
-	"log"
 	"os"
 	"testing"
 )
@@ -12,7 +11,7 @@ func TestGetHostLsCpu(t *testing.T) {
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
-	log.Println(string(hostLsCpu))
+	t.Log(string(hostLsCpu))
 }
 
 func TestParseHostLsCpu(t *testing.T) {

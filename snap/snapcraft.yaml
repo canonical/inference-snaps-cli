@@ -1,6 +1,6 @@
 name: hardware-info
 base: core24
-adopt-info: hardware-info-cli
+version: git
 summary: Prints a summary of host hardware
 description: |
   This application scans the host system and creates a summary of the available hardware.
@@ -8,10 +8,6 @@ description: |
 
 grade: devel
 confinement: strict
-
-platforms:
-  amd64:
-  arm64:
 
 # lshw requires access to the pci ids database file to look up vendor and product names. We download and include this file in a part.
 layout:
@@ -29,11 +25,8 @@ parts:
       - lshw
     source: .
     source-type: local
-    override-pull: |
-      craftctl default
-      craftctl set version="$(git describe --long --tags --always --match=v*.*.* | sed 's/v//')"
 
-  pciids:
+  pci-ids:
     plugin: dump
     source: https://pci-ids.ucw.cz/v2.2/pci.ids
     source-type: file

@@ -10,6 +10,6 @@ import (
 type HwInfo struct {
 	Cpu    *cpu.Info                 `json:"cpu,omitempty"`
 	Memory *memory.Info              `json:"memory,omitempty"`
-	Disk   *map[string]disk.DirStats `json:"disk,omitempty"`
-	Gpu    *[]gpu.Display            `json:"gpu,omitempty"`
+	Disk   map[string]*disk.DirStats `json:"disk,omitempty"`
+	Gpus   []gpu.Display             `json:"gpu,omitempty"`
 }

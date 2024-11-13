@@ -2,22 +2,12 @@
 
 This program detects system hardware and provides a summary in JSON format.
 
-## Required dependencies
-
-External dependencies are kept to a minimum.
-The only extra dependency is the new standard Unix Syscall interface library.
-This can be installed by running:
-
-```
-go get golang.org/x/sys/unix
-```
-
 ## Build
 
 To build the CLI for hardware-info, run the following command in the root of this repository:
 
 ```bash
-go build -o build/hardware-info ./cmd/hardware-info
+go build github.com/canonical/hardware-info/cmd/hardware-info
 ```
 
 To build a snap for this application, run:
@@ -36,17 +26,8 @@ sudo snap connect hardware-info:hardware-observe
 A help message is printed out when providing the `-h` or `--help` flags.
 
 ```bash
-# Locally built
-$ build/hardware-info -h
-Usage of build/hardware-info:
-  -file string
-        Output json to this file. Default output is to stdout.
-  -pretty
-        Output pretty json. Default is compact json.
-
-# Snap
 $ hardware-info -h
-Usage of /snap/hardware-info/x1/bin/hardware-info:
+Usage of hardware-info:
   -file string
         Output json to this file. Default output is to stdout.
   -pretty
