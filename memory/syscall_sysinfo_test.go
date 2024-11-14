@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-func TestGetInfo(t *testing.T) {
-	info, err := GetInfo()
+func TestInfo(t *testing.T) {
+	info, err := Info()
 	if err != nil {
 		t.Fatalf(err.Error())
 	}

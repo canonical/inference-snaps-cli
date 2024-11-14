@@ -1,6 +1,8 @@
 package disk
 
-func GetInfo() (map[string]*DirStats, error) {
+import "log"
+
+func Info() (map[string]*DirStats, error) {
 	var info = make(map[string]*DirStats)
 
 	directories := []string{
@@ -9,9 +11,10 @@ func GetInfo() (map[string]*DirStats, error) {
 	}
 
 	for _, dir := range directories {
-		dirInfo, err := GetDirStats(dir)
+		dirInfo, err := dirStats(dir)
 		if err != nil {
-			return nil, err
+			log.Printf("%s: %s", dir, err.Error())
+			continue
 		}
 		info[dir] = dirInfo
 	}

@@ -23,25 +23,25 @@ func main() {
 
 	var hwInfo HwInfo
 
-	memoryInfo, err := memory.GetInfo()
+	memoryInfo, err := memory.Info()
 	if err != nil {
 		log.Println("Failed to get memory info:", err)
 	}
 	hwInfo.Memory = memoryInfo
 
-	cpuInfo, err := cpu.GetInfo()
+	cpuInfo, err := cpu.Info()
 	if err != nil {
 		log.Println("Failed to get CPU info:", err)
 	}
 	hwInfo.Cpu = cpuInfo
 
-	diskInfo, err := disk.GetInfo()
+	diskInfo, err := disk.Info()
 	if err != nil {
 		log.Println("Failed to get disk info:", err)
 	}
 	hwInfo.Disk = diskInfo
 
-	gpuInfo, err := gpu.GetInfo()
+	gpuInfo, err := gpu.Info()
 	if err != nil {
 		log.Println("Failed to get GPU info:", err)
 	}

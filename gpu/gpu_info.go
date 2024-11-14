@@ -1,13 +1,13 @@
 package gpu
 
-func GetInfo() ([]Display, error) {
+func Info() ([]Display, error) {
 	var gpus []Display
-	lsHw, err := GetHostLsHw()
+	lsHw, err := hostLsHw()
 	if err != nil {
 		return nil, err
 	}
 
-	gpus, err = ParseLsHw(lsHw)
+	gpus, err = parseLsHw(lsHw)
 	if err != nil {
 		return nil, err
 	}

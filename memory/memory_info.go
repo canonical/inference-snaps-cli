@@ -1,9 +1,9 @@
 package memory
 
-func GetInfo() (*Info, error) {
-	var memoryInfo Info
+func Info() (*MemoryInfo, error) {
+	var memoryInfo MemoryInfo
 
-	sysInfo, err := GetSysInfo()
+	sysInfo, err := sysInfo()
 	if err != nil {
 		return nil, err
 	}

@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-func TestGetHostLsHw(t *testing.T) {
-	lsHw, err := GetHostLsHw()
+func TestHostLsHw(t *testing.T) {
+	lsHw, err := hostLsHw()
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -16,12 +16,12 @@ func TestGetHostLsHw(t *testing.T) {
 }
 
 func TestParseHostLsHw(t *testing.T) {
-	lsHw, err := GetHostLsHw()
+	lsHw, err := hostLsHw()
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
 
-	gpus, err := ParseLsHw(lsHw)
+	gpus, err := parseLsHw(lsHw)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -44,7 +44,7 @@ func TestParseLsHw(t *testing.T) {
 				t.Fatalf(err.Error())
 			}
 
-			gpuInfo, err := ParseLsHw(lsHw)
+			gpuInfo, err := parseLsHw(lsHw)
 			if err != nil {
 				t.Fatalf(err.Error())
 			}

@@ -10,7 +10,7 @@ type LsCpuObject struct {
 	Children []LsCpuObject `json:"children"`
 }
 
-type Info struct {
+type CpuInfo struct {
 	Architecture string  `json:"architecture"`
 	CpuCount     int     `json:"cpu_count"`
 	Vendor       string  `json:"vendor"`

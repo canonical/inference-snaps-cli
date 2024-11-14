@@ -5,7 +5,7 @@ import (
 	"os/exec"
 )
 
-func GetHostLsHw() ([]byte, error) {
+func hostLsHw() ([]byte, error) {
 	out, err := exec.Command("lshw", "-json", "-C", "display").Output()
 	if err != nil {
 		return nil, err
@@ -13,7 +13,7 @@ func GetHostLsHw() ([]byte, error) {
 	return out, nil
 }
 
-func ParseLsHw(input []byte) ([]Display, error) {
+func parseLsHw(input []byte) ([]Display, error) {
 	var displays []Display
 
 	var lsHwParsed []map[string]interface{}

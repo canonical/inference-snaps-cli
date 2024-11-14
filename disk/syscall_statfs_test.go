@@ -1,6 +1,7 @@
 package disk
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/canonical/hardware-info/utils"
@@ -11,10 +12,10 @@ var testDirs = []string{
 	"/var/lib/snapd/snaps",
 }
 
-func TestGetDirStats(t *testing.T) {
+func TestDirStats(t *testing.T) {
 	for _, dir := range testDirs {
 		t.Run(dir, func(t *testing.T) {
-			diskStats, err := GetDirStats(dir)
+			diskStats, err := dirStats(dir)
 			if err != nil {
 				t.Fatalf(err.Error())
 			}
@@ -24,4 +25,25 @@ func TestGetDirStats(t *testing.T) {
 			t.Log("Avail:", utils.FmtGigabytes(diskStats.Avail))
 		})
 	}
+}
+
+func TestDirStatsNonExistentDir(t *testing.T) {
+	_, err := dirStats("/path/that/does/not/exist")
+	if err == nil {
+		t.Fatalf("Non existent dir should return error")
+	}
+}
+
+func TestInfo(t *testing.T) {
+	diskInfo, err := Info()
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	jsonData, err := json.MarshalIndent(diskInfo, "", "  ")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	t.Log(string(jsonData))
 }

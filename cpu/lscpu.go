@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func GetHostLsCpu() ([]byte, error) {
+func hostLsCpu() ([]byte, error) {
 	out, err := exec.Command("lscpu", "--json", "--hierarchic").Output()
 	if err != nil {
 		return nil, err
@@ -15,8 +15,8 @@ func GetHostLsCpu() ([]byte, error) {
 	return out, nil
 }
 
-func ParseLsCpu(input []byte) (*Info, error) {
-	cpuInfo := Info{}
+func parseLsCpu(input []byte) (*CpuInfo, error) {
+	cpuInfo := CpuInfo{}
 
 	var lsCpuJson LsCpuContainer
 	err := json.Unmarshal(input, &lsCpuJson)

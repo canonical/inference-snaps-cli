@@ -1,12 +1,12 @@
 package cpu
 
-func GetInfo() (*Info, error) {
-	hostLsCpu, err := GetHostLsCpu()
+func Info() (*CpuInfo, error) {
+	hostLsCpu, err := hostLsCpu()
 	if err != nil {
 		return nil, err
 	}
 
-	cpuInfo, err := ParseLsCpu(hostLsCpu)
+	cpuInfo, err := parseLsCpu(hostLsCpu)
 	if err != nil {
 		return nil, err
 	}
