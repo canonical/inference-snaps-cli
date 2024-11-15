@@ -34,6 +34,7 @@ var testFiles = []string{
 	"test_data/rpi-5.json",
 	"test_data/xps13-gen10.json",
 	"test_data/intel-cbrd-raptor-lake.json",
+	"test_data/intel-arc-a580.json",
 }
 
 func TestParseLsHw(t *testing.T) {

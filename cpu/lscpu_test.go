@@ -42,6 +42,7 @@ var testFiles = []string{
 	"test_data/mediatek-genio-1200-lscpu.json",
 	"test_data/mediatek-g350-lscpu.json",
 	"test_data/intel-cbrd-raptor-lake.json",
+	"test_data/intel-core2.json",
 }
 
 func TestParseLsCpu(t *testing.T) {
