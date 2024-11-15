@@ -9,7 +9,6 @@ import (
 
 	"github.com/canonical/hardware-info/cpu"
 	"github.com/canonical/hardware-info/disk"
-	"github.com/canonical/hardware-info/gpu"
 	"github.com/canonical/hardware-info/memory"
 )
 
@@ -40,12 +39,6 @@ func main() {
 		log.Println("Failed to get disk info:", err)
 	}
 	hwInfo.Disk = diskInfo
-
-	gpuInfo, err := gpu.Info()
-	if err != nil {
-		log.Println("Failed to get GPU info:", err)
-	}
-	hwInfo.Gpus = gpuInfo
 
 	var jsonString []byte
 	if prettyOutput {
