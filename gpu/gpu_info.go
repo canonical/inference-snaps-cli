@@ -1,7 +1,12 @@
 package gpu
 
 import (
+	"errors"
 	"fmt"
+	"log"
+	"os"
+	"os/exec"
+	"strconv"
 
 	"github.com/canonical/hardware-info/lspci"
 )
@@ -36,7 +41,10 @@ func DisplayDevices(pciDevices []lspci.PciDevice) ([]Gpu, error) {
 				gpu.SubDeviceId = &subDeviceId
 			}
 
-			// TODO look up vram
+			vram, err := lookuUpVram(device)
+			if err == nil {
+				gpu.VRam = &vram
+			}
 
 			gpu.VendorName = device.VendorName
 			gpu.DeviceName = device.DeviceName
@@ -47,4 +55,43 @@ func DisplayDevices(pciDevices []lspci.PciDevice) ([]Gpu, error) {
 		}
 	}
 	return gpus, nil
+}
+
+func lookuUpVram(device lspci.PciDevice) (uint64, error) {
+	// AMD vram is listed under /sys/bus/pci/devices/${pci_slot}/mem_info_vram_total
+	if device.VendorId == 0x1002 {
+		/*
+			ubuntu@u-HP-EliteBook-845-G8-Notebook-PC:~$ cat /sys/bus/pci/devices/0000\:04\:00.0/mem_info_
+			mem_info_gtt_total       mem_info_vis_vram_total  mem_info_vram_used
+			mem_info_gtt_used        mem_info_vis_vram_used   mem_info_vram_vendor
+			mem_info_preempt_used    mem_info_vram_total
+
+			ubuntu@u-HP-EliteBook-845-G8-Notebook-PC:~$ cat /sys/bus/pci/devices/0000\:04\:00.0/mem_info_vram_total
+			536870912
+		*/
+		data, err := os.ReadFile("/sys/bus/pci/devices/" + device.Slot + "/mem_info_vram_total")
+		if err == nil {
+			size, err := strconv.ParseUint(string(data), 10, 64)
+			if err != nil {
+				return size, nil
+			}
+		} else {
+			log.Println("Failed to look up AMD VRAM")
+		}
+	}
+
+	// Nvidia: LANG=C nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits
+	if device.VendorId == 0x10de {
+		out, err := exec.Command("LANG=C", "nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits").Output()
+		if err == nil {
+			size, err := strconv.ParseUint(string(out), 10, 64)
+			if err != nil {
+				return size, nil
+			}
+		} else {
+			log.Println("Failed to look up NVIDIA VRAM")
+		}
+	}
+
+	return 0, errors.New("unable to detect vram")
 }
