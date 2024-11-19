@@ -1,9 +1,12 @@
 package lspci
 
 import (
+	"log"
 	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/jaypipes/pcidb"
 )
 
 func hostLsPci() ([]byte, error) {
@@ -14,7 +17,17 @@ func hostLsPci() ([]byte, error) {
 	return out, nil
 }
 
-func parseLsPci(input []byte) ([]PciDevice, error) {
+func ParseLsPci(input []byte, friendlyNames bool) ([]PciDevice, error) {
+	// Preload pci.ids database if needed
+	var err error
+	if friendlyNames {
+		pciDb, err = pcidb.New()
+		if err != nil {
+			log.Printf("Error initing PCI ID DB: %v", err)
+			friendlyNames = false
+		}
+	}
+
 	var devices []PciDevice
 
 	inputString := string(input)
@@ -57,6 +70,9 @@ func parseLsPci(input []byte) ([]PciDevice, error) {
 				}
 			}
 
+		}
+		if friendlyNames {
+			lookupFriendlyName(&device)
 		}
 		devices = append(devices, device)
 	}

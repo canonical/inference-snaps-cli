@@ -15,9 +15,11 @@ import (
 
 func main() {
 	var prettyOutput bool
+	var friendlyNames bool
 	var fileOutput string
 
 	flag.BoolVar(&prettyOutput, "pretty", false, "Output pretty json. Default is compact json.")
+	flag.BoolVar(&friendlyNames, "friendly", false, "Include human readable names for devices.")
 	flag.StringVar(&fileOutput, "file", "", "Output json to this file. Default output is to stdout.")
 	flag.Parse()
 
@@ -41,7 +43,7 @@ func main() {
 	}
 	hwInfo.Disk = diskInfo
 
-	gpuInfo, err := gpu.Info()
+	gpuInfo, err := gpu.Info(friendlyNames)
 	if err != nil {
 		log.Println("Failed to get GPU info:", err)
 	}

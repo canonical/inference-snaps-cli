@@ -9,5 +9,7 @@ type PciDevice struct {
 	DeviceId             uint16  `json:"device_id"`
 	DeviceName           *string `json:"device_name,omitempty"`
 	SubVendorId          *uint16 `json:"sub_vendor_id,omitempty"`
+	SubVendorName        *string `json:"sub_vendor_name,omitempty"`
 	SubDeviceId          *uint16 `json:"sub_device_id,omitempty"`
+	SubDeviceName        *string `json:"sub_device_name,omitempty"`
 }
