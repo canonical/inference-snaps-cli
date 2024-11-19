@@ -11,5 +11,5 @@ type HwInfo struct {
 	Cpu    *cpu.CpuInfo              `json:"cpu,omitempty"`
 	Memory *memory.MemoryInfo        `json:"memory,omitempty"`
 	Disk   map[string]*disk.DirStats `json:"disk,omitempty"`
-	Gpus   []gpu.Display             `json:"gpu,omitempty"`
+	Gpus   []gpu.Gpu                 `json:"gpu,omitempty"`
 }
