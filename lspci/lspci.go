@@ -55,12 +55,12 @@ func ParseLsPci(input []byte, friendlyNames bool) ([]PciDevice, error) {
 			case "SVendor":
 				if subVendorId, err := strconv.ParseUint(value, 16, 16); err == nil {
 					subVendorIdUint16 := uint16(subVendorId)
-					device.SubVendorId = &subVendorIdUint16
+					device.SubvendorId = &subVendorIdUint16
 				}
 			case "SDevice":
 				if subDeviceId, err := strconv.ParseUint(value, 16, 16); err == nil {
 					subDeviceIdUint16 := uint16(subDeviceId)
-					device.SubDeviceId = &subDeviceIdUint16
+					device.SubdeviceId = &subDeviceIdUint16
 				}
 			case "ProgIf":
 				// e.g. 0x02

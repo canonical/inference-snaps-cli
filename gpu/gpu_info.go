@@ -18,12 +18,10 @@ func Info(friendlyNames bool) ([]Gpu, error) {
 		return nil, err
 	}
 
-	gpus, err := DisplayDevices(pciDevices)
-
-	return gpus, nil
+	return pciGpus(pciDevices)
 }
 
-func DisplayDevices(pciDevices []lspci.PciDevice) ([]Gpu, error) {
+func pciGpus(pciDevices []lspci.PciDevice) ([]Gpu, error) {
 	var gpus []Gpu
 
 	for _, device := range pciDevices {
@@ -33,16 +31,16 @@ func DisplayDevices(pciDevices []lspci.PciDevice) ([]Gpu, error) {
 			var gpu Gpu
 			gpu.VendorId = fmt.Sprintf("0x%04x", device.VendorId)
 			gpu.DeviceId = fmt.Sprintf("0x%04x", device.DeviceId)
-			if device.SubVendorId != nil {
-				subVendorId := fmt.Sprintf("0x%04x", *device.SubVendorId)
-				gpu.SubVendorId = &subVendorId
+			if device.SubvendorId != nil {
+				subVendorId := fmt.Sprintf("0x%04x", *device.SubvendorId)
+				gpu.SubvendorId = &subVendorId
 			}
-			if device.SubDeviceId != nil {
-				subDeviceId := fmt.Sprintf("0x%04x", *device.SubDeviceId)
-				gpu.SubDeviceId = &subDeviceId
+			if device.SubdeviceId != nil {
+				subDeviceId := fmt.Sprintf("0x%04x", *device.SubdeviceId)
+				gpu.SubdeviceId = &subDeviceId
 			}
 
-			vram, err := lookupVram(device)
+			vram, err := lookUpVram(device)
 			if err != nil {
 				// If vram lookup fails, we only log it, as it is not fatal
 				log.Println(err.Error())
@@ -52,8 +50,8 @@ func DisplayDevices(pciDevices []lspci.PciDevice) ([]Gpu, error) {
 
 			gpu.VendorName = device.VendorName
 			gpu.DeviceName = device.DeviceName
-			gpu.SubVendorName = device.SubVendorName
-			gpu.SubDeviceName = device.SubDeviceName
+			gpu.SubvendorName = device.SubvendorName
+			gpu.SubdeviceName = device.SubdeviceName
 
 			gpus = append(gpus, gpu)
 		}
@@ -61,14 +59,14 @@ func DisplayDevices(pciDevices []lspci.PciDevice) ([]Gpu, error) {
 	return gpus, nil
 }
 
-func lookupVram(device lspci.PciDevice) (uint64, error) {
+func lookUpVram(device lspci.PciDevice) (uint64, error) {
 
 	switch device.VendorId {
 	case 0x1002: // AMD
-		return lookupAmdVram(device)
+		return lookUpAmdVram(device)
 
 	case 0x10de: // NVIDIA
-		return lookupNvidiaVram(device)
+		return lookUpNvidiaVram(device)
 
 	case 0x8086: // Intel
 		return 0, errors.New("vram detection for Intel not implemented")
@@ -78,7 +76,7 @@ func lookupVram(device lspci.PciDevice) (uint64, error) {
 	return 0, errors.New(fmt.Sprintf("unable to detect vram for vendor %04x", device.VendorId))
 }
 
-func lookupAmdVram(device lspci.PciDevice) (uint64, error) {
+func lookUpAmdVram(device lspci.PciDevice) (uint64, error) {
 	/*
 		AMD vram is listed under /sys/bus/pci/devices/${pci_slot}/mem_info_vram_total
 
@@ -100,7 +98,7 @@ func lookupAmdVram(device lspci.PciDevice) (uint64, error) {
 	}
 }
 
-func lookupNvidiaVram(device lspci.PciDevice) (uint64, error) {
+func lookUpNvidiaVram(device lspci.PciDevice) (uint64, error) {
 	/*
 		Nvidia: LANG=C nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits
 

@@ -32,13 +32,13 @@ func lookupFriendlyName(device *PciDevice) {
 	deviceIdString := fmt.Sprintf("%04x", device.DeviceId)
 
 	subVendorIdString := ""
-	if device.SubDeviceId != nil {
-		subVendorIdString = fmt.Sprintf("%04x", *device.SubVendorId)
+	if device.SubdeviceId != nil {
+		subVendorIdString = fmt.Sprintf("%04x", *device.SubvendorId)
 	}
 
 	subDeviceIdString := ""
-	if device.SubDeviceId != nil {
-		subDeviceIdString = fmt.Sprintf("%04x", *device.SubDeviceId)
+	if device.SubdeviceId != nil {
+		subDeviceIdString = fmt.Sprintf("%04x", *device.SubdeviceId)
 	}
 
 	for _, vendor := range pciDb.Vendors {
@@ -52,11 +52,11 @@ func lookupFriendlyName(device *PciDevice) {
 					device.DeviceName = &productName
 
 					// Look up subDevice name from subsystem list
-					if device.SubDeviceId != nil {
+					if device.SubdeviceId != nil {
 						for _, subSystem := range product.Subsystems {
 							if subSystem.ID == subDeviceIdString {
 								subSystemName := subSystem.Name
-								device.SubDeviceName = &subSystemName
+								device.SubdeviceName = &subSystemName
 							}
 						}
 					}
@@ -65,9 +65,9 @@ func lookupFriendlyName(device *PciDevice) {
 		}
 
 		// Look up SubVendor name from main vendor list
-		if device.SubVendorId != nil && vendor.ID == subVendorIdString {
+		if device.SubvendorId != nil && vendor.ID == subVendorIdString {
 			vendorName := vendor.Name
-			device.SubVendorName = &vendorName
+			device.SubvendorName = &vendorName
 		}
 	}
 }

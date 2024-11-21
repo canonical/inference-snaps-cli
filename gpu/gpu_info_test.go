@@ -11,13 +11,13 @@ import (
 var lspciFiles = []string{
 	"../lspci/test_data/dell-precision-3660-c29399.txt",
 	"../lspci/test_data/dell-vostro153535-c30942.txt",
-	"../lspci/test_data/farshid-amd.txt",
+	"../lspci/test_data/amd-cezanne.txt",
 	"../lspci/test_data/hp-elitebook845-g8-notebook-pc-c30368.txt",
-	"../lspci/test_data/katryn.txt",
-	"../lspci/test_data/lana.txt",
-	"../lspci/test_data/magda.txt",
+	"../lspci/test_data/intel-arc-a580.txt",
+	"../lspci/test_data/radeon_hd7450+tesla_k20xm.txt",
+	"../lspci/test_data/matrox_g200er2.txt",
 	"../lspci/test_data/rpi5.txt",
-	"../lspci/test_data/xps13.txt",
+	"../lspci/test_data/dell_xps13_gen10.txt",
 }
 
 func TestDisplayDevices(t *testing.T) {
@@ -33,7 +33,7 @@ func TestDisplayDevices(t *testing.T) {
 				t.Fatalf(err.Error())
 			}
 
-			displayDevices, err := DisplayDevices(pciDevices)
+			displayDevices, err := pciGpus(pciDevices)
 
 			jsonData, err := json.MarshalIndent(displayDevices, "", "  ")
 			if err != nil {
