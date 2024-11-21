@@ -1,15 +1,9 @@
 package gpu
 
 import (
-	"errors"
 	"fmt"
-	"log"
-	"os"
-	"os/exec"
-	"strconv"
-	"strings"
-
 	"github.com/canonical/hardware-info/lspci"
+	"log"
 )
 
 func Info(friendlyNames bool) ([]Gpu, error) {
@@ -40,18 +34,12 @@ func pciGpus(pciDevices []lspci.PciDevice) ([]Gpu, error) {
 				gpu.SubdeviceId = &subDeviceId
 			}
 
-			vram, err := lookUpVram(device)
-			if err != nil {
-				// If vram lookup fails, we only log it, as it is not fatal
-				log.Println(err.Error())
-			} else {
-				gpu.VRam = &vram
-			}
-
 			gpu.VendorName = device.VendorName
 			gpu.DeviceName = device.DeviceName
 			gpu.SubvendorName = device.SubvendorName
 			gpu.SubdeviceName = device.SubdeviceName
+			gpu.Properties = make(map[string]interface{})
+			vendorSpecificInfo(&gpu, device)
 
 			gpus = append(gpus, gpu)
 		}
@@ -59,80 +47,36 @@ func pciGpus(pciDevices []lspci.PciDevice) ([]Gpu, error) {
 	return gpus, nil
 }
 
-func lookUpVram(device lspci.PciDevice) (uint64, error) {
+func vendorSpecificInfo(gpu *Gpu, pciDevice lspci.PciDevice) {
 
-	switch device.VendorId {
+	switch pciDevice.VendorId {
 	case 0x1002: // AMD
-		return lookUpAmdVram(device)
+		vram, err := lookUpAmdVram(pciDevice)
+		if err != nil {
+			log.Printf("Error looking up AMD vRAM: %v", err)
+		} else {
+			gpu.Properties["vram"] = vram
+		}
 
 	case 0x10de: // NVIDIA
-		return lookUpNvidiaVram(device)
+		vram, err := lookUpNvidiaVram(pciDevice)
+		if err != nil {
+			log.Printf("Error looking up NVIDIA vRAM: %v", err)
+		} else {
+			gpu.Properties["vram"] = vram
+		}
+
+		nvCompCap, err := computeCapability(pciDevice)
+		if err != nil {
+			log.Printf("Error looking up NVIDIA compute capability: %v", err)
+		} else {
+			gpu.Properties["compute_capability"] = nvCompCap
+		}
 
 	case 0x8086: // Intel
-		return 0, errors.New("vram detection for Intel not implemented")
-	}
+		log.Println("Not implemented")
 
-	// TODO perhaps we can use eglinfo as a fallback
-	return 0, errors.New(fmt.Sprintf("unable to detect vram for vendor %04x", device.VendorId))
-}
-
-func lookUpAmdVram(device lspci.PciDevice) (uint64, error) {
-	/*
-		AMD vram is listed under /sys/bus/pci/devices/${pci_slot}/mem_info_vram_total
-
-		ubuntu@u-HP-EliteBook-845-G8-Notebook-PC:~$ cat /sys/bus/pci/devices/0000\:04\:00.0/mem_info_
-		mem_info_gtt_total       mem_info_vis_vram_total  mem_info_vram_used
-		mem_info_gtt_used        mem_info_vis_vram_used   mem_info_vram_vendor
-		mem_info_preempt_used    mem_info_vram_total
-
-		ubuntu@u-HP-EliteBook-845-G8-Notebook-PC:~$ cat /sys/bus/pci/devices/0000\:04\:00.0/mem_info_vram_total
-		536870912
-	*/
-	data, err := os.ReadFile("/sys/bus/pci/devices/" + device.Slot + "/mem_info_vram_total")
-	if err != nil {
-		return 0, err
-	} else {
-		dataStr := string(data)
-		dataStr = strings.TrimSpace(dataStr) // value in file ends in \n
-		return strconv.ParseUint(dataStr, 10, 64)
-	}
-}
-
-func lookUpNvidiaVram(device lspci.PciDevice) (uint64, error) {
-	/*
-		Nvidia: LANG=C nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits
-
-		$ nvidia-smi --id=00000000:01:00.0 --query-gpu=memory.total --format=csv,noheader
-		4096 MiB
-		$ nvidia-smi --id=00000000:02:00.0 --query-gpu=memory.total --format=csv,noheader
-		No devices were found
-	*/
-	command := exec.Command("nvidia-smi", "--id="+device.Slot, "--query-gpu=memory.total", "--format=csv,noheader")
-	command.Env = os.Environ()
-	command.Env = append(command.Env, "LANG=C")
-	data, err := command.Output()
-	if err != nil {
-		return 0, err
-	} else {
-		dataStr := string(data)
-		dataStr = strings.TrimSpace(dataStr) // value ends in \n
-		valueStr, unit, hasUnit := strings.Cut(dataStr, " ")
-		vramValue, err := strconv.ParseUint(valueStr, 10, 64)
-		if err != nil {
-			return 0, err
-		}
-
-		if hasUnit {
-			switch unit {
-			case "KiB":
-				vramValue = vramValue * 1024
-			case "MiB":
-				vramValue = vramValue * 1024 * 1024
-			case "GiB":
-				vramValue = vramValue * 1024 * 1024 * 1024
-			}
-		}
-
-		return vramValue, nil
+	default:
+		log.Println("Unknown GPU Vendor")
 	}
 }
