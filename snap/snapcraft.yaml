@@ -9,6 +9,12 @@ description: |
 grade: devel
 confinement: strict
 
+plugs:
+  gpu-2404:
+    interface: content
+    target: $SNAP/gpu-2404
+    default-provider: mesa-2404
+
 # lshw requires access to the pci ids database file to look up vendor and product names. We download and include this file in a part.
 layout:
   /usr/share/misc/pci.ids:
@@ -24,6 +30,7 @@ parts:
     stage-packages:
       - lshw
       - pciutils
+      - nvidia-utils
     source: .
     source-type: local
 
@@ -36,6 +43,7 @@ apps:
   hardware-info:
     plugs:
       - hardware-observe
+      - opengl
 # The following plugs clear up lshw apparmor denials, but we do not need them for the correct functionality of our application.
 #      - home
 #      - mount-observe

@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 
 	"github.com/canonical/hardware-info/lspci"
 )
@@ -41,8 +42,11 @@ func DisplayDevices(pciDevices []lspci.PciDevice) ([]Gpu, error) {
 				gpu.SubDeviceId = &subDeviceId
 			}
 
-			vram, err := lookuUpVram(device)
-			if err == nil {
+			vram, err := lookupVram(device)
+			if err != nil {
+				// If vram lookup fails, we only log it, as it is not fatal
+				log.Println(err.Error())
+			} else {
 				gpu.VRam = &vram
 			}
 
@@ -57,41 +61,80 @@ func DisplayDevices(pciDevices []lspci.PciDevice) ([]Gpu, error) {
 	return gpus, nil
 }
 
-func lookuUpVram(device lspci.PciDevice) (uint64, error) {
-	// AMD vram is listed under /sys/bus/pci/devices/${pci_slot}/mem_info_vram_total
-	if device.VendorId == 0x1002 {
-		/*
-			ubuntu@u-HP-EliteBook-845-G8-Notebook-PC:~$ cat /sys/bus/pci/devices/0000\:04\:00.0/mem_info_
-			mem_info_gtt_total       mem_info_vis_vram_total  mem_info_vram_used
-			mem_info_gtt_used        mem_info_vis_vram_used   mem_info_vram_vendor
-			mem_info_preempt_used    mem_info_vram_total
+func lookupVram(device lspci.PciDevice) (uint64, error) {
 
-			ubuntu@u-HP-EliteBook-845-G8-Notebook-PC:~$ cat /sys/bus/pci/devices/0000\:04\:00.0/mem_info_vram_total
-			536870912
-		*/
-		data, err := os.ReadFile("/sys/bus/pci/devices/" + device.Slot + "/mem_info_vram_total")
-		if err == nil {
-			size, err := strconv.ParseUint(string(data), 10, 64)
-			if err != nil {
-				return size, nil
-			}
-		} else {
-			log.Println("Failed to look up AMD VRAM")
-		}
+	switch device.VendorId {
+	case 0x1002: // AMD
+		return lookupAmdVram(device)
+
+	case 0x10de: // NVIDIA
+		return lookupNvidiaVram(device)
+
+	case 0x8086: // Intel
+		return 0, errors.New("vram detection for Intel not implemented")
 	}
 
-	// Nvidia: LANG=C nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits
-	if device.VendorId == 0x10de {
-		out, err := exec.Command("LANG=C", "nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits").Output()
-		if err == nil {
-			size, err := strconv.ParseUint(string(out), 10, 64)
-			if err != nil {
-				return size, nil
-			}
-		} else {
-			log.Println("Failed to look up NVIDIA VRAM")
-		}
-	}
+	// TODO perhaps we can use eglinfo as a fallback
+	return 0, errors.New(fmt.Sprintf("unable to detect vram for vendor %04x", device.VendorId))
+}
 
-	return 0, errors.New("unable to detect vram")
+func lookupAmdVram(device lspci.PciDevice) (uint64, error) {
+	/*
+		AMD vram is listed under /sys/bus/pci/devices/${pci_slot}/mem_info_vram_total
+
+		ubuntu@u-HP-EliteBook-845-G8-Notebook-PC:~$ cat /sys/bus/pci/devices/0000\:04\:00.0/mem_info_
+		mem_info_gtt_total       mem_info_vis_vram_total  mem_info_vram_used
+		mem_info_gtt_used        mem_info_vis_vram_used   mem_info_vram_vendor
+		mem_info_preempt_used    mem_info_vram_total
+
+		ubuntu@u-HP-EliteBook-845-G8-Notebook-PC:~$ cat /sys/bus/pci/devices/0000\:04\:00.0/mem_info_vram_total
+		536870912
+	*/
+	data, err := os.ReadFile("/sys/bus/pci/devices/" + device.Slot + "/mem_info_vram_total")
+	if err != nil {
+		return 0, err
+	} else {
+		dataStr := string(data)
+		dataStr = strings.TrimSpace(dataStr) // value in file ends in \n
+		return strconv.ParseUint(dataStr, 10, 64)
+	}
+}
+
+func lookupNvidiaVram(device lspci.PciDevice) (uint64, error) {
+	/*
+		Nvidia: LANG=C nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits
+
+		$ nvidia-smi --id=00000000:01:00.0 --query-gpu=memory.total --format=csv,noheader
+		4096 MiB
+		$ nvidia-smi --id=00000000:02:00.0 --query-gpu=memory.total --format=csv,noheader
+		No devices were found
+	*/
+	command := exec.Command("nvidia-smi", "--id="+device.Slot, "--query-gpu=memory.total", "--format=csv,noheader")
+	command.Env = os.Environ()
+	command.Env = append(command.Env, "LANG=C")
+	data, err := command.Output()
+	if err != nil {
+		return 0, err
+	} else {
+		dataStr := string(data)
+		dataStr = strings.TrimSpace(dataStr) // value ends in \n
+		valueStr, unit, hasUnit := strings.Cut(dataStr, " ")
+		vramValue, err := strconv.ParseUint(valueStr, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+
+		if hasUnit {
+			switch unit {
+			case "KiB":
+				vramValue = vramValue * 1024
+			case "MiB":
+				vramValue = vramValue * 1024 * 1024
+			case "GiB":
+				vramValue = vramValue * 1024 * 1024 * 1024
+			}
+		}
+
+		return vramValue, nil
+	}
 }
