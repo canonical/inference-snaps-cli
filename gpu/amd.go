@@ -22,9 +22,8 @@ func lookUpAmdVram(device lspci.PciDevice) (uint64, error) {
 	data, err := os.ReadFile("/sys/bus/pci/devices/" + device.Slot + "/mem_info_vram_total")
 	if err != nil {
 		return 0, err
-	} else {
-		dataStr := string(data)
-		dataStr = strings.TrimSpace(dataStr) // value in file ends in \n
-		return strconv.ParseUint(dataStr, 10, 64)
 	}
+	dataStr := string(data)
+	dataStr = strings.TrimSpace(dataStr) // value in file ends in \n
+	return strconv.ParseUint(dataStr, 10, 64)
 }
