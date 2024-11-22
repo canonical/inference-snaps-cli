@@ -74,7 +74,7 @@ func vendorSpecificInfo(gpu *Gpu, pciDevice lspci.PciDevice) {
 		}
 
 	case 0x8086: // Intel
-		log.Println("Not implemented")
+		log.Println("Vendor specific info for Intel GPU not implemented")
 
 	default:
 		log.Println("Unknown GPU Vendor")
