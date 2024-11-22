@@ -1,13 +1,13 @@
 package gpu
 
 import (
-	"github.com/canonical/hardware-info/lspci"
+	"github.com/canonical/hardware-info/pci"
 	"os"
 	"strconv"
 	"strings"
 )
 
-func lookUpAmdVram(device lspci.PciDevice) (uint64, error) {
+func lookUpAmdVram(device pci.Device) (uint64, error) {
 	/*
 		AMD vram is listed under /sys/bus/pci/devices/${pci_slot}/mem_info_vram_total
 

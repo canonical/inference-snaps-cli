@@ -14,5 +14,5 @@ type Gpu struct {
 	SubvendorName *string                `json:"subvendor_name,omitempty"`
 	SubdeviceId   *string                `json:"subdevice_id,omitempty"`
 	SubdeviceName *string                `json:"subdevice_name,omitempty"`
-	Properties    map[string]interface{} `json:"properties"`
+	Properties    map[string]interface{} `json:"properties,omitempty"`
 }

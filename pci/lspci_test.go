@@ -1,4 +1,4 @@
-package lspci
+package pci
 
 import (
 	"encoding/json"

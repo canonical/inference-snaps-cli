@@ -1,14 +1,14 @@
 package gpu
 
 import (
-	"github.com/canonical/hardware-info/lspci"
+	"github.com/canonical/hardware-info/pci"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 )
 
-func lookUpNvidiaVram(device lspci.PciDevice) (uint64, error) {
+func lookUpNvidiaVram(device pci.Device) (uint64, error) {
 	/*
 		Nvidia: LANG=C nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits
 
@@ -47,7 +47,7 @@ func lookUpNvidiaVram(device lspci.PciDevice) (uint64, error) {
 	}
 }
 
-func computeCapability(device lspci.PciDevice) (string, error) {
+func computeCapability(device pci.Device) (string, error) {
 	// nvidia-smi --query-gpu=compute_cap --format=csv
 	command := exec.Command("nvidia-smi", "--id="+device.Slot, "--query-gpu=compute_cap", "--format=csv,noheader")
 	command.Env = os.Environ()

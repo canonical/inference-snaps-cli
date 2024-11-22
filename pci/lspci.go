@@ -1,4 +1,4 @@
-package lspci
+package pci
 
 import (
 	"log"
@@ -15,12 +15,12 @@ func hostLsPci() ([]byte, error) {
 	return out, nil
 }
 
-func ParseLsPci(input []byte, friendlyNames bool) ([]PciDevice, error) {
-	var devices []PciDevice
+func ParseLsPci(input []byte, includeFriendlyNames bool) ([]Device, error) {
+	var devices []Device
 
 	inputString := string(input)
 	for _, section := range strings.Split(inputString, "\n\n") {
-		var device PciDevice
+		var device Device
 		for _, line := range strings.Split(section, "\n") {
 			key, value, _ := strings.Cut(line, ":\t")
 
@@ -59,11 +59,13 @@ func ParseLsPci(input []byte, friendlyNames bool) ([]PciDevice, error) {
 			}
 
 		}
-		if friendlyNames {
-			err := lookupFriendlyName(&device)
+		if includeFriendlyNames {
+			friendlyNames, err := lookupFriendlyNames(device)
 			if err != nil {
 				// This is not a fatal error, so just logging it
 				log.Printf("Error looking up friendly name: %v", err)
+			} else {
+				device.FriendlyNames = friendlyNames
 			}
 		}
 		devices = append(devices, device)

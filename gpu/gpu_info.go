@@ -2,12 +2,12 @@ package gpu
 
 import (
 	"fmt"
-	"github.com/canonical/hardware-info/lspci"
+	"github.com/canonical/hardware-info/pci"
 	"log"
 )
 
 func Info(friendlyNames bool) ([]Gpu, error) {
-	pciDevices, err := lspci.PciDevices(friendlyNames)
+	pciDevices, err := pci.PciDevices(friendlyNames)
 	if err != nil {
 		return nil, err
 	}
@@ -15,7 +15,7 @@ func Info(friendlyNames bool) ([]Gpu, error) {
 	return pciGpus(pciDevices)
 }
 
-func pciGpus(pciDevices []lspci.PciDevice) ([]Gpu, error) {
+func pciGpus(pciDevices []pci.Device) ([]Gpu, error) {
 	var gpus []Gpu
 
 	for _, device := range pciDevices {
@@ -38,8 +38,7 @@ func pciGpus(pciDevices []lspci.PciDevice) ([]Gpu, error) {
 			gpu.DeviceName = device.DeviceName
 			gpu.SubvendorName = device.SubvendorName
 			gpu.SubdeviceName = device.SubdeviceName
-			gpu.Properties = make(map[string]interface{})
-			vendorSpecificInfo(&gpu, device)
+			gpu.Properties = vendorSpecificProperties(device)
 
 			gpus = append(gpus, gpu)
 		}
@@ -47,7 +46,9 @@ func pciGpus(pciDevices []lspci.PciDevice) ([]Gpu, error) {
 	return gpus, nil
 }
 
-func vendorSpecificInfo(gpu *Gpu, pciDevice lspci.PciDevice) {
+func vendorSpecificProperties(pciDevice pci.Device) map[string]interface{} {
+
+	var properties map[string]interface{}
 
 	switch pciDevice.VendorId {
 	case 0x1002: // AMD
@@ -55,7 +56,7 @@ func vendorSpecificInfo(gpu *Gpu, pciDevice lspci.PciDevice) {
 		if err != nil {
 			log.Printf("Error looking up AMD vRAM: %v", err)
 		} else {
-			gpu.Properties["vram"] = vram
+			properties["vram"] = vram
 		}
 
 	case 0x10de: // NVIDIA
@@ -63,14 +64,14 @@ func vendorSpecificInfo(gpu *Gpu, pciDevice lspci.PciDevice) {
 		if err != nil {
 			log.Printf("Error looking up NVIDIA vRAM: %v", err)
 		} else {
-			gpu.Properties["vram"] = vram
+			properties["vram"] = vram
 		}
 
 		nvCompCap, err := computeCapability(pciDevice)
 		if err != nil {
 			log.Printf("Error looking up NVIDIA compute capability: %v", err)
 		} else {
-			gpu.Properties["compute_capability"] = nvCompCap
+			properties["compute_capability"] = nvCompCap
 		}
 
 	case 0x8086: // Intel
@@ -79,4 +80,6 @@ func vendorSpecificInfo(gpu *Gpu, pciDevice lspci.PciDevice) {
 	default:
 		log.Println("Unknown GPU Vendor")
 	}
+
+	return properties
 }

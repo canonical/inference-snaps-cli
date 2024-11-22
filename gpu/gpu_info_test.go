@@ -5,19 +5,19 @@ import (
 	"os"
 	"testing"
 
-	"github.com/canonical/hardware-info/lspci"
+	"github.com/canonical/hardware-info/pci"
 )
 
 var lspciFiles = []string{
-	"../lspci/test_data/dell-precision-3660-c29399.txt",
-	"../lspci/test_data/dell-vostro153535-c30942.txt",
-	"../lspci/test_data/amd-cezanne.txt",
-	"../lspci/test_data/hp-elitebook845-g8-notebook-pc-c30368.txt",
-	"../lspci/test_data/intel-arc-a580.txt",
-	"../lspci/test_data/radeon_hd7450+tesla_k20xm.txt",
-	"../lspci/test_data/matrox_g200er2.txt",
-	"../lspci/test_data/rpi5.txt",
-	"../lspci/test_data/dell_xps13_gen10.txt",
+	"../pci/test_data/dell-precision-3660-c29399.txt",
+	"../pci/test_data/dell-vostro153535-c30942.txt",
+	"../pci/test_data/amd-cezanne.txt",
+	"../pci/test_data/hp-elitebook845-g8-notebook-pc-c30368.txt",
+	"../pci/test_data/intel-arc-a580.txt",
+	"../pci/test_data/radeon_hd7450+tesla_k20xm.txt",
+	"../pci/test_data/matrox_g200er2.txt",
+	"../pci/test_data/rpi5.txt",
+	"../pci/test_data/dell_xps13_gen10.txt",
 }
 
 func TestDisplayDevices(t *testing.T) {
@@ -28,7 +28,7 @@ func TestDisplayDevices(t *testing.T) {
 				t.Fatalf(err.Error())
 			}
 
-			pciDevices, err := lspci.ParseLsPci(lsPci, true)
+			pciDevices, err := pci.ParseLsPci(lsPci, true)
 			if err != nil {
 				t.Fatalf(err.Error())
 			}

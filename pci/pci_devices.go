@@ -1,4 +1,4 @@
-package lspci
+package pci
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ var (
 	pciDb *pcidb.PCIDB
 )
 
-func PciDevices(friendlyNames bool) ([]PciDevice, error) {
+func PciDevices(friendlyNames bool) ([]Device, error) {
 
 	hostLsPci, err := hostLsPci()
 	if err != nil {
@@ -22,13 +22,15 @@ func PciDevices(friendlyNames bool) ([]PciDevice, error) {
 	return devices, nil
 }
 
-func lookupFriendlyName(device *PciDevice) error {
+func lookupFriendlyNames(device Device) (FriendlyNames, error) {
+	var friendlyNames FriendlyNames
+
 	if pciDb == nil {
 		// Load pci.ids database if needed
 		var err error
 		pciDb, err = pcidb.New()
 		if err != nil {
-			return err
+			return friendlyNames, err
 		}
 	}
 
@@ -48,19 +50,19 @@ func lookupFriendlyName(device *PciDevice) error {
 	for _, vendor := range pciDb.Vendors {
 		if vendor.ID == vendorIdString {
 			vendorName := vendor.Name
-			device.VendorName = &vendorName
+			friendlyNames.VendorName = &vendorName
 
 			for _, product := range vendor.Products {
 				if product.ID == deviceIdString {
 					productName := product.Name
-					device.DeviceName = &productName
+					friendlyNames.DeviceName = &productName
 
 					// Look up subDevice name from subsystem list
 					if device.SubdeviceId != nil {
 						for _, subSystem := range product.Subsystems {
 							if subSystem.ID == subDeviceIdString {
 								subSystemName := subSystem.Name
-								device.SubdeviceName = &subSystemName
+								friendlyNames.SubdeviceName = &subSystemName
 							}
 						}
 					}
@@ -71,9 +73,9 @@ func lookupFriendlyName(device *PciDevice) error {
 		// Look up SubVendor name from main vendor list
 		if device.SubvendorId != nil && vendor.ID == subVendorIdString {
 			vendorName := vendor.Name
-			device.SubvendorName = &vendorName
+			friendlyNames.SubvendorName = &vendorName
 		}
 	}
 
-	return nil
+	return friendlyNames, nil
 }
