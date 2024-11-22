@@ -21,16 +21,18 @@ layout:
     bind-file: $SNAP/pci.ids
 
 parts:
+  system-utilities:
+    plugin: nil
+    build-packages:
+      - git
+    stage-packages:
+      - pciutils
+      - nvidia-utils
+
   hardware-info-cli:
     plugin: go
     build-snaps:
       - go/latest/stable
-    build-packages:
-      - git
-    stage-packages:
-      - lshw
-      - pciutils
-      - nvidia-utils
     source: .
     source-type: local
 
