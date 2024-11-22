@@ -5,8 +5,6 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-
-	"github.com/jaypipes/pcidb"
 )
 
 func hostLsPci() ([]byte, error) {
@@ -18,16 +16,6 @@ func hostLsPci() ([]byte, error) {
 }
 
 func ParseLsPci(input []byte, friendlyNames bool) ([]PciDevice, error) {
-	// Preload pci.ids database if needed
-	var err error
-	if friendlyNames {
-		pciDb, err = pcidb.New()
-		if err != nil {
-			log.Printf("Error initing PCI ID DB: %v", err)
-			friendlyNames = false
-		}
-	}
-
 	var devices []PciDevice
 
 	inputString := string(input)
@@ -72,7 +60,11 @@ func ParseLsPci(input []byte, friendlyNames bool) ([]PciDevice, error) {
 
 		}
 		if friendlyNames {
-			lookupFriendlyName(&device)
+			err := lookupFriendlyName(&device)
+			if err != nil {
+				// This is not a fatal error, so just logging it
+				log.Printf("Error looking up friendly name: %v", err)
+			}
 		}
 		devices = append(devices, device)
 	}

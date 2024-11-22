@@ -2,7 +2,6 @@ package lspci
 
 import (
 	"fmt"
-
 	"github.com/jaypipes/pcidb"
 )
 
@@ -23,9 +22,14 @@ func PciDevices(friendlyNames bool) ([]PciDevice, error) {
 	return devices, nil
 }
 
-func lookupFriendlyName(device *PciDevice) {
+func lookupFriendlyName(device *PciDevice) error {
 	if pciDb == nil {
-		return
+		// Load pci.ids database if needed
+		var err error
+		pciDb, err = pcidb.New()
+		if err != nil {
+			return err
+		}
 	}
 
 	vendorIdString := fmt.Sprintf("%04x", device.VendorId)
@@ -70,4 +74,6 @@ func lookupFriendlyName(device *PciDevice) {
 			device.SubvendorName = &vendorName
 		}
 	}
+
+	return nil
 }
