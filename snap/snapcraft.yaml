@@ -17,11 +17,16 @@ layout:
 parts:
   system-utilities:
     plugin: nil
-    build-packages:
-      - git
     stage-packages:
       - pciutils
       - nvidia-utils
+
+  # To use `version: git` in this file, we require git as a build dependency.
+  # This is fixed but not published yet. See https://github.com/canonical/snapcraft/issues/4944
+  git:
+    plugin: nil
+    build-packages:
+      - git
 
   hardware-info-cli:
     plugin: go
