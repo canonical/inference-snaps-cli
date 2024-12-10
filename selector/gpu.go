@@ -6,6 +6,7 @@ import (
 
 	"github.com/canonical/hardware-info/hardware_info/gpu"
 	"github.com/canonical/hardware-info/types"
+	"github.com/canonical/hardware-info/utils"
 )
 
 func checkGpus(gpus []gpu.Gpu, stackDevice types.StackDevice) (float64, error) {
@@ -36,7 +37,7 @@ func gpuMatchesStack(gpu gpu.Gpu, stackDevice types.StackDevice) (bool, error) {
 
 	// If stack has a vram requirement, check if GPU has enough
 	if stackDevice.VRam != nil {
-		vramRequired, err := StringToBytes(*stackDevice.VRam)
+		vramRequired, err := utils.StringToBytes(*stackDevice.VRam)
 		if err != nil {
 			return false, err
 		}

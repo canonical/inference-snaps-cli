@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/canonical/hardware-info/types"
+	"github.com/canonical/hardware-info/utils"
 	"gopkg.in/yaml.v3"
 )
 
@@ -79,7 +80,7 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (float64, error) {
 
 	// Enough memory
 	if stack.Memory != nil {
-		requiredMemory, err := StringToBytes(*stack.Memory)
+		requiredMemory, err := utils.StringToBytes(*stack.Memory)
 		if err != nil {
 			return 0, err
 		}
@@ -97,7 +98,7 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (float64, error) {
 
 	// Enough disk space
 	if stack.DiskSpace != nil {
-		requiredDisk, err := StringToBytes(*stack.DiskSpace)
+		requiredDisk, err := utils.StringToBytes(*stack.DiskSpace)
 		if err != nil {
 			return 0, err
 		}

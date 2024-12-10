@@ -36,13 +36,13 @@ import (
 //}
 
 var testFiles = []string{
-	"test_data/dell-r430-lscpu.json",
-	"test_data/hp-dl380p-gen8-lscpu.json",
-	"test_data/rpi5-lscpu.json",
-	"test_data/mediatek-genio-1200-lscpu.json",
-	"test_data/mediatek-g350-lscpu.json",
-	"test_data/intel-cbrd-raptor-lake.json",
-	"test_data/intel-core2.json",
+	"../../test_data/lscpu_cpuinfo/dell-r430-lscpu.json",
+	"../../test_data/lscpu_cpuinfo/hp-dl380p-gen8-lscpu.json",
+	"../../test_data/lscpu_cpuinfo/rpi5-lscpu.json",
+	"../../test_data/lscpu_cpuinfo/mediatek-genio-1200-lscpu.json",
+	"../../test_data/lscpu_cpuinfo/mediatek-g350-lscpu.json",
+	"../../test_data/lscpu_cpuinfo/intel-cbrd-raptor-lake.json",
+	"../../test_data/lscpu_cpuinfo/intel-core2.json",
 }
 
 func TestParseLsCpu(t *testing.T) {

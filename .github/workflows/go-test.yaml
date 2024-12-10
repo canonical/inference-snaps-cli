@@ -19,3 +19,9 @@ jobs:
       - name: Selector tests
         run: |
           go test -v -failfast ./selector
+      - name: Type tests
+        run: |
+          go test -v -failfast ./types
+      - name: Util tests
+        run: |
+          go test -v -failfast ./utils
