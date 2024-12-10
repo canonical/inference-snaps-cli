@@ -4,12 +4,12 @@ import (
 	"testing"
 
 	"github.com/canonical/hardware-info/hardware_info/cpu"
-	"github.com/canonical/hardware-info/stack"
+	"github.com/canonical/hardware-info/types"
 )
 
 func TestCheckCpu(t *testing.T) {
 	vendorId := "GenuineIntel"
-	stackDevice := stack.StackDevice{
+	stackDevice := types.StackDevice{
 		Type:     "cpu",
 		Bus:      nil,
 		VendorId: &vendorId,

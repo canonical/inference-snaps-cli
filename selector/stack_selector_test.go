@@ -6,10 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/canonical/hardware-info/hardware_info/common"
 	"github.com/canonical/hardware-info/hardware_info/disk"
 	"github.com/canonical/hardware-info/hardware_info/memory"
-	"github.com/canonical/hardware-info/stack"
+	"github.com/canonical/hardware-info/types"
 	"gopkg.in/yaml.v3"
 )
 
@@ -35,7 +34,7 @@ func TestFindStack(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			var hardwareInfo common.HwInfo
+			var hardwareInfo types.HwInfo
 			err = json.Unmarshal(data, &hardwareInfo)
 			if err != nil {
 				t.Fatal(err)
@@ -58,13 +57,13 @@ func TestDiskCheck(t *testing.T) {
 		Free:  0,
 		Avail: 400000000,
 	}
-	hwInfo := common.HwInfo{}
+	hwInfo := types.HwInfo{}
 	hwInfo.Disk = make(map[string]*disk.DirStats)
 	hwInfo.Disk["/"] = &dirStat
 	hwInfo.Disk["/var/lib/snapd/snaps"] = &dirStat
 
 	stackDisk := "300M"
-	stack := stack.Stack{DiskSpace: &stackDisk}
+	stack := types.Stack{DiskSpace: &stackDisk}
 
 	result, err := checkStack(hwInfo, stack)
 	if err != nil {
@@ -85,7 +84,7 @@ func TestDiskCheck(t *testing.T) {
 }
 
 func TestMemoryCheck(t *testing.T) {
-	hwInfo := common.HwInfo{
+	hwInfo := types.HwInfo{
 		Memory: &memory.MemoryInfo{
 			RamTotal:  200000000,
 			SwapTotal: 200000000,
@@ -93,7 +92,7 @@ func TestMemoryCheck(t *testing.T) {
 	}
 
 	stackMemory := "300M"
-	stack := stack.Stack{Memory: &stackMemory}
+	stack := types.Stack{Memory: &stackMemory}
 
 	result, err := checkStack(hwInfo, stack)
 	if err != nil {
@@ -124,7 +123,7 @@ func TestCpuFlagsAvx2(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var hardwareInfo common.HwInfo
+	var hardwareInfo types.HwInfo
 	err = json.Unmarshal(data, &hardwareInfo)
 	if err != nil {
 		t.Fatal(err)
@@ -135,7 +134,7 @@ func TestCpuFlagsAvx2(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var stack stack.Stack
+	var stack types.Stack
 	err = yaml.Unmarshal(data, &stack)
 	if err != nil {
 		t.Fatal(err)
@@ -181,7 +180,7 @@ func TestCpuFlagsAvx512(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var hardwareInfo common.HwInfo
+	var hardwareInfo types.HwInfo
 	err = json.Unmarshal(data, &hardwareInfo)
 	if err != nil {
 		t.Fatal(err)
@@ -192,7 +191,7 @@ func TestCpuFlagsAvx512(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var currentStack stack.Stack
+	var currentStack types.Stack
 	err = yaml.Unmarshal(data, &currentStack)
 	if err != nil {
 		t.Fatal(err)
@@ -227,7 +226,7 @@ func TestCpuFlagsAvx512(t *testing.T) {
 }
 
 func TestNoCpuInHwInfo(t *testing.T) {
-	hwInfo := common.HwInfo{
+	hwInfo := types.HwInfo{
 		// All fields are nil or zero
 	}
 
@@ -236,7 +235,7 @@ func TestNoCpuInHwInfo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var currentStack stack.Stack
+	var currentStack types.Stack
 	err = yaml.Unmarshal(data, &currentStack)
 	if err != nil {
 		t.Fatal(err)

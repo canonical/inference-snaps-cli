@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/canonical/hardware-info/hardware_info/gpu"
-	"github.com/canonical/hardware-info/stack"
+	"github.com/canonical/hardware-info/types"
 )
 
 func TestCheckGpuVendor(t *testing.T) {
@@ -23,7 +23,7 @@ func TestCheckGpuVendor(t *testing.T) {
 		Properties:    nil,
 	}
 
-	stackDevice := stack.StackDevice{
+	stackDevice := types.StackDevice{
 		Type:     "gpu",
 		Bus:      nil,
 		VendorId: &gpuVendorId,
@@ -77,7 +77,7 @@ func TestCheckGpuVram(t *testing.T) {
 	}
 
 	stackVram := "4G"
-	stackDevice := stack.StackDevice{
+	stackDevice := types.StackDevice{
 		Type:     "gpu",
 		Bus:      nil,
 		VendorId: nil,

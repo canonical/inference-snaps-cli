@@ -7,13 +7,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/canonical/hardware-info/hardware_info/common"
-	"github.com/canonical/hardware-info/stack"
+	"github.com/canonical/hardware-info/types"
 	"gopkg.in/yaml.v3"
 )
 
-func FindStack(hardwareInfo common.HwInfo, stacksDir string) (*stack.StackResult, error) {
-	var foundStacks []stack.StackResult
+func FindStack(hardwareInfo types.HwInfo, stacksDir string) (*types.StackResult, error) {
+	var foundStacks []types.StackResult
 
 	// Sanitise stack dir path
 	if !strings.HasSuffix(stacksDir, "/") {
@@ -37,7 +36,7 @@ func FindStack(hardwareInfo common.HwInfo, stacksDir string) (*stack.StackResult
 			return nil, fmt.Errorf("%s: %s", stacksDir+file.Name(), err)
 		}
 
-		var currentStack stack.Stack
+		var currentStack types.Stack
 		err = yaml.Unmarshal(data, &currentStack)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %s", stacksDir, err)
@@ -50,7 +49,7 @@ func FindStack(hardwareInfo common.HwInfo, stacksDir string) (*stack.StackResult
 		}
 
 		if score > 0 {
-			foundStack := stack.StackResult{
+			foundStack := types.StackResult{
 				Name:       currentStack.Name,
 				Components: currentStack.Components,
 				Score:      score,
@@ -75,7 +74,7 @@ func FindStack(hardwareInfo common.HwInfo, stacksDir string) (*stack.StackResult
 	return &foundStacks[0], nil
 }
 
-func checkStack(hardwareInfo common.HwInfo, stack stack.Stack) (float64, error) {
+func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (float64, error) {
 	stackScore := 0.0
 
 	// Enough memory

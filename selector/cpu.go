@@ -4,10 +4,10 @@ import (
 	"slices"
 
 	"github.com/canonical/hardware-info/hardware_info/cpu"
-	"github.com/canonical/hardware-info/stack"
+	"github.com/canonical/hardware-info/types"
 )
 
-func checkCpus(stackDevice stack.StackDevice, cpu cpu.CpuInfo) (float64, error) {
+func checkCpus(stackDevice types.StackDevice, cpu cpu.CpuInfo) (float64, error) {
 	cpuScore := 0.0
 
 	// Vendor
@@ -39,7 +39,7 @@ func checkCpus(stackDevice stack.StackDevice, cpu cpu.CpuInfo) (float64, error) 
 }
 
 // Apply the same "filter" logic as we have for the GPUs. See checkGpus() and checkGpu().
-func checkCpuModel(cpuModel cpu.Model, stackDevice stack.StackDevice) (float64, error) {
+func checkCpuModel(cpuModel cpu.Model, stackDevice types.StackDevice) (float64, error) {
 	// Each CPU that matches increases the score by 1
 	score := 1.0
 

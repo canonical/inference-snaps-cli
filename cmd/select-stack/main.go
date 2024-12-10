@@ -7,8 +7,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/canonical/hardware-info/hardware_info/common"
 	"github.com/canonical/hardware-info/selector"
+	"github.com/canonical/hardware-info/types"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 	flag.Parse()
 
 	// Read json piped in from the hardware-info app
-	var hardwareInfo common.HwInfo
+	var hardwareInfo types.HwInfo
 
 	err := json.NewDecoder(os.Stdin).Decode(&hardwareInfo)
 	if err != nil {
