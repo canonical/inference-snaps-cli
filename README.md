@@ -2,17 +2,18 @@
 
 This repo contains utilities used in snapping machine learning (AI) workloads.
 
-
 ## Build
 
 The CLIs included in this repo can be built using the following commands.
 
 Hardware Info:
+
 ```bash
 go build github.com/canonical/hardware-info/cmd/hardware-info
 ```
 
 Select Stack:
+
 ```bash
 go build github.com/canonical/hardware-info/cmd/select-stack
 ```
@@ -44,6 +45,7 @@ You need to provide the location of the stack definitions from which the selecti
 The result is written as json to STDOUT, while any other log messages are available on STDERR.
 
 Example:
+
 ```bash
 $ ml-snap-utils.hardware-info | ml-snap-utils.stack-selector --stacks=test_data/stacks/
 2024/12/10 11:28:03 Vendor specific info for Intel GPU not implemented
