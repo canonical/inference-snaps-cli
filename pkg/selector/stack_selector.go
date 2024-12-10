@@ -7,8 +7,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/canonical/hardware-info/types"
-	"github.com/canonical/hardware-info/utils"
+	"github.com/canonical/hardware-info/pkg/types"
+	"github.com/canonical/hardware-info/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
 

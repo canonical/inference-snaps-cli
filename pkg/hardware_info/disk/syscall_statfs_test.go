@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/canonical/hardware-info/utils"
+	"github.com/canonical/hardware-info/pkg/utils"
 )
 
 var testDirs = []string{

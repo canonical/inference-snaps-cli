@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/canonical/hardware-info/hardware_info/pci"
+	"github.com/canonical/hardware-info/pkg/hardware_info/pci"
 )
 
 func Info(friendlyNames bool) ([]Gpu, error) {

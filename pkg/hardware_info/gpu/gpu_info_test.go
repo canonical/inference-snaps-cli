@@ -5,19 +5,19 @@ import (
 	"os"
 	"testing"
 
-	"github.com/canonical/hardware-info/hardware_info/pci"
+	"github.com/canonical/hardware-info/pkg/hardware_info/pci"
 )
 
 var lspciFiles = []string{
-	"../../test_data/lspci/dell-precision-3660-c29399.txt",
-	"../../test_data/lspci/dell-vostro153535-c30942.txt",
-	"../../test_data/lspci/amd-cezanne.txt",
-	"../../test_data/lspci/hp-elitebook845-g8-notebook-pc-c30368.txt",
-	"../../test_data/lspci/intel-arc-a580.txt",
-	"../../test_data/lspci/radeon_hd7450+tesla_k20xm.txt",
-	"../../test_data/lspci/matrox_g200er2.txt",
-	"../../test_data/lspci/rpi5.txt",
-	"../../test_data/lspci/dell_xps13_gen10.txt",
+	"../../../test_data/lspci/dell-precision-3660-c29399.txt",
+	"../../../test_data/lspci/dell-vostro153535-c30942.txt",
+	"../../../test_data/lspci/amd-cezanne.txt",
+	"../../../test_data/lspci/hp-elitebook845-g8-notebook-pc-c30368.txt",
+	"../../../test_data/lspci/intel-arc-a580.txt",
+	"../../../test_data/lspci/radeon_hd7450+tesla_k20xm.txt",
+	"../../../test_data/lspci/matrox_g200er2.txt",
+	"../../../test_data/lspci/rpi5.txt",
+	"../../../test_data/lspci/dell_xps13_gen10.txt",
 }
 
 func TestDisplayDevices(t *testing.T) {

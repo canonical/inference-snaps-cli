@@ -7,11 +7,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/canonical/hardware-info/hardware_info/cpu"
-	"github.com/canonical/hardware-info/hardware_info/disk"
-	"github.com/canonical/hardware-info/hardware_info/gpu"
-	"github.com/canonical/hardware-info/hardware_info/memory"
-	"github.com/canonical/hardware-info/types"
+	"github.com/canonical/hardware-info/pkg/hardware_info/cpu"
+	"github.com/canonical/hardware-info/pkg/hardware_info/disk"
+	"github.com/canonical/hardware-info/pkg/hardware_info/gpu"
+	"github.com/canonical/hardware-info/pkg/hardware_info/memory"
+	"github.com/canonical/hardware-info/pkg/types"
 )
 
 func main() {

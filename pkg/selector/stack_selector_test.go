@@ -6,19 +6,19 @@ import (
 	"os"
 	"testing"
 
-	"github.com/canonical/hardware-info/hardware_info/disk"
-	"github.com/canonical/hardware-info/hardware_info/memory"
-	"github.com/canonical/hardware-info/types"
+	"github.com/canonical/hardware-info/pkg/hardware_info/disk"
+	"github.com/canonical/hardware-info/pkg/hardware_info/memory"
+	"github.com/canonical/hardware-info/pkg/types"
 	"gopkg.in/yaml.v3"
 )
 
 var hwInfoFiles = []string{
-	"../test_data/hardware_info/amd-ryzen7-5700g.json",
-	"../test_data/hardware_info/amd-ryzen9-7900.json",
-	"../test_data/hardware_info/cbrd-i5-1350pe.json",
-	"../test_data/hardware_info/hp-dl380p-gen8.json",
-	"../test_data/hardware_info/xeon-6138.json",
-	"../test_data/hardware_info/xps13-gen10.json",
+	"../../test_data/hardware_info/amd-ryzen7-5700g.json",
+	"../../test_data/hardware_info/amd-ryzen9-7900.json",
+	"../../test_data/hardware_info/cbrd-i5-1350pe.json",
+	"../../test_data/hardware_info/hp-dl380p-gen8.json",
+	"../../test_data/hardware_info/xeon-6138.json",
+	"../../test_data/hardware_info/xps13-gen10.json",
 }
 
 func TestFindStack(t *testing.T) {
@@ -40,7 +40,7 @@ func TestFindStack(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			result, err := FindStack(hardwareInfo, "../test_data/stacks")
+			result, err := FindStack(hardwareInfo, "../../test_data/stacks")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -113,7 +113,7 @@ func TestMemoryCheck(t *testing.T) {
 }
 
 func TestCpuFlagsAvx2(t *testing.T) {
-	file, err := os.Open("../test_data/hardware_info/amd-ryzen7-5700g.json")
+	file, err := os.Open("../../test_data/hardware_info/amd-ryzen7-5700g.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -129,7 +129,7 @@ func TestCpuFlagsAvx2(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	data, err = os.ReadFile("../test_data/stacks/llamacpp-avx2/stack.yaml")
+	data, err = os.ReadFile("../../test_data/stacks/llamacpp-avx2/stack.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,7 +147,7 @@ func TestCpuFlagsAvx2(t *testing.T) {
 	}
 	t.Logf("Matching score: %f", result)
 
-	file, err = os.Open("../test_data/hardware_info/hp-dl380p-gen8.json")
+	file, err = os.Open("../../test_data/hardware_info/hp-dl380p-gen8.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -170,7 +170,7 @@ func TestCpuFlagsAvx2(t *testing.T) {
 }
 
 func TestCpuFlagsAvx512(t *testing.T) {
-	file, err := os.Open("../test_data/hardware_info/amd-ryzen9-7900.json")
+	file, err := os.Open("../../test_data/hardware_info/amd-ryzen9-7900.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -186,7 +186,7 @@ func TestCpuFlagsAvx512(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	data, err = os.ReadFile("../test_data/stacks/llamacpp-avx512/stack.yaml")
+	data, err = os.ReadFile("../../test_data/stacks/llamacpp-avx512/stack.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -203,7 +203,7 @@ func TestCpuFlagsAvx512(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	file, err = os.Open("../test_data/hardware_info/hp-dl380p-gen8.json")
+	file, err = os.Open("../../test_data/hardware_info/hp-dl380p-gen8.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -230,7 +230,7 @@ func TestNoCpuInHwInfo(t *testing.T) {
 		// All fields are nil or zero
 	}
 
-	data, err := os.ReadFile("../test_data/stacks/llamacpp-avx512/stack.yaml")
+	data, err := os.ReadFile("../../test_data/stacks/llamacpp-avx512/stack.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}

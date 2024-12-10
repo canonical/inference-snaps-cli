@@ -7,8 +7,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/canonical/hardware-info/selector"
-	"github.com/canonical/hardware-info/types"
+	"github.com/canonical/hardware-info/pkg/selector"
+	"github.com/canonical/hardware-info/pkg/types"
 )
 
 func main() {
