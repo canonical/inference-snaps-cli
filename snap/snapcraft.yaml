@@ -27,7 +27,7 @@ parts:
     build-packages:
       - git
 
-  hardware-info-cli:
+  go-clis:
     plugin: go
     build-snaps:
       - go/latest/stable
