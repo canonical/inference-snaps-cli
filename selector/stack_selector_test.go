@@ -6,8 +6,11 @@ import (
 	"os"
 	"testing"
 
-	"gopkg.in/yaml.v2"
-	"katemoss/common"
+	"github.com/canonical/hardware-info/hardware_info"
+	"github.com/canonical/hardware-info/hardware_info/disk"
+	"github.com/canonical/hardware-info/hardware_info/memory"
+	"github.com/canonical/hardware-info/stack"
+	"gopkg.in/yaml.v3"
 )
 
 var hwInfoFiles = []string{
@@ -32,7 +35,7 @@ func TestFindStack(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			var hardwareInfo common.HwInfo
+			var hardwareInfo hardware_info.HwInfo
 			err = json.Unmarshal(data, &hardwareInfo)
 			if err != nil {
 				t.Fatal(err)
@@ -49,19 +52,19 @@ func TestFindStack(t *testing.T) {
 }
 
 func TestDiskCheck(t *testing.T) {
-	dirStat := common.DirStats{
+	dirStat := disk.DirStats{
 		Total: 0,
 		Used:  0,
 		Free:  0,
 		Avail: 400000000,
 	}
-	hwInfo := common.HwInfo{}
-	hwInfo.Disk = make(map[string]*common.DirStats)
+	hwInfo := hardware_info.HwInfo{}
+	hwInfo.Disk = make(map[string]*disk.DirStats)
 	hwInfo.Disk["/"] = &dirStat
 	hwInfo.Disk["/var/lib/snapd/snaps"] = &dirStat
 
 	stackDisk := "300M"
-	stack := common.Stack{DiskSpace: &stackDisk}
+	stack := stack.Stack{DiskSpace: &stackDisk}
 
 	result, err := checkStack(hwInfo, stack)
 	if err != nil {
@@ -82,15 +85,15 @@ func TestDiskCheck(t *testing.T) {
 }
 
 func TestMemoryCheck(t *testing.T) {
-	hwInfo := common.HwInfo{
-		Memory: &common.MemoryInfo{
+	hwInfo := hardware_info.HwInfo{
+		Memory: &memory.MemoryInfo{
 			RamTotal:  200000000,
 			SwapTotal: 200000000,
 		},
 	}
 
 	stackMemory := "300M"
-	stack := common.Stack{Memory: &stackMemory}
+	stack := stack.Stack{Memory: &stackMemory}
 
 	result, err := checkStack(hwInfo, stack)
 	if err != nil {
@@ -121,7 +124,7 @@ func TestCpuFlagsAvx2(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var hardwareInfo common.HwInfo
+	var hardwareInfo hardware_info.HwInfo
 	err = json.Unmarshal(data, &hardwareInfo)
 	if err != nil {
 		t.Fatal(err)
@@ -132,7 +135,7 @@ func TestCpuFlagsAvx2(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var stack common.Stack
+	var stack stack.Stack
 	err = yaml.Unmarshal(data, &stack)
 	if err != nil {
 		t.Fatal(err)
@@ -143,7 +146,7 @@ func TestCpuFlagsAvx2(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("%+v", result)
+	t.Logf("Matching score: %f", result)
 
 	file, err = os.Open("../test_data/hardware_info/hp-dl380p-gen8.json")
 	if err != nil {
@@ -178,7 +181,7 @@ func TestCpuFlagsAvx512(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var hardwareInfo common.HwInfo
+	var hardwareInfo hardware_info.HwInfo
 	err = json.Unmarshal(data, &hardwareInfo)
 	if err != nil {
 		t.Fatal(err)
@@ -189,14 +192,14 @@ func TestCpuFlagsAvx512(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var stack common.Stack
-	err = yaml.Unmarshal(data, &stack)
+	var currentStack stack.Stack
+	err = yaml.Unmarshal(data, &currentStack)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Valid hardware for stack
-	_, err = checkStack(hardwareInfo, stack)
+	_, err = checkStack(hardwareInfo, currentStack)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -217,14 +220,14 @@ func TestCpuFlagsAvx512(t *testing.T) {
 	}
 
 	// Invalid hardware for stack
-	_, err = checkStack(hardwareInfo, stack)
+	_, err = checkStack(hardwareInfo, currentStack)
 	if err == nil {
 		t.Fatal("Stack should not match if avx512 is not available")
 	}
 }
 
 func TestNoCpuInHwInfo(t *testing.T) {
-	hwInfo := common.HwInfo{
+	hwInfo := hardware_info.HwInfo{
 		// All fields are nil or zero
 	}
 
@@ -233,40 +236,40 @@ func TestNoCpuInHwInfo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var stack common.Stack
-	err = yaml.Unmarshal(data, &stack)
+	var currentStack stack.Stack
+	err = yaml.Unmarshal(data, &currentStack)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// No memory in hardware info
-	_, err = checkStack(hwInfo, stack)
+	_, err = checkStack(hwInfo, currentStack)
 	if err == nil {
 		t.Fatal("No Memory in hardware_info should return err")
 	}
-	t.Log(err)
+	//t.Log(err)
 
-	hwInfo.Memory = &common.MemoryInfo{
+	hwInfo.Memory = &memory.MemoryInfo{
 		RamTotal:  17000000000,
 		SwapTotal: 2000000000,
 	}
 
 	// No disk space in hardware info
-	_, err = checkStack(hwInfo, stack)
+	_, err = checkStack(hwInfo, currentStack)
 	if err == nil {
 		t.Fatal("No Disk space in hardware_info should return err")
 	}
-	t.Log(err)
+	//t.Log(err)
 
-	hwInfo.Disk = make(map[string]*common.DirStats)
-	hwInfo.Disk["/"] = &common.DirStats{
+	hwInfo.Disk = make(map[string]*disk.DirStats)
+	hwInfo.Disk["/"] = &disk.DirStats{
 		Avail: 6000000000,
 	}
 
 	// No CPU in hardware info
-	_, err = checkStack(hwInfo, stack)
+	_, err = checkStack(hwInfo, currentStack)
 	if err == nil {
 		t.Fatal("No CPU in hardware_info should return err")
 	}
-	t.Log(err)
+	//t.Log(err)
 }

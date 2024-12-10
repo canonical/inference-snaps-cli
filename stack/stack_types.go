@@ -1,4 +1,4 @@
-package common
+package stack
 
 type StackResult struct {
 	Name       string   `json:"name"`

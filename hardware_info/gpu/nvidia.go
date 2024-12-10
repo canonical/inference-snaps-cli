@@ -1,11 +1,12 @@
 package gpu
 
 import (
-	"github.com/canonical/hardware-info/pci"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/canonical/hardware-info/hardware_info/pci"
 )
 
 func lookUpNvidiaVram(device pci.Device) (uint64, error) {

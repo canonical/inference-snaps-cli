@@ -1,10 +1,10 @@
-package main
+package hardware_info
 
 import (
-	"github.com/canonical/hardware-info/cpu"
-	"github.com/canonical/hardware-info/disk"
-	"github.com/canonical/hardware-info/gpu"
-	"github.com/canonical/hardware-info/memory"
+	"github.com/canonical/hardware-info/hardware_info/cpu"
+	"github.com/canonical/hardware-info/hardware_info/disk"
+	"github.com/canonical/hardware-info/hardware_info/gpu"
+	"github.com/canonical/hardware-info/hardware_info/memory"
 )
 
 type HwInfo struct {

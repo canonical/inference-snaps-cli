@@ -3,14 +3,15 @@ package selector
 import (
 	"testing"
 
-	"katemoss/common"
+	"github.com/canonical/hardware-info/hardware_info/gpu"
+	"github.com/canonical/hardware-info/stack"
 )
 
 func TestCheckGpuVendor(t *testing.T) {
 
 	gpuVendorId := "b33f"
 
-	hwInfoGpu := common.Gpu{
+	hwInfoGpu := gpu.Gpu{
 		VendorId:      gpuVendorId,
 		VendorName:    nil,
 		DeviceId:      "",
@@ -22,7 +23,7 @@ func TestCheckGpuVendor(t *testing.T) {
 		Properties:    nil,
 	}
 
-	stackDevice := common.StackDevice{
+	stackDevice := stack.StackDevice{
 		Type:     "gpu",
 		Bus:      nil,
 		VendorId: &gpuVendorId,
@@ -60,7 +61,7 @@ func TestCheckGpuVram(t *testing.T) {
 
 	var vram uint64 = 5000000000
 
-	hwInfoGpu := common.Gpu{
+	hwInfoGpu := gpu.Gpu{
 		VendorId:      "",
 		VendorName:    nil,
 		DeviceId:      "",
@@ -76,7 +77,7 @@ func TestCheckGpuVram(t *testing.T) {
 	}
 
 	stackVram := "4G"
-	stackDevice := common.StackDevice{
+	stackDevice := stack.StackDevice{
 		Type:     "gpu",
 		Bus:      nil,
 		VendorId: nil,

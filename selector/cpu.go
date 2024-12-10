@@ -3,10 +3,11 @@ package selector
 import (
 	"slices"
 
-	"katemoss/common"
+	"github.com/canonical/hardware-info/hardware_info/cpu"
+	"github.com/canonical/hardware-info/stack"
 )
 
-func checkCpus(stackDevice common.StackDevice, cpu common.CpuInfo) (float64, error) {
+func checkCpus(stackDevice stack.StackDevice, cpu cpu.CpuInfo) (float64, error) {
 	cpuScore := 0.0
 
 	// Vendor
@@ -38,7 +39,7 @@ func checkCpus(stackDevice common.StackDevice, cpu common.CpuInfo) (float64, err
 }
 
 // Apply the same "filter" logic as we have for the GPUs. See checkGpus() and checkGpu().
-func checkCpuModel(cpuModel common.CpuModel, stackDevice common.StackDevice) (float64, error) {
+func checkCpuModel(cpuModel cpu.Model, stackDevice stack.StackDevice) (float64, error) {
 	// Each CPU that matches increases the score by 1
 	score := 1.0
 

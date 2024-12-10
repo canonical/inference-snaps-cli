@@ -4,10 +4,11 @@ import (
 	"errors"
 	"strings"
 
-	"katemoss/common"
+	"github.com/canonical/hardware-info/hardware_info/gpu"
+	"github.com/canonical/hardware-info/stack"
 )
 
-func checkGpus(gpus []common.Gpu, stackDevice common.StackDevice) (float64, error) {
+func checkGpus(gpus []gpu.Gpu, stackDevice stack.StackDevice) (float64, error) {
 	for _, gpu := range gpus {
 		result, err := gpuMatchesStack(gpu, stackDevice)
 		if err != nil {
@@ -25,7 +26,7 @@ func checkGpus(gpus []common.Gpu, stackDevice common.StackDevice) (float64, erro
 // gpuMatchesStack checks if the GPU matches what is required by the stack definition.
 // This is done as a filter, based on the fields in the stack definition.
 // If the GPU from the hardware info passes all these filters, the GPU is a match.
-func gpuMatchesStack(gpu common.Gpu, stackDevice common.StackDevice) (bool, error) {
+func gpuMatchesStack(gpu gpu.Gpu, stackDevice stack.StackDevice) (bool, error) {
 
 	// If the stack has a Vendor ID requirement, check if the GPU's vendor matches
 	// Vendor IDs are hex number strings, so do a case-insensitive compare

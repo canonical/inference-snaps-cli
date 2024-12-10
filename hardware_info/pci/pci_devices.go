@@ -2,6 +2,7 @@ package pci
 
 import (
 	"fmt"
+
 	"github.com/jaypipes/pcidb"
 )
 

@@ -7,12 +7,13 @@ import (
 	"sort"
 	"strings"
 
-	"gopkg.in/yaml.v2"
-	"katemoss/common"
+	"github.com/canonical/hardware-info/hardware_info"
+	"github.com/canonical/hardware-info/stack"
+	"gopkg.in/yaml.v3"
 )
 
-func FindStack(hardwareInfo common.HwInfo, stacksDir string) (*common.StackResult, error) {
-	var foundStacks []common.StackResult
+func FindStack(hardwareInfo hardware_info.HwInfo, stacksDir string) (*stack.StackResult, error) {
+	var foundStacks []stack.StackResult
 
 	// Sanitise stack dir path
 	if !strings.HasSuffix(stacksDir, "/") {
@@ -36,32 +37,32 @@ func FindStack(hardwareInfo common.HwInfo, stacksDir string) (*common.StackResul
 			return nil, fmt.Errorf("%s: %s", stacksDir+file.Name(), err)
 		}
 
-		var stack common.Stack
-		err = yaml.Unmarshal(data, &stack)
+		var currentStack stack.Stack
+		err = yaml.Unmarshal(data, &currentStack)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %s", stacksDir, err)
 		}
 
-		score, err := checkStack(hardwareInfo, stack)
+		score, err := checkStack(hardwareInfo, currentStack)
 		if err != nil {
-			log.Printf("Stack %s not selected: %s", stack.Name, err)
+			log.Printf("Stack %s not selected: %s", currentStack.Name, err)
 			continue
 		}
 
 		if score > 0 {
-			foundStack := common.StackResult{
-				Name:       stack.Name,
-				Components: stack.Components,
+			foundStack := stack.StackResult{
+				Name:       currentStack.Name,
+				Components: currentStack.Components,
 				Score:      score,
 			}
 			foundStacks = append(foundStacks, foundStack)
-			log.Printf("Stack %s matches. Score = %f", stack.Name, score)
+			log.Printf("Stack %s matches. Score = %f", currentStack.Name, score)
 		}
 	}
 
 	// If none found, return err
 	if len(foundStacks) == 0 {
-		return nil, fmt.Errorf("no stack found matching hardware")
+		return nil, fmt.Errorf("no stack found matching this hardware")
 	}
 
 	// Sort by score (high to low) and return best match
@@ -74,7 +75,7 @@ func FindStack(hardwareInfo common.HwInfo, stacksDir string) (*common.StackResul
 	return &foundStacks[0], nil
 }
 
-func checkStack(hardwareInfo common.HwInfo, stack common.Stack) (float64, error) {
+func checkStack(hardwareInfo hardware_info.HwInfo, stack stack.Stack) (float64, error) {
 	stackScore := 0.0
 
 	// Enough memory

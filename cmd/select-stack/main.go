@@ -7,8 +7,8 @@ import (
 	"log"
 	"os"
 
-	"katemoss/common"
-	"katemoss/selector"
+	"github.com/canonical/hardware-info/hardware_info"
+	"github.com/canonical/hardware-info/selector"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 	flag.Parse()
 
 	// Read json piped in from the hardware-info app
-	var hardwareInfo common.HwInfo
+	var hardwareInfo hardware_info.HwInfo
 
 	err := json.NewDecoder(os.Stdin).Decode(&hardwareInfo)
 	if err != nil {

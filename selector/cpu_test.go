@@ -3,23 +3,24 @@ package selector
 import (
 	"testing"
 
-	"katemoss/common"
+	"github.com/canonical/hardware-info/hardware_info/cpu"
+	"github.com/canonical/hardware-info/stack"
 )
 
 func TestCheckCpu(t *testing.T) {
 	vendorId := "GenuineIntel"
-	stackDevice := common.StackDevice{
+	stackDevice := stack.StackDevice{
 		Type:     "cpu",
 		Bus:      nil,
 		VendorId: &vendorId,
 	}
 
-	hwInfoCpu := common.CpuInfo{
+	hwInfoCpu := cpu.CpuInfo{
 		Architecture: "",
 		CpuCount:     0,
 		Vendor:       vendorId,
-		Models: []common.CpuModel{
-			common.CpuModel{},
+		Models: []cpu.Model{
+			{},
 		},
 	}
 

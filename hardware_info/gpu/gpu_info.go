@@ -2,8 +2,9 @@ package gpu
 
 import (
 	"fmt"
-	"github.com/canonical/hardware-info/pci"
 	"log"
+
+	"github.com/canonical/hardware-info/hardware_info/pci"
 )
 
 func Info(friendlyNames bool) ([]Gpu, error) {

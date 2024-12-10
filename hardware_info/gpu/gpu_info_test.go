@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/canonical/hardware-info/pci"
+	"github.com/canonical/hardware-info/hardware_info/pci"
 )
 
 var lspciFiles = []string{
