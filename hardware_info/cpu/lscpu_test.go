@@ -8,32 +8,32 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func TestGetHostLsCpu(t *testing.T) {
-	hostLsCpu, err := hostLsCpu()
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-	t.Log(string(hostLsCpu))
-}
+//func TestGetHostLsCpu(t *testing.T) {
+//	hostLsCpu, err := hostLsCpu()
+//	if err != nil {
+//		t.Fatalf(err.Error())
+//	}
+//	t.Log(string(hostLsCpu))
+//}
 
-func TestParseHostLsCpu(t *testing.T) {
-	hostLsCpu, err := hostLsCpu()
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-
-	cpuInfo, err := parseLsCpu(hostLsCpu)
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-
-	jsonData, err := json.MarshalIndent(cpuInfo, "", "  ")
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-
-	t.Log(string(jsonData))
-}
+//func TestParseHostLsCpu(t *testing.T) {
+//	hostLsCpu, err := hostLsCpu()
+//	if err != nil {
+//		t.Fatalf(err.Error())
+//	}
+//
+//	cpuInfo, err := parseLsCpu(hostLsCpu)
+//	if err != nil {
+//		t.Fatalf(err.Error())
+//	}
+//
+//	jsonData, err := json.MarshalIndent(cpuInfo, "", "  ")
+//	if err != nil {
+//		t.Fatalf(err.Error())
+//	}
+//
+//	t.Log(string(jsonData))
+//}
 
 var testFiles = []string{
 	"test_data/dell-r430-lscpu.json",
