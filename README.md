@@ -47,7 +47,7 @@ The result is written as json to STDOUT, while any other log messages are availa
 Example:
 
 ```bash
-$ ml-snap-utils.hardware-info | ml-snap-utils.stack-selector --stacks=test_data/stacks/
+$ ml-snap-utils.hardware-info | ml-snap-utils.select-stack --stacks=test_data/stacks/
 2024/12/10 11:28:03 Vendor specific info for Intel GPU not implemented
 2024/12/10 11:28:03 Stack cpu-f32 not selected: not enough memory
 2024/12/10 11:28:03 Stack fallback-cpu matches. Score = 4.000000

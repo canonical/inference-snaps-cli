@@ -46,7 +46,7 @@ apps:
       - opengl
     command: bin/hardware-info
 
-  stack-selector:
+  select-stack:
     plugs:
       - home
     command: bin/select-stack
