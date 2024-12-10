@@ -1,27 +1,6 @@
-# Hardware Detect
+# Hardware Info
 
 This program detects system hardware and provides a summary in JSON format.
-
-## Build
-
-To build the CLI for hardware-info, run the following command in the root of this repository:
-
-```bash
-go build github.com/canonical/hardware-info/cmd/hardware-info
-```
-
-To build a snap for this application, run:
-
-```bash
-snapcraft -v
-```
-
-Then install the snap and connect the required interfaces:
-
-```bash
-sudo snap install --dangerous ./hardware-info_*.snap
-sudo snap connect hardware-info:hardware-observe
-```
 
 ## Usage
 
