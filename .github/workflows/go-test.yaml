@@ -15,13 +15,13 @@ jobs:
           go-version: '1.23.x'
       - name: Hardware info tests
         run: |
-          go test -v -failfast ./hardware_info/*
+          go test -v -failfast ./pkg/hardware_info/*
       - name: Selector tests
         run: |
-          go test -v -failfast ./selector
+          go test -v -failfast ./pkg/selector
       - name: Type tests
         run: |
-          go test -v -failfast ./types
+          go test -v -failfast ./pkg/types
       - name: Util tests
         run: |
-          go test -v -failfast ./utils
+          go test -v -failfast ./pkg/utils
