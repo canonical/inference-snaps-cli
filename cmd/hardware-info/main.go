@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/canonical/hardware-info/hardware_info"
+	"github.com/canonical/hardware-info/hardware_info/common"
 	"github.com/canonical/hardware-info/hardware_info/cpu"
 	"github.com/canonical/hardware-info/hardware_info/disk"
 	"github.com/canonical/hardware-info/hardware_info/gpu"
@@ -24,7 +24,7 @@ func main() {
 	flag.StringVar(&fileOutput, "file", "", "Output json to this file. Default output is to stdout.")
 	flag.Parse()
 
-	var hwInfo hardware_info.HwInfo
+	var hwInfo common.HwInfo
 
 	memoryInfo, err := memory.Info()
 	if err != nil {

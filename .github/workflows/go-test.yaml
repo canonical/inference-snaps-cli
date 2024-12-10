@@ -15,11 +15,7 @@ jobs:
           go-version: '1.23.x'
       - name: Hardware info tests
         run: |
-          go test -v -failfast ./hardware_info/ &&
-          go test -v -failfast ./hardware_info/disk &&
-          go test -v -failfast ./hardware_info/gpu &&
-          go test -v -failfast ./hardware_info/memory &&
-          go test -v -failfast ./hardware_info/pci
+          go test -v -failfast ./hardware_info/*
       - name: Selector tests
         run: |
           go test -v -failfast ./selector

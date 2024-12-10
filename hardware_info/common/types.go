@@ -1,4 +1,4 @@
-package hardware_info
+package common
 
 import (
 	"github.com/canonical/hardware-info/hardware_info/cpu"

@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/canonical/hardware-info/hardware_info"
+	"github.com/canonical/hardware-info/hardware_info/common"
 	"github.com/canonical/hardware-info/hardware_info/disk"
 	"github.com/canonical/hardware-info/hardware_info/memory"
 	"github.com/canonical/hardware-info/stack"
@@ -35,7 +35,7 @@ func TestFindStack(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			var hardwareInfo hardware_info.HwInfo
+			var hardwareInfo common.HwInfo
 			err = json.Unmarshal(data, &hardwareInfo)
 			if err != nil {
 				t.Fatal(err)
@@ -58,7 +58,7 @@ func TestDiskCheck(t *testing.T) {
 		Free:  0,
 		Avail: 400000000,
 	}
-	hwInfo := hardware_info.HwInfo{}
+	hwInfo := common.HwInfo{}
 	hwInfo.Disk = make(map[string]*disk.DirStats)
 	hwInfo.Disk["/"] = &dirStat
 	hwInfo.Disk["/var/lib/snapd/snaps"] = &dirStat
@@ -85,7 +85,7 @@ func TestDiskCheck(t *testing.T) {
 }
 
 func TestMemoryCheck(t *testing.T) {
-	hwInfo := hardware_info.HwInfo{
+	hwInfo := common.HwInfo{
 		Memory: &memory.MemoryInfo{
 			RamTotal:  200000000,
 			SwapTotal: 200000000,
@@ -124,7 +124,7 @@ func TestCpuFlagsAvx2(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var hardwareInfo hardware_info.HwInfo
+	var hardwareInfo common.HwInfo
 	err = json.Unmarshal(data, &hardwareInfo)
 	if err != nil {
 		t.Fatal(err)
@@ -181,7 +181,7 @@ func TestCpuFlagsAvx512(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var hardwareInfo hardware_info.HwInfo
+	var hardwareInfo common.HwInfo
 	err = json.Unmarshal(data, &hardwareInfo)
 	if err != nil {
 		t.Fatal(err)
@@ -227,7 +227,7 @@ func TestCpuFlagsAvx512(t *testing.T) {
 }
 
 func TestNoCpuInHwInfo(t *testing.T) {
-	hwInfo := hardware_info.HwInfo{
+	hwInfo := common.HwInfo{
 		// All fields are nil or zero
 	}
 

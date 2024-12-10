@@ -7,12 +7,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/canonical/hardware-info/hardware_info"
+	"github.com/canonical/hardware-info/hardware_info/common"
 	"github.com/canonical/hardware-info/stack"
 	"gopkg.in/yaml.v3"
 )
 
-func FindStack(hardwareInfo hardware_info.HwInfo, stacksDir string) (*stack.StackResult, error) {
+func FindStack(hardwareInfo common.HwInfo, stacksDir string) (*stack.StackResult, error) {
 	var foundStacks []stack.StackResult
 
 	// Sanitise stack dir path
@@ -75,7 +75,7 @@ func FindStack(hardwareInfo hardware_info.HwInfo, stacksDir string) (*stack.Stac
 	return &foundStacks[0], nil
 }
 
-func checkStack(hardwareInfo hardware_info.HwInfo, stack stack.Stack) (float64, error) {
+func checkStack(hardwareInfo common.HwInfo, stack stack.Stack) (float64, error) {
 	stackScore := 0.0
 
 	// Enough memory
