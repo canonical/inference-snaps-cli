@@ -1,4 +1,4 @@
-module github.com/canonical/hardware-info
+module github.com/canonical/ml-snap-utils
 
 go 1.23.2
 

@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/canonical/hardware-info/pkg/hardware_info/disk"
-	"github.com/canonical/hardware-info/pkg/hardware_info/memory"
-	"github.com/canonical/hardware-info/pkg/types"
+	"github.com/canonical/ml-snap-utils/pkg/hardware_info/disk"
+	"github.com/canonical/ml-snap-utils/pkg/hardware_info/memory"
+	"github.com/canonical/ml-snap-utils/pkg/types"
 	"gopkg.in/yaml.v3"
 )
 

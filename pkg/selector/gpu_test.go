@@ -3,8 +3,8 @@ package selector
 import (
 	"testing"
 
-	"github.com/canonical/hardware-info/pkg/hardware_info/gpu"
-	"github.com/canonical/hardware-info/pkg/types"
+	"github.com/canonical/ml-snap-utils/pkg/hardware_info/gpu"
+	"github.com/canonical/ml-snap-utils/pkg/types"
 )
 
 func TestCheckGpuVendor(t *testing.T) {

@@ -7,8 +7,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/canonical/hardware-info/pkg/selector"
-	"github.com/canonical/hardware-info/pkg/types"
+	"github.com/canonical/ml-snap-utils/pkg/selector"
+	"github.com/canonical/ml-snap-utils/pkg/types"
 )
 
 func main() {

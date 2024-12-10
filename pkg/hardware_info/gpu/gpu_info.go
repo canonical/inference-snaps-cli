@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/canonical/hardware-info/pkg/hardware_info/pci"
+	"github.com/canonical/ml-snap-utils/pkg/hardware_info/pci"
 )
 
 func Info(friendlyNames bool) ([]Gpu, error) {

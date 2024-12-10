@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/canonical/hardware-info/pkg/utils"
+	"github.com/canonical/ml-snap-utils/pkg/utils"
 )
 
 var testDirs = []string{

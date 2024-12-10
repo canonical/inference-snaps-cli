@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/canonical/hardware-info/pkg/hardware_info/pci"
+	"github.com/canonical/ml-snap-utils/pkg/hardware_info/pci"
 )
 
 func lookUpAmdVram(device pci.Device) (uint64, error) {

@@ -4,9 +4,9 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/canonical/hardware-info/pkg/hardware_info/gpu"
-	"github.com/canonical/hardware-info/pkg/types"
-	"github.com/canonical/hardware-info/pkg/utils"
+	"github.com/canonical/ml-snap-utils/pkg/hardware_info/gpu"
+	"github.com/canonical/ml-snap-utils/pkg/types"
+	"github.com/canonical/ml-snap-utils/pkg/utils"
 )
 
 func checkGpus(gpus []gpu.Gpu, stackDevice types.StackDevice) (float64, error) {
