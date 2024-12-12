@@ -1,0 +1,146 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Stack Definition",
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "maintainer": {
+        "type": "string"
+      },
+      "devices": {
+        "type": "object",
+        "properties": {
+          "any": {
+            "$ref": "#/$defs/deviceList"
+          },
+          "all": {
+            "$ref": "#/$defs/deviceList"
+          }
+        }
+      },
+      "memory": {
+        "type": "string",
+        "pattern": "^\\d+[GM]$"
+      },
+      "disk-space": {
+        "type": "string",
+        "pattern": "^\\d+[GM]$"
+      },
+      "components": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "configurations": {
+        "type": "object",
+        "patternProperties": {
+          "^[a-z0-9-]+$": {}
+        },
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "name",
+      "description",
+      "maintainer",
+      "devices",
+      "memory",
+      "disk-space",
+      "components"
+    ],
+    "additionalProperties": false,
+    "$defs": {
+      "hex": {
+        "type": "string",
+        "pattern": "^0x[0-9a-f]+$"
+      },
+      "deviceList": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "cpu",
+                "gpu"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "anyOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "cpu"
+                },
+                "vendor-id": {
+                  "type": "string"
+                },
+                "families": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/hex"
+                  }
+                },
+                "architectures": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "amd64"
+                    ]
+                  }
+                },
+                "flags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "properties": {
+                "type": {
+                  "const": "gpu"
+                },
+                "bus": {
+                  "type": "string",
+                  "enum": [
+                    "pci"
+                  ]
+                },
+                "vendor-id": {
+                  "$ref": "#/$defs/hex"
+                },
+                "vram": {
+                  "type": "string",
+                  "pattern": "^\\d+[GM]$"
+                },
+                "compute-capability": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^(==|>=|<=|<|>)?\\d+(\\.\\d+)?$"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        }
+      }
+    }
+  }
+  
