@@ -24,12 +24,10 @@
         }
       },
       "memory": {
-        "type": "string",
-        "pattern": "^\\d+[GM]$"
+        "$ref": "#/$defs/storageSpace"
       },
       "disk-space": {
-        "type": "string",
-        "pattern": "^\\d+[GM]$"
+        "$ref": "#/$defs/storageSpace"
       },
       "components": {
         "type": "array",
@@ -59,6 +57,10 @@
       "hex": {
         "type": "string",
         "pattern": "^0x[0-9a-f]+$"
+      },
+      "storageSpace": {
+        "type": "string",
+        "pattern": "^\\d+[GM]$"
       },
       "deviceList": {
         "type": "array",
@@ -125,8 +127,7 @@
                   "$ref": "#/$defs/hex"
                 },
                 "vram": {
-                  "type": "string",
-                  "pattern": "^\\d+[GM]$"
+                  "$ref": "#/$defs/storageSpace"
                 },
                 "compute-capability": {
                   "type": "array",
