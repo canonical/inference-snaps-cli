@@ -3,7 +3,7 @@ package types
 type StackResult struct {
 	Name           string    `json:"name"`
 	Components     []string  `json:"components"`
-	Configurations StackConf `yaml:"configurations"`
+	Configurations StackConf `json:"configurations"`
 	Score          float64   `json:"score"`
 }
 
