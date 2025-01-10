@@ -76,7 +76,7 @@ func computeCapability(device pci.Device) (string, error) {
 }
 
 func findNvidiaSmi() (string, error) {
-	nvidiaSmi := "nvidia-smi" // Fall back to find in PATH
+	nvidiaSmiFallback := "nvidia-smi" // Fall back to find in PATH
 	nvidiaSmiHostFs := "/var/lib/snapd/hostfs/usr/bin/nvidia-smi"
 	nvidiaSmiTmp := "/tmp/nvidia-smi"
 
@@ -85,25 +85,31 @@ func findNvidiaSmi() (string, error) {
 		nvidia-smi from the host can be accessed. This path is read-only without execution, so we need to copy it to
 		another location first and then fix permissions.
 	*/
-	if _, err := os.Stat(nvidiaSmiHostFs); err == nil {
-		err = utils.CopyFile(nvidiaSmiHostFs, nvidiaSmiTmp)
-		if err != nil {
-			return nvidiaSmi, err
+	info, err := os.Stat(nvidiaSmiHostFs)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			// Not inside a snap or nvidia-smi is not on the host. Fall through to fallback.
+		} else {
+			// A different error occurred
+			return nvidiaSmiFallback, err
 		}
-		err = os.Chmod(nvidiaSmiTmp, 0755)
-		if err != nil {
-			log.Fatal(err)
-		}
-		nvidiaSmi = nvidiaSmiTmp
-	} else if errors.Is(err, os.ErrNotExist) {
-		/*
-			Not inside a snap, system-backup interface not connected, or nvidia-smi is not on the host.
-			Leave nvidiaSmi path unchanged, so that we search for it in PATH.
-		*/
 	} else {
-		// A different error occurred
-		return nvidiaSmi, err
+		// File exists. Check if the file is readable.
+		if info.Mode().Perm()&0444 == 0444 {
+			err = utils.CopyFile(nvidiaSmiHostFs, nvidiaSmiTmp)
+			if err != nil {
+				return nvidiaSmiFallback, err
+			}
+			err = os.Chmod(nvidiaSmiTmp, 0755)
+			if err != nil {
+				return nvidiaSmiFallback, err
+			}
+			return nvidiaSmiTmp, nil
+		} else {
+			// File is not readable, fall through to fallback.
+			log.Println("Can't access hostfs. Try connecting the system-backup interface.")
+		}
 	}
 
-	return nvidiaSmi, nil
+	return nvidiaSmiFallback, nil
 }
