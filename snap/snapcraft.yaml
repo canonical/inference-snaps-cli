@@ -44,6 +44,7 @@ apps:
     plugs:
       - hardware-observe
       - opengl
+      - system-backup
     command: bin/hardware-info
 
   select-stack:
