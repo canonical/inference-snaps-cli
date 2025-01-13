@@ -77,25 +77,35 @@ func computeCapability(device pci.Device) (string, error) {
 
 func findNvidiaSmi() (string, error) {
 	nvidiaSmiFallback := "nvidia-smi" // Fall back to find in PATH
-	nvidiaSmiHostFs := "/var/lib/snapd/hostfs/usr/bin/nvidia-smi"
+	hostFs := "/var/lib/snapd/hostfs"
+	nvidiaSmiHostFs := hostFs + "/usr/bin/nvidia-smi"
 	nvidiaSmiTmp := "/tmp/nvidia-smi"
 
-	/*
-		If we are running inside a snap, and the snap has access to the host file system via the system-backup interface,
-		nvidia-smi from the host can be accessed. This path is read-only without execution, so we need to copy it to
-		another location first and then fix permissions.
-	*/
-	info, err := os.Stat(nvidiaSmiHostFs)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			// Not inside a snap or nvidia-smi is not on the host. Fall through to fallback.
-		} else {
-			// A different error occurred
-			return nvidiaSmiFallback, err
+	// If the hostfs path exists, we are inside a snap
+	infoHostFs, err := os.Stat(hostFs)
+	// No error means the path exists
+	if err == nil {
+		// If it is not readable, the system-backup interface is missing
+		if infoHostFs.Mode().Perm()&0444 == 0444 {
+			log.Println("Can't access hostfs. Try connecting the system-backup interface.")
+			return nvidiaSmiFallback, nil
 		}
-	} else {
-		// File exists. Check if the file is readable.
-		if info.Mode().Perm()&0444 == 0444 {
+
+		/*
+			If we are running inside a snap, and the snap has access to the host file system via the system-backup interface,
+			nvidia-smi from the host can be accessed. This path is read-only without execution, so we need to copy it to
+			another location first and then fix permissions.
+		*/
+		_, err = os.Stat(nvidiaSmiHostFs)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				// Not inside a snap, or nvidia-smi is not on the host. Fall through to fallback.
+				return nvidiaSmiFallback, nil
+			} else {
+				// A different error occurred
+				return nvidiaSmiFallback, err
+			}
+		} else {
 			err = utils.CopyFile(nvidiaSmiHostFs, nvidiaSmiTmp)
 			if err != nil {
 				return nvidiaSmiFallback, err
@@ -105,11 +115,9 @@ func findNvidiaSmi() (string, error) {
 				return nvidiaSmiFallback, err
 			}
 			return nvidiaSmiTmp, nil
-		} else {
-			// File is not readable, fall through to fallback.
-			log.Println("Can't access hostfs. Try connecting the system-backup interface.")
 		}
 	}
 
+	// Not inside a snap, always use the fallback
 	return nvidiaSmiFallback, nil
 }
