@@ -1,4 +1,4 @@
-package selector
+package select_stack
 
 import (
 	"fmt"
@@ -12,8 +12,19 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func FindStack(hardwareInfo types.HwInfo, stacksDir string) (*types.StackResult, error) {
-	var foundStacks []types.StackResult
+func BestStack(compatibleStacks []types.StackResult) (*types.StackResult, error) {
+	// Sort by score (high to low) and return best match
+	sort.Slice(compatibleStacks, func(i, j int) bool {
+		return compatibleStacks[i].Score > compatibleStacks[j].Score
+	})
+
+	// TODO find duplicate scores, use a different metric to choose one of them
+
+	return &compatibleStacks[0], nil
+}
+
+func LoadStacksFromDir(stacksDir string) ([]types.Stack, error) {
+	var stacks []types.Stack
 
 	// Sanitise stack dir path
 	if !strings.HasSuffix(stacksDir, "/") {
@@ -43,37 +54,102 @@ func FindStack(hardwareInfo types.HwInfo, stacksDir string) (*types.StackResult,
 			return nil, fmt.Errorf("%s: %s", stacksDir, err)
 		}
 
-		score, err := checkStack(hardwareInfo, currentStack)
-		if err != nil {
-			log.Printf("Stack %s not selected: %s", currentStack.Name, err)
-			continue
-		}
+		stacks = append(stacks, currentStack)
+	}
+	return stacks, nil
+}
 
-		if score > 0 {
-			foundStack := types.StackResult{
+func ScoreStacks(hardwareInfo types.HwInfo, stacks []types.Stack) ([]types.StackResult, error) {
+	var scoredStacks []types.StackResult
+
+	//tpuStacks := stacksForType(stacks, "tpu")
+	gpuStacks := stacksForType(stacks, "gpu")
+	cpuStacks := stacksForType(stacks, "cpu")
+
+	// 1. TODO If hwinfo contains a TPU/NPU, check these stacks first
+
+	// 2. Next check generic GPUs
+	if len(hardwareInfo.Gpus) > 0 {
+		log.Println("System has a GPU. Checking GPU stacks.")
+
+		gpuStackMatches := 0
+		for _, currentStack := range gpuStacks {
+			score, err := checkStack(hardwareInfo, currentStack)
+			if score > 0 {
+				gpuStackMatches++
+			}
+
+			scoredStack := types.StackResult{
 				Name:           currentStack.Name,
 				Components:     currentStack.Components,
 				Configurations: currentStack.Configurations,
 				Score:          score,
 			}
-			foundStacks = append(foundStacks, foundStack)
-			log.Printf("Stack %s matches. Score = %f", currentStack.Name, score)
+
+			if err != nil {
+				scoredStack.Comment = err.Error()
+			}
+
+			scoredStacks = append(scoredStacks, scoredStack)
+		}
+
+		log.Printf("Found %d matching GPU stacks", gpuStackMatches)
+		if gpuStackMatches > 0 {
+			return scoredStacks, nil
 		}
 	}
 
-	// If none found, return err
-	if len(foundStacks) == 0 {
-		return nil, fmt.Errorf("no stack found matching this hardware")
+	// 3. If no stacks have been found and returned, check CPU stacks
+	log.Println("Checking CPU stacks.")
+
+	cpuStackMatches := 0
+	for _, currentStack := range cpuStacks {
+		score, err := checkStack(hardwareInfo, currentStack)
+		if score > 0 {
+			cpuStackMatches++
+		}
+
+		foundStack := types.StackResult{
+			Name:           currentStack.Name,
+			Components:     currentStack.Components,
+			Configurations: currentStack.Configurations,
+			Score:          score,
+		}
+
+		if err != nil {
+			foundStack.Comment = err.Error()
+		}
+
+		scoredStacks = append(scoredStacks, foundStack)
+	}
+	log.Printf("Found %d matching CPU stacks", cpuStackMatches)
+
+	if len(scoredStacks) > 0 {
+		return scoredStacks, nil
 	}
 
-	// Sort by score (high to low) and return best match
-	sort.Slice(foundStacks, func(i, j int) bool {
-		return foundStacks[i].Score > foundStacks[j].Score
-	})
+	// If none found, return err
+	return nil, fmt.Errorf("no stack found matching this hardware")
+}
 
-	// TODO find duplicate scores, use a different metric to choose one of them
-
-	return &foundStacks[0], nil
+func stacksForType(allStacks []types.Stack, deviceType string) []types.Stack {
+	var stacks []types.Stack
+iterateStacks:
+	for _, stack := range allStacks {
+		for _, device := range stack.Devices.All {
+			if device.Type == deviceType {
+				stacks = append(stacks, stack)
+				continue iterateStacks
+			}
+		}
+		for _, device := range stack.Devices.Any {
+			if device.Type == deviceType {
+				stacks = append(stacks, stack)
+				continue iterateStacks
+			}
+		}
+	}
+	return stacks
 }
 
 func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (float64, error) {

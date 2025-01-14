@@ -1,4 +1,4 @@
-package selector
+package select_stack
 
 import (
 	"slices"

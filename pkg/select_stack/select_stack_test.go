@@ -1,8 +1,9 @@
-package selector
+package select_stack
 
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"os"
 	"testing"
 
@@ -40,12 +41,23 @@ func TestFindStack(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			result, err := FindStack(hardwareInfo, "../../test_data/stacks")
+			allStacks, err := LoadStacksFromDir("../../test_data/stack-snap")
+			if err != nil {
+				log.Fatal(err)
+			}
+			scoredStacks, err := ScoreStacks(hardwareInfo, allStacks)
+			if err != nil {
+				log.Fatal(err)
+			}
+			bestStack, err := BestStack(scoredStacks)
+			if err != nil {
+				log.Fatal(err)
+			}
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			t.Logf("Found stack %s which installs %v", result.Name, result.Components)
+			t.Logf("Found stack %s which installs %v", bestStack.Name, bestStack.Components)
 		})
 	}
 }
