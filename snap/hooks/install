@@ -1,0 +1,5 @@
+#!/bin/bash -e
+
+mkdir $SNAP_DATA/bin
+cp /var/lib/snapd/hostfs/usr/bin/nvidia-smi $SNAP_DATA/bin || true
+chmod -R +x $SNAP_DATA/bin
