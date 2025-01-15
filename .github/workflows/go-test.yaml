@@ -18,7 +18,7 @@ jobs:
           go test -v -failfast ./pkg/hardware_info/*
       - name: Selector tests
         run: |
-          go test -v -failfast ./pkg/select_stack
+          go test -v -failfast ./pkg/selector
       - name: Type tests
         run: |
           go test -v -failfast ./pkg/types

@@ -1,4 +1,4 @@
-package select_stack
+package selector
 
 import (
 	"encoding/json"

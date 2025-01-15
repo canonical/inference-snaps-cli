@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/canonical/ml-snap-utils/pkg/select_stack"
+	"github.com/canonical/ml-snap-utils/pkg/selector"
 	"github.com/canonical/ml-snap-utils/pkg/types"
 )
 
@@ -34,15 +34,15 @@ func main() {
 
 	var resultStr []byte
 
-	allStacks, err := select_stack.LoadStacksFromDir(stacksDir)
+	allStacks, err := selector.LoadStacksFromDir(stacksDir)
 	if err != nil {
 		log.Fatal(err)
 	}
-	scoredStacks, err := select_stack.ScoreStacks(hardwareInfo, allStacks)
+	scoredStacks, err := selector.ScoreStacks(hardwareInfo, allStacks)
 	if err != nil {
 		log.Fatal(err)
 	}
-	bestStack, err := select_stack.BestStack(scoredStacks)
+	bestStack, err := selector.BestStack(scoredStacks)
 	if err != nil {
 		log.Fatal(err)
 	}
