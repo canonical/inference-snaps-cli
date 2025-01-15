@@ -157,7 +157,7 @@ func TestCpuFlagsAvx2(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("Matching score: %f", result)
+	t.Logf("Matching score: %d", result)
 
 	file, err = os.Open("../../test_data/hardware_info/hp-dl380p-gen8.json")
 	if err != nil {
