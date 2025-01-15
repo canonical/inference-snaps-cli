@@ -7,8 +7,8 @@ import (
 	"github.com/canonical/ml-snap-utils/pkg/types"
 )
 
-func checkCpus(stackDevice types.StackDevice, cpu cpu.CpuInfo) (float64, error) {
-	cpuScore := 0.0
+func checkCpus(stackDevice types.StackDevice, cpu cpu.CpuInfo) (int, error) {
+	cpuScore := 0
 
 	// Vendor
 	if stackDevice.VendorId != nil {
@@ -39,16 +39,16 @@ func checkCpus(stackDevice types.StackDevice, cpu cpu.CpuInfo) (float64, error) 
 }
 
 // Apply the same "filter" logic as we have for the GPUs. See checkGpus() and checkGpu().
-func checkCpuModel(cpuModel cpu.Model, stackDevice types.StackDevice) (float64, error) {
+func checkCpuModel(cpuModel cpu.Model, stackDevice types.StackDevice) (int, error) {
 	// Each CPU that matches increases the score by 1
-	score := 1.0
+	score := WEIGHT_CPU
 
 	// Flags
 	for _, flag := range stackDevice.Flags {
 		if !slices.Contains(cpuModel.Flags, flag) {
 			return 0, nil
 		}
-		score += 0.1 // flag matched has a score of 0.1
+		score += WEIGHT_CPU_FLAG // flag matched has a score of 0.1
 	}
 
 	// TODO

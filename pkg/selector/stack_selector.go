@@ -57,7 +57,7 @@ func FindStack(hardwareInfo types.HwInfo, stacksDir string) (*types.StackResult,
 				Score:          score,
 			}
 			foundStacks = append(foundStacks, foundStack)
-			log.Printf("Stack %s matches. Score = %f", currentStack.Name, score)
+			log.Printf("Stack %s matches. Score = %d", currentStack.Name, score)
 		}
 	}
 
@@ -76,8 +76,8 @@ func FindStack(hardwareInfo types.HwInfo, stacksDir string) (*types.StackResult,
 	return &foundStacks[0], nil
 }
 
-func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (float64, error) {
-	stackScore := 0.0
+func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, error) {
+	stackScore := 0
 
 	// Enough memory
 	if stack.Memory != nil {
