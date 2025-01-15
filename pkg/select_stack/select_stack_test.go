@@ -41,7 +41,7 @@ func TestFindStack(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			allStacks, err := LoadStacksFromDir("../../test_data/stack-snap")
+			allStacks, err := LoadStacksFromDir("../../test_data/stacks")
 			if err != nil {
 				log.Fatal(err)
 			}
