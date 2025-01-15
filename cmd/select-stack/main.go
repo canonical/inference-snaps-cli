@@ -59,10 +59,10 @@ func main() {
 			if stack.Score == 0 {
 				log.Printf("Stack %s not selected: %s", stack.Name, stack.Comment)
 			} else {
-				log.Printf("Stack %s matches. Score = %f", stack.Name, stack.Score)
+				log.Printf("Stack %s matches. Score = %d", stack.Name, stack.Score)
 			}
 		}
-		log.Printf("Best stack: %s. Score = %f", bestStack.Name, bestStack.Score)
+		log.Printf("Best stack: %s. Score = %d", bestStack.Name, bestStack.Score)
 
 	} else {
 		if prettyOutput {

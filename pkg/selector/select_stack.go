@@ -1,8 +1,8 @@
 package selector
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"os"
 	"sort"
 	"strings"
@@ -62,54 +62,11 @@ func LoadStacksFromDir(stacksDir string) ([]types.Stack, error) {
 func ScoreStacks(hardwareInfo types.HwInfo, stacks []types.Stack) ([]types.StackResult, error) {
 	var scoredStacks []types.StackResult
 
-	//tpuStacks := stacksForType(stacks, "tpu")
-	gpuStacks := stacksForType(stacks, "gpu")
-	cpuStacks := stacksForType(stacks, "cpu")
-
-	// 1. TODO If hwinfo contains a TPU/NPU, check these stacks first
-
-	// 2. Next check generic GPUs
-	if len(hardwareInfo.Gpus) > 0 {
-		log.Println("System has a GPU. Checking GPU stacks.")
-
-		gpuStackMatches := 0
-		for _, currentStack := range gpuStacks {
-			score, err := checkStack(hardwareInfo, currentStack)
-			if score > 0 {
-				gpuStackMatches++
-			}
-
-			scoredStack := types.StackResult{
-				Name:           currentStack.Name,
-				Components:     currentStack.Components,
-				Configurations: currentStack.Configurations,
-				Score:          score,
-			}
-
-			if err != nil {
-				scoredStack.Comment = err.Error()
-			}
-
-			scoredStacks = append(scoredStacks, scoredStack)
-		}
-
-		log.Printf("Found %d matching GPU stacks", gpuStackMatches)
-		if gpuStackMatches > 0 {
-			return scoredStacks, nil
-		}
-	}
-
-	// 3. If no stacks have been found and returned, check CPU stacks
-	log.Println("Checking CPU stacks.")
-
-	cpuStackMatches := 0
-	for _, currentStack := range cpuStacks {
+	compatibleStacks := 0
+	for _, currentStack := range stacks {
 		score, err := checkStack(hardwareInfo, currentStack)
-		if score > 0 {
-			cpuStackMatches++
-		}
 
-		foundStack := types.StackResult{
+		scoredStack := types.StackResult{
 			Name:           currentStack.Name,
 			Components:     currentStack.Components,
 			Configurations: currentStack.Configurations,
@@ -117,19 +74,21 @@ func ScoreStacks(hardwareInfo types.HwInfo, stacks []types.Stack) ([]types.Stack
 		}
 
 		if err != nil {
-			foundStack.Comment = err.Error()
+			scoredStack.Comment = err.Error()
 		}
 
-		scoredStacks = append(scoredStacks, foundStack)
-	}
-	log.Printf("Found %d matching CPU stacks", cpuStackMatches)
+		if score > 0 {
+			compatibleStacks++
+		}
 
-	if len(scoredStacks) > 0 {
-		return scoredStacks, nil
+		scoredStacks = append(scoredStacks, scoredStack)
 	}
 
-	// If none found, return err
-	return nil, fmt.Errorf("no stack found matching this hardware")
+	if compatibleStacks == 0 {
+		return scoredStacks, errors.New("no stacks found for this hardware")
+	}
+
+	return scoredStacks, nil
 }
 
 func stacksForType(allStacks []types.Stack, deviceType string) []types.Stack {
@@ -152,8 +111,8 @@ iterateStacks:
 	return stacks
 }
 
-func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (float64, error) {
-	stackScore := 0.0
+func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, error) {
+	stackScore := 0
 
 	// Enough memory
 	if stack.Memory != nil {
