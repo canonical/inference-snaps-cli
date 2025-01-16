@@ -3,7 +3,6 @@ package selector
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"os"
 	"testing"
 
@@ -43,22 +42,39 @@ func TestFindStack(t *testing.T) {
 
 			allStacks, err := LoadStacksFromDir("../../test_data/stacks")
 			if err != nil {
-				log.Fatal(err)
+				t.Fatal(err)
 			}
 			scoredStacks, err := ScoreStacks(hardwareInfo, allStacks)
 			if err != nil {
-				log.Fatal(err)
+				t.Fatal(err)
 			}
-			bestStack, err := BestStack(scoredStacks)
-			if err != nil {
-				log.Fatal(err)
-			}
+			bestStack, err := TopStack(scoredStacks)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			t.Logf("Found stack %s which installs %v", bestStack.Name, bestStack.Components)
 		})
+	}
+}
+
+func TestFindStackEmpty(t *testing.T) {
+	hwInfo := types.HwInfo{}
+
+	allStacks, err := LoadStacksFromDir("../../test_data/stacks")
+	if err != nil {
+		t.Fatal(err)
+	}
+	scoredStacks, err := ScoreStacks(hwInfo, allStacks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bestStack, err := TopStack(scoredStacks)
+	if err == nil {
+		t.Fatal("Empty stack dir should return an error for best stack")
+	}
+	if bestStack != nil {
+		t.Fatal("No stack should be found in empty stacks dir")
 	}
 }
 

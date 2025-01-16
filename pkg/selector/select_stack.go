@@ -12,15 +12,25 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func BestStack(compatibleStacks []types.StackResult) (*types.StackResult, error) {
+func TopStack(scoredStacks []types.StackResult) (*types.StackResult, error) {
+	if len(scoredStacks) == 0 {
+		return nil, errors.New("no stacks found")
+	}
+
 	// Sort by score (high to low) and return best match
-	sort.Slice(compatibleStacks, func(i, j int) bool {
-		return compatibleStacks[i].Score > compatibleStacks[j].Score
+	sort.Slice(scoredStacks, func(i, j int) bool {
+		return scoredStacks[i].Score > scoredStacks[j].Score
 	})
 
 	// TODO find duplicate scores, use a different metric to choose one of them
+	bestStack := scoredStacks[0]
 
-	return &compatibleStacks[0], nil
+	// If the best stack has a score of 0, it means all of them are 0, and none are compatible
+	if bestStack.Score == 0 {
+		return nil, errors.New("no stacks found for this hardware")
+	}
+
+	return &scoredStacks[0], nil
 }
 
 func LoadStacksFromDir(stacksDir string) ([]types.Stack, error) {
@@ -62,7 +72,6 @@ func LoadStacksFromDir(stacksDir string) ([]types.Stack, error) {
 func ScoreStacks(hardwareInfo types.HwInfo, stacks []types.Stack) ([]types.StackResult, error) {
 	var scoredStacks []types.StackResult
 
-	compatibleStacks := 0
 	for _, currentStack := range stacks {
 		score, err := checkStack(hardwareInfo, currentStack)
 
@@ -77,38 +86,10 @@ func ScoreStacks(hardwareInfo types.HwInfo, stacks []types.Stack) ([]types.Stack
 			scoredStack.Comment = err.Error()
 		}
 
-		if score > 0 {
-			compatibleStacks++
-		}
-
 		scoredStacks = append(scoredStacks, scoredStack)
 	}
 
-	if compatibleStacks == 0 {
-		return scoredStacks, errors.New("no stacks found for this hardware")
-	}
-
 	return scoredStacks, nil
-}
-
-func stacksForType(allStacks []types.Stack, deviceType string) []types.Stack {
-	var stacks []types.Stack
-iterateStacks:
-	for _, stack := range allStacks {
-		for _, device := range stack.Devices.All {
-			if device.Type == deviceType {
-				stacks = append(stacks, stack)
-				continue iterateStacks
-			}
-		}
-		for _, device := range stack.Devices.Any {
-			if device.Type == deviceType {
-				stacks = append(stacks, stack)
-				continue iterateStacks
-			}
-		}
-	}
-	return stacks
 }
 
 func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, error) {
