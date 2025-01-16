@@ -17,16 +17,16 @@ func TopStack(scoredStacks []types.StackResult) (*types.StackResult, error) {
 		return nil, errors.New("no stacks found")
 	}
 
-	// Sort by score (high to low) and return best match
+	// Sort by score (high to low) and return highest match
 	sort.Slice(scoredStacks, func(i, j int) bool {
 		return scoredStacks[i].Score > scoredStacks[j].Score
 	})
 
 	// TODO find duplicate scores, use a different metric to choose one of them
-	bestStack := scoredStacks[0]
+	topStack := scoredStacks[0]
 
-	// If the best stack has a score of 0, it means all of them are 0, and none are compatible
-	if bestStack.Score == 0 {
+	// If the top stack has a score of 0, it means all of them are 0, and none are compatible
+	if topStack.Score == 0 {
 		return nil, errors.New("no stacks found for this hardware")
 	}
 

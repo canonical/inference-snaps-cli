@@ -48,12 +48,12 @@ func TestFindStack(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			bestStack, err := TopStack(scoredStacks)
+			topStack, err := TopStack(scoredStacks)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			t.Logf("Found stack %s which installs %v", bestStack.Name, bestStack.Components)
+			t.Logf("Found stack %s which installs %v", topStack.Name, topStack.Components)
 		})
 	}
 }
@@ -69,11 +69,11 @@ func TestFindStackEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	bestStack, err := TopStack(scoredStacks)
+	topStack, err := TopStack(scoredStacks)
 	if err == nil {
-		t.Fatal("Empty stack dir should return an error for best stack")
+		t.Fatal("Empty stack dir should return an error for top stack")
 	}
-	if bestStack != nil {
+	if topStack != nil {
 		t.Fatal("No stack should be found in empty stacks dir")
 	}
 }

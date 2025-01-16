@@ -48,18 +48,18 @@ func main() {
 		}
 	}
 
-	bestStack, err := selector.TopStack(scoredStacks)
+	topStack, err := selector.TopStack(scoredStacks)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Best stack: %s. Score = %d", bestStack.Name, bestStack.Score)
+	log.Printf("Top stack: %s. Score = %d", topStack.Name, topStack.Score)
 
 	// Print json on STDOUT
 	var result interface{}
 	if listAll {
 		result = scoredStacks
 	} else {
-		result = bestStack
+		result = topStack
 	}
 
 	var resultStr []byte
