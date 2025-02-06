@@ -15,6 +15,6 @@ type Gpu struct {
 	SubvendorName     *string `json:"subvendor_name,omitempty"`
 	SubdeviceId       *string `json:"subdevice_id,omitempty"`
 	SubdeviceName     *string `json:"subdevice_name,omitempty"`
-	VRam              *string `json:"vram,omitempty"`
+	VRam              *uint64 `json:"vram,omitempty"`
 	ComputeCapability *string `json:"compute_capability,omitempty"`
 }

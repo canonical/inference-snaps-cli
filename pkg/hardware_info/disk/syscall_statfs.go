@@ -1,7 +1,7 @@
 package disk
 
 import (
-	"github.com/canonical/ml-snap-utils/pkg/hardware_info/types"
+	"github.com/canonical/ml-snap-utils/pkg/types"
 	"golang.org/x/sys/unix"
 )
 
@@ -17,7 +17,5 @@ func dirStats(path string) (*types.DirStats, error) {
 
 	dirStats.Total = fs.Blocks * uint64(fs.Bsize)
 	dirStats.Avail = fs.Bavail * uint64(fs.Bsize)
-	dirStats.Free = fs.Bfree * uint64(fs.Bsize)
-	dirStats.Used = dirStats.Total - dirStats.Free
 	return &dirStats, nil
 }

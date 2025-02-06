@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/canonical/ml-snap-utils/pkg/hardware_info/types"
+	"github.com/canonical/ml-snap-utils/pkg/types"
 )
 
 func hostLsPci() ([]byte, error) {

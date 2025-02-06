@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/canonical/ml-snap-utils/pkg/hardware_info/types"
+	"github.com/canonical/ml-snap-utils/pkg/types"
 )
 
-func lookUpNvidiaVram(device types.Device) (uint64, error) {
+func nvidiaVram(device types.Device) (*uint64, error) {
 	/*
 		Nvidia: LANG=C nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits
 
@@ -23,14 +23,14 @@ func lookUpNvidiaVram(device types.Device) (uint64, error) {
 	command.Env = append(command.Env, "LANG=C")
 	data, err := command.Output()
 	if err != nil {
-		return 0, err
+		return nil, err
 	} else {
 		dataStr := string(data)
 		dataStr = strings.TrimSpace(dataStr) // value ends in \n
 		valueStr, unit, hasUnit := strings.Cut(dataStr, " ")
 		vramValue, err := strconv.ParseUint(valueStr, 10, 64)
 		if err != nil {
-			return 0, err
+			return nil, err
 		}
 
 		if hasUnit {
@@ -44,20 +44,20 @@ func lookUpNvidiaVram(device types.Device) (uint64, error) {
 			}
 		}
 
-		return vramValue, nil
+		return &vramValue, nil
 	}
 }
 
-func computeCapability(device types.Device) (string, error) {
+func nvidiaComputeCapability(device types.Device) (*string, error) {
 	// nvidia-smi --query-gpu=compute_cap --format=csv
 	command := exec.Command("nvidia-smi", "--id="+device.Slot, "--query-gpu=compute_cap", "--format=csv,noheader")
 	command.Env = os.Environ()
 	command.Env = append(command.Env, "LANG=C")
 	data, err := command.Output()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	ccValue := strings.TrimSpace(string(data))
-	return ccValue, nil
+	return &ccValue, nil
 }

@@ -3,7 +3,7 @@ package pci
 import (
 	"fmt"
 
-	"github.com/canonical/ml-snap-utils/pkg/hardware_info/types"
+	"github.com/canonical/ml-snap-utils/pkg/types"
 	"github.com/jaypipes/pcidb"
 )
 

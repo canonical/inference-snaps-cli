@@ -6,7 +6,6 @@ import (
 	"os"
 	"testing"
 
-	types2 "github.com/canonical/ml-snap-utils/pkg/hardware_info/types"
 	"github.com/canonical/ml-snap-utils/pkg/types"
 	"gopkg.in/yaml.v3"
 )
@@ -78,14 +77,12 @@ func TestFindStackEmpty(t *testing.T) {
 }
 
 func TestDiskCheck(t *testing.T) {
-	dirStat := types2.DirStats{
+	dirStat := types.DirStats{
 		Total: 0,
-		Used:  0,
-		Free:  0,
 		Avail: 400000000,
 	}
 	hwInfo := types.HwInfo{}
-	hwInfo.Disk = make(map[string]*types2.DirStats)
+	hwInfo.Disk = make(map[string]*types.DirStats)
 	hwInfo.Disk["/"] = &dirStat
 	hwInfo.Disk["/var/lib/snapd/snaps"] = &dirStat
 
@@ -112,7 +109,7 @@ func TestDiskCheck(t *testing.T) {
 
 func TestMemoryCheck(t *testing.T) {
 	hwInfo := types.HwInfo{
-		Memory: &types2.MemoryInfo{
+		Memory: &types.MemoryInfo{
 			TotalRam:  200000000,
 			TotalSwap: 200000000,
 		},
@@ -275,7 +272,7 @@ func TestNoCpuInHwInfo(t *testing.T) {
 	}
 	//t.Log(err)
 
-	hwInfo.Memory = &types2.MemoryInfo{
+	hwInfo.Memory = &types.MemoryInfo{
 		TotalRam:  17000000000,
 		TotalSwap: 2000000000,
 	}
@@ -287,8 +284,8 @@ func TestNoCpuInHwInfo(t *testing.T) {
 	}
 	//t.Log(err)
 
-	hwInfo.Disk = make(map[string]*types2.DirStats)
-	hwInfo.Disk["/"] = &types2.DirStats{
+	hwInfo.Disk = make(map[string]*types.DirStats)
+	hwInfo.Disk["/"] = &types.DirStats{
 		Avail: 6000000000,
 	}
 

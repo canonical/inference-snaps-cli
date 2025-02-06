@@ -134,10 +134,10 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, error) {
 	for _, device := range stack.Devices.All {
 		switch device.Type {
 		case "cpu":
-			if hardwareInfo.Cpu == nil {
+			if hardwareInfo.Cpus == nil {
 				return 0, fmt.Errorf("cpu device is required but none found")
 			}
-			cpuScore, err := checkCpus(device, *hardwareInfo.Cpu)
+			cpuScore, err := checkCpus(device, hardwareInfo.Cpus)
 			if err != nil {
 				return 0, err
 			}
@@ -172,10 +172,10 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, error) {
 	for _, device := range stack.Devices.Any {
 		switch device.Type {
 		case "cpu":
-			if hardwareInfo.Cpu == nil {
+			if hardwareInfo.Cpus == nil {
 				continue
 			}
-			cpuScore, err := checkCpus(device, *hardwareInfo.Cpu)
+			cpuScore, err := checkCpus(device, hardwareInfo.Cpus)
 			if err != nil {
 				return 0, err
 			}

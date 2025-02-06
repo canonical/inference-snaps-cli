@@ -3,7 +3,7 @@ package disk
 import (
 	"log"
 
-	"github.com/canonical/ml-snap-utils/pkg/hardware_info/types"
+	"github.com/canonical/ml-snap-utils/pkg/types"
 )
 
 func Info() (map[string]*types.DirStats, error) {

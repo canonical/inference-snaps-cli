@@ -1,6 +1,8 @@
 package memory
 
-import "github.com/canonical/ml-snap-utils/pkg/hardware_info/types"
+import (
+	"github.com/canonical/ml-snap-utils/pkg/types"
+)
 
 func Info() (*types.MemoryInfo, error) {
 	var memoryInfo types.MemoryInfo
