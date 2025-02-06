@@ -5,9 +5,10 @@ import (
 	"log"
 
 	"github.com/canonical/ml-snap-utils/pkg/hardware_info/pci"
+	"github.com/canonical/ml-snap-utils/pkg/hardware_info/types"
 )
 
-func Info(friendlyNames bool) ([]Gpu, error) {
+func Info(friendlyNames bool) ([]types.Gpu, error) {
 	pciDevices, err := pci.PciDevices(friendlyNames)
 	if err != nil {
 		return nil, err
@@ -16,14 +17,14 @@ func Info(friendlyNames bool) ([]Gpu, error) {
 	return pciGpus(pciDevices)
 }
 
-func pciGpus(pciDevices []pci.Device) ([]Gpu, error) {
-	var gpus []Gpu
+func pciGpus(pciDevices []types.Device) ([]types.Gpu, error) {
+	var gpus []types.Gpu
 
 	for _, device := range pciDevices {
 		// 00 01 - legacy VGA devices
 		// 03 xx - display controllers
 		if device.DeviceClass == 0x0001 || device.DeviceClass&0xFF00 == 0x0300 {
-			var gpu Gpu
+			var gpu types.Gpu
 			gpu.VendorId = fmt.Sprintf("0x%04x", device.VendorId)
 			gpu.DeviceId = fmt.Sprintf("0x%04x", device.DeviceId)
 			if device.SubvendorId != nil {
@@ -47,7 +48,7 @@ func pciGpus(pciDevices []pci.Device) ([]Gpu, error) {
 	return gpus, nil
 }
 
-func vendorSpecificProperties(pciDevice pci.Device) map[string]interface{} {
+func vendorSpecificProperties(pciDevice types.Device) map[string]interface{} {
 
 	properties := make(map[string]interface{})
 

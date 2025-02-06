@@ -1,6 +1,10 @@
 package cpu
 
-func Info() (*CpuInfo, error) {
+import (
+	"github.com/canonical/ml-snap-utils/pkg/hardware_info/types"
+)
+
+func Info() (*types.CpuInfo, error) {
 	hostLsCpu, err := hostLsCpu()
 	if err != nil {
 		return nil, err

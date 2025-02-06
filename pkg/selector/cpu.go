@@ -3,11 +3,11 @@ package selector
 import (
 	"slices"
 
-	"github.com/canonical/ml-snap-utils/pkg/hardware_info/cpu"
+	types2 "github.com/canonical/ml-snap-utils/pkg/hardware_info/types"
 	"github.com/canonical/ml-snap-utils/pkg/types"
 )
 
-func checkCpus(stackDevice types.StackDevice, cpu cpu.CpuInfo) (int, error) {
+func checkCpus(stackDevice types.StackDevice, cpu types2.CpuInfo) (int, error) {
 	cpuScore := 0
 
 	// Vendor
@@ -39,7 +39,7 @@ func checkCpus(stackDevice types.StackDevice, cpu cpu.CpuInfo) (int, error) {
 }
 
 // Apply the same "filter" logic as we have for the GPUs. See checkGpus() and checkGpu().
-func checkCpuModel(cpuModel cpu.Model, stackDevice types.StackDevice) (int, error) {
+func checkCpuModel(cpuModel types2.Model, stackDevice types.StackDevice) (int, error) {
 	// Each CPU that matches increases the score
 	score := WeightCpu
 

@@ -3,7 +3,7 @@ package selector
 import (
 	"testing"
 
-	"github.com/canonical/ml-snap-utils/pkg/hardware_info/cpu"
+	types2 "github.com/canonical/ml-snap-utils/pkg/hardware_info/types"
 	"github.com/canonical/ml-snap-utils/pkg/types"
 )
 
@@ -15,11 +15,11 @@ func TestCheckCpu(t *testing.T) {
 		VendorId: &vendorId,
 	}
 
-	hwInfoCpu := cpu.CpuInfo{
+	hwInfoCpu := types2.CpuInfo{
 		Architecture: "",
 		CpuCount:     0,
 		Vendor:       vendorId,
-		Models: []cpu.Model{
+		Models: []types2.Model{
 			{},
 		},
 	}

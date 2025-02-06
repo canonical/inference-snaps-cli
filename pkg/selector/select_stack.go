@@ -107,7 +107,7 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, error) {
 		}
 
 		// Checking combination of ram and swap
-		if hardwareInfo.Memory.RamTotal+hardwareInfo.Memory.SwapTotal < requiredMemory {
+		if hardwareInfo.Memory.TotalRam+hardwareInfo.Memory.TotalSwap < requiredMemory {
 			return 0, fmt.Errorf("not enough memory")
 		}
 		stackScore++

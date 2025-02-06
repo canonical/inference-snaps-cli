@@ -1,0 +1,20 @@
+package types
+
+type Display struct {
+	Vendor  string `json:"vendor"`
+	Product string `json:"product"`
+}
+
+type Gpu struct {
+	Bus               string  `json:"bus"`
+	VendorId          string  `json:"vendor_id"`
+	VendorName        *string `json:"vendor_name,omitempty"`
+	DeviceId          string  `json:"device_id"`
+	DeviceName        *string `json:"device_name,omitempty"`
+	SubvendorId       *string `json:"subvendor_id,omitempty"`
+	SubvendorName     *string `json:"subvendor_name,omitempty"`
+	SubdeviceId       *string `json:"subdevice_id,omitempty"`
+	SubdeviceName     *string `json:"subdevice_name,omitempty"`
+	VRam              *string `json:"vram,omitempty"`
+	ComputeCapability *string `json:"compute_capability,omitempty"`
+}

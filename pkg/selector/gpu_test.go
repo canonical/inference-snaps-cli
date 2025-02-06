@@ -3,7 +3,7 @@ package selector
 import (
 	"testing"
 
-	"github.com/canonical/ml-snap-utils/pkg/hardware_info/gpu"
+	types2 "github.com/canonical/ml-snap-utils/pkg/hardware_info/types"
 	"github.com/canonical/ml-snap-utils/pkg/types"
 )
 
@@ -11,7 +11,7 @@ func TestCheckGpuVendor(t *testing.T) {
 
 	gpuVendorId := "b33f"
 
-	hwInfoGpu := gpu.Gpu{
+	hwInfoGpu := types2.Gpu{
 		VendorId:      gpuVendorId,
 		VendorName:    nil,
 		DeviceId:      "",
@@ -61,7 +61,7 @@ func TestCheckGpuVram(t *testing.T) {
 
 	var vram uint64 = 5000000000
 
-	hwInfoGpu := gpu.Gpu{
+	hwInfoGpu := types2.Gpu{
 		VendorId:      "",
 		VendorName:    nil,
 		DeviceId:      "",

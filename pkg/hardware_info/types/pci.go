@@ -1,4 +1,4 @@
-package pci
+package types
 
 type Device struct {
 	Slot                 string  `json:"slot"`

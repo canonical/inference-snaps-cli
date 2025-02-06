@@ -1,12 +1,13 @@
 package disk
 
 import (
+	"github.com/canonical/ml-snap-utils/pkg/hardware_info/types"
 	"golang.org/x/sys/unix"
 )
 
 // dirStats returns a struct with the total, used, free and available bytes for a given directory.
-func dirStats(path string) (*DirStats, error) {
-	var dirStats DirStats
+func dirStats(path string) (*types.DirStats, error) {
+	var dirStats types.DirStats
 
 	var fs unix.Statfs_t
 	err := unix.Statfs(path, &fs)

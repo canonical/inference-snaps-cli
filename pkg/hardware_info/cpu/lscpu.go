@@ -5,6 +5,8 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/canonical/ml-snap-utils/pkg/hardware_info/types"
 )
 
 func hostLsCpu() ([]byte, error) {
@@ -15,10 +17,10 @@ func hostLsCpu() ([]byte, error) {
 	return out, nil
 }
 
-func parseLsCpu(input []byte) (*CpuInfo, error) {
-	cpuInfo := CpuInfo{}
+func parseLsCpu(input []byte) (*types.CpuInfo, error) {
+	cpuInfo := types.CpuInfo{}
 
-	var lsCpuJson LsCpuContainer
+	var lsCpuJson types.LsCpuContainer
 	err := json.Unmarshal(input, &lsCpuJson)
 	if err != nil {
 		return nil, err
@@ -42,7 +44,7 @@ func parseLsCpu(input []byte) (*CpuInfo, error) {
 				switch vendorChild.Field {
 
 				case "Model name:":
-					cpuModel := Model{Name: value}
+					cpuModel := types.Model{Name: value}
 					cpuModel.Name = vendorChild.Data
 
 					for _, modelNameChild := range vendorChild.Children {

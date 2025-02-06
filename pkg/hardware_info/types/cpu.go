@@ -1,4 +1,4 @@
-package cpu
+package types
 
 type LsCpuContainer struct {
 	LsCpu []LsCpuObject `json:"lscpu"`
@@ -11,10 +11,16 @@ type LsCpuObject struct {
 }
 
 type CpuInfo struct {
-	Architecture string  `json:"architecture"`
-	CpuCount     int     `json:"cpu_count"`
-	Vendor       string  `json:"vendor"`
-	Models       []Model `json:"models"`
+	Architecture  string   `json:"architecture"`
+	VendorId      string   `json:"vendor_id"`
+	FamilyId      int      `json:"family_id"`
+	ModelId       string   `json:"model_id"`
+	ModelName     string   `json:"model_name"`
+	PhysicalCores int      `json:"physical_cores"`
+	LogicalCores  int      `json:"logical_cores"`
+	MaxFrequency  float64  `json:"max_frequency"`
+	MinFrequency  float64  `json:"min_frequency"`
+	Flags         []string `json:"flags"`
 }
 
 type Model struct {
