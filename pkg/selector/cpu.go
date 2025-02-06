@@ -40,7 +40,7 @@ func checkCpus(stackDevice types.StackDevice, cpu cpu.CpuInfo) (int, error) {
 
 // Apply the same "filter" logic as we have for the GPUs. See checkGpus() and checkGpu().
 func checkCpuModel(cpuModel cpu.Model, stackDevice types.StackDevice) (int, error) {
-	// Each CPU that matches increases the score by 1
+	// Each CPU that matches increases the score
 	score := WeightCpu
 
 	// Flags
