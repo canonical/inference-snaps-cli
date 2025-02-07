@@ -82,3 +82,36 @@ func TestUtsName(t *testing.T) {
 	t.Log(string(sysInfo.Machine[:]))    // x86_64
 	t.Log(string(sysInfo.Domainname[:])) // (none)
 }
+
+func TestMultipleModels(t *testing.T) {
+	lsCpu, err := os.ReadFile("../../../test_data/lscpu_cpuinfo/hp-dl380p-gen8-lscpu.json")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	cpuInfo, err := parseLsCpu(lsCpu)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	if len(cpuInfo) != 4 {
+		// two different CPU models are reported as 4 different models by lscpu
+		t.Fatalf("need to find 4 CPU models")
+	}
+
+	if cpuInfo[0].PhysicalCores != 8 {
+		t.Fatalf("need to detect 8 physical cores")
+	}
+
+	if cpuInfo[0].LogicalCores != 16 {
+		t.Fatalf("need to detect 8 physical cores")
+	}
+
+	if cpuInfo[1].PhysicalCores != 8 {
+		t.Fatalf("need to detect 8 physical cores")
+	}
+
+	if cpuInfo[1].LogicalCores != 16 {
+		t.Fatalf("need to detect 8 physical cores")
+	}
+}
