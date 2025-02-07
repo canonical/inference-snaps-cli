@@ -35,9 +35,10 @@ iterateCpus:
 			}
 			cpuScore += WeightCpuFlag
 		}
+
+		// Only add this CPU's score if it passed all the filters
 		cpusScore += cpuScore
 	}
 
-	// If we get here, we checked all the CPU models and none were matches
 	return cpusScore, nil
 }
