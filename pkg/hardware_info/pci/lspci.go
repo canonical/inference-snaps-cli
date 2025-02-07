@@ -17,12 +17,12 @@ func hostLsPci() ([]byte, error) {
 	return out, nil
 }
 
-func ParseLsPci(input []byte, includeFriendlyNames bool) ([]types.Device, error) {
-	var devices []types.Device
+func ParseLsPci(input []byte, includeFriendlyNames bool) ([]types.PciDevice, error) {
+	var devices []types.PciDevice
 
 	inputString := string(input)
 	for _, section := range strings.Split(inputString, "\n\n") {
-		var device types.Device
+		var device types.PciDevice
 		for _, line := range strings.Split(section, "\n") {
 			key, value, _ := strings.Cut(line, ":\t")
 

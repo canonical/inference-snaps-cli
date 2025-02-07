@@ -1,6 +1,6 @@
 package types
 
-type Device struct {
+type PciDevice struct {
 	Slot                 string  `json:"slot"`
 	DeviceClass          uint16  `json:"device_class"`
 	ProgrammingInterface *uint8  `json:"programming_interface"`

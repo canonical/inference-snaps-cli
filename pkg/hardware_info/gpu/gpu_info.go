@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/canonical/ml-snap-utils/pkg/constants"
 	"github.com/canonical/ml-snap-utils/pkg/hardware_info/pci"
-	types2 "github.com/canonical/ml-snap-utils/pkg/types"
+	"github.com/canonical/ml-snap-utils/pkg/types"
 )
 
-func Info(friendlyNames bool) ([]types2.Gpu, error) {
+func Info(friendlyNames bool) ([]types.Gpu, error) {
 	pciDevices, err := pci.PciDevices(friendlyNames)
 	if err != nil {
 		return nil, err
@@ -18,14 +19,14 @@ func Info(friendlyNames bool) ([]types2.Gpu, error) {
 	return pciGpus(pciDevices)
 }
 
-func pciGpus(pciDevices []types2.Device) ([]types2.Gpu, error) {
-	var gpus []types2.Gpu
+func pciGpus(pciDevices []types.PciDevice) ([]types.Gpu, error) {
+	var gpus []types.Gpu
 
 	for _, device := range pciDevices {
 		// 00 01 - legacy VGA devices
 		// 03 xx - display controllers
 		if device.DeviceClass == 0x0001 || device.DeviceClass&0xFF00 == 0x0300 {
-			var gpu types2.Gpu
+			var gpu types.Gpu
 			gpu.VendorId = fmt.Sprintf("0x%04x", device.VendorId)
 			gpu.DeviceId = fmt.Sprintf("0x%04x", device.DeviceId)
 			if device.SubvendorId != nil {
@@ -60,28 +61,28 @@ func pciGpus(pciDevices []types2.Device) ([]types2.Gpu, error) {
 	return gpus, nil
 }
 
-func getVRam(pciDevice types2.Device) (*uint64, error) {
+func getVRam(pciDevice types.PciDevice) (*uint64, error) {
 	switch pciDevice.VendorId {
-	case 0x1002: // AMD
+	case constants.PciVendorAmd:
 		return amdVram(pciDevice)
-	case 0x10de: // NVIDIA
+	case constants.PciVendorNvidia:
 		return nvidiaVram(pciDevice)
-	case 0x8086: // Intel
+	case constants.PciVendorIntel:
 		return nil, errors.New("vram lookup for Intel GPU not implemented")
 	default:
-		return nil, errors.New("vram lookup for unknown GPU not implemented")
+		return nil, errors.New("unknown GPU, not looking up vram")
 	}
 }
 
-func getComputeCapability(pciDevice types2.Device) (*string, error) {
+func getComputeCapability(pciDevice types.PciDevice) (*string, error) {
 	switch pciDevice.VendorId {
-	case 0x1002: // AMD
+	case constants.PciVendorAmd:
 		return nil, errors.New("compute capability lookup for AMD GPU not implemented")
-	case 0x10de: // NVIDIA
+	case constants.PciVendorNvidia:
 		return nvidiaComputeCapability(pciDevice)
-	case 0x8086: // Intel
+	case constants.PciVendorIntel:
 		return nil, errors.New("compute capability lookup for Intel GPU not implemented")
 	default:
-		return nil, errors.New("compute capability lookup for unknown GPU not implemented")
+		return nil, errors.New("unknown GPU, not looking up compute capability")
 	}
 }

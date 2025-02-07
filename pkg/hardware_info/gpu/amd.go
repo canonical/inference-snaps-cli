@@ -8,7 +8,7 @@ import (
 	"github.com/canonical/ml-snap-utils/pkg/types"
 )
 
-func amdVram(device types.Device) (*uint64, error) {
+func amdVram(device types.PciDevice) (*uint64, error) {
 	/*
 		AMD vram is listed under /sys/bus/pci/devices/${pci_slot}/mem_info_vram_total
 
