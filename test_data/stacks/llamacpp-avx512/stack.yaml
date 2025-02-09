@@ -8,7 +8,7 @@ devices:
         - avx512f
         - avx512dq
         - avx512bw
-memory: 8G
+memory: 16G
 disk-space: 5G
 components:
   - llamacpp-avx512
