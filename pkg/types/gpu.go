@@ -1,10 +1,5 @@
 package types
 
-type Display struct {
-	Vendor  string `json:"vendor"`
-	Product string `json:"product"`
-}
-
 type Gpu struct {
 	Bus               string  `json:"bus"`
 	VendorId          string  `json:"vendor_id"`

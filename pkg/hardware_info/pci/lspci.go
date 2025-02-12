@@ -5,8 +5,6 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-
-	"github.com/canonical/ml-snap-utils/pkg/types"
 )
 
 func hostLsPci() ([]byte, error) {
@@ -17,12 +15,12 @@ func hostLsPci() ([]byte, error) {
 	return out, nil
 }
 
-func ParseLsPci(input []byte, includeFriendlyNames bool) ([]types.PciDevice, error) {
-	var devices []types.PciDevice
+func ParseLsPci(input []byte, includeFriendlyNames bool) ([]PciDevice, error) {
+	var devices []PciDevice
 
 	inputString := string(input)
 	for _, section := range strings.Split(inputString, "\n\n") {
-		var device types.PciDevice
+		var device PciDevice
 		for _, line := range strings.Split(section, "\n") {
 			key, value, _ := strings.Cut(line, ":\t")
 

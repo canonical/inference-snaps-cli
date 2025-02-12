@@ -1,15 +1,5 @@
 package types
 
-type LsCpuContainer struct {
-	LsCpu []LsCpuObject `json:"lscpu"`
-}
-
-type LsCpuObject struct {
-	Field    string        `json:"field"`
-	Data     string        `json:"data"`
-	Children []LsCpuObject `json:"children"`
-}
-
 type CpuInfo struct {
 	Architecture  string   `json:"architecture"`
 	VendorId      string   `json:"vendor_id"`
