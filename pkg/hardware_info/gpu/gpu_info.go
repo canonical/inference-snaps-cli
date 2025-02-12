@@ -75,14 +75,9 @@ func getVRam(pciDevice types.PciDevice) (*uint64, error) {
 }
 
 func getComputeCapability(pciDevice types.PciDevice) (*string, error) {
-	switch pciDevice.VendorId {
-	case constants.PciVendorAmd:
-		return nil, errors.New("compute capability lookup for AMD GPU not implemented")
-	case constants.PciVendorNvidia:
+	if pciDevice.VendorId == constants.PciVendorNvidia {
 		return nvidiaComputeCapability(pciDevice)
-	case constants.PciVendorIntel:
-		return nil, errors.New("compute capability lookup for Intel GPU not implemented")
-	default:
-		return nil, errors.New("unknown GPU, not looking up compute capability")
 	}
+	// For other vendors we do not look up the Compute Capability
+	return nil, nil
 }

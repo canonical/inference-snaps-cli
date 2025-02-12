@@ -95,23 +95,17 @@ func TestMultipleModels(t *testing.T) {
 	}
 
 	if len(cpuInfo) != 4 {
-		// two different CPU models are reported as 4 different models by lscpu
+		// 4 models are reported. See https://github.com/canonical/ml-snap-utils/issues/29
 		t.Fatalf("need to find 4 CPU models")
 	}
 
-	if cpuInfo[0].PhysicalCores != 8 {
-		t.Fatalf("need to detect 8 physical cores")
-	}
+	for _, cpu := range cpuInfo {
+		if cpu.PhysicalCores != 8 {
+			t.Fatalf("need to detect 8 physical cores")
+		}
 
-	if cpuInfo[0].LogicalCores != 16 {
-		t.Fatalf("need to detect 8 physical cores")
-	}
-
-	if cpuInfo[1].PhysicalCores != 8 {
-		t.Fatalf("need to detect 8 physical cores")
-	}
-
-	if cpuInfo[1].LogicalCores != 16 {
-		t.Fatalf("need to detect 8 physical cores")
+		if cpu.LogicalCores != 16 {
+			t.Fatalf("need to detect 16 logical cores")
+		}
 	}
 }
