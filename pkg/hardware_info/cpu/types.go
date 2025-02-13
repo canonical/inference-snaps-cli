@@ -1,11 +1,11 @@
 package cpu
 
-type LsCpuContainer struct {
-	LsCpu []LsCpuObject `json:"lscpu"`
+type lsCpuContainer struct {
+	LsCpu []lsCpuObject `json:"lscpu"`
 }
 
-type LsCpuObject struct {
+type lsCpuObject struct {
 	Field    string        `json:"field"`
 	Data     string        `json:"data"`
-	Children []LsCpuObject `json:"children"`
+	Children []lsCpuObject `json:"children"`
 }

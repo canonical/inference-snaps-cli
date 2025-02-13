@@ -18,7 +18,7 @@ func hostLsCpu() ([]byte, error) {
 }
 
 func parseLsCpu(input []byte) ([]types.CpuInfo, error) {
-	var lsCpuJson LsCpuContainer
+	var lsCpuJson lsCpuContainer
 	err := json.Unmarshal(input, &lsCpuJson)
 	if err != nil {
 		return nil, err
