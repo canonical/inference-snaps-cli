@@ -185,7 +185,7 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (bool, []string, e
 
 		case "gpu":
 			if hardwareInfo.Gpus == nil {
-				continuereason
+				continue
 			}
 			result, reasons, err := checkGpus(hardwareInfo.Gpus, device)
 			if err != nil {
