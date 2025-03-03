@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/canonical/ml-snap-utils/pkg/types"
@@ -42,7 +43,7 @@ func TestFindStack(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			scoredStacks, err := ScoreStacks(hardwareInfo, allStacks)
+			scoredStacks, err := FilterStacks(hardwareInfo, allStacks)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -51,7 +52,7 @@ func TestFindStack(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			t.Logf("Found stack %s which installs %v", topStack.Name, topStack.Components)
+			t.Logf("Found stack %s with size %d", topStack.Name, topStack.Size)
 		})
 	}
 }
@@ -59,11 +60,11 @@ func TestFindStack(t *testing.T) {
 func TestFindStackEmpty(t *testing.T) {
 	hwInfo := types.HwInfo{}
 
-	allStacks, err := LoadStacksFromDir("../../test_data/stacks")
+	allStacks, err := LoadStacksFromDir("../../test_data/stacks-empty")
 	if err != nil {
 		t.Fatal(err)
 	}
-	scoredStacks, err := ScoreStacks(hwInfo, allStacks)
+	scoredStacks, err := FilterStacks(hwInfo, allStacks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,56 +83,56 @@ func TestDiskCheck(t *testing.T) {
 		Avail: 400000000,
 	}
 	hwInfo := types.HwInfo{}
+	hwInfo.Memory = &types.MemoryInfo{TotalRam: 2000000}
 	hwInfo.Disk = make(map[string]*types.DirStats)
 	hwInfo.Disk["/"] = &dirStat
 	hwInfo.Disk["/var/lib/snapd/snaps"] = &dirStat
 
-	stackDisk := "300M"
-	stack := types.Stack{DiskSpace: &stackDisk}
+	stack := types.Stack{DiskSpace: "300M", Memory: "1M"}
 
-	result, err := checkStack(hwInfo, stack)
+	compatible, notes, err := checkStack(hwInfo, stack)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result == 0 {
-		t.Fatal("disk should be enough")
+	if !compatible {
+		t.Fatalf("disk should be enough: %s", strings.Join(notes, ", "))
 	}
 
 	dirStat.Avail = 100000000
-	result, err = checkStack(hwInfo, stack)
-	if err == nil {
-		t.Fatal("Not enough disk should return err")
+	compatible, _, err = checkStack(hwInfo, stack)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if result > 0 {
-		t.Fatal("disk should NOT be enough")
+	if compatible {
+		t.Fatal("Not enough disk should not be compatible")
 	}
 }
 
 func TestMemoryCheck(t *testing.T) {
-	hwInfo := types.HwInfo{
-		Memory: &types.MemoryInfo{
-			TotalRam:  200000000,
-			TotalSwap: 200000000,
-		},
+	hwInfo := types.HwInfo{}
+	hwInfo.Memory = &types.MemoryInfo{TotalRam: 200000000, TotalSwap: 200000000}
+	hwInfo.Disk = make(map[string]*types.DirStats)
+	hwInfo.Disk["/var/lib/snapd/snaps"] = &types.DirStats{
+		Total: 0,
+		Avail: 400000000,
 	}
 
-	stackMemory := "300M"
-	stack := types.Stack{Memory: &stackMemory}
+	stack := types.Stack{Memory: "300M", DiskSpace: "1M"}
 
-	result, err := checkStack(hwInfo, stack)
+	compatible, notes, err := checkStack(hwInfo, stack)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result == 0 {
-		t.Fatal("memory should be enough")
+	if !compatible {
+		t.Fatalf("memory should be enough: %s", strings.Join(notes, ", "))
 	}
 
 	hwInfo.Memory.TotalRam = 100000000
-	result, err = checkStack(hwInfo, stack)
-	if err == nil {
-		t.Fatal("Not enough memory should return err")
+	compatible, _, err = checkStack(hwInfo, stack)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if result > 0 {
+	if compatible {
 		t.Fatal("memory should NOT be enough")
 	}
 }
@@ -165,11 +166,13 @@ func TestCpuFlagsAvx2(t *testing.T) {
 	}
 
 	// Valid hardware for stack
-	result, err := checkStack(hardwareInfo, stack)
+	compatible, notes, err := checkStack(hardwareInfo, stack)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("Matching score: %d", result)
+	if !compatible {
+		t.Fatalf("cpu should be compatible: %s", strings.Join(notes, ", "))
+	}
 
 	file, err = os.Open("../../test_data/hardware_info/hp-dl380p-gen8.json")
 	if err != nil {
@@ -187,9 +190,12 @@ func TestCpuFlagsAvx2(t *testing.T) {
 	}
 
 	// Invalid hardware for stack
-	result, err = checkStack(hardwareInfo, stack)
-	if err == nil {
-		t.Fatal("Stack should not match if avx2 is not available")
+	compatible, notes, err = checkStack(hardwareInfo, stack)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if compatible {
+		t.Fatalf("Stack should not match if avx2 is not available")
 	}
 }
 
@@ -222,9 +228,12 @@ func TestCpuFlagsAvx512(t *testing.T) {
 	}
 
 	// Valid hardware for stack
-	_, err = checkStack(hardwareInfo, currentStack)
+	compatible, _, err := checkStack(hardwareInfo, currentStack)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if !compatible {
+		t.Fatal("cpu should be compatible")
 	}
 
 	file, err = os.Open("../../test_data/hardware_info/hp-dl380p-gen8.json")
@@ -243,8 +252,11 @@ func TestCpuFlagsAvx512(t *testing.T) {
 	}
 
 	// Invalid hardware for stack
-	_, err = checkStack(hardwareInfo, currentStack)
-	if err == nil {
+	compatible, _, err = checkStack(hardwareInfo, currentStack)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if compatible {
 		t.Fatal("Stack should not match if avx512 is not available")
 	}
 }
@@ -266,9 +278,12 @@ func TestNoCpuInHwInfo(t *testing.T) {
 	}
 
 	// No memory in hardware info
-	_, err = checkStack(hwInfo, currentStack)
-	if err == nil {
-		t.Fatal("No Memory in hardware_info should return err")
+	compatible, _, err := checkStack(hwInfo, currentStack)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if compatible {
+		t.Fatal("No Memory in hardware_info should not be compatible")
 	}
 	//t.Log(err)
 
@@ -278,11 +293,13 @@ func TestNoCpuInHwInfo(t *testing.T) {
 	}
 
 	// No disk space in hardware info
-	_, err = checkStack(hwInfo, currentStack)
-	if err == nil {
-		t.Fatal("No Disk space in hardware_info should return err")
+	compatible, _, err = checkStack(hwInfo, currentStack)
+	if err != nil {
+		t.Fatal(err)
 	}
-	//t.Log(err)
+	if compatible {
+		t.Fatal("No Disk space in hardware_info should not be compatible")
+	}
 
 	hwInfo.Disk = make(map[string]*types.DirStats)
 	hwInfo.Disk["/"] = &types.DirStats{
@@ -290,9 +307,11 @@ func TestNoCpuInHwInfo(t *testing.T) {
 	}
 
 	// No CPU in hardware info
-	_, err = checkStack(hwInfo, currentStack)
-	if err == nil {
-		t.Fatal("No CPU in hardware_info should return err")
+	compatible, _, err = checkStack(hwInfo, currentStack)
+	if err != nil {
+		t.Fatal(err)
 	}
-	//t.Log(err)
+	if compatible {
+		t.Fatal("No CPU in hardware_info should not be compatible")
+	}
 }

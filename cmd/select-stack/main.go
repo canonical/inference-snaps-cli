@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/canonical/ml-snap-utils/pkg/selector"
 	"github.com/canonical/ml-snap-utils/pkg/types"
@@ -34,33 +35,30 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	scoredStacks, err := selector.ScoreStacks(hardwareInfo, allStacks)
+	filteredStacks, err := selector.FilterStacks(hardwareInfo, allStacks)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Print summary on STDERR
-	for _, stack := range scoredStacks {
-		if stack.Score == 0 {
-			log.Printf("Stack %s not selected: %s", stack.Name, stack.Comment)
+	var result types.StackSelection
+	result.Stacks = make([]types.StackResult, 0)
+
+	// Append stacks to result. Print summary on STDERR.
+	for _, stack := range filteredStacks {
+		result.Stacks = append(result.Stacks, stack)
+		if !stack.Compatible {
+			log.Printf("Stack %s not compatible: %s", stack.Name, strings.Join(stack.Notes, ", "))
 		} else {
-			log.Printf("Stack %s matches. Score = %d", stack.Name, stack.Score)
+			log.Printf("Stack %s is compatible. Size %d", stack.Name, stack.Size)
 		}
 	}
 
-	topStack, err := selector.TopStack(scoredStacks)
+	topStack, err := selector.TopStack(filteredStacks)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Top stack: %s. Score = %d", topStack.Name, topStack.Score)
-
-	// Print json on STDOUT
-	var result interface{}
-	if listAll {
-		result = scoredStacks
-	} else {
-		result = topStack
-	}
+	log.Printf("Top stack: %s. Size = %d", topStack.Name, topStack.Size)
+	result.TopStack = topStack.Name
 
 	var resultStr []byte
 	if prettyOutput {

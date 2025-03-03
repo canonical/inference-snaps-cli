@@ -12,24 +12,17 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// TopStack finds the "best" stack to use. The current best choice is the smallest one to download to improve user experience.
 func TopStack(scoredStacks []types.StackResult) (*types.StackResult, error) {
 	if len(scoredStacks) == 0 {
 		return nil, errors.New("no stacks found")
 	}
 
-	// Sort by score (high to low) and return highest match
+	// Sort by size (low to high)
 	sort.Slice(scoredStacks, func(i, j int) bool {
-		return scoredStacks[i].Score > scoredStacks[j].Score
+		return scoredStacks[i].Size < scoredStacks[j].Size
 	})
-
-	// TODO find duplicate scores, use a different metric to choose one of them
-	topStack := scoredStacks[0]
-
-	// If the top stack has a score of 0, it means all of them are 0, and none are compatible
-	if topStack.Score == 0 {
-		return nil, errors.New("no stacks found for this hardware")
-	}
-
+	// return smallest
 	return &scoredStacks[0], nil
 }
 
@@ -69,22 +62,26 @@ func LoadStacksFromDir(stacksDir string) ([]types.Stack, error) {
 	return stacks, nil
 }
 
-func ScoreStacks(hardwareInfo types.HwInfo, stacks []types.Stack) ([]types.StackResult, error) {
+func FilterStacks(hardwareInfo types.HwInfo, stacks []types.Stack) ([]types.StackResult, error) {
 	var scoredStacks []types.StackResult
 
 	for _, currentStack := range stacks {
-		score, err := checkStack(hardwareInfo, currentStack)
+		compatible, notes, err := checkStack(hardwareInfo, currentStack)
+		if err != nil {
+			return nil, err
+		}
 
 		scoredStack := types.StackResult{
-			Name:           currentStack.Name,
-			Components:     currentStack.Components,
-			Configurations: currentStack.Configurations,
-			Score:          score,
+			Name:       currentStack.Name,
+			Compatible: compatible,
+			Notes:      notes,
 		}
 
+		stackSize, err := utils.StringToBytes(currentStack.DiskSpace)
 		if err != nil {
-			scoredStack.Comment = err.Error()
+			return nil, err
 		}
+		scoredStack.Size = stackSize
 
 		scoredStacks = append(scoredStacks, scoredStack)
 	}
@@ -92,79 +89,81 @@ func ScoreStacks(hardwareInfo types.HwInfo, stacks []types.Stack) ([]types.Stack
 	return scoredStacks, nil
 }
 
-func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, error) {
-	stackScore := 0
+func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (bool, []string, error) {
+	var notes []string
+	var compatible = true
 
 	// Enough memory
-	if stack.Memory != nil {
-		requiredMemory, err := utils.StringToBytes(*stack.Memory)
-		if err != nil {
-			return 0, err
-		}
+	requiredMemory, err := utils.StringToBytes(stack.Memory)
+	if err != nil {
+		return false, nil, err
+	}
 
-		if hardwareInfo.Memory == nil {
-			return 0, fmt.Errorf("no memory in hardware info")
-		}
-
+	if hardwareInfo.Memory == nil {
+		notes = append(notes, "memory size not provided by hardware info")
+		compatible = false
+	} else {
 		// Checking combination of ram and swap
 		if hardwareInfo.Memory.TotalRam+hardwareInfo.Memory.TotalSwap < requiredMemory {
-			return 0, fmt.Errorf("not enough memory")
+			notes = append(notes, "not enough memory")
+			compatible = false
 		}
-		stackScore++
 	}
 
 	// Enough disk space
-	if stack.DiskSpace != nil {
-		requiredDisk, err := utils.StringToBytes(*stack.DiskSpace)
-		if err != nil {
-			return 0, err
-		}
-		if _, ok := hardwareInfo.Disk["/var/lib/snapd/snaps"]; !ok {
-			return 0, fmt.Errorf("disk space not provided by hardware info")
-		}
+	requiredDisk, err := utils.StringToBytes(stack.DiskSpace)
+	if err != nil {
+		return false, nil, err
+	}
+	if _, ok := hardwareInfo.Disk["/var/lib/snapd/snaps"]; !ok {
+		notes = append(notes, "disk space not provided by hardware info")
+		compatible = false
+	} else {
 		if hardwareInfo.Disk["/var/lib/snapd/snaps"].Avail < requiredDisk {
-			return 0, fmt.Errorf("not enough free disk space")
+			notes = append(notes, "not enough free disk space")
+			compatible = false
 		}
-		stackScore++
 	}
 
 	// Devices
 	// all
 	allOfDevicesFound := 0
-	for _, device := range stack.Devices.All {
-		switch device.Type {
+	for _, requiredDevice := range stack.Devices.All {
+		switch requiredDevice.Type {
 		case "cpu":
 			if hardwareInfo.Cpus == nil {
-				return 0, fmt.Errorf("cpu device is required but none found")
+				notes = append(notes, "cpu device is required but none found")
+				compatible = false
 			}
-			cpuScore, err := checkCpus(device, hardwareInfo.Cpus)
+			result, reasons, err := checkCpus(requiredDevice, hardwareInfo.Cpus)
 			if err != nil {
-				return 0, err
+				return false, nil, err
 			}
-			if cpuScore == 0 {
-				return 0, fmt.Errorf("required cpu device not found")
+			if !result {
+				notes = append(notes, reasons...)
+				compatible = false
 			}
-			stackScore += cpuScore
-			allOfDevicesFound++
 
 		case "gpu":
 			if len(hardwareInfo.Gpus) == 0 {
-				return 0, fmt.Errorf("gpu device is required but none found")
+				notes = append(notes, "gpu device is required but none found")
+				compatible = false
 			}
-			gpuScore, err := checkGpus(hardwareInfo.Gpus, device)
+			result, reasons, err := checkGpus(hardwareInfo.Gpus, requiredDevice)
 			if err != nil {
-				return 0, err
+				return false, nil, err
 			}
-			if gpuScore == 0 {
-				return 0, fmt.Errorf("required gpu device not found")
+			if !result {
+				notes = append(notes, reasons...)
+				compatible = false
 			}
-			stackScore += gpuScore
-			allOfDevicesFound++
 		}
+		allOfDevicesFound++
 	}
 
 	if len(stack.Devices.All) > 0 && allOfDevicesFound != len(stack.Devices.All) {
-		return 0, fmt.Errorf("all: could not find a required device")
+		notes = append(notes, "all: could not find a required device")
+		compatible = false
 	}
 
 	// any
@@ -175,34 +174,36 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, error) {
 			if hardwareInfo.Cpus == nil {
 				continue
 			}
-			cpuScore, err := checkCpus(device, hardwareInfo.Cpus)
+			result, reasons, err := checkCpus(device, hardwareInfo.Cpus)
 			if err != nil {
-				return 0, err
+				return false, nil, err
 			}
-			if cpuScore > 0 {
-				anyOfDevicesFound++
+			notes = append(notes, reasons...)
+			if !result {
+				compatible = false
 			}
-			stackScore += cpuScore
 
 		case "gpu":
 			if hardwareInfo.Gpus == nil {
-				continue
+				continuereason
 			}
-			gpuScore, err := checkGpus(hardwareInfo.Gpus, device)
+			result, reasons, err := checkGpus(hardwareInfo.Gpus, device)
 			if err != nil {
-				return 0, err
+				return false, nil, err
 			}
-			if gpuScore > 0 {
-				anyOfDevicesFound++
+			if !result {
+				notes = append(notes, reasons...)
+				compatible = false
 			}
-			stackScore += gpuScore
 		}
+		anyOfDevicesFound++
 	}
 
 	// If any-of devices are defined, we need to find at least one
 	if len(stack.Devices.Any) > 0 && anyOfDevicesFound == 0 {
-		return 0, fmt.Errorf("any: could not find a required device")
+		notes = append(notes, "any: could not find a required device")
+		compatible = false
 	}
 
-	return stackScore, nil
+	return compatible, notes, nil
 }

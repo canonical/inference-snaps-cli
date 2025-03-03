@@ -29,28 +29,28 @@ func TestCheckGpuVendor(t *testing.T) {
 		VendorId: &gpuVendorId,
 	}
 
-	result, err := gpuMatchesStack(hwInfoGpu, stackDevice)
+	result, reason, err := gpuMatchesStack(hwInfoGpu, stackDevice)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if !result {
-		t.Fatal("GPU vendor should match")
+		t.Fatalf("GPU vendor should match: %s", reason)
 	}
 
 	// Same value, different case
 	gpuVendorId = "B33F"
-	result, err = gpuMatchesStack(hwInfoGpu, stackDevice)
+	result, reason, err = gpuMatchesStack(hwInfoGpu, stackDevice)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if !result {
-		t.Fatal("GPU vendor should match")
+		t.Fatalf("GPU vendor should match: %s", reason)
 	}
 
 	gpuVendorId = "1337"
-	result, err = gpuMatchesStack(hwInfoGpu, stackDevice)
+	result, reason, err = gpuMatchesStack(hwInfoGpu, stackDevice)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if result {
 		t.Fatal("GPU vendor should NOT match")
@@ -76,24 +76,24 @@ func TestCheckGpuVram(t *testing.T) {
 
 	stackVram := "4G"
 	stackDevice := types.StackDevice{
-		Type:     "gpu",
-		Bus:      nil,
-		VendorId: nil,
-		VRam:     &stackVram,
+		Type:        "gpu",
+		Bus:         nil,
+		VendorId:    nil,
+		MinimumVram: &stackVram,
 	}
 
-	result, err := gpuMatchesStack(hwInfoGpu, stackDevice)
+	result, reason, err := gpuMatchesStack(hwInfoGpu, stackDevice)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if !result {
-		t.Fatal("GPU vram should be enough")
+		t.Fatalf("GPU vram should be enough: %s", reason)
 	}
 
 	stackVram = "24G"
-	result, err = gpuMatchesStack(hwInfoGpu, stackDevice)
+	result, reason, err = gpuMatchesStack(hwInfoGpu, stackDevice)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if result {
 		t.Fatal("GPU vram should NOT be enough")

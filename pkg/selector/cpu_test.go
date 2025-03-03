@@ -19,21 +19,21 @@ func TestCheckCpuVendor(t *testing.T) {
 		VendorId:     vendorId,
 	}}
 
-	result, err := checkCpus(stackDevice, hwInfoCpus)
+	compatible, reason, err := checkCpus(stackDevice, hwInfoCpus)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
-	if result == 0 {
-		t.Fatal("CPU vendor should match")
+	if !compatible {
+		t.Fatalf("CPU vendor should match: %s", reason)
 	}
 
 	vendorId = "AuthenticAMD"
 
-	result, err = checkCpus(stackDevice, hwInfoCpus)
+	compatible, reason, err = checkCpus(stackDevice, hwInfoCpus)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
-	if result > 0 {
+	if compatible {
 		t.Fatal("CPU vendor should NOT match")
 	}
 
@@ -54,21 +54,21 @@ func TestCheckCpuFlags(t *testing.T) {
 		Flags:        []string{"avx2"},
 	}}
 
-	result, err := checkCpus(stackDevice, hwInfoCpus)
+	compatible, reason, err := checkCpus(stackDevice, hwInfoCpus)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
-	if result == 0 {
-		t.Fatal("CPU flags should match")
+	if !compatible {
+		t.Fatalf("CPU flags should match: %s", reason)
 	}
 
 	stackDevice.Flags = []string{"avx512"}
 
-	result, err = checkCpus(stackDevice, hwInfoCpus)
+	compatible, reason, err = checkCpus(stackDevice, hwInfoCpus)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
-	if result > 0 {
+	if compatible {
 		t.Fatal("CPU flags should NOT match")
 	}
 
