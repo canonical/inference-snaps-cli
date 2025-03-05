@@ -148,32 +148,33 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (bool, []string, e
 		case "cpu":
 			if hardwareInfo.Cpus == nil {
 				notes = append(notes, "cpu device is required but none found")
-				compatible = false
+				continue
 			}
 			result, reasons, err := checkCpus(requiredDevice, hardwareInfo.Cpus)
 			if err != nil {
 				return false, nil, err
 			}
-			if !result {
+			if result {
+				allOfDevicesFound++
+			} else {
 				notes = append(notes, reasons...)
-				compatible = false
 			}
 
 		case "gpu":
 			if len(hardwareInfo.Gpus) == 0 {
 				notes = append(notes, "gpu device is required but none found")
-				compatible = false
+				continue
 			}
 			result, reasons, err := checkGpus(hardwareInfo.Gpus, requiredDevice)
 			if err != nil {
 				return false, nil, err
 			}
-			if !result {
+			if result {
+				allOfDevicesFound++
+			} else {
 				notes = append(notes, reasons...)
-				compatible = false
 			}
 		}
-		allOfDevicesFound++
 	}
 
 	if len(stack.Devices.All) > 0 && allOfDevicesFound != len(stack.Devices.All) {

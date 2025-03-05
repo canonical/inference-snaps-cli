@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -52,7 +53,7 @@ func TestFindStack(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			t.Logf("Found stack %s with size %d", topStack.Name, topStack.Size)
+			t.Logf("%s - %s - %d bytes", filepath.Base(file.Name()), topStack.Name, topStack.Size)
 		})
 	}
 }
@@ -345,7 +346,6 @@ func TestTopStack(t *testing.T) {
 	if err == nil {
 		t.Fatal("devel stack alone should not be chosen")
 	}
-	t.Log(err.Error())
 }
 
 func TestLoadStacksFromDir(t *testing.T) {
@@ -353,7 +353,9 @@ func TestLoadStacksFromDir(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(stacks)
+	if len(stacks) == 0 {
+		t.Fatalf("no stacks were loaded")
+	}
 }
 
 func TestUnmarshalStack(t *testing.T) {
@@ -367,8 +369,6 @@ func TestUnmarshalStack(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	t.Logf("%+v", currentStack)
 }
 
 func TestMemory(t *testing.T) {
