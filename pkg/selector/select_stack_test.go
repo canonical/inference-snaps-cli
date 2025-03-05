@@ -15,7 +15,7 @@ var hwInfoFiles = []string{
 	"../../test_data/hardware_info/amd-ryzen7-5700g.json",
 	"../../test_data/hardware_info/amd-ryzen9-7900.json",
 	"../../test_data/hardware_info/dell-r730xd.json",
-	"../../test_data/hardware_info/hp-dl380p-gen8.json",
+	//"../../test_data/hardware_info/hp-dl380p-gen8.json", // No stacks available for legacy CPUs
 	"../../test_data/hardware_info/nuc11-i5-1145G7.json",
 	"../../test_data/hardware_info/xps13-gen10.json",
 }
@@ -43,7 +43,7 @@ func TestFindStack(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			scoredStacks, err := FilterStacks(hardwareInfo, allStacks)
+			scoredStacks, err := CheckStacks(allStacks, hardwareInfo)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -64,7 +64,7 @@ func TestFindStackEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	scoredStacks, err := FilterStacks(hwInfo, allStacks)
+	scoredStacks, err := CheckStacks(allStacks, hwInfo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -313,5 +313,98 @@ func TestNoCpuInHwInfo(t *testing.T) {
 	}
 	if compatible {
 		t.Fatal("No CPU in hardware_info should not be compatible")
+	}
+}
+
+func TestTopStack(t *testing.T) {
+	testStack := types.StackResult{
+		Name:       "test-stack",
+		Compatible: true,
+		Grade:      "stable",
+		Notes:      nil,
+		Size:       1000,
+	}
+
+	var stacks = []types.StackResult{testStack}
+
+	result, err := TopStack(stacks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result == nil {
+		t.Fatalf("Top stack should return a valid result")
+	}
+	if result.Name != "test-stack" {
+		t.Fatalf("Top stack result name should be `test-stack`")
+	}
+
+	testStack.Grade = "devel"
+	stacks = []types.StackResult{testStack}
+
+	result, err = TopStack(stacks)
+	if err == nil {
+		t.Fatal("devel stack alone should not be chosen")
+	}
+	t.Log(err.Error())
+}
+
+func TestLoadStacksFromDir(t *testing.T) {
+	stacks, err := LoadStacksFromDir("../../test_data/stacks")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(stacks)
+}
+
+func TestUnmarshalStack(t *testing.T) {
+	data, err := os.ReadFile("../../test_data/stacks/example-cpu-avx512/stack.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var currentStack types.Stack
+	err = yaml.Unmarshal(data, &currentStack)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Logf("%+v", currentStack)
+}
+
+func TestMemory(t *testing.T) {
+	file, err := os.Open("../../test_data/hardware_info/amd-ryzen9-7900.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var hardwareInfo types.HwInfo
+	err = json.Unmarshal(data, &hardwareInfo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	data, err = os.ReadFile("../../test_data/stacks/example-memory/stack.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var currentStack types.Stack
+	err = yaml.Unmarshal(data, &currentStack)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Valid hardware for stack
+	compatible, _, err := checkStack(hardwareInfo, currentStack)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !compatible {
+		t.Fatal("memory stack should be compatible")
 	}
 }

@@ -35,25 +35,24 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	filteredStacks, err := selector.FilterStacks(hardwareInfo, allStacks)
+	checkedStacks, err := selector.CheckStacks(allStacks, hardwareInfo)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var result types.StackSelection
-	result.Stacks = make([]types.StackResult, 0)
 
-	// Append stacks to result. Print summary on STDERR.
-	for _, stack := range filteredStacks {
-		result.Stacks = append(result.Stacks, stack)
-		if !stack.Compatible {
-			log.Printf("Stack %s not compatible: %s", stack.Name, strings.Join(stack.Notes, ", "))
+	// Append compatible stacks to result. Print summary on STDERR
+	for _, stack := range checkedStacks {
+		if stack.Compatible {
+			result.Stacks = append(result.Stacks, stack)
+			log.Printf("%s is compatible. Size: %d", stack.Name, stack.Size)
 		} else {
-			log.Printf("Stack %s is compatible. Size %d", stack.Name, stack.Size)
+			log.Printf("%s not compatible. Reasons: %s", stack.Name, strings.Join(stack.Notes, ", "))
 		}
 	}
 
-	topStack, err := selector.TopStack(filteredStacks)
+	topStack, err := selector.TopStack(checkedStacks)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -13,17 +13,26 @@ import (
 )
 
 // TopStack finds the "best" stack to use. The current best choice is the smallest one to download to improve user experience.
-func TopStack(scoredStacks []types.StackResult) (*types.StackResult, error) {
-	if len(scoredStacks) == 0 {
-		return nil, errors.New("no stacks found")
+func TopStack(checkedStacks []types.StackResult) (*types.StackResult, error) {
+	var availableStacks []types.StackResult
+
+	// Only choose from compatible and stable stacks
+	for _, stack := range checkedStacks {
+		if stack.Compatible && stack.Grade == "stable" {
+			availableStacks = append(availableStacks, stack)
+		}
+	}
+
+	if len(availableStacks) == 0 {
+		return nil, errors.New("no stable compatible stacks found")
 	}
 
 	// Sort by size (low to high)
-	sort.Slice(scoredStacks, func(i, j int) bool {
-		return scoredStacks[i].Size < scoredStacks[j].Size
+	sort.Slice(availableStacks, func(i, j int) bool {
+		return availableStacks[i].Size < availableStacks[j].Size
 	})
 	// return smallest
-	return &scoredStacks[0], nil
+	return &availableStacks[0], nil
 }
 
 func LoadStacksFromDir(stacksDir string) ([]types.Stack, error) {
@@ -62,8 +71,13 @@ func LoadStacksFromDir(stacksDir string) ([]types.Stack, error) {
 	return stacks, nil
 }
 
-func FilterStacks(hardwareInfo types.HwInfo, stacks []types.Stack) ([]types.StackResult, error) {
-	var scoredStacks []types.StackResult
+/*
+CheckStacks checks a list of stacks for compatibility against the provided hardware info.
+It returns a list of StackResults with the Compatibility field set to true or false,
+and the Notes field containing reasons for the decision.
+*/
+func CheckStacks(stacks []types.Stack, hardwareInfo types.HwInfo) ([]types.StackResult, error) {
+	var checkedStacks []types.StackResult
 
 	for _, currentStack := range stacks {
 		compatible, notes, err := checkStack(hardwareInfo, currentStack)
@@ -71,8 +85,9 @@ func FilterStacks(hardwareInfo types.HwInfo, stacks []types.Stack) ([]types.Stac
 			return nil, err
 		}
 
-		scoredStack := types.StackResult{
+		stackResult := types.StackResult{
 			Name:       currentStack.Name,
+			Grade:      currentStack.Grade,
 			Compatible: compatible,
 			Notes:      notes,
 		}
@@ -81,12 +96,12 @@ func FilterStacks(hardwareInfo types.HwInfo, stacks []types.Stack) ([]types.Stac
 		if err != nil {
 			return nil, err
 		}
-		scoredStack.Size = stackSize
+		stackResult.Size = stackSize
 
-		scoredStacks = append(scoredStacks, scoredStack)
+		checkedStacks = append(checkedStacks, stackResult)
 	}
 
-	return scoredStacks, nil
+	return checkedStacks, nil
 }
 
 func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (bool, []string, error) {
@@ -178,9 +193,10 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (bool, []string, e
 			if err != nil {
 				return false, nil, err
 			}
-			notes = append(notes, reasons...)
-			if !result {
-				compatible = false
+			if result {
+				anyOfDevicesFound++
+			} else {
+				notes = append(notes, reasons...)
 			}
 
 		case "gpu":
@@ -191,12 +207,12 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (bool, []string, e
 			if err != nil {
 				return false, nil, err
 			}
-			if !result {
+			if result {
+				anyOfDevicesFound++
+			} else {
 				notes = append(notes, reasons...)
-				compatible = false
 			}
 		}
-		anyOfDevicesFound++
 	}
 
 	// If any-of devices are defined, we need to find at least one

@@ -43,7 +43,7 @@ type StackDevice struct {
 	// GPUs
 	Bus               *string `yaml:"bus"`
 	ComputeCapability *string `yaml:"compute-capability"`
-	MinimumVram       *string `yaml:"minimum-vram"`
+	MinimumVram       *string `yaml:"vram"` // TODO update key to minimum-vram
 }
 
 type StackConf map[string]interface{}
