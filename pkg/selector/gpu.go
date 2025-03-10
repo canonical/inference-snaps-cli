@@ -34,8 +34,8 @@ func gpuMatchesStack(gpu types.Gpu, stackDevice types.StackDevice) (bool, error)
 	}
 
 	// If stack has a vram requirement, check if GPU has enough
-	if stackDevice.VRam != nil {
-		vramRequired, err := utils.StringToBytes(*stackDevice.VRam)
+	if stackDevice.MinimumVRam != nil {
+		vramRequired, err := utils.StringToBytes(*stackDevice.MinimumVRam)
 		if err != nil {
 			return false, err
 		}
