@@ -76,10 +76,10 @@ func TestCheckGpuVram(t *testing.T) {
 
 	stackVram := "4G"
 	stackDevice := types.StackDevice{
-		Type:        "gpu",
-		Bus:         nil,
-		VendorId:    nil,
-		MinimumVRam: &stackVram,
+		Type:     "gpu",
+		Bus:      nil,
+		VendorId: nil,
+		VRam:     &stackVram,
 	}
 
 	result, err := gpuMatchesStack(hwInfoGpu, stackDevice)

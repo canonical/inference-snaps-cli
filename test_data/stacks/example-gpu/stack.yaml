@@ -1,6 +1,6 @@
 name: example-gpu
 description: Example stack for NVIDIA GPU use, offering full accuracy
-maintainer: Canonical Ltd
+vendor: Canonical Ltd
 grade: devel
 devices:
   all:

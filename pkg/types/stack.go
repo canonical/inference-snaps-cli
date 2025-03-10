@@ -16,7 +16,7 @@ type ScoredStack struct {
 type Stack struct {
 	Name        string `yaml:"name"`
 	Description string `yaml:"description"`
-	Maintainer  string `yaml:"maintainer"`
+	Vendor      string `yaml:"vendor"`
 	Grade       string `yaml:"grade"`
 
 	Devices   StackDevices `yaml:"devices"`
@@ -38,12 +38,12 @@ type StackDevice struct {
 
 	// CPUs
 	Architectures []string `yaml:"architectures"`
-	Families      []string `yaml:"families"`
+	FamilyIds     []string `yaml:"family-ids"`
 	Flags         []string `yaml:"flags"`
 
 	// GPUs
 	Bus               *string `yaml:"bus"`
-	MinimumVRam       *string `yaml:"vram"`
+	VRam              *string `yaml:"vram"`
 	ComputeCapability *string `yaml:"compute-capability"`
 }
 

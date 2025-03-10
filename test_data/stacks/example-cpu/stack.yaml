@@ -1,6 +1,6 @@
 name: example-cpu
 description: Example stack for legacy CPUs, offering good accuracy with low footprints
-maintainer: Canonical Ltd
+vendor: Canonical Ltd
 grade: stable
 devices:
   any:
