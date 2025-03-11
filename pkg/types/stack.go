@@ -6,10 +6,9 @@ type StackSelection struct {
 }
 
 type ScoredStack struct {
-	Name       string   `json:"name"`
+	Stack
 	Score      int      `json:"score"`
 	Compatible bool     `json:"compatible"`
-	Grade      string   `json:"grade"`
 	Notes      []string `json:"notes,omitempty"`
 }
 

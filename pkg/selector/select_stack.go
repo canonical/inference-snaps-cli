@@ -77,9 +77,8 @@ func ScoreStacks(hardwareInfo types.HwInfo, stacks []types.Stack) ([]types.Score
 		score, err := checkStack(hardwareInfo, currentStack)
 
 		scoredStack := types.ScoredStack{
-			Name:       currentStack.Name,
+			Stack:      currentStack,
 			Score:      score,
-			Grade:      currentStack.Grade,
 			Compatible: true,
 		}
 
