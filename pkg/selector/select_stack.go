@@ -3,6 +3,7 @@ package selector
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"sort"
 	"strings"
@@ -16,7 +17,11 @@ func TopStack(scoredStacks []types.ScoredStack) (*types.ScoredStack, error) {
 	var compatibleStacks []types.ScoredStack
 
 	for _, stack := range scoredStacks {
-		if stack.Score > 0 && stack.Grade == "stable" {
+		if stack.Score == 0 {
+			log.Printf("Skipping stack %s because it is not compatible", stack.Name)
+		} else if stack.Grade != "stable" {
+			log.Printf("Skipping stack %s because it is not stable", stack.Name)
+		} else {
 			compatibleStacks = append(compatibleStacks, stack)
 		}
 	}

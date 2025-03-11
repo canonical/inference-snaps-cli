@@ -12,6 +12,8 @@ import (
 )
 
 func main() {
+	slog.SetComponentName("hook.install")
+
 	// get all stacks from "$SNAP"/stacks/*/stack.yaml and append to a single json array
 	snapDir, ok := os.LookupEnv("SNAP")
 	if !ok {
@@ -24,18 +26,7 @@ func main() {
 		slog.Fatalf("Error loading stacks: %v", err)
 	}
 
-	slog.Info("Found %d stacks", len(allStacks))
-
-	stacksJson, err := json.Marshal(allStacks)
-	if err != nil {
-		slog.Fatalf("Error serializing stacks: %v", err)
-	}
-
-	// set all stacks as snap options under `stacks`
-	err = snapctl.Set("stacks", string(stacksJson)).Document().Run()
-	if err != nil {
-		slog.Fatalf("Error setting stacks option: %v", err)
-	}
+	slog.Infof("Found %d stacks", len(allStacks))
 
 	// get hardware info
 	hardwareInfo, err := hardware_info.Get(false)
@@ -54,6 +45,19 @@ func main() {
 		}
 	}
 
+	// set all stacks as snap options under `stacks`
+	for _, stack := range scoredStacks {
+		stackJson, err := json.Marshal(stack)
+		if err != nil {
+			slog.Fatalf("Error serializing stacks: %v", err)
+		}
+
+		err = snapctl.Set("stacks."+stack.Name, string(stackJson)).Document().Run()
+		if err != nil {
+			slog.Fatalf("Error setting stacks option: %v", err)
+		}
+	}
+
 	// find top stack
 	topStack, err := selector.TopStack(scoredStacks)
 	if err != nil {
@@ -66,19 +70,19 @@ func main() {
 		slog.Fatalf("Error setting stack: %v", err)
 	}
 
-	// install components
+	// install top stack's components
 	snapctl.InstallComponents(topStack.Components...)
 
-	// get top stack configurations
-
-	// set snap options for configurations
-	configurationsString, err := json.Marshal(topStack.Configurations)
-	if err != nil {
-		slog.Fatalf("can't convert configurations to string: %v", err)
-	}
-	err = snapctl.Set("", string(configurationsString)).Document().Run()
-	if err != nil {
-		slog.Fatalf("can't set snap option: %v", err)
+	// set snap options for configurations - can't set json on root, so iterate options
+	for confKey, confVal := range topStack.Configurations {
+		valJson, err := json.Marshal(confVal)
+		if err != nil {
+			slog.Fatalf("Error serializing configuration %s: %v - %v", confKey, confVal, err)
+		}
+		err = snapctl.Set(confKey, string(valJson)).String().Run() // FIXME: for now always assume string
+		if err != nil {
+			slog.Fatalf("can't set snap option: %v", err)
+		}
 	}
 
 	// set generic configurations
