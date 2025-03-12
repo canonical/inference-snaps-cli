@@ -23,17 +23,17 @@ func TestParseLsCpu(t *testing.T) {
 		t.Run(lsPciFile, func(t *testing.T) {
 			lsPci, err := os.ReadFile(lsPciFile)
 			if err != nil {
-				t.Fatalf(err.Error())
+				t.Fatalf("%v", err.Error())
 			}
 
 			pciDevices, err := ParseLsPci(lsPci, true)
 			if err != nil {
-				t.Fatalf(err.Error())
+				t.Fatalf("%v", err.Error())
 			}
 
 			jsonData, err := json.MarshalIndent(pciDevices, "", "  ")
 			if err != nil {
-				t.Fatalf(err.Error())
+				t.Fatalf("%v", err.Error())
 			}
 
 			t.Log(string(jsonData))

@@ -50,17 +50,17 @@ func TestParseLsCpu(t *testing.T) {
 		t.Run(lsCpuFile, func(t *testing.T) {
 			lsCpu, err := os.ReadFile(lsCpuFile)
 			if err != nil {
-				t.Fatalf(err.Error())
+				t.Fatalf("%v", err.Error())
 			}
 
 			cpuInfo, err := parseLsCpu(lsCpu)
 			if err != nil {
-				t.Fatalf(err.Error())
+				t.Fatalf("%v", err.Error())
 			}
 
 			jsonData, err := json.MarshalIndent(cpuInfo, "", "  ")
 			if err != nil {
-				t.Fatalf(err.Error())
+				t.Fatalf("%v", err.Error())
 			}
 
 			t.Log(string(jsonData))
@@ -73,7 +73,7 @@ func TestUtsName(t *testing.T) {
 	var sysInfo unix.Utsname
 	err := unix.Uname(&sysInfo)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatalf("%v", err.Error())
 	}
 	t.Log(string(sysInfo.Sysname[:]))    // Linux
 	t.Log(string(sysInfo.Nodename[:]))   // jpmeijers-XP-13-7390
@@ -86,12 +86,12 @@ func TestUtsName(t *testing.T) {
 func TestMultipleModels(t *testing.T) {
 	lsCpu, err := os.ReadFile("../../../test_data/lscpu_cpuinfo/hp-dl380p-gen8-lscpu.json")
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatalf("%v", err.Error())
 	}
 
 	cpuInfo, err := parseLsCpu(lsCpu)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatalf("%v", err.Error())
 	}
 
 	if len(cpuInfo) != 4 {
