@@ -61,6 +61,7 @@ func main() {
 	// find top stack
 	topStack, err := selector.TopStack(scoredStacks)
 	if err != nil {
+		// FIXME: If no matching stacks are found, installation of this snap will fail
 		slog.Fatal(err)
 	}
 
@@ -70,20 +71,9 @@ func main() {
 		slog.Fatalf("Error setting stack: %v", err)
 	}
 
-	// install top stack's components
-	snapctl.InstallComponents(topStack.Components...)
+	slog.Infof("Selected stack for your hardware configuration: %s", topStack.Name)
 
-	// set snap options for configurations - can't set json on root, so iterate options
-	for confKey, confVal := range topStack.Configurations {
-		valJson, err := json.Marshal(confVal)
-		if err != nil {
-			slog.Fatalf("Error serializing configuration %s: %v - %v", confKey, confVal, err)
-		}
-		err = snapctl.Set(confKey, string(valJson)).String().Run() // FIXME: for now always assume string
-		if err != nil {
-			slog.Fatalf("can't set snap option: %v", err)
-		}
-	}
+	// Installation of topStack's components and snap options are done in configure hook, which runs after install hook
 
 	// set generic configurations
 	err = snapctl.Set("http.port", "8080").Run()
