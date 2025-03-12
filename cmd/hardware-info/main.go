@@ -21,6 +21,9 @@ func main() {
 	flag.Parse()
 
 	hwInfo, err := hardware_info.Get(friendlyNames)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	var jsonString []byte
 	if prettyOutput {

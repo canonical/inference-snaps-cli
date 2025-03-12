@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"os"
 	"strings"
 
 	"github.com/canonical/go-snapctl"
+	"github.com/canonical/go-snapctl/env"
 	slog "github.com/canonical/go-snapctl/log"
 	"github.com/canonical/ml-snap-utils/pkg/hardware_info"
 	"github.com/canonical/ml-snap-utils/pkg/selector"
@@ -15,12 +15,7 @@ func main() {
 	slog.SetComponentName("hook.install")
 
 	// get all stacks from "$SNAP"/stacks/*/stack.yaml and append to a single json array
-	snapDir, ok := os.LookupEnv("SNAP")
-	if !ok {
-		slog.Fatalf("SNAP environment variable not set")
-	}
-
-	stacksDir := snapDir + "/stacks"
+	stacksDir := env.Snap + "/stacks"
 	allStacks, err := selector.LoadStacksFromDir(stacksDir)
 	if err != nil {
 		slog.Fatalf("Error loading stacks: %v", err)
@@ -30,6 +25,9 @@ func main() {
 
 	// get hardware info
 	hardwareInfo, err := hardware_info.Get(false)
+	if err != nil {
+		slog.Fatalf("Error getting hardware info: %v", err)
+	}
 
 	// score stacks
 	scoredStacks, err := selector.ScoreStacks(hardwareInfo, allStacks)

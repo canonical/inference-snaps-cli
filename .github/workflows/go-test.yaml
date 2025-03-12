@@ -15,12 +15,7 @@ jobs:
           go-version: '1.24.x'
       - name: Hardware info tests
         run: |
-          go test -v -failfast ./pkg/hardware_info
-          go test -v -failfast ./pkg/hardware_info/cpu
-          go test -v -failfast ./pkg/hardware_info/disk
-          go test -v -failfast ./pkg/hardware_info/gpu
-          go test -v -failfast ./pkg/hardware_info/memory
-          go test -v -failfast ./pkg/hardware_info/pci
+          go test -v -failfast ./pkg/hardware_info/...
       - name: Selector tests
         run: |
           go test -v -failfast ./pkg/selector
