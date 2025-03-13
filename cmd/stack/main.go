@@ -204,7 +204,7 @@ func downloadRequiredComponents() {
 			if strings.Contains(err.Error(), "cannot install components for a snap that is unknown to the store") {
 				slog.Infof("Skip component installation. Install a local build: sudo snap install <path to %s component>", component)
 			} else if strings.Contains(err.Error(), "already installed") {
-				slog.Infof("Skip component installation: already installed: %s", component)
+				slog.Debugf("Skip component installation: already installed: %s", component)
 			} else {
 				slog.Fatalf("Error installing component: %v", err)
 			}
