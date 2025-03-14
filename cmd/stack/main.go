@@ -32,7 +32,7 @@ func main() {
 	downloadCmd := flag.NewFlagSet("download", flag.ExitOnError)
 
 	if len(os.Args) < 2 {
-		slog.Fatalf("expected a subcommands")
+		slog.Fatalf("expected a subcommand")
 	}
 
 	switch os.Args[1] {
