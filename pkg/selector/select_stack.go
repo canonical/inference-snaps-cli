@@ -16,11 +16,7 @@ func TopStack(scoredStacks []types.ScoredStack) (*types.ScoredStack, error) {
 	var compatibleStacks []types.ScoredStack
 
 	for _, stack := range scoredStacks {
-		if stack.Score == 0 {
-			fmt.Fprintln(os.Stderr, "Skipping incompatible stack:", stack.Name)
-		} else if stack.Grade != "stable" {
-			fmt.Fprintln(os.Stderr, "Skipping unstable stack:", stack.Name)
-		} else {
+		if stack.Score > 0 && stack.Grade == "stable" {
 			compatibleStacks = append(compatibleStacks, stack)
 		}
 	}
