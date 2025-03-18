@@ -9,7 +9,7 @@ import (
 
 	"github.com/canonical/go-snapctl"
 	"github.com/canonical/go-snapctl/env"
-	slog "github.com/canonical/go-snapctl/log"
+
 	"github.com/canonical/ml-snap-utils/pkg/hardware_info"
 	"github.com/canonical/ml-snap-utils/pkg/selector"
 	"github.com/canonical/ml-snap-utils/pkg/types"
@@ -18,8 +18,6 @@ import (
 var stacksDir = env.Snap + "/stacks"
 
 func main() {
-	slog.SetComponentName("stack")
-
 	// stack select [--auto]
 	// stack select [<stack>]
 	selectCmd := flag.NewFlagSet("select", flag.ExitOnError)
@@ -32,7 +30,8 @@ func main() {
 	downloadCmd := flag.NewFlagSet("download", flag.ExitOnError)
 
 	if len(os.Args) < 2 {
-		slog.Fatalf("expected a subcommand")
+		fmt.Println("expected a subcommands")
+		os.Exit(1)
 	}
 
 	switch os.Args[1] {
@@ -42,16 +41,19 @@ func main() {
 
 		if *selectAuto {
 			if len(selectCmd.Args()) != 0 {
-				slog.Fatal("Error: cannot specify stack with --auto flag")
+				fmt.Println("Error: cannot specify stack with --auto flag")
+				os.Exit(1)
 			}
 			autoSelectStacks()
 		} else {
 			// for now falling here is an error, regardless of other arguments
 			selectStack := selectCmd.Args()
 			if len(selectStack) == 0 {
-				slog.Fatal("Error: stack name not specified")
+				fmt.Println("Error: stack name not specified")
+				os.Exit(1)
 			} else {
-				slog.Fatal("Not implemented! Use 'snap <snap> set stack=<stack>' instead")
+				fmt.Println("Not implemented! Use 'snap <snap> set stack=<stack>' instead")
+				os.Exit(1)
 			}
 		}
 
@@ -71,11 +73,12 @@ func main() {
 }
 
 func loadStacksToSnapOptions() {
-	slog.Info("Loading stacks to snap options ...")
+	fmt.Println("Loading stacks to snap options ...")
 
 	allStacks, err := selector.LoadStacksFromDir(stacksDir)
 	if err != nil {
-		slog.Fatalf("Error loading stacks: %v", err)
+		fmt.Printf("Error loading stacks: %v", err)
+		os.Exit(1)
 	}
 
 	// set all stacks as snap options
@@ -83,53 +86,60 @@ func loadStacksToSnapOptions() {
 	for _, stack := range allStacks {
 		stackJson, err := json.Marshal(stack)
 		if err != nil {
-			slog.Fatalf("Error serializing stacks: %v", err)
+			fmt.Println("Error serializing stacks:", err)
+			os.Exit(1)
 		}
 
 		err = snapctl.Set("stacks."+stack.Name, string(stackJson)).Document().Run()
 		if err != nil {
-			slog.Fatalf("Error setting stacks option: %v", err)
+			fmt.Println("Error setting stacks option:", err)
+			os.Exit(1)
 		}
 	}
 }
 
 func autoSelectStacks() {
-	slog.Info("Automatically selecting a compatible stack ...")
+	fmt.Println("Automatically selecting a compatible stack ...")
 
 	connected, err := snapctl.IsConnected("hardware-observe").Run()
 	if err != nil {
-		slog.Fatalf("Error checking hardware-observer connection: %v", err)
+		fmt.Println("Error checking hardware-observer connection:", err)
+		os.Exit(1)
 	}
 	if !connected {
-		slog.Info("Error: hardware-observe interface (https://snapcraft.io/docs/hardware-observe-interface) isn't connected.")
-		slog.Info("This is required for hardware detection.")
-		slog.Fatalf("Please connect and try again: sudo snap connect %s:hardware-observe", env.SnapName) // TODO: change to SnapInstanceName
+		fmt.Println("Error: hardware-observe interface (https://snapcraft.io/docs/hardware-observe-interface) isn't connected.")
+		fmt.Println("This is required for hardware detection.")
+		fmt.Printf("Please connect and try again: sudo snap connect %s:hardware-observe\n", env.SnapInst)
+		os.Exit(1)
 	}
 
 	allStacks, err := selector.LoadStacksFromDir(stacksDir)
 	if err != nil {
-		slog.Fatalf("Error loading stacks: %v", err)
+		fmt.Println("Error loading stacks:", err)
+		os.Exit(1)
 	}
 
-	slog.Infof("Found %d stacks", len(allStacks))
+	fmt.Printf("Found %d stacks\n", len(allStacks))
 
 	// get hardware info
 	hardwareInfo, err := hardware_info.Get(false)
 	if err != nil {
-		slog.Fatalf("Error getting hardware info: %v", err)
+		fmt.Println("Error getting hardware info:", err)
+		os.Exit(1)
 	}
 
 	// score stacks
 	scoredStacks, err := selector.ScoreStacks(hardwareInfo, allStacks)
 	if err != nil {
-		slog.Fatal(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	for _, stack := range scoredStacks {
 		if stack.Score == 0 {
-			slog.Infof("Stack %s not selected: %s", stack.Name, strings.Join(stack.Notes, ", "))
+			fmt.Printf("Stack %s not selected: %s\n", stack.Name, strings.Join(stack.Notes, ", "))
 		} else {
-			slog.Infof("Stack %s matches. Score = %d", stack.Name, stack.Score)
+			fmt.Printf("Stack %s matches. Score = %d\n", stack.Name, stack.Score)
 		}
 	}
 
@@ -137,64 +147,73 @@ func autoSelectStacks() {
 	for _, stack := range scoredStacks {
 		stackJson, err := json.Marshal(stack)
 		if err != nil {
-			slog.Fatalf("Error serializing stacks: %v", err)
+			fmt.Println("Error serializing stacks:", err)
+			os.Exit(1)
 		}
 
 		err = snapctl.Set("stacks."+stack.Name, string(stackJson)).Document().Run()
 		if err != nil {
-			slog.Fatalf("Error setting stacks option: %v", err)
+			fmt.Println("Error setting stacks option:", err)
+			os.Exit(1)
 		}
 	}
 
 	// find top stack
 	topStack, err := selector.TopStack(scoredStacks)
 	if err != nil {
-		// FIXME: If no matching stacks are found, installation of this snap will fail
-		slog.Fatal(err)
+		fmt.Println("Error selecting a stack:", err)
+		os.Exit(1)
 	}
 
 	// set top stack name as snap option
 	err = snapctl.Set("stack", topStack.Name).String().Run()
 	if err != nil {
-		slog.Fatalf("Error setting stack: %v", err)
+		fmt.Println("Error setting stack:", err)
+		os.Exit(1)
 	}
 
 	// set snap options from stack configurations
 	for confKey, confVal := range topStack.Configurations {
 		valJson, err := json.Marshal(confVal)
 		if err != nil {
-			slog.Fatalf("Error serializing configuration %s: %v - %v", confKey, confVal, err)
+			fmt.Printf("Error serializing configuration %s: %v - %v\n", confKey, confVal, err)
+			os.Exit(1)
 		}
 		err = snapctl.Set(confKey, string(valJson)).Document().Run()
 		if err != nil {
-			slog.Fatalf("can't set snap option: %v", err)
+			fmt.Println("Error setting snap option:", err)
+			os.Exit(1)
 		}
 	}
 
-	slog.Infof("Selected stack for your hardware configuration: %s", topStack.Name)
+	fmt.Println("Selected stack for your hardware configuration:", topStack.Name)
 }
 
 func downloadRequiredComponents() {
-	slog.Infof("Downloading required components ...")
+	fmt.Println("Downloading required components ...")
 
 	// get stack snap option
 	stackName, err := snapctl.Get("stack").Run()
 	if err != nil {
-		slog.Fatalf("Error getting stack from snap options: %v", err)
+		fmt.Println("Error getting stack from snap options:", err)
+		os.Exit(1)
 	}
 	if stackName == "" {
-		slog.Fatal("Stack snap option is empty")
+		fmt.Println("Stack snap option is empty")
+		os.Exit(1)
 	}
 
 	// get stacks.<new-stack> snap option for the list of components
 	stackJson, err := snapctl.Get("stacks." + stackName).Run()
 	if err != nil {
-		slog.Fatalf("Error getting stack definition from snap options: %v", err)
+		fmt.Println("Error getting stack definition from snap options:", err)
+		os.Exit(1)
 	}
 	var stack types.ScoredStack
 	err = json.Unmarshal([]byte(stackJson), &stack)
 	if err != nil {
-		slog.Fatalf("Error deserializing stack definition from snap options: %v", err)
+		fmt.Println("Error deserializing stack definition from snap options:", err)
+		os.Exit(1)
 	}
 
 	// install components
@@ -202,11 +221,12 @@ func downloadRequiredComponents() {
 		err = snapctl.InstallComponents(component).Run()
 		if err != nil {
 			if strings.Contains(err.Error(), "cannot install components for a snap that is unknown to the store") {
-				slog.Infof("Skip component installation. Install a local build: sudo snap install <path to %s component>", component)
+				fmt.Printf("Skip component installation. Install a local build: sudo snap install <path to %s component>\n", component)
 			} else if strings.Contains(err.Error(), "already installed") {
-				slog.Debugf("Skip component installation: already installed: %s", component)
+				fmt.Println("Skip component installation: already installed:", component)
 			} else {
-				slog.Fatalf("Error installing component: %v", err)
+				fmt.Println("Error installing component:", err)
+				os.Exit(1)
 			}
 		}
 	}
