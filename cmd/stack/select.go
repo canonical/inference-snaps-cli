@@ -15,18 +15,6 @@ import (
 func autoSelectStacks() {
 	fmt.Println("Automatically selecting a compatible stack ...")
 
-	connected, err := snapctl.IsConnected("hardware-observe").Run()
-	if err != nil {
-		fmt.Println("Error checking hardware-observer connection:", err)
-		os.Exit(1)
-	}
-	if !connected {
-		fmt.Println("Error: hardware-observe interface (https://snapcraft.io/docs/hardware-observe-interface) isn't connected.")
-		fmt.Println("This is required for hardware detection.")
-		fmt.Printf("Please connect and try again: sudo snap connect %s:hardware-observe\n", env.SnapInst)
-		os.Exit(1)
-	}
-
 	allStacks, err := selector.LoadStacksFromDir(stacksDir)
 	if err != nil {
 		fmt.Println("Error loading stacks:", err)
