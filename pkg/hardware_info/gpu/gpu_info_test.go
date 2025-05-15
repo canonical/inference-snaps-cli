@@ -17,7 +17,7 @@ var lspciFiles = []string{
 	"../../../test_data/lspci/radeon_hd7450+tesla_k20xm.txt",
 	"../../../test_data/lspci/matrox_g200er2.txt",
 	"../../../test_data/lspci/rpi5.txt",
-	"../../../test_data/lspci/dell_xps13_gen10.txt",
+	"../../../test_data/lspci/xps13-7390.txt",
 }
 
 func TestDisplayDevices(t *testing.T) {
