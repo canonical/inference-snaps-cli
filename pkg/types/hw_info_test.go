@@ -14,7 +14,8 @@ var hwInfoFiles = []string{
 	"../../test_data/hardware_info/hp-dl380p-gen8.json",
 	"../../test_data/hardware_info/i7-2600k.json",
 	"../../test_data/hardware_info/nuc11-i5-1145G7.json",
-	"../../test_data/hardware_info/xps13-gen10.json",
+	"../../test_data/hardware_info/xps13-7390.json",
+	"../../test_data/hardware_info/xps13-9350.json",
 }
 
 func TestParseHwInfo(t *testing.T) {
