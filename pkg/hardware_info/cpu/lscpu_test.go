@@ -43,6 +43,7 @@ var testFiles = []string{
 	"../../../test_data/lscpu_cpuinfo/mediatek-g350-lscpu.json",
 	"../../../test_data/lscpu_cpuinfo/intel-cbrd-raptor-lake.json",
 	"../../../test_data/lscpu_cpuinfo/intel-core2.json",
+	"../../../test_data/lscpu_cpuinfo/xps13-9350-lscpu.json", // has NPU
 }
 
 func TestParseLsCpu(t *testing.T) {
