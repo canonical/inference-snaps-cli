@@ -69,7 +69,7 @@ func getVRam(pciDevice pci.PciDevice) (*uint64, error) {
 	case constants.PciVendorNvidia:
 		return nvidiaVram(pciDevice)
 	case constants.PciVendorIntel:
-		return nil, errors.New("vram lookup for Intel GPU not implemented")
+		return intelVram(pciDevice)
 	default:
 		return nil, errors.New("unknown GPU, not looking up vram")
 	}
