@@ -417,24 +417,24 @@ type Clinfo struct {
 			ClDeviceMaxWorkItemSizes               []int `json:"CL_DEVICE_MAX_WORK_ITEM_SIZES"`
 			ClDeviceMaxWorkGroupSize               int   `json:"CL_DEVICE_MAX_WORK_GROUP_SIZE"`
 			ClDevicePreferredWorkGroupSizeMultiple int   `json:"CL_DEVICE_PREFERRED_WORK_GROUP_SIZE_MULTIPLE"`
-			ClKernelPreferredWorkGroupSizeMultiple int   `json:"CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE"`
-			ClDeviceMaxNumSubGroups                int   `json:"CL_DEVICE_MAX_NUM_SUB_GROUPS"`
-			ClDeviceSubGroupSizesIntel             []int `json:"CL_DEVICE_SUB_GROUP_SIZES_INTEL"`
-			ClDevicePreferredVectorWidthChar       int   `json:"CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR"`
-			ClDeviceNativeVectorWidthChar          int   `json:"CL_DEVICE_NATIVE_VECTOR_WIDTH_CHAR"`
-			ClDevicePreferredVectorWidthShort      int   `json:"CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT"`
-			ClDeviceNativeVectorWidthShort         int   `json:"CL_DEVICE_NATIVE_VECTOR_WIDTH_SHORT"`
-			ClDevicePreferredVectorWidthInt        int   `json:"CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT"`
-			ClDeviceNativeVectorWidthInt           int   `json:"CL_DEVICE_NATIVE_VECTOR_WIDTH_INT"`
-			ClDevicePreferredVectorWidthLong       int   `json:"CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG"`
-			ClDeviceNativeVectorWidthLong          int   `json:"CL_DEVICE_NATIVE_VECTOR_WIDTH_LONG"`
-			ClDevicePreferredVectorWidthHalf       int   `json:"CL_DEVICE_PREFERRED_VECTOR_WIDTH_HALF"`
-			ClDeviceNativeVectorWidthHalf          int   `json:"CL_DEVICE_NATIVE_VECTOR_WIDTH_HALF"`
-			ClDevicePreferredVectorWidthFloat      int   `json:"CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT"`
-			ClDeviceNativeVectorWidthFloat         int   `json:"CL_DEVICE_NATIVE_VECTOR_WIDTH_FLOAT"`
-			ClDevicePreferredVectorWidthDouble     int   `json:"CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE"`
-			ClDeviceNativeVectorWidthDouble        int   `json:"CL_DEVICE_NATIVE_VECTOR_WIDTH_DOUBLE"`
-			ClDeviceHalfFpConfig                   struct {
+			//ClKernelPreferredWorkGroupSizeMultiple int   `json:"CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE"` // Inside a snap this field is a string with value "<getWGsizes:1954: build program : error -6>"
+			ClDeviceMaxNumSubGroups            int   `json:"CL_DEVICE_MAX_NUM_SUB_GROUPS"`
+			ClDeviceSubGroupSizesIntel         []int `json:"CL_DEVICE_SUB_GROUP_SIZES_INTEL"`
+			ClDevicePreferredVectorWidthChar   int   `json:"CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR"`
+			ClDeviceNativeVectorWidthChar      int   `json:"CL_DEVICE_NATIVE_VECTOR_WIDTH_CHAR"`
+			ClDevicePreferredVectorWidthShort  int   `json:"CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT"`
+			ClDeviceNativeVectorWidthShort     int   `json:"CL_DEVICE_NATIVE_VECTOR_WIDTH_SHORT"`
+			ClDevicePreferredVectorWidthInt    int   `json:"CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT"`
+			ClDeviceNativeVectorWidthInt       int   `json:"CL_DEVICE_NATIVE_VECTOR_WIDTH_INT"`
+			ClDevicePreferredVectorWidthLong   int   `json:"CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG"`
+			ClDeviceNativeVectorWidthLong      int   `json:"CL_DEVICE_NATIVE_VECTOR_WIDTH_LONG"`
+			ClDevicePreferredVectorWidthHalf   int   `json:"CL_DEVICE_PREFERRED_VECTOR_WIDTH_HALF"`
+			ClDeviceNativeVectorWidthHalf      int   `json:"CL_DEVICE_NATIVE_VECTOR_WIDTH_HALF"`
+			ClDevicePreferredVectorWidthFloat  int   `json:"CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT"`
+			ClDeviceNativeVectorWidthFloat     int   `json:"CL_DEVICE_NATIVE_VECTOR_WIDTH_FLOAT"`
+			ClDevicePreferredVectorWidthDouble int   `json:"CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE"`
+			ClDeviceNativeVectorWidthDouble    int   `json:"CL_DEVICE_NATIVE_VECTOR_WIDTH_DOUBLE"`
+			ClDeviceHalfFpConfig               struct {
 				Raw    int      `json:"raw"`
 				Config []string `json:"config"`
 			} `json:"CL_DEVICE_HALF_FP_CONFIG"`

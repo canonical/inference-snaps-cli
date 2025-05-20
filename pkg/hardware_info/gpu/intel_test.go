@@ -7,6 +7,7 @@ import (
 
 var clinfoFiles = []string{
 	"../../../test_data/clinfo/ArcA580.json",
+	"../../../test_data/clinfo/ArcA580Snap.json",
 	"../../../test_data/clinfo/ArcB580.json",
 	"../../../test_data/clinfo/NoDevices.json",
 }
