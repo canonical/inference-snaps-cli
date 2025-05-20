@@ -12,11 +12,10 @@ import (
 
 func intelVram(device pci.PciDevice) (*uint64, error) {
 	/*
-			For GPU vRAM information, I was able to see it with – clinfo. Grep for “Global memory size” and/or “Max memory allocation”
-			After installing necessary drivers for GPU, NPU, you can use OV APIs to see available devices and their properties include VRAM
+		For GPU vRAM information use clinfo. Grep for "Global memory size" and/or "Max memory allocation".
+		After installing necessary drivers for GPU, NPU, you can also use OpenVino APIs to see available devices and their properties, including VRAM.
 
-		clinfo --json
-		CL_DEVICE_GLOBAL_MEM_SIZE
+		`clinfo --json` reports a field `CL_DEVICE_GLOBAL_MEM_SIZE` which corresponds to the installed hardware's vRAM.
 	*/
 	command := exec.Command("clinfo", "--json")
 	data, err := command.Output()
