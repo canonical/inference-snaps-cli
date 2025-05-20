@@ -299,7 +299,7 @@ func TestNoCpuInHwInfo(t *testing.T) {
 	//t.Log(err)
 }
 
-func TestCpuFlagsIntelGpu(t *testing.T) {
+func TestIntelDiscreetGpu(t *testing.T) {
 	file, err := os.Open("../../test_data/hardware_info/mustang.json")
 	if err != nil {
 		t.Fatal(err)
