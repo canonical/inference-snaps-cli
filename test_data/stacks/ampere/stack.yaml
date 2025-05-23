@@ -7,7 +7,7 @@ devices:
     - type: cpu
       architectures: [arm64]
       vendor-id: ARM
-      model-name: Neoverse-N1
+      model-name: Neoverse-N1 # Altra uses the ARM vendor ID along with the Neoverse-N1 model name.
     - type: cpu
       architectures: [arm64]
       vendor-id: Ampere
