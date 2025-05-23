@@ -1,0 +1,26 @@
+name: ampere
+description: Test ampere selection
+vendor: Canonical Ltd
+grade: stable
+devices:
+  any:
+    - type: cpu
+      architectures: [arm64]
+      vendor-id: ARM
+      model-name: Neoverse-N1
+    - type: cpu
+      architectures: [arm64]
+      vendor-id: Ampere
+      model-name: Ampere-1
+    - type: cpu
+      architectures: [arm64]
+      vendor-id: Ampere
+      model-name: Ampere-1a
+memory: 8G
+disk-space: 5G
+components:
+  - llamaaio
+  - model-q4-k-m-gguf
+configurations:
+  engine: llamaaio
+  model: model-q4-k-m-gguf

@@ -339,3 +339,42 @@ func TestIntelDiscreteGpu(t *testing.T) {
 	}
 
 }
+
+func TestAmpere(t *testing.T) {
+	file, err := os.Open("../../test_data/hardware_info/ampere-altra.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var hardwareInfo types.HwInfo
+	err = json.Unmarshal(data, &hardwareInfo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	data, err = os.ReadFile("../../test_data/stacks/ampere/stack.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var stack types.Stack
+	err = yaml.Unmarshal(data, &stack)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Valid hardware for stack
+	result, err := checkStack(hardwareInfo, stack)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result == 0 {
+		t.Fatal("Ampere stack should match ampere hardware")
+	}
+	t.Logf("Matching score: %d", result)
+}

@@ -9,6 +9,7 @@ import (
 )
 
 func hostLsPci() ([]byte, error) {
+	// lspci -vmmnD
 	out, err := exec.Command("lspci", "-vmmnD").Output()
 	if err != nil {
 		return nil, err
