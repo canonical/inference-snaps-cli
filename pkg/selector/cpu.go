@@ -26,7 +26,22 @@ iterateCpus:
 		// architecture
 		// cpu count
 		// Family
+
 		// CpuModel
+		if stackDevice.ModelId != nil {
+			if *stackDevice.ModelId == cpu.ModelId {
+				cpuScore += WeightCpuModel
+			} else {
+				continue
+			}
+		}
+		if stackDevice.ModelName != nil {
+			if *stackDevice.ModelName == cpu.ModelName {
+				cpuScore += WeightCpuModel
+			} else {
+				continue
+			}
+		}
 
 		// Flags
 		for _, flag := range stackDevice.Flags {
