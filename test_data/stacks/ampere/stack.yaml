@@ -16,7 +16,7 @@ devices:
       architectures: [arm64]
       vendor-id: Ampere
       model-name: Ampere-1a
-memory: 8G
+memory: 4G
 disk-space: 5G
 components:
   - llamaaio
