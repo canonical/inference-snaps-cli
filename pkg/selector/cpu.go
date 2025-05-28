@@ -35,13 +35,8 @@ iterateCpus:
 				continue
 			}
 		}
-		if stackDevice.ModelName != nil {
-			if *stackDevice.ModelName == cpu.ModelName {
-				cpuScore += WeightCpuModel
-			} else {
-				continue
-			}
-		}
+
+		// TODO stackDevice.ModelName - see #48
 
 		// Flags
 		for _, flag := range stackDevice.Flags {
