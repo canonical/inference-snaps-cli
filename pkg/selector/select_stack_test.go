@@ -418,7 +418,7 @@ func TestAmpereNotMatchPi(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Valid hardware for stack
+	// Pi hardware should be invalid for ampere stack
 	result, err := checkStack(hardwareInfo, stack)
 	if result != 0 {
 		t.Fatal("Ampere stack should not match Raspberry Pi hardware")
