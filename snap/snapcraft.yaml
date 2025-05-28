@@ -1,4 +1,4 @@
-name: ml-snap-utils
+name: stack-utils
 base: core24
 version: git
 summary: Utilities for snapping ML workloads

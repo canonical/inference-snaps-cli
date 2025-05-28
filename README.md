@@ -27,8 +27,8 @@ snapcraft -v
 Then install the snap and connect the required interfaces:
 
 ```bash
-sudo snap install --dangerous ./ml-snap-utils_*.snap
-sudo snap connect ml-snap-utils:hardware-observe 
+sudo snap install --dangerous ./stack-utils_*.snap
+sudo snap connect stack-utils:hardware-observe 
 ```
 
 ## Usage
@@ -38,7 +38,7 @@ sudo snap connect ml-snap-utils:hardware-observe
 A help message is printed out when providing the `-h` or `--help` flags.
 
 ```bash
-$ ml-snap-utils.hardware-info -h
+$ stack-utils.hardware-info -h
 Usage of hardware-info:
   -file string
         Output json to this file. Default output is to stdout.
@@ -63,7 +63,7 @@ The result is written as json to STDOUT, while any other log messages are availa
 Example:
 
 ```bash
-$ ml-snap-utils.hardware-info | ml-snap-utils.select-stack --stacks=test_data/stacks/
+$ stack-utils.hardware-info | stack-utils.select-stack --stacks=test_data/stacks/
 2024/12/10 11:28:03 Vendor specific info for Intel GPU not implemented
 2024/12/10 11:28:03 Stack cpu-f32 not selected: not enough memory
 2024/12/10 11:28:03 Stack fallback-cpu matches. Score = 4.000000
