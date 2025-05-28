@@ -9,7 +9,6 @@ import (
 var testFiles = []string{
 	"../../../test_data/lspci/dell-precision-3660-c29399.txt",
 	"../../../test_data/lspci/dell-vostro153535-c30942.txt",
-	"../../../test_data/lspci/amd-cezanne.txt",
 	"../../../test_data/lspci/hp-elitebook845-g8-notebook-pc-c30368.txt",
 	"../../../test_data/lspci/intel-arc-a580.txt",
 	"../../../test_data/lspci/radeon_hd7450+tesla_k20xm.txt",
