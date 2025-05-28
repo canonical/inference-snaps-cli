@@ -342,9 +342,9 @@ func TestIntelDiscreteGpu(t *testing.T) {
 
 func TestAmpere(t *testing.T) {
 	var ampereHwInfos = []string{
-		"../../test_data/hardware_info/ampere-altra.json",
-		"../../test_data/hardware_info/ampere-one.json",
-		"../../test_data/hardware_info/ampere-one-x.json",
+		"../../test_data/hardware_info/ampere-altra.json", // we only have real hardware-info from an Altra server
+		//"../../test_data/hardware_info/ampere-one.json",
+		//"../../test_data/hardware_info/ampere-one-x.json",
 	}
 
 	for _, hwInfoFile := range ampereHwInfos {
