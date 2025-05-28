@@ -2,21 +2,19 @@
 
 This repo contains utilities used in snapping machine learning (AI) workloads.
 
-## Build
+## Development
 
-The CLIs included in this repo can be built using the following commands.
+### Build binaries
 
-Hardware Info:
-
-```bash
-go build github.com/canonical/ml-snap-utils/cmd/hardware-info
-```
-
-Select Stack:
+The CLIs included in this repo can be built using the following commands:
 
 ```bash
-go build github.com/canonical/ml-snap-utils/cmd/select-stack
+go build ./cmd/hardware-info
+go build ./cmd/select-stack
+go build ./cmd/stack
 ```
+
+### Build snap
 
 To build a snap for these applications, run:
 
@@ -30,6 +28,14 @@ Then install the snap and connect the required interfaces:
 sudo snap install --dangerous ./stack-utils_*.snap
 sudo snap connect stack-utils:hardware-observe 
 ```
+
+## Installation
+
+```bash
+sudo snap install stack-utils --devmode
+```
+
+To build and install from source, refer to [here](#build-snap).
 
 ## Usage
 
