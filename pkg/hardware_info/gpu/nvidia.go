@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/canonical/ml-snap-utils/pkg/hardware_info/pci"
+	"github.com/canonical/ml-snap-utils/pkg/types"
 )
 
-func nvidiaVram(device pci.PciDevice) (*uint64, error) {
+func nvidiaVram(device types.PciDevice) (*uint64, error) {
 	/*
 		Nvidia: LANG=C nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits
 
@@ -48,7 +48,7 @@ func nvidiaVram(device pci.PciDevice) (*uint64, error) {
 	}
 }
 
-func nvidiaComputeCapability(device pci.PciDevice) (*string, error) {
+func nvidiaComputeCapability(device types.PciDevice) (*string, error) {
 	// nvidia-smi --query-gpu=compute_cap --format=csv
 	command := exec.Command("nvidia-smi", "--id="+device.Slot, "--query-gpu=compute_cap", "--format=csv,noheader")
 	command.Env = os.Environ()
