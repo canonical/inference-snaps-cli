@@ -164,6 +164,20 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, error) {
 			}
 			stackScore += gpuScore
 			allOfDevicesFound++
+		default:
+			// Devices without a type will land here
+
+			// The type field should be empty, err if it is not
+			if device.Type != "" {
+				return 0, fmt.Errorf("stack device has an invalid type")
+			}
+
+			deviceScore, err := checkTypelessDevice(hardwareInfo, device)
+			if err != nil || deviceScore == 0 {
+				return 0, fmt.Errorf("a required device was not found: %v", err)
+			}
+			stackScore += deviceScore
+			allOfDevicesFound++
 		}
 	}
 
@@ -200,6 +214,22 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, error) {
 				anyOfDevicesFound++
 			}
 			stackScore += gpuScore
+		default:
+			// Devices without a type will land here
+
+			// The type field should be empty, err if it is not
+			if device.Type != "" {
+				return 0, fmt.Errorf("stack device has an invalid type")
+			}
+
+			deviceScore, err := checkTypelessDevice(hardwareInfo, device)
+			if err != nil {
+				return 0, err
+			}
+			if deviceScore > 0 {
+				anyOfDevicesFound++
+			}
+			stackScore += deviceScore
 		}
 	}
 
@@ -209,4 +239,20 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, error) {
 	}
 
 	return stackScore, nil
+}
+
+func checkTypelessDevice(hardwareInfo types.HwInfo, device types.StackDevice) (int, error) {
+	if device.Bus == nil {
+		return 0, fmt.Errorf("stack devices without a type or bus are not supported")
+	}
+	bus := *device.Bus
+
+	switch bus {
+	case "pci":
+		return checkPciPeripherals(hardwareInfo.PciPeripherals, device)
+	case "usb":
+		return 0, fmt.Errorf("usb devices not implemented")
+	default:
+		return 0, fmt.Errorf("unknown device bus")
+	}
 }
