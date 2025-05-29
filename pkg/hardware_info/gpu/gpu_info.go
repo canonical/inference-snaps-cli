@@ -19,7 +19,7 @@ func Info(friendlyNames bool) ([]types.Gpu, error) {
 	return pciGpus(pciDevices)
 }
 
-func pciGpus(pciDevices []pci.PciDevice) ([]types.Gpu, error) {
+func pciGpus(pciDevices []types.PciDevice) ([]types.Gpu, error) {
 	var gpus []types.Gpu
 
 	for _, device := range pciDevices {
@@ -62,7 +62,7 @@ func pciGpus(pciDevices []pci.PciDevice) ([]types.Gpu, error) {
 	return gpus, nil
 }
 
-func getVRam(pciDevice pci.PciDevice) (*uint64, error) {
+func getVRam(pciDevice types.PciDevice) (*uint64, error) {
 	switch pciDevice.VendorId {
 	case constants.PciVendorAmd:
 		return amdVram(pciDevice)
@@ -75,7 +75,7 @@ func getVRam(pciDevice pci.PciDevice) (*uint64, error) {
 	}
 }
 
-func getComputeCapability(pciDevice pci.PciDevice) (*string, error) {
+func getComputeCapability(pciDevice types.PciDevice) (*string, error) {
 	if pciDevice.VendorId == constants.PciVendorNvidia {
 		return nvidiaComputeCapability(pciDevice)
 	}

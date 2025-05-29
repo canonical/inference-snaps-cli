@@ -5,6 +5,7 @@ import (
 	"github.com/canonical/ml-snap-utils/pkg/hardware_info/disk"
 	"github.com/canonical/ml-snap-utils/pkg/hardware_info/gpu"
 	"github.com/canonical/ml-snap-utils/pkg/hardware_info/memory"
+	"github.com/canonical/ml-snap-utils/pkg/hardware_info/pci_peripherals"
 	"github.com/canonical/ml-snap-utils/pkg/types"
 )
 
@@ -34,6 +35,12 @@ func Get(friendlyNames bool) (types.HwInfo, error) {
 		return hwInfo, err
 	}
 	hwInfo.Gpus = gpuInfo
+
+	pciPeripherals, err := pci_peripherals.Info()
+	if err != nil {
+		return hwInfo, err
+	}
+	hwInfo.PciPeripherals = pciPeripherals
 
 	return hwInfo, nil
 }
