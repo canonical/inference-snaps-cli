@@ -3,7 +3,6 @@ package pci
 import (
 	"fmt"
 
-	"github.com/canonical/ml-snap-utils/pkg/types"
 	"github.com/jaypipes/pcidb"
 )
 
@@ -11,7 +10,7 @@ var (
 	pciDb *pcidb.PCIDB
 )
 
-func PciDevices(friendlyNames bool) ([]types.PciDevice, error) {
+func PciDevices(friendlyNames bool) ([]PciDevice, error) {
 
 	hostLsPci, err := hostLsPci()
 	if err != nil {
@@ -24,8 +23,8 @@ func PciDevices(friendlyNames bool) ([]types.PciDevice, error) {
 	return devices, nil
 }
 
-func lookupFriendlyNames(device types.PciDevice) (types.FriendlyNames, error) {
-	var friendlyNames types.FriendlyNames
+func lookupFriendlyNames(device PciDevice) (FriendlyNames, error) {
+	var friendlyNames FriendlyNames
 
 	if pciDb == nil {
 		// Load pci.ids database if needed
