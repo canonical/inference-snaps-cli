@@ -36,7 +36,7 @@ func Get(friendlyNames bool) (types.HwInfo, error) {
 	}
 	hwInfo.Gpus = gpuInfo
 
-	pciPeripherals, err := pci_peripherals.Info()
+	pciPeripherals, err := pci_peripherals.Info(friendlyNames)
 	if err != nil {
 		return hwInfo, err
 	}
