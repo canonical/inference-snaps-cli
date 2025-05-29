@@ -6,6 +6,7 @@ import (
 )
 
 func Info(friendlyNames bool) ([]types.PciDevice, error) {
+	var pciPeripherals []types.PciDevice
 
 	pciDevices, err := pci.PciDevices(friendlyNames)
 	if err != nil {
@@ -17,12 +18,15 @@ func Info(friendlyNames bool) ([]types.PciDevice, error) {
 	if err != nil {
 		return nil, err
 	}
+	pciPeripherals = append(pciPeripherals, pciAccelerators...)
+
 	pciCoprocessors, err := coprocessors(pciDevices)
 	if err != nil {
 		return nil, err
 	}
+	pciPeripherals = append(pciPeripherals, pciCoprocessors...)
 
-	return append(pciAccelerators, pciCoprocessors...), err
+	return pciPeripherals, err
 }
 
 /*
