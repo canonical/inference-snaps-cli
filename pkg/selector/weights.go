@@ -1,8 +1,8 @@
 package selector
 
 const (
-	WeightTpu       = 1000
-	WeightTpuVendor = 200
+	WeightPci       = 1000
+	WeightPciVendor = 200
 
 	WeightGpu                  = 100
 	WeightGpuVendor            = 20
