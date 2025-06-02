@@ -9,7 +9,7 @@ devices:
     - bus: pci
       vendor-id: 0x8086 # Intel Corporation
       model-ids:
-        - 643e # Lunar Lake NPU
+        - 0x643e # Lunar Lake NPU
 memory: 4G
 disk-space: 8G
 components:

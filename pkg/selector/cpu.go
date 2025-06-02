@@ -25,16 +25,8 @@ iterateCpus:
 		// TODO
 		// architecture
 		// cpu count
-		// Family
-
-		// CpuModel
-		if stackDevice.ModelId != nil {
-			if *stackDevice.ModelId == cpu.ModelId {
-				cpuScore += WeightCpuModel
-			} else {
-				continue
-			}
-		}
+		// Family in list
+		// CpuModel in list
 
 		// TODO stackDevice.ModelName - see #48
 

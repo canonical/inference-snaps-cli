@@ -34,15 +34,15 @@ type StackDevices struct {
 type StackDevice struct {
 	Type     string  `yaml:"type" json:"type"`
 	VendorId *string `yaml:"vendor-id" json:"vendor-id"`
+	Bus      *string `yaml:"bus" json:"bus,omitempty"`
 
 	// CPUs
 	Architectures []string `yaml:"architectures" json:"architectures,omitempty"`
-	ModelId       *int     `yaml:"model-id" json:"model-id,omitempty"`
+	ModelIds      []string `yaml:"model-ids" json:"model-ids,omitempty"`
 	FamilyIds     []string `yaml:"family-ids" json:"family-ids,omitempty"`
 	Flags         []string `yaml:"flags" json:"flags,omitempty"`
 
 	// GPUs
-	Bus               *string `yaml:"bus" json:"bus,omitempty"`
 	VRam              *string `yaml:"vram" json:"vram,omitempty"`
 	ComputeCapability *string `yaml:"compute-capability" json:"compute-capability,omitempty"`
 }
