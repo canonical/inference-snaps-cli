@@ -183,12 +183,12 @@
   ],
   "pci-peripherals": [
     {
-      "device-class": "0x1200",
-      "programming-interface": "0x0",
-      "vendor-id": "0x8086",
-      "device-id": "0x643e",
-      "subvendor-id": "0x1028",
-      "subdevice-id": "0x0cc9"
+      "device_class": "0x1200",
+      "programming_interface": "0x0",
+      "vendor_id": "0x8086",
+      "device_id": "0x643e",
+      "subvendor_id": "0x1028",
+      "subdevice_id": "0x0cc9"
     }
   ]
 }

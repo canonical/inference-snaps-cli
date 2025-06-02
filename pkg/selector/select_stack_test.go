@@ -461,4 +461,29 @@ func TestNpuStackMatch(t *testing.T) {
 		t.Fatalf("NPU stack should match npu hardware: %v", err)
 	}
 	t.Logf("Matching score: %d", result)
+
+	// Invalid hardware for stack
+	file, err = os.Open("../../test_data/hardware_info/raspberry-pi-5.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	data, err = io.ReadAll(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	hardwareInfo = types.HwInfo{}
+	err = json.Unmarshal(data, &hardwareInfo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result, err = checkStack(hardwareInfo, stack)
+	if result != 0 {
+		t.Fatalf("NPU stack should not match on non-npu hardware: %v", err)
+	}
+	if err != nil {
+		t.Logf("NPU stack does not match on Pi 5: %v", err)
+	}
 }
