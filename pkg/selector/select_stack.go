@@ -134,7 +134,26 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, error) {
 
 	// Devices
 	// all
-	allOfDevicesFound := 0
+	extraScore, err := checkDevicesAll(hardwareInfo, stack)
+	if err != nil {
+		return 0, fmt.Errorf("all: %v", err)
+	}
+	stackScore += extraScore
+
+	// any
+	extraScore, err = checkDevicesAny(hardwareInfo, stack)
+	if err != nil {
+		return 0, fmt.Errorf("any: %v", err)
+	}
+	stackScore += extraScore
+
+	return stackScore, nil
+}
+
+func checkDevicesAll(hardwareInfo types.HwInfo, stack types.Stack) (int, error) {
+	devicesFound := 0
+	extraScore := 0
+
 	for _, device := range stack.Devices.All {
 		switch device.Type {
 		case "cpu":
@@ -143,13 +162,13 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, error) {
 			}
 			cpuScore, err := checkCpus(device, hardwareInfo.Cpus)
 			if err != nil {
-				return 0, err
+				return 0, fmt.Errorf("cpu: %v", err)
 			}
 			if cpuScore == 0 {
 				return 0, fmt.Errorf("required cpu device not found")
 			}
-			stackScore += cpuScore
-			allOfDevicesFound++
+			extraScore += cpuScore
+			devicesFound++
 
 		case "gpu":
 			if len(hardwareInfo.Gpus) == 0 {
@@ -157,36 +176,43 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, error) {
 			}
 			gpuScore, err := checkGpus(hardwareInfo.Gpus, device)
 			if err != nil {
-				return 0, err
+				return 0, fmt.Errorf("gpu: %v", err)
 			}
 			if gpuScore == 0 {
 				return 0, fmt.Errorf("required gpu device not found")
 			}
-			stackScore += gpuScore
-			allOfDevicesFound++
-		default:
-			// Devices without a type will land here
+			extraScore += gpuScore
+			devicesFound++
 
-			// The type field should be empty, err if it is not
+		default:
+			// Devices without a type will land here - the type field should be empty
 			if device.Type != "" {
 				return 0, fmt.Errorf("stack device has an invalid type")
 			}
 
 			deviceScore, err := checkTypelessDevice(hardwareInfo, device)
-			if err != nil || deviceScore == 0 {
-				return 0, fmt.Errorf("a required device was not found: %v", err)
+			if err != nil {
+				return 0, fmt.Errorf("error matching device: %v", err)
 			}
-			stackScore += deviceScore
-			allOfDevicesFound++
+			if deviceScore == 0 {
+				return 0, fmt.Errorf("a required typeless device was not found")
+			}
+			extraScore += deviceScore
+			devicesFound++
 		}
 	}
 
-	if len(stack.Devices.All) > 0 && allOfDevicesFound != len(stack.Devices.All) {
-		return 0, fmt.Errorf("all: could not find a required device")
+	if len(stack.Devices.All) > 0 && devicesFound != len(stack.Devices.All) {
+		return 0, fmt.Errorf("could not find a required device")
 	}
 
-	// any
-	anyOfDevicesFound := 0
+	return extraScore, nil
+}
+
+func checkDevicesAny(hardwareInfo types.HwInfo, stack types.Stack) (int, error) {
+	devicesFound := 0
+	extraScore := 0
+
 	for _, device := range stack.Devices.Any {
 		switch device.Type {
 		case "cpu":
@@ -198,9 +224,9 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, error) {
 				return 0, err
 			}
 			if cpuScore > 0 {
-				anyOfDevicesFound++
+				devicesFound++
 			}
-			stackScore += cpuScore
+			extraScore += cpuScore
 
 		case "gpu":
 			if hardwareInfo.Gpus == nil {
@@ -211,34 +237,33 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, error) {
 				return 0, err
 			}
 			if gpuScore > 0 {
-				anyOfDevicesFound++
+				devicesFound++
 			}
-			stackScore += gpuScore
-		default:
-			// Devices without a type will land here
+			extraScore += gpuScore
 
-			// The type field should be empty, err if it is not
+		default:
+			// Devices without a type will land here - the type field should be empty
 			if device.Type != "" {
 				return 0, fmt.Errorf("stack device has an invalid type")
 			}
 
 			deviceScore, err := checkTypelessDevice(hardwareInfo, device)
 			if err != nil {
-				return 0, err
+				return 0, fmt.Errorf("error matching typeless device: %v", err)
 			}
 			if deviceScore > 0 {
-				anyOfDevicesFound++
+				devicesFound++
 			}
-			stackScore += deviceScore
+			extraScore += deviceScore
 		}
 	}
 
 	// If any-of devices are defined, we need to find at least one
-	if len(stack.Devices.Any) > 0 && anyOfDevicesFound == 0 {
-		return 0, fmt.Errorf("any: could not find a required device")
+	if len(stack.Devices.Any) > 0 && devicesFound == 0 {
+		return 0, fmt.Errorf("could not find a required device")
 	}
 
-	return stackScore, nil
+	return extraScore, nil
 }
 
 func checkTypelessDevice(hardwareInfo types.HwInfo, device types.StackDevice) (int, error) {
