@@ -1,7 +1,7 @@
 package pci
 
 type PciDevice struct {
-	Slot                 string  `json:"slot,omitempty"`
+	Slot                 string  `json:"slot"`
 	DeviceClass          uint16  `json:"device_class"`
 	ProgrammingInterface *uint8  `json:"programming_interface"`
 	VendorId             uint16  `json:"vendor_id"`
