@@ -10,6 +10,7 @@ devices:
       vendor-id: 0x8086 # Intel Corporation
       model-ids:
         - 0x643e # Lunar Lake NPU
+        - 0x7d1d # Meteor Lake NPU
 memory: 4G
 disk-space: 8G
 components:

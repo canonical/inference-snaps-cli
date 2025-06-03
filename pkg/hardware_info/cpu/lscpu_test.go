@@ -42,12 +42,12 @@ var testFiles = []string{
 	"../../../test_data/lscpu/hp-dl380p-gen8.json",
 	"../../../test_data/lscpu/intel-cbrd-raptor-lake.json",
 	"../../../test_data/lscpu/intel-core2.json",
+	"../../../test_data/lscpu/locker-mustang.json", // Intel Battlemage dGPU
 	"../../../test_data/lscpu/mediatek-g350.json",
 	"../../../test_data/lscpu/mediatek-genio-1200.json",
-	"../../../test_data/lscpu/mustang.json",
 	"../../../test_data/lscpu/rpi5.json",
 	"../../../test_data/lscpu/xps13-7390.json",
-	"../../../test_data/lscpu/xps13-9350.json", // has NPU
+	"../../../test_data/lscpu/xps13-9350.json", // Intel Lunar Lake NPU
 }
 
 func TestParseLsCpu(t *testing.T) {

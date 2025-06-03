@@ -16,8 +16,10 @@ var hwInfoFiles = []string{
 	"../../test_data/hardware_info/dell-r730xd.json",
 	"../../test_data/hardware_info/hp-dl380p-gen8.json",
 	//"../../test_data/hardware_info/i7-2600k.json", // Old CPU that does not have any of the necessary flags
-	"../../test_data/hardware_info/mustang.json",
+	"../../test_data/hardware_info/locker-hercules.json",
+	"../../test_data/hardware_info/locker-mustang.json",
 	"../../test_data/hardware_info/nuc11-i5-1145G7.json",
+	//"../../test_data/hardware_info/raspberry-pi-5.json", // No compatible stacks
 	"../../test_data/hardware_info/xps13-7390.json",
 	"../../test_data/hardware_info/xps13-9350.json",
 }
@@ -301,7 +303,7 @@ func TestNoCpuInHwInfo(t *testing.T) {
 }
 
 func TestIntelDiscreteGpu(t *testing.T) {
-	file, err := os.Open("../../test_data/hardware_info/mustang.json")
+	file, err := os.Open("../../test_data/hardware_info/locker-mustang.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -428,7 +430,7 @@ func TestAmpereNotMatchPi(t *testing.T) {
 }
 
 func TestNpuStackMatch(t *testing.T) {
-	file, err := os.Open("../../test_data/hardware_info/xps13-9350.json")
+	file, err := os.Open("../../test_data/hardware_info/locker-hercules.json")
 	if err != nil {
 		t.Fatal(err)
 	}
