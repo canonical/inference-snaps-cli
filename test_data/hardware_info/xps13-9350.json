@@ -180,15 +180,5 @@
       "subvendor_id": "0x1028",
       "subdevice_id": "0x0cc9"
     }
-  ],
-  "pci-peripherals": [
-    {
-      "device_class": "0x1200",
-      "programming_interface": "0x0",
-      "vendor_id": "0x8086",
-      "device_id": "0x643e",
-      "subvendor_id": "0x1028",
-      "subdevice_id": "0x0cc9"
-    }
   ]
 }

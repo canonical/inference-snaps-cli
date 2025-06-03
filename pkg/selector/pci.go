@@ -13,64 +13,77 @@ func checkPciPeripherals(peripherals []types.PciPeripheral, device types.StackDe
 
 	for _, peripheral := range peripherals {
 
-		vendorFound, err := checkPciVendorId(device, peripheral)
-		if err != nil {
-			return 0, err
-		}
-		if vendorFound {
-			deviceScore += WeightPciVendor
-
-			// Only check the device ID if the vendor is a match - device IDs are only unique per vendor namespace
-			modelFound, err := checkPciDeviceId(device, peripheral)
+		// Only check pci device vendor if it is set in the stack manifest
+		if device.VendorId != nil {
+			vendorMatch, err := checkPciVendorId(device, peripheral)
 			if err != nil {
-				return 0, err
+				return 0, fmt.Errorf("failed to check pci device vendor: %v", err)
 			}
-			if modelFound {
-				deviceScore += WeightPciModel
+			if vendorMatch {
+				deviceScore += WeightPciVendor
+
+				// Only check the device ID if the vendor is a match - device IDs are only unique per vendor namespace
+				if len(device.ModelIds) > 0 {
+					modelMatch, err := checkPciDeviceId(device, peripheral)
+					if err != nil {
+						return 0, fmt.Errorf("failed to check pci device/model id: %v", err)
+					}
+					if modelMatch {
+						deviceScore += WeightPciModel
+					}
+				}
 			}
 		}
+
+		// TODO other PCI device fields
 	}
 
 	return deviceScore, nil
 }
 
 func checkPciVendorId(device types.StackDevice, peripheral types.PciPeripheral) (bool, error) {
-	if device.VendorId != nil && peripheral.VendorId != "" {
-		deviceVendorId, err := strconv.ParseUint(peripheral.VendorId, 0, 32)
+	if peripheral.VendorId != "" {
+		stackVendorId, err := strconv.ParseUint(*device.VendorId, 0, 32)
 		if err != nil {
 			return false, fmt.Errorf("can't parse stack device vendor ID: %v", err)
 		}
-		peripheralVendorId, err := strconv.ParseUint(peripheral.VendorId, 0, 32)
+
+		hwVendorId, err := strconv.ParseUint(peripheral.VendorId, 0, 32)
 		if err != nil {
 			return false, fmt.Errorf("can't parse peripheral vendor ID: %v", err)
 		}
-		if deviceVendorId == peripheralVendorId {
+
+		if stackVendorId == hwVendorId {
 			return true, nil
 		}
+
+		return false, nil // vendor does not match
 	}
-	return false, fmt.Errorf("pci device with required vendor not found")
+	return false, fmt.Errorf("pci device vendor id not set")
 }
 
 func checkPciDeviceId(device types.StackDevice, peripheral types.PciPeripheral) (bool, error) {
 	// For now, we use the model-ids list in the stack manifest to match the PCI device ID
-	if len(device.ModelIds) > 0 && peripheral.DeviceId != "" {
-		var deviceModelIds []uint64
+	if peripheral.DeviceId != "" {
+		var stackModelIds []uint64
 		for _, modelIdString := range device.ModelIds {
 			modelIdInt, err := strconv.ParseUint(modelIdString, 0, 32)
 			if err != nil {
 				return false, fmt.Errorf("can't parse stack device model ID: %v", err)
 			}
-			deviceModelIds = append(deviceModelIds, modelIdInt)
+			stackModelIds = append(stackModelIds, modelIdInt)
 		}
 
-		peripheralModelId, err := strconv.ParseUint(peripheral.DeviceId, 0, 32)
+		hwModelId, err := strconv.ParseUint(peripheral.DeviceId, 0, 32)
 		if err != nil {
 			return false, fmt.Errorf("can't parse peripheral device ID: %v", err)
 		}
 
-		if slices.Contains(deviceModelIds, peripheralModelId) {
+		if slices.Contains(stackModelIds, hwModelId) {
 			return true, nil
 		}
+
+		return false, nil // model does not match
 	}
-	return false, fmt.Errorf("pci device with required device id (model id) not found")
+	return false, fmt.Errorf("pci device id not set")
 }

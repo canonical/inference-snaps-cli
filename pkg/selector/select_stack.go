@@ -86,6 +86,8 @@ func ScoreStacks(hardwareInfo types.HwInfo, stacks []types.Stack) ([]types.Score
 			scoredStack.Compatible = false
 		}
 
+		// TODO: Need to split runtime errors from non-match reasons.
+		// For now use the error message as a note why this stack is not a match.
 		if err != nil {
 			scoredStack.Notes = append(scoredStack.Notes, err.Error())
 		}
@@ -268,7 +270,7 @@ func checkDevicesAny(hardwareInfo types.HwInfo, stack types.Stack) (int, error) 
 
 func checkTypelessDevice(hardwareInfo types.HwInfo, device types.StackDevice) (int, error) {
 	if device.Bus == nil {
-		return 0, fmt.Errorf("stack devices without a type or bus are not supported")
+		return 0, fmt.Errorf("stack devices without a type and without a bus are not supported")
 	}
 	bus := *device.Bus
 
@@ -276,7 +278,7 @@ func checkTypelessDevice(hardwareInfo types.HwInfo, device types.StackDevice) (i
 	case "pci":
 		return checkPciPeripherals(hardwareInfo.PciPeripherals, device)
 	case "usb":
-		return 0, fmt.Errorf("usb devices not implemented")
+		return 0, fmt.Errorf("usb device matching not implemented")
 	default:
 		return 0, fmt.Errorf("unknown device bus")
 	}
