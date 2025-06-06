@@ -10,5 +10,6 @@ type CpuInfo struct {
 	LogicalCores  int      `json:"logical_cores"`
 	MaxFrequency  float64  `json:"max_frequency"`
 	MinFrequency  float64  `json:"min_frequency"`
+	BogoMips      float64  `json:"bogo_mips"`
 	Flags         []string `json:"flags"`
 }
