@@ -16,16 +16,17 @@ func Info() ([]types.CpuInfo, error) {
 	}
 
 	hostProcCpuInfo, err := procCpuInfo()
-	if err != nil {
-		return nil, err
-	}
+	// procCpuInfo currently returns a not implemented error on all architectures except arm64
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	cpus, err = enrichCpus(cpus, hostProcCpuInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	return cpus, err
+	return cpus, nil
 }
 
 func enrichCpus(cpus []types.CpuInfo, procCpuInfo []ProcCpuInfo) ([]types.CpuInfo, error) {
