@@ -1,15 +1,38 @@
-package gpu
+package nvidia
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 
-	"github.com/canonical/ml-snap-utils/pkg/hardware_info/pci"
+	"github.com/canonical/ml-snap-utils/pkg/types"
 )
 
-func nvidiaVram(device pci.PciDevice) (*uint64, error) {
+func gpuProperties(pciDevice types.PciDevice) map[string]string {
+	properties := make(map[string]string)
+
+	vRamVal, err := vRam(pciDevice)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "NVIDIA: error looking up vRAM: %v", err)
+	}
+	if vRamVal != nil {
+		properties["vram"] = strconv.FormatUint(*vRamVal, 10)
+	}
+
+	ccVal, err := computeCapability(pciDevice)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "NVIDIA: error looking up compute capability: %v", err)
+	}
+	if ccVal != nil {
+		properties["computeCapability"] = *ccVal
+	}
+
+	return properties
+}
+
+func vRam(device types.PciDevice) (*uint64, error) {
 	/*
 		Nvidia: LANG=C nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits
 
@@ -48,7 +71,7 @@ func nvidiaVram(device pci.PciDevice) (*uint64, error) {
 	}
 }
 
-func nvidiaComputeCapability(device pci.PciDevice) (*string, error) {
+func computeCapability(device types.PciDevice) (*string, error) {
 	// nvidia-smi --query-gpu=compute_cap --format=csv
 	command := exec.Command("nvidia-smi", "--id="+device.Slot, "--query-gpu=compute_cap", "--format=csv,noheader")
 	command.Env = os.Environ()

@@ -1,14 +1,29 @@
-package gpu
+package amd
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
 
-	"github.com/canonical/ml-snap-utils/pkg/hardware_info/pci"
+	"github.com/canonical/ml-snap-utils/pkg/types"
 )
 
-func amdVram(device pci.PciDevice) (*uint64, error) {
+func gpuProperties(pciDevice types.PciDevice) map[string]string {
+	properties := make(map[string]string)
+
+	vRamVal, err := vRam(pciDevice)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "AMD: error looking up vRAM: %v", err)
+	}
+	if vRamVal != nil {
+		properties["vram"] = strconv.FormatUint(*vRamVal, 10)
+	}
+
+	return properties
+}
+
+func vRam(device types.PciDevice) (*uint64, error) {
 	/*
 		AMD vram is listed under /sys/bus/pci/devices/${pci_slot}/mem_info_vram_total
 

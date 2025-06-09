@@ -1,17 +1,18 @@
-package pci
+package types
 
 type PciDevice struct {
 	Slot                 string  `json:"slot"`
 	DeviceClass          uint16  `json:"device_class"`
-	ProgrammingInterface *uint8  `json:"programming_interface"`
+	ProgrammingInterface *uint8  `json:"programming_interface,omitempty"`
 	VendorId             uint16  `json:"vendor_id"`
 	DeviceId             uint16  `json:"device_id"`
 	SubvendorId          *uint16 `json:"subvendor_id,omitempty"`
 	SubdeviceId          *uint16 `json:"subdevice_id,omitempty"`
-	FriendlyNames
+	PciFriendlyNames
+	AdditionalProperties map[string]string `json:"additional_properties,omitempty"`
 }
 
-type FriendlyNames struct {
+type PciFriendlyNames struct {
 	VendorName    *string `json:"vendor_name,omitempty"`
 	DeviceName    *string `json:"device_name,omitempty"`
 	SubvendorName *string `json:"subvendor_name,omitempty"`
