@@ -32,17 +32,22 @@ type StackDevices struct {
 }
 
 type StackDevice struct {
-	Type     string  `yaml:"type" json:"type"`
-	VendorId *string `yaml:"vendor-id" json:"vendor-id"`
+	Type string `yaml:"type" json:"type"`
+	Bus  string `yaml:"bus" json:"bus,omitempty"`
 
 	// CPUs
 	Architectures []string `yaml:"architectures" json:"architectures,omitempty"`
-	ModelId       *int     `yaml:"model-id" json:"model-id,omitempty"`
+	VendorId      *string  `yaml:"vendor-id" json:"vendor-id"`
+	ModelIds      []string `yaml:"model-id" json:"model-id,omitempty"`
 	FamilyIds     []string `yaml:"family-ids" json:"family-ids,omitempty"`
 	Flags         []string `yaml:"flags" json:"flags,omitempty"`
 
-	// GPUs
-	Bus               *string `yaml:"bus" json:"bus,omitempty"`
+	// PCI
+	PciDeviceClass *string  `yaml:"pci-device-class" json:"pci-device-class,omitempty"`
+	PciVendorId    *string  `yaml:"pci-vendor-id" json:"pci-vendor-id,omitempty"`
+	PciDeviceIds   []string `yaml:"pci-device-ids" json:"pci-device-ids,omitempty"`
+
+	// GPU additional properties
 	VRam              *string `yaml:"vram" json:"vram,omitempty"`
 	ComputeCapability *string `yaml:"compute-capability" json:"compute-capability,omitempty"`
 }
