@@ -482,3 +482,39 @@ func TestAmpereNotMatchPi(t *testing.T) {
 		t.Logf("Ampere stack does not match on Pi 5. Reason: %v", reasons)
 	}
 }
+
+func TestNpuStackMatch(t *testing.T) {
+	file, err := os.Open("../../test_data/hardware_info/xps13-9350.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var hardwareInfo types.HwInfo
+	err = json.Unmarshal(data, &hardwareInfo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	data, err = os.ReadFile("../../test_data/stacks/intel-npu/stack.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var stack types.Stack
+	err = yaml.Unmarshal(data, &stack)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Valid hardware for stack
+	result, err := checkStack(hardwareInfo, stack)
+	if err != nil || result == 0 {
+		t.Fatalf("NPU stack should match npu hardware: %v", err)
+	}
+	t.Logf("Matching score: %d", result)
+}
