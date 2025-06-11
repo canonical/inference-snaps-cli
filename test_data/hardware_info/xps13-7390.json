@@ -132,17 +132,17 @@
     }
   ],
   "memory": {
-    "total_ram": 15908732928,
+    "total_ram": 15908737024,
     "total_swap": 4294963200
   },
   "disk": {
     "/": {
-      "total": 1003736440832,
-      "avail": 770774802432
+      "total": 7954366464,
+      "avail": 7954366464
     },
     "/var/lib/snapd/snaps": {
       "total": 1003736440832,
-      "avail": 770774802432
+      "avail": 769959477248
     }
   },
   "pci": [
@@ -168,7 +168,10 @@
       "subdevice_id": 2402,
       "vendor_name": "Intel Corporation",
       "device_name": "CometLake-U GT2 [UHD Graphics]",
-      "subvendor_name": "Dell"
+      "subvendor_name": "Dell",
+      "additional_properties": {
+        "vram": "14482350080"
+      }
     },
     {
       "slot": "0000:00:04.0",
