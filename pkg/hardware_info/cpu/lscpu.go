@@ -2,6 +2,7 @@ package cpu
 
 import (
 	"encoding/json"
+	"fmt"
 	"os/exec"
 	"strings"
 
@@ -35,7 +36,11 @@ func parseLsCpu(input []byte) ([]types.CpuInfo, error) {
 
 		switch label {
 		case "Architecture:":
-			architecture = value
+			// Use Debian architecture constants
+			architecture, err = debianArchitecture(value)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse lscpu architecture: %v", err)
+			}
 		case "CPU(s):":
 			// Not used as we calculate it ourselves per model
 		case "Vendor ID:":
@@ -95,7 +100,9 @@ func parseLsCpu(input []byte) ([]types.CpuInfo, error) {
 							//	cpuInfo.MinFrequency = minFreq
 							//}
 						case "BogoMIPS:":
-							// Not used
+							if bogoMips, err := strconv.ParseFloat(modelNameChild.Data, 64); err == nil {
+								cpuInfo.BogoMips = bogoMips
+							}
 						case "Flags:":
 							flags := strings.Fields(modelNameChild.Data)
 							cpuInfo.Flags = flags
