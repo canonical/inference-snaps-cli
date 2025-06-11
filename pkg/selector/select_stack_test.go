@@ -512,9 +512,12 @@ func TestNpuStackMatch(t *testing.T) {
 	}
 
 	// Valid hardware for stack
-	result, err := checkStack(hardwareInfo, stack)
-	if err != nil || result == 0 {
-		t.Fatalf("NPU stack should match npu hardware: %v", err)
+	result, reasons, err := checkStack(hardwareInfo, stack)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result == 0 {
+		t.Fatalf("NPU stack should match npu hardware: %v", reasons)
 	}
 	t.Logf("Matching score: %d", result)
 }

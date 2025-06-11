@@ -172,23 +172,22 @@
       "avail": 445910405120
     }
   },
-  "gpus": [
+  "pci": [
     {
-      "bus": "",
-      "vendor_id": "0x8086",
-      "device_id": "0x64a0",
-      "subvendor_id": "0x1028",
-      "subdevice_id": "0x0cc9"
-    }
-  ],
-  "pci-peripherals": [
+      "device_class": 768,
+      "programming_interface": 0,
+      "vendor_id": 32902,
+      "device_id": 25760,
+      "subvendor_id": 4136,
+      "subdevice_id": 3273
+    },
     {
-      "device-class": "0x1200",
-      "programming-interface": "0x0",
-      "vendor-id": "0x8086",
-      "device-id": "0x643e",
-      "subvendor-id": "0x1028",
-      "subdevice-id": "0x0cc9"
+      "device_class": 4608,
+      "programming_interface": 0,
+      "vendor_id": 32902,
+      "device_id": 25662,
+      "subvendor_id": 4136,
+      "subdevice_id": 3273
     }
   ]
 }
