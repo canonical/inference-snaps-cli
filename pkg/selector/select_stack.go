@@ -196,7 +196,7 @@ func checkDevicesAll(hardwareInfo types.HwInfo, stackDevices []types.StackDevice
 			}
 			extraScore += cpuScore
 			devicesFound++
-			
+
 		} else if device.Bus == "usb" {
 			// Not implemented
 
@@ -253,15 +253,13 @@ func checkDevicesAny(hardwareInfo types.HwInfo, stackDevices []types.StackDevice
 					reasons = append(reasons, "cpu: "+reason)
 				}
 			}
-		}
 
-		if device.Bus == "usb" {
+		} else if device.Bus == "usb" {
 			reasons = append(reasons, "usb: not implemented")
 			return 0, reasons, nil
-		}
 
-		// Fallback to PCI as default bus
-		if device.Bus == "" || device.Bus == "pci" {
+		} else if device.Bus == "" || device.Bus == "pci" {
+			// Fallback to PCI as default bus
 			if hardwareInfo.PciDevices == nil {
 				continue
 			}

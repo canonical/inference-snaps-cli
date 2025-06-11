@@ -1,14 +1,17 @@
 package types
 
 type CpuInfo struct {
-	Architecture  string   `json:"architecture"`
-	VendorId      string   `json:"vendor_id"`
-	FamilyId      *int     `json:"family_id"`
-	ModelId       int      `json:"model_id"`
-	ModelName     string   `json:"model_name"`
-	PhysicalCores int      `json:"physical_cores"`
-	LogicalCores  int      `json:"logical_cores"`
-	MaxFrequency  float64  `json:"max_frequency"`
-	MinFrequency  float64  `json:"min_frequency"`
-	Flags         []string `json:"flags"`
+	Architecture string `json:"architecture"`
+	CpuInfoAmd64
+	CpuInfoArm64
+}
+
+type CpuInfoAmd64 struct {
+	ManufacturerId string   `json:"manufacturer_id"`
+	Flags          []string `json:"flags"`
+}
+
+type CpuInfoArm64 struct {
+	ImplementerId HexInt `json:"implementer_id"`
+	PartNumber    HexInt `json:"part_number"`
 }

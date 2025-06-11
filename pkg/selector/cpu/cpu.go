@@ -1,6 +1,7 @@
 package cpu
 
 import (
+	"fmt"
 	"slices"
 
 	"github.com/canonical/ml-snap-utils/pkg/selector/weights"
@@ -20,12 +21,22 @@ iterateCpus:
 	for _, cpu := range cpus {
 		cpuScore := weights.CpuDevice
 
-		// Vendor
-		if stackDevice.VendorId != nil {
-			if *stackDevice.VendorId == cpu.VendorId {
+		// amd64 manufacturer ID
+		if stackDevice.ManufacturerId != nil {
+			if *stackDevice.ManufacturerId == cpu.ManufacturerId {
 				cpuScore += weights.CpuVendor // vendor matched
 			} else {
-				reasons = append(reasons, "Vendor ID does not match")
+				reasons = append(reasons, fmt.Sprintf("Manufacturer ID does not match: %s = %s", *stackDevice.ManufacturerId, cpu.ManufacturerId))
+				continue
+			}
+		}
+
+		// arm64 implementer ID
+		if stackDevice.ImplementerId != nil {
+			if *stackDevice.ImplementerId == cpu.ImplementerId {
+				cpuScore += weights.CpuVendor
+			} else {
+				reasons = append(reasons, fmt.Sprintf("Implementer ID does not match: %x = %x", *stackDevice.ImplementerId, cpu.ImplementerId))
 				continue
 			}
 		}

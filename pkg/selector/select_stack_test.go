@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/canonical/ml-snap-utils/pkg/types"
@@ -352,7 +353,7 @@ func TestIntelDiscreteGpu(t *testing.T) {
 	}
 
 	if score == 0 {
-		t.Fatalf("Stack should match: %v", reasons)
+		t.Fatalf("Stack should match: %s", strings.Join(reasons, ",\n"))
 	}
 }
 

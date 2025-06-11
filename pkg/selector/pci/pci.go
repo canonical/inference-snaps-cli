@@ -1,9 +1,6 @@
 package pci
 
 import (
-	"slices"
-	"strconv"
-
 	"github.com/canonical/ml-snap-utils/pkg/selector/weights"
 	"github.com/canonical/ml-snap-utils/pkg/types"
 )
@@ -44,12 +41,8 @@ func checkPciDevice(stackDevice types.StackDevice, pciDevice types.PciDevice) (i
 		}
 	}
 
-	if stackDevice.PciVendorId != nil {
-		requiredVendorId, err := strconv.ParseUint(*stackDevice.PciVendorId, 0, 32)
-		if err != nil {
-			return 0, reasons, err
-		}
-		if requiredVendorId == uint64(pciDevice.VendorId) {
+	if stackDevice.VendorId != nil {
+		if uint16(*stackDevice.VendorId) == pciDevice.VendorId {
 			currentDeviceScore += weights.PciVendorId
 		} else {
 			reasons = append(reasons, "pci vendor id mismatch")
@@ -57,18 +50,8 @@ func checkPciDevice(stackDevice types.StackDevice, pciDevice types.PciDevice) (i
 		}
 
 		// A model ID is only unique per vendor ID namespace. Only check it if the vendor is a match
-		if len(stackDevice.PciDeviceIds) > 0 {
-			var requiredIds []uint64
-
-			for _, deviceId := range stackDevice.PciDeviceIds {
-				requiredDeviceId, err := strconv.ParseUint(deviceId, 0, 32)
-				if err != nil {
-					return 0, reasons, err
-				}
-				requiredIds = append(requiredIds, requiredDeviceId)
-			}
-
-			if slices.Contains(requiredIds, uint64(pciDevice.DeviceId)) {
+		if stackDevice.DeviceId != nil {
+			if uint16(*stackDevice.DeviceId) == pciDevice.DeviceId {
 				currentDeviceScore += weights.PciDeviceId
 			} else {
 				reasons = append(reasons, "no device with matching device id found")

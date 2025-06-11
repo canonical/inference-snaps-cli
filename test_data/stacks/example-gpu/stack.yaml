@@ -5,7 +5,7 @@ grade: devel
 devices:
   all:
     - type: cpu
-      architectures: [amd64]
+      architecture: amd64
     - type: gpu
       bus: pci
       vendor-id: 0x10de # Nvidia Corporation

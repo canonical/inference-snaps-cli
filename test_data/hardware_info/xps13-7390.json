@@ -2,14 +2,7 @@
   "cpus": [
     {
       "architecture": "x86_64",
-      "vendor_id": "GenuineIntel",
-      "family_id": 6,
-      "model_id": 142,
-      "model_name": "Intel(R) Core(TM) i7-10510U CPU @ 1.80GHz",
-      "physical_cores": 4,
-      "logical_cores": 8,
-      "max_frequency": 4900,
-      "min_frequency": 400,
+      "manufacturer_id": "GenuineIntel",
       "flags": [
         "fpu",
         "vme",
@@ -128,7 +121,9 @@
         "md_clear",
         "flush_l1d",
         "arch_capabilities"
-      ]
+      ],
+      "implementer_id": 0,
+      "part_number": 0
     }
   ],
   "memory": {
@@ -142,7 +137,7 @@
     },
     "/var/lib/snapd/snaps": {
       "total": 1003736440832,
-      "avail": 769959477248
+      "avail": 769012416512
     }
   },
   "pci": [
