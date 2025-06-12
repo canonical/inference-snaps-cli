@@ -7,26 +7,19 @@ import (
 	"strings"
 )
 
-// ProcCpuInfo contains general information about a system CPU found in /proc/cpuinfo.
-type ProcCpuInfo struct {
-	Processor    int64    // %d - kernel defines it as long long
-	ModelName    *string  // %s
-	BogoMips     float64  // %lu.%02lu
-	Features     []string // space separated strings
-	Implementer  uint64   // 0x%02x
-	Architecture uint64   // constant int
-	Variant      uint64   // 0x%x
-	Part         uint64   // 0x%03x
-	Revision     uint64   // %d
-}
-
 func procCpuInfo() ([]ProcCpuInfo, error) {
+
+	architecture, err := hostArchitecture()
+	if err != nil {
+		return []ProcCpuInfo{}, err
+	}
+
 	procCpuInfoBytes, err := hostProcCpuInfoBytes()
 	if err != nil {
 		return nil, err
 	}
 
-	return parseProcCpuInfo(procCpuInfoBytes)
+	return parseProcCpuInfo(procCpuInfoBytes, architecture)
 }
 
 func hostProcCpuInfoBytes() ([]byte, error) {
@@ -35,72 +28,115 @@ func hostProcCpuInfoBytes() ([]byte, error) {
 	return cpuInfoBytes, err
 }
 
-func parseProcCpuInfo(cpuInfoBytes []byte) ([]ProcCpuInfo, error) {
-	cpuInfoString := string(cpuInfoBytes)
-
-	// amd64 machines have a static string set
-	// see https://github.com/torvalds/linux/blob/master/arch/arm64/kernel/cpuinfo.c#L267
-	if strings.Contains(cpuInfoString, "CPU architecture: 8\n") {
-		return parseProcCpuInfoAmd64(cpuInfoString)
+func parseProcCpuInfo(cpuInfoBytes []byte, architecture string) ([]ProcCpuInfo, error) {
+	switch architecture {
+	case amd64:
+		return parseProcCpuInfoAmd64(cpuInfoBytes)
+	case arm64:
+		return parseProcCpuInfoArm64(cpuInfoBytes)
+	default:
+		return nil, fmt.Errorf("unsupported architecture: %s", architecture)
 	}
-
-	// TODO x86 see https://github.com/torvalds/linux/blob/ec7714e4947909190ffb3041a03311a975350fe0/arch/x86/kernel/cpu/proc.c#L63
-
-	return nil, fmt.Errorf("cpu info parsing not implemented for this architecture")
 }
 
-func parseProcCpuInfoAmd64(cpuInfoString string) ([]ProcCpuInfo, error) {
+func parseProcCpuInfoAmd64(cpuInfoBytes []byte) ([]ProcCpuInfo, error) {
+	cpuInfoString := string(cpuInfoBytes)
 	var parsedCpus []ProcCpuInfo
 
 	lines := strings.Split(cpuInfoString, "\n")
-	previousLineEmpty := false
-	var parsedCpu ProcCpuInfo
+	cpuIndex := 0
 
 	for _, line := range lines {
 		if strings.TrimSpace(line) == "" {
-			previousLineEmpty = true
 			continue
-		}
-
-		// New cpu block
-		if previousLineEmpty {
-			previousLineEmpty = false
-			parsedCpus = append(parsedCpus, parsedCpu)
-			parsedCpu = ProcCpuInfo{}
 		}
 
 		fields := strings.SplitN(line, ":", 2)
 		key := strings.TrimSpace(fields[0]) // remove \t between key and colon
 		value := strings.TrimSpace(fields[1])
 
-		switch key {
-		// Formatting strings above cases are from torvalds/linux/blob/master/arch/arm64/kernel/cpuinfo.c
+		// New cpu block
+		if key == "processor" {
+			newCpu := ProcCpuInfo{}
+			newCpu.Architecture = amd64
+			parsedCpus = append(parsedCpus, newCpu)
+			cpuIndex = len(parsedCpus) - 1
+		}
 
+		switch key {
+		case "processor":
+			processorIndex, err := strconv.ParseInt(value, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			parsedCpus[cpuIndex].Processor = processorIndex
+		case "vendor_id":
+			parsedCpus[cpuIndex].ManufacturerId = value
+
+		case "flags":
+			flags := strings.Split(value, " ")
+			parsedCpus[cpuIndex].Flags = append(parsedCpus[cpuIndex].Flags, flags...)
+
+		case "model name":
+			parsedCpus[cpuIndex].BrandString = value
+		}
+	}
+
+	return parsedCpus, nil
+}
+
+func parseProcCpuInfoArm64(cpuInfoBytes []byte) ([]ProcCpuInfo, error) {
+	cpuInfoString := string(cpuInfoBytes)
+	var parsedCpus []ProcCpuInfo
+
+	lines := strings.Split(cpuInfoString, "\n")
+	cpuIndex := 0
+
+	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+
+		fields := strings.SplitN(line, ":", 2)
+		key := strings.TrimSpace(fields[0]) // remove \t between key and colon
+		value := strings.TrimSpace(fields[1])
+
+		// New cpu block
+		if key == "processor" {
+			newCpu := ProcCpuInfo{}
+			newCpu.Architecture = arm64
+			parsedCpus = append(parsedCpus, newCpu)
+			cpuIndex = len(parsedCpus) - 1
+		}
+
+		switch key {
+
+		// Formatting strings above cases are from torvalds/linux/blob/master/arch/arm64/kernel/cpuinfo.c
 		// "processor\t: %d\n"
 		case "processor":
 			processorIndex, err := strconv.ParseInt(value, 10, 64)
 			if err != nil {
 				return nil, err
 			}
-			parsedCpu.Processor = processorIndex
+			parsedCpus[cpuIndex].Processor = processorIndex
 
 		// "model name\t: ARMv8 Processor rev %d (%s)\n"
 		case "model name":
 			modelName := strings.TrimSpace(value)
-			parsedCpu.ModelName = &modelName
+			parsedCpus[cpuIndex].ModelName = &modelName
 
 		// BogoMIPS\t: %lu.%02lu\n
-		case "BogoMIPS":
+		case "BogoMIPS", "bogomips":
 			bogoMips, err := strconv.ParseFloat(value, 64)
 			if err != nil {
 				return nil, err
 			}
-			parsedCpu.BogoMips = bogoMips
+			parsedCpus[cpuIndex].BogoMips = bogoMips
 
 		// "Features\t:"+" %s"
 		case "Features":
 			flags := strings.Split(value, " ")
-			parsedCpu.Features = append(parsedCpu.Features, flags...)
+			parsedCpus[cpuIndex].Features = append(parsedCpus[cpuIndex].Features, flags...)
 
 		// "CPU implementer\t: 0x%02x\n"
 		case "CPU implementer":
@@ -108,15 +144,15 @@ func parseProcCpuInfoAmd64(cpuInfoString string) ([]ProcCpuInfo, error) {
 			if err != nil {
 				return nil, err
 			}
-			parsedCpu.Implementer = implementer
+			parsedCpus[cpuIndex].ImplementerId = implementer
 
 		// "CPU architecture: 8\n"
 		case "CPU architecture":
-			architecture, err := strconv.ParseUint(value, 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			parsedCpu.Architecture = architecture
+			//architecture, err := strconv.ParseUint(value, 10, 64)
+			//if err != nil {
+			//	return nil, err
+			//}
+			parsedCpus[cpuIndex].Architecture = arm64
 
 		// "CPU variant\t: 0x%x\n"
 		case "CPU variant":
@@ -124,7 +160,7 @@ func parseProcCpuInfoAmd64(cpuInfoString string) ([]ProcCpuInfo, error) {
 			if err != nil {
 				return nil, err
 			}
-			parsedCpu.Variant = variant
+			parsedCpus[cpuIndex].Variant = variant
 
 		// "CPU part\t: 0x%03x\n"
 		case "CPU part":
@@ -132,7 +168,7 @@ func parseProcCpuInfoAmd64(cpuInfoString string) ([]ProcCpuInfo, error) {
 			if err != nil {
 				return nil, err
 			}
-			parsedCpu.Part = part
+			parsedCpus[cpuIndex].PartNumber = part
 
 		// "CPU revision\t: %d\n\n"
 		case "CPU revision":
@@ -140,8 +176,9 @@ func parseProcCpuInfoAmd64(cpuInfoString string) ([]ProcCpuInfo, error) {
 			if err != nil {
 				return nil, err
 			}
-			parsedCpu.Revision = revision
+			parsedCpus[cpuIndex].Revision = revision
 		}
 	}
+
 	return parsedCpus, nil
 }

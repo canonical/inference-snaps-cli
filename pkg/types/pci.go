@@ -2,12 +2,12 @@ package types
 
 type PciDevice struct {
 	Slot                 string  `json:"slot"`
-	DeviceClass          uint16  `json:"device_class"`
+	DeviceClass          HexInt  `json:"device_class"`
 	ProgrammingInterface *uint8  `json:"programming_interface,omitempty"`
-	VendorId             uint16  `json:"vendor_id"`
-	DeviceId             uint16  `json:"device_id"`
-	SubvendorId          *uint16 `json:"subvendor_id,omitempty"`
-	SubdeviceId          *uint16 `json:"subdevice_id,omitempty"`
+	VendorId             HexInt  `json:"vendor_id"`
+	DeviceId             HexInt  `json:"device_id"`
+	SubvendorId          *HexInt `json:"subvendor_id,omitempty"`
+	SubdeviceId          *HexInt `json:"subdevice_id,omitempty"`
 	PciFriendlyNames
 	AdditionalProperties map[string]string `json:"additional_properties,omitempty"`
 }

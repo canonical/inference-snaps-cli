@@ -2,16 +2,12 @@ package types
 
 type CpuInfo struct {
 	Architecture string `json:"architecture"`
-	CpuInfoAmd64
-	CpuInfoArm64
-}
 
-type CpuInfoAmd64 struct {
-	ManufacturerId string   `json:"manufacturer_id"`
-	Flags          []string `json:"flags"`
-}
+	// amd64
+	ManufacturerId string   `json:"manufacturer_id,omitempty"`
+	Flags          []string `json:"flags,omitempty"`
 
-type CpuInfoArm64 struct {
-	ImplementerId HexInt `json:"implementer_id"`
-	PartNumber    HexInt `json:"part_number"`
+	// arm64
+	ImplementerId HexInt `json:"implementer_id,omitempty"`
+	PartNumber    HexInt `json:"part_number,omitempty"`
 }

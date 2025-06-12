@@ -55,3 +55,8 @@ func (hi *HexInt) UnmarshalJSON(data []byte) error {
 	*hi = HexInt(val)
 	return nil
 }
+
+func (hi HexInt) MarshalJSON() ([]byte, error) {
+	hexString := fmt.Sprintf("\"%x\"", int(hi))
+	return []byte(hexString), nil
+}

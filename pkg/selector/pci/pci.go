@@ -42,7 +42,7 @@ func checkPciDevice(stackDevice types.StackDevice, pciDevice types.PciDevice) (i
 	}
 
 	if stackDevice.VendorId != nil {
-		if uint16(*stackDevice.VendorId) == pciDevice.VendorId {
+		if *stackDevice.VendorId == pciDevice.VendorId {
 			currentDeviceScore += weights.PciVendorId
 		} else {
 			reasons = append(reasons, "pci vendor id mismatch")
@@ -51,7 +51,7 @@ func checkPciDevice(stackDevice types.StackDevice, pciDevice types.PciDevice) (i
 
 		// A model ID is only unique per vendor ID namespace. Only check it if the vendor is a match
 		if stackDevice.DeviceId != nil {
-			if uint16(*stackDevice.DeviceId) == pciDevice.DeviceId {
+			if *stackDevice.DeviceId == pciDevice.DeviceId {
 				currentDeviceScore += weights.PciDeviceId
 			} else {
 				reasons = append(reasons, "no device with matching device id found")

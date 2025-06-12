@@ -174,20 +174,20 @@
   },
   "pci": [
     {
-      "device_class": 768,
+      "device_class": "0300",
       "programming_interface": 0,
-      "vendor_id": 32902,
-      "device_id": 25760,
-      "subvendor_id": 4136,
-      "subdevice_id": 3273
+      "vendor_id": "8086",
+      "device_id": "64A0",
+      "subvendor_id": "1028",
+      "subdevice_id": "6311"
     },
     {
-      "device_class": 4608,
+      "device_class": "1200",
       "programming_interface": 0,
-      "vendor_id": 32902,
-      "device_id": 25662,
-      "subvendor_id": 4136,
-      "subdevice_id": 3273
+      "vendor_id": "8086",
+      "device_id": "643e",
+      "subvendor_id": "1028",
+      "subdevice_id": "0cc9"
     }
   ]
 }

@@ -7,8 +7,8 @@ devices:
     - type: cpu
       architecture: amd64
     - bus: pci
-      pci-vendor-id: 0x8086 # Intel Corporation
-      pci-model-id: 643e # Lunar Lake NPU
+      vendor-id: 0x8086 # Intel Corporation
+      device-id: 643e # Lunar Lake NPU
 memory: 4G
 disk-space: 8G
 components:

@@ -38,24 +38,24 @@ func ParseLsPci(input []byte, includeFriendlyNames bool) ([]types.PciDevice, err
 			case "Class":
 				// e.g. 0x0300 for VGA controller
 				if class, err := strconv.ParseUint(value, 16, 16); err == nil {
-					device.DeviceClass = uint16(class)
+					device.DeviceClass = types.HexInt(class)
 				}
 			case "Vendor":
 				if vendor, err := strconv.ParseUint(value, 16, 16); err == nil {
-					device.VendorId = uint16(vendor)
+					device.VendorId = types.HexInt(vendor)
 				}
 			case "Device":
 				if deviceId, err := strconv.ParseUint(value, 16, 16); err == nil {
-					device.DeviceId = uint16(deviceId)
+					device.DeviceId = types.HexInt(deviceId)
 				}
 			case "SVendor":
 				if subVendorId, err := strconv.ParseUint(value, 16, 16); err == nil {
-					subVendorIdUint16 := uint16(subVendorId)
+					subVendorIdUint16 := types.HexInt(subVendorId)
 					device.SubvendorId = &subVendorIdUint16
 				}
 			case "SDevice":
 				if subDeviceId, err := strconv.ParseUint(value, 16, 16); err == nil {
-					subDeviceIdUint16 := uint16(subDeviceId)
+					subDeviceIdUint16 := types.HexInt(subDeviceId)
 					device.SubdeviceId = &subDeviceIdUint16
 				}
 			case "ProgIf":

@@ -1,48 +1,95 @@
 package cpu
 
 import (
+	"fmt"
+	"slices"
+
 	"github.com/canonical/ml-snap-utils/pkg/types"
 )
 
 func Info() ([]types.CpuInfo, error) {
-	hostLsCpu, err := hostLsCpu()
-	if err != nil {
-		return nil, err
-	}
-
-	cpus, err := parseLsCpu(hostLsCpu)
-	if err != nil {
-		return nil, err
-	}
 
 	hostProcCpuInfo, err := procCpuInfo()
-	// procCpuInfo currently returns a not implemented error on all architectures except arm64
-	//if err != nil {
-	//	return nil, err
-	//}
-
-	cpus, err = enrichCpus(cpus, hostProcCpuInfo)
 	if err != nil {
 		return nil, err
 	}
+
+	cpus, err := copyCpuInfoToStruct(hostProcCpuInfo)
 
 	return cpus, nil
 }
 
-func enrichCpus(cpus []types.CpuInfo, procCpuInfo []ProcCpuInfo) ([]types.CpuInfo, error) {
-	for i, cpu := range cpus {
+func copyCpuInfoToStruct(procCpus []ProcCpuInfo) ([]types.CpuInfo, error) {
+	procCpus = slices.CompactFunc(procCpus, procCpuInfoIsDuplicate)
 
-		if cpu.Architecture == "arm64" {
-			// lscpu reports ARM CPUs with model ID 1, while cpuinfo has a valid part number.
-			// Use /proc/cpuinfo to get the correct value
-			// Look up lscpu cpu model in cpuinfo based on bogomips as that looks like the only semi-unique field
-			for _, cpuInfo := range procCpuInfo {
-				if cpuInfo.BogoMips == cpu.BogoMips {
-					cpus[i].ModelId = int(procCpuInfo[0].Part)
-				}
+	cpuInfos, err := cpuInfoFromProc(procCpus)
+	if err != nil {
+		return nil, err
+	}
+	return cpuInfos, nil
+}
+
+func procCpuInfoIsDuplicate(a ProcCpuInfo, b ProcCpuInfo) bool {
+	if a.Architecture != b.Architecture {
+		return false
+	}
+
+	if a.Architecture == amd64 {
+		if a.ManufacturerId != b.ManufacturerId {
+			return false
+		}
+		if a.BrandString != b.BrandString {
+			return false
+		}
+		for _, flag := range a.Flags {
+			if !slices.Contains(b.Flags, flag) {
+				return false
+			}
+		}
+		return true
+	}
+
+	if a.Architecture == arm64 {
+		if a.ImplementerId != b.ImplementerId {
+			return false
+		}
+		if a.PartNumber != b.PartNumber {
+			return false
+		}
+		if a.Variant != b.Variant {
+			return false
+		}
+		if a.Revision != b.Revision {
+			return false
+		}
+
+		for _, feature := range a.Features {
+			if !slices.Contains(b.Features, feature) {
+				return false
 			}
 		}
 
+		return true
 	}
-	return cpus, nil
+	return false
+}
+
+func cpuInfoFromProc(procCpus []ProcCpuInfo) ([]types.CpuInfo, error) {
+	var cpuInfos []types.CpuInfo
+	for _, procCpu := range procCpus {
+		var cpuInfo types.CpuInfo
+		if procCpu.Architecture == amd64 {
+			cpuInfo.Architecture = procCpu.Architecture
+			cpuInfo.ManufacturerId = procCpu.ManufacturerId
+			cpuInfo.Flags = procCpu.Flags
+		} else if procCpu.Architecture == arm64 {
+			cpuInfo.Architecture = procCpu.Architecture
+			cpuInfo.ImplementerId = types.HexInt(procCpu.ImplementerId)
+			cpuInfo.PartNumber = types.HexInt(procCpu.PartNumber)
+		} else {
+			return nil, fmt.Errorf("unsupported architecture %s", procCpu.Architecture)
+		}
+		cpuInfos = append(cpuInfos, cpuInfo)
+	}
+	return cpuInfos, nil
 }

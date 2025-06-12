@@ -47,8 +47,8 @@ type StackDevice struct {
 	PartNumber    *HexInt `yaml:"part-number" json:"part-number,omitempty"`
 
 	// PCI
-	VendorId *HexInt `yaml:"pci-vendor-id" json:"pci-vendor-id,omitempty"`
-	DeviceId *HexInt `yaml:"pci-device-id" json:"pci-device-id,omitempty"`
+	VendorId *HexInt `yaml:"vendor-id" json:"vendor-id,omitempty"`
+	DeviceId *HexInt `yaml:"device-id" json:"device-id,omitempty"`
 
 	// GPU additional properties
 	VRam              *string `yaml:"vram" json:"vram,omitempty"`
