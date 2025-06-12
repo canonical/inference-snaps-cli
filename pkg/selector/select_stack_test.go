@@ -35,6 +35,26 @@ var stackTestSets = map[string]stackTestSet{
 		},
 	},
 
+	"ampere-altra": {
+		ValidHw: []string{
+			"ampere-altra",
+		},
+		InvalidHw: []string{
+			"ampere-one-x-mocked",
+			"amd-ryzen7-5700g",
+			"amd-ryzen9-7900",
+			"dell-r730xd",
+			"hp-dl380p-gen8",
+			"i7-2600k+arc-a580",
+			"i7-2600k",
+			"mustang",
+			"nuc11-i5-1145G7",
+			"raspberry-pi-5",
+			"xps13-7390",
+			"xps13-9350",
+		},
+	},
+
 	"example-cpu": {
 		ValidHw: []string{
 			"amd-ryzen7-5700g",
@@ -74,7 +94,7 @@ var stackTestSets = map[string]stackTestSet{
 			"xps13-9350",
 		},
 	},
-	
+
 	"example-memory": {
 		ValidHw: []string{
 			"dell-r730xd",
