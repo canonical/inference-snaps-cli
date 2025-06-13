@@ -24,7 +24,7 @@ func TestParseProcCpuInfo(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			parsed, err := parseProcCpuInfo(procCpuInfoBytes, arch)
+			parsed, err := parseProcCpuInfo(string(procCpuInfoBytes), arch)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -43,7 +43,7 @@ func TestParseProcCpuInfoAmd64(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cpuInfos, err := parseProcCpuInfoAmd64(cpuInfoData)
+	cpuInfos, err := parseProcCpuInfoAmd64(string(cpuInfoData))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +59,7 @@ func TestParseProcCpuInfoArm64(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cpuInfos, err := parseProcCpuInfoArm64(cpuInfoData)
+	cpuInfos, err := parseProcCpuInfoArm64(string(cpuInfoData))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -51,7 +51,7 @@ func vRam(device types.PciDevice) (*uint64, error) {
 	// Search for the device with a matching PCI address
 	for _, clInfoDevice := range clinfo.Devices[0].Online {
 		if strings.Contains(clInfoDevice.ClDevicePciBusInfoKhr, device.Slot) {
-			vram := clinfo.Devices[0].Online[0].ClDeviceGlobalMemSize
+			vram := clInfoDevice.ClDeviceGlobalMemSize
 			vramValue = &vram
 		}
 	}

@@ -87,7 +87,7 @@ func cpuInfoFromProc(procCpus []ProcCpuInfo) ([]types.CpuInfo, error) {
 			cpuInfo.ImplementerId = types.HexInt(procCpu.ImplementerId)
 			cpuInfo.PartNumber = types.HexInt(procCpu.PartNumber)
 		} else {
-			return nil, fmt.Errorf("unsupported architecture %s", procCpu.Architecture)
+			return nil, fmt.Errorf("unsupported architecture: %s", procCpu.Architecture)
 		}
 		cpuInfos = append(cpuInfos, cpuInfo)
 	}

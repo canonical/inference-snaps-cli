@@ -14,7 +14,7 @@ func procCpuInfo() ([]ProcCpuInfo, error) {
 		return []ProcCpuInfo{}, err
 	}
 
-	procCpuInfoBytes, err := hostProcCpuInfoBytes()
+	procCpuInfoBytes, err := hostProcCpuInfo()
 	if err != nil {
 		return nil, err
 	}
@@ -22,25 +22,24 @@ func procCpuInfo() ([]ProcCpuInfo, error) {
 	return parseProcCpuInfo(procCpuInfoBytes, architecture)
 }
 
-func hostProcCpuInfoBytes() ([]byte, error) {
+func hostProcCpuInfo() (string, error) {
 	// cat /proc/cpuinfo
 	cpuInfoBytes, err := os.ReadFile("/proc/cpuinfo")
-	return cpuInfoBytes, err
+	return string(cpuInfoBytes), err
 }
 
-func parseProcCpuInfo(cpuInfoBytes []byte, architecture string) ([]ProcCpuInfo, error) {
+func parseProcCpuInfo(cpuInfoString string, architecture string) ([]ProcCpuInfo, error) {
 	switch architecture {
 	case amd64:
-		return parseProcCpuInfoAmd64(cpuInfoBytes)
+		return parseProcCpuInfoAmd64(cpuInfoString)
 	case arm64:
-		return parseProcCpuInfoArm64(cpuInfoBytes)
+		return parseProcCpuInfoArm64(cpuInfoString)
 	default:
 		return nil, fmt.Errorf("unsupported architecture: %s", architecture)
 	}
 }
 
-func parseProcCpuInfoAmd64(cpuInfoBytes []byte) ([]ProcCpuInfo, error) {
-	cpuInfoString := string(cpuInfoBytes)
+func parseProcCpuInfoAmd64(cpuInfoString string) ([]ProcCpuInfo, error) {
 	var parsedCpus []ProcCpuInfo
 
 	lines := strings.Split(cpuInfoString, "\n")
@@ -85,8 +84,7 @@ func parseProcCpuInfoAmd64(cpuInfoBytes []byte) ([]ProcCpuInfo, error) {
 	return parsedCpus, nil
 }
 
-func parseProcCpuInfoArm64(cpuInfoBytes []byte) ([]ProcCpuInfo, error) {
-	cpuInfoString := string(cpuInfoBytes)
+func parseProcCpuInfoArm64(cpuInfoString string) ([]ProcCpuInfo, error) {
 	var parsedCpus []ProcCpuInfo
 
 	lines := strings.Split(cpuInfoString, "\n")
@@ -111,7 +109,7 @@ func parseProcCpuInfoArm64(cpuInfoBytes []byte) ([]ProcCpuInfo, error) {
 
 		switch key {
 
-		// Formatting strings above cases are from torvalds/linux/blob/master/arch/arm64/kernel/cpuinfo.c
+		// Formatting strings above the following cases are from https://github.com/torvalds/linux/blob/master/arch/arm64/kernel/cpuinfo.c
 		// "processor\t: %d\n"
 		case "processor":
 			processorIndex, err := strconv.ParseInt(value, 10, 64)
