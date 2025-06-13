@@ -2,6 +2,7 @@ package cpu
 
 import (
 	"fmt"
+	"reflect"
 	"slices"
 
 	"github.com/canonical/ml-snap-utils/pkg/types"
@@ -14,13 +15,18 @@ func Info() ([]types.CpuInfo, error) {
 		return nil, err
 	}
 
-	cpus, err := copyCpuInfoToStruct(hostProcCpuInfo)
+	cpus, err := uniqueCpuInfo(hostProcCpuInfo)
 
 	return cpus, nil
 }
 
-func copyCpuInfoToStruct(procCpus []ProcCpuInfo) ([]types.CpuInfo, error) {
-	procCpus = slices.CompactFunc(procCpus, procCpuInfoIsDuplicate)
+func uniqueCpuInfo(procCpus []ProcCpuInfo) ([]types.CpuInfo, error) {
+	// Set processor index to 0 to only check other fields for uniqueness
+	for i := range procCpus {
+		procCpus[i].Processor = 0
+	}
+
+	procCpus = slices.CompactFunc(procCpus, isDuplicate)
 
 	cpuInfos, err := cpuInfoFromProc(procCpus)
 	if err != nil {
@@ -29,49 +35,8 @@ func copyCpuInfoToStruct(procCpus []ProcCpuInfo) ([]types.CpuInfo, error) {
 	return cpuInfos, nil
 }
 
-func procCpuInfoIsDuplicate(a ProcCpuInfo, b ProcCpuInfo) bool {
-	if a.Architecture != b.Architecture {
-		return false
-	}
-
-	if a.Architecture == amd64 {
-		if a.ManufacturerId != b.ManufacturerId {
-			return false
-		}
-		if a.BrandString != b.BrandString {
-			return false
-		}
-		for _, flag := range a.Flags {
-			if !slices.Contains(b.Flags, flag) {
-				return false
-			}
-		}
-		return true
-	}
-
-	if a.Architecture == arm64 {
-		if a.ImplementerId != b.ImplementerId {
-			return false
-		}
-		if a.PartNumber != b.PartNumber {
-			return false
-		}
-		if a.Variant != b.Variant {
-			return false
-		}
-		if a.Revision != b.Revision {
-			return false
-		}
-
-		for _, feature := range a.Features {
-			if !slices.Contains(b.Features, feature) {
-				return false
-			}
-		}
-
-		return true
-	}
-	return false
+func isDuplicate(a ProcCpuInfo, b ProcCpuInfo) bool {
+	return reflect.DeepEqual(a, b)
 }
 
 func cpuInfoFromProc(procCpus []ProcCpuInfo) ([]types.CpuInfo, error) {
