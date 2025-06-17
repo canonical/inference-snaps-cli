@@ -13,7 +13,7 @@ env:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: [ self-hosted, amd64, Linux, noble, medium ]
 
     steps:
       - name: Checkout code
