@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  SNAP_NAME: ml-snap-utils
+  SNAP_NAME: stack-utils
 
 jobs:
   test:
@@ -69,4 +69,4 @@ jobs:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.STORE_LOGIN }}
         with:
           snap: ${{ steps.snapcraft.outputs.snap }}
-          release: latest/edge
+          release: latest/edge/ci
