@@ -142,7 +142,7 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, []string, er
 	if len(stack.Devices.All) > 0 {
 		extraScore, reasonsAll, err := checkDevicesAll(hardwareInfo, stack.Devices.All)
 		for _, reason := range reasonsAll {
-			reasons = append(reasons, "all: "+reason)
+			reasons = append(reasons, "devices all: "+reason)
 		}
 		if err != nil {
 			return 0, reasons, err
@@ -157,7 +157,7 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, []string, er
 	if len(stack.Devices.Any) > 0 {
 		extraScore, reasonsAny, err := checkDevicesAny(hardwareInfo, stack.Devices.Any)
 		for _, reason := range reasonsAny {
-			reasons = append(reasons, "any: "+reason)
+			reasons = append(reasons, "devices any: "+reason)
 		}
 		if err != nil {
 			return 0, reasons, err
@@ -217,7 +217,7 @@ func checkDevicesAll(hardwareInfo types.HwInfo, stackDevices []types.StackDevice
 	}
 
 	if len(stackDevices) > 0 && devicesFound != len(stackDevices) {
-		reasons = append(reasons, "could not find a required device")
+		reasons = append(reasons, "required device not found")
 		return 0, reasons, nil
 	}
 
@@ -266,7 +266,7 @@ func checkDevicesAny(hardwareInfo types.HwInfo, stackDevices []types.StackDevice
 
 	// If any-of devices are defined, we need to find at least one
 	if len(stackDevices) > 0 && devicesFound == 0 {
-		reasons = append(reasons, "could not find a required device")
+		reasons = append(reasons, "required device not found")
 		return 0, reasons, nil
 	}
 
