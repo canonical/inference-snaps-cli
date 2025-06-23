@@ -2,8 +2,6 @@ Slot:	0000:00:00.0
 Class:	0600
 Vendor:	1def
 Device:	e100
-SVendor:	1849
-SDevice:	e100
 ProgIf:	00
 NUMANode:	0
 
@@ -14,14 +12,30 @@ Device:	e101
 Rev:	04
 ProgIf:	00
 NUMANode:	0
-IOMMUGroup:	9
+IOMMUGroup:	1
+
+Slot:	0000:00:03.0
+Class:	0604
+Vendor:	1def
+Device:	e103
+Rev:	04
+ProgIf:	00
+NUMANode:	0
+IOMMUGroup:	2
+
+Slot:	0000:00:04.0
+Class:	0604
+Vendor:	1def
+Device:	e104
+Rev:	04
+ProgIf:	00
+NUMANode:	0
+IOMMUGroup:	3
 
 Slot:	0001:00:00.0
 Class:	0600
 Vendor:	1def
 Device:	e100
-SVendor:	1849
-SDevice:	e100
 ProgIf:	00
 NUMANode:	0
 
@@ -32,36 +46,30 @@ Device:	e101
 Rev:	04
 ProgIf:	00
 NUMANode:	0
-IOMMUGroup:	8
+IOMMUGroup:	4
 
-Slot:	0001:01:00.0
-Class:	0300
-Vendor:	10de
-Device:	27b0
-SVendor:	10de
-SDevice:	16fa
-Rev:	a1
+Slot:	0001:00:03.0
+Class:	0604
+Vendor:	1def
+Device:	e103
+Rev:	04
 ProgIf:	00
 NUMANode:	0
-IOMMUGroup:	27
+IOMMUGroup:	5
 
-Slot:	0001:01:00.1
-Class:	0403
-Vendor:	10de
-Device:	22bc
-SVendor:	10de
-SDevice:	16fa
-Rev:	a1
+Slot:	0001:00:04.0
+Class:	0604
+Vendor:	1def
+Device:	e104
+Rev:	04
 ProgIf:	00
 NUMANode:	0
-IOMMUGroup:	27
+IOMMUGroup:	6
 
 Slot:	0002:00:00.0
 Class:	0600
 Vendor:	1def
 Device:	e100
-SVendor:	1849
-SDevice:	e100
 ProgIf:	00
 NUMANode:	0
 
@@ -72,61 +80,32 @@ Device:	e101
 Rev:	04
 ProgIf:	00
 NUMANode:	0
-IOMMUGroup:	10
-
-Slot:	0002:00:02.0
-Class:	0604
-Vendor:	1def
-Device:	e102
-Rev:	04
-ProgIf:	00
-NUMANode:	0
-IOMMUGroup:	11
-
-Slot:	0002:00:03.0
-Class:	0604
-Vendor:	1def
-Device:	e103
-Rev:	04
-ProgIf:	00
-NUMANode:	0
-IOMMUGroup:	12
-
-Slot:	0002:00:04.0
-Class:	0604
-Vendor:	1def
-Device:	e104
-Rev:	04
-ProgIf:	00
-NUMANode:	0
-IOMMUGroup:	13
+IOMMUGroup:	7
 
 Slot:	0002:01:00.0
-Class:	0108
-Vendor:	144d
-Device:	a80c
-SVendor:	144d
-SDevice:	a801
-ProgIf:	02
+Class:	0200
+Vendor:	15b3
+Device:	101f
+SVendor:	15b3
+SDevice:	0012
+ProgIf:	00
 NUMANode:	0
-IOMMUGroup:	24
+IOMMUGroup:	27
 
-Slot:	0002:02:00.0
-Class:	0108
-Vendor:	144d
-Device:	a80c
-SVendor:	144d
-SDevice:	a801
-ProgIf:	02
+Slot:	0002:01:00.1
+Class:	0200
+Vendor:	15b3
+Device:	101f
+SVendor:	15b3
+SDevice:	0012
+ProgIf:	00
 NUMANode:	0
-IOMMUGroup:	25
+IOMMUGroup:	28
 
 Slot:	0003:00:00.0
 Class:	0600
 Vendor:	1def
 Device:	e100
-SVendor:	1849
-SDevice:	e100
 ProgIf:	00
 NUMANode:	0
 
@@ -137,105 +116,12 @@ Device:	e101
 Rev:	04
 ProgIf:	00
 NUMANode:	0
-IOMMUGroup:	14
-
-Slot:	0003:00:02.0
-Class:	0604
-Vendor:	1def
-Device:	e102
-Rev:	04
-ProgIf:	00
-NUMANode:	0
-IOMMUGroup:	15
-
-Slot:	0003:00:03.0
-Class:	0604
-Vendor:	1def
-Device:	e103
-Rev:	04
-ProgIf:	00
-NUMANode:	0
-IOMMUGroup:	16
-
-Slot:	0003:00:04.0
-Class:	0604
-Vendor:	1def
-Device:	e104
-Rev:	04
-ProgIf:	00
-NUMANode:	0
-IOMMUGroup:	17
-
-Slot:	0003:01:00.0
-Class:	0604
-Vendor:	1849
-Device:	1150
-SVendor:	1849
-SDevice:	1150
-Rev:	04
-ProgIf:	00
-NUMANode:	0
-IOMMUGroup:	18
-
-Slot:	0003:02:00.0
-Class:	0300
-Vendor:	1a03
-Device:	2000
-SVendor:	1849
-SDevice:	2000
-Rev:	41
-ProgIf:	00
-NUMANode:	0
-
-Slot:	0003:03:00.0
-Class:	0200
-Vendor:	8086
-Device:	1563
-SVendor:	1849
-SDevice:	1563
-Rev:	01
-ProgIf:	00
-NUMANode:	0
-IOMMUGroup:	23
-
-Slot:	0003:03:00.1
-Class:	0200
-Vendor:	8086
-Device:	1563
-SVendor:	1849
-SDevice:	1563
-Rev:	01
-ProgIf:	00
-NUMANode:	0
-IOMMUGroup:	26
-
-Slot:	0003:04:00.0
-Class:	0c03
-Vendor:	1b21
-Device:	3042
-SVendor:	1b21
-SDevice:	2142
-ProgIf:	30
-NUMANode:	0
-IOMMUGroup:	21
-
-Slot:	0003:05:00.0
-Class:	0200
-Vendor:	8086
-Device:	1533
-SVendor:	1849
-SDevice:	1533
-Rev:	03
-ProgIf:	00
-NUMANode:	0
-IOMMUGroup:	22
+IOMMUGroup:	8
 
 Slot:	0004:00:00.0
 Class:	0600
 Vendor:	1def
 Device:	e100
-SVendor:	1849
-SDevice:	e100
 ProgIf:	00
 NUMANode:	0
 
@@ -246,14 +132,39 @@ Device:	e101
 Rev:	04
 ProgIf:	00
 NUMANode:	0
-IOMMUGroup:	19
+IOMMUGroup:	9
+
+Slot:	0004:00:02.0
+Class:	0604
+Vendor:	1def
+Device:	e102
+Rev:	04
+ProgIf:	00
+NUMANode:	0
+IOMMUGroup:	10
+
+Slot:	0004:00:03.0
+Class:	0604
+Vendor:	1def
+Device:	e103
+Rev:	04
+ProgIf:	00
+NUMANode:	0
+IOMMUGroup:	11
+
+Slot:	0004:00:04.0
+Class:	0604
+Vendor:	1def
+Device:	e104
+Rev:	04
+ProgIf:	00
+NUMANode:	0
+IOMMUGroup:	12
 
 Slot:	0005:00:00.0
 Class:	0600
 Vendor:	1def
 Device:	e100
-SVendor:	1849
-SDevice:	e100
 ProgIf:	00
 NUMANode:	0
 
@@ -264,95 +175,181 @@ Device:	e101
 Rev:	04
 ProgIf:	00
 NUMANode:	0
-IOMMUGroup:	20
+IOMMUGroup:	13
 
-Slot:	000c:00:00.0
+Slot:	0005:00:02.0
+Class:	0604
+Vendor:	1def
+Device:	e102
+Rev:	04
+ProgIf:	00
+NUMANode:	0
+IOMMUGroup:	14
+
+Slot:	0005:00:03.0
+Class:	0604
+Vendor:	1def
+Device:	e103
+Rev:	04
+ProgIf:	00
+NUMANode:	0
+IOMMUGroup:	15
+
+Slot:	0005:00:04.0
+Class:	0604
+Vendor:	1def
+Device:	e104
+Rev:	04
+ProgIf:	00
+NUMANode:	0
+IOMMUGroup:	16
+
+Slot:	0006:00:00.0
 Class:	0600
 Vendor:	1def
 Device:	e100
-SVendor:	1849
-SDevice:	e100
 ProgIf:	00
 NUMANode:	0
 
-Slot:	000c:00:01.0
+Slot:	0006:00:01.0
 Class:	0604
 Vendor:	1def
 Device:	e101
 Rev:	04
+ProgIf:	00
+NUMANode:	0
+IOMMUGroup:	17
+
+Slot:	0006:00:02.0
+Class:	0604
+Vendor:	1def
+Device:	e102
+Rev:	04
+ProgIf:	00
+NUMANode:	0
+IOMMUGroup:	18
+
+Slot:	0006:00:03.0
+Class:	0604
+Vendor:	1def
+Device:	e103
+Rev:	04
+ProgIf:	00
+NUMANode:	0
+IOMMUGroup:	19
+
+Slot:	0006:00:04.0
+Class:	0604
+Vendor:	1def
+Device:	e104
+Rev:	04
+ProgIf:	00
+NUMANode:	0
+IOMMUGroup:	20
+
+Slot:	0006:01:00.0
+Class:	0880
+Vendor:	103c
+Device:	3306
+SVendor:	1590
+SDevice:	00e4
+Rev:	08
+ProgIf:	00
+NUMANode:	0
+
+Slot:	0006:01:00.1
+Class:	0300
+Vendor:	102b
+Device:	0538
+SVendor:	1590
+SDevice:	00e4
+Rev:	03
 ProgIf:	00
 NUMANode:	0
 IOMMUGroup:	0
 
-Slot:	000c:00:02.0
-Class:	0604
-Vendor:	1def
-Device:	e102
-Rev:	04
+Slot:	0006:01:00.2
+Class:	0880
+Vendor:	103c
+Device:	3307
+SVendor:	1590
+SDevice:	00e4
+Rev:	08
 ProgIf:	00
 NUMANode:	0
-IOMMUGroup:	1
+IOMMUGroup:	0
 
-Slot:	000c:00:03.0
-Class:	0604
-Vendor:	1def
-Device:	e103
-Rev:	04
-ProgIf:	00
+Slot:	0006:01:00.4
+Class:	0c03
+Vendor:	103c
+Device:	22f6
+SVendor:	1590
+SDevice:	00e4
+Rev:	01
+ProgIf:	20
 NUMANode:	0
-IOMMUGroup:	2
+IOMMUGroup:	0
 
-Slot:	000c:00:04.0
-Class:	0604
-Vendor:	1def
-Device:	e104
-Rev:	04
-ProgIf:	00
+Slot:	0006:02:00.0
+Class:	0c03
+Vendor:	1912
+Device:	0014
+Rev:	03
+ProgIf:	30
 NUMANode:	0
-IOMMUGroup:	3
+IOMMUGroup:	25
 
-Slot:	000d:00:00.0
+Slot:	0006:03:00.0
+Class:	0108
+Vendor:	1c5c
+Device:	2427
+SVendor:	1c5c
+SDevice:	02f3
+Rev:	01
+ProgIf:	02
+NUMANode:	0
+IOMMUGroup:	26
+
+Slot:	0007:00:00.0
 Class:	0600
 Vendor:	1def
 Device:	e100
-SVendor:	1849
-SDevice:	e100
 ProgIf:	00
 NUMANode:	0
 
-Slot:	000d:00:01.0
+Slot:	0007:00:01.0
 Class:	0604
 Vendor:	1def
 Device:	e101
 Rev:	04
 ProgIf:	00
 NUMANode:	0
-IOMMUGroup:	4
+IOMMUGroup:	21
 
-Slot:	000d:00:02.0
+Slot:	0007:00:02.0
 Class:	0604
 Vendor:	1def
 Device:	e102
 Rev:	04
 ProgIf:	00
 NUMANode:	0
-IOMMUGroup:	5
+IOMMUGroup:	22
 
-Slot:	000d:00:03.0
+Slot:	0007:00:03.0
 Class:	0604
 Vendor:	1def
 Device:	e103
 Rev:	04
 ProgIf:	00
 NUMANode:	0
-IOMMUGroup:	6
+IOMMUGroup:	23
 
-Slot:	000d:00:04.0
+Slot:	0007:00:04.0
 Class:	0604
 Vendor:	1def
 Device:	e104
 Rev:	04
 ProgIf:	00
 NUMANode:	0
-IOMMUGroup:	7
+IOMMUGroup:	24
 
