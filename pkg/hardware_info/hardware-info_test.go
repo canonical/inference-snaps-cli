@@ -13,12 +13,12 @@ import (
 )
 
 var devices = []string{
-	//"hp-proliant-rl300-gen11-altra",
-	//"hp-proliant-rl300-gen11-altra-max",
-	//"i7-2600k+arc-a580",
-	//"raspberry-pi-5",
-	//"raspberry-pi-5+hailo-8",
-	//"xps13-7390",
+	"hp-proliant-rl300-gen11-altra",
+	"hp-proliant-rl300-gen11-altra-max",
+	"i7-2600k+arc-a580",
+	"raspberry-pi-5",
+	"raspberry-pi-5+hailo-8",
+	"xps13-7390",
 }
 
 func TestGetFromFiles(t *testing.T) {
