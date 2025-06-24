@@ -20,7 +20,7 @@ func parseProcCpuInfo(cpuInfoString string, architecture string) ([]ProcCpuInfo,
 	case arm64:
 		return parseProcCpuInfoArm64(cpuInfoString)
 	default:
-		return nil, fmt.Errorf("unsupported architecture: %s", architecture)
+		return nil, fmt.Errorf("can't parse /proc/cpuinfo. unsupported architecture: %s", architecture)
 	}
 }
 
