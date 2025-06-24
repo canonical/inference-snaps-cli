@@ -11,8 +11,6 @@ import (
 )
 
 func downloadRequiredComponents() {
-	fmt.Println("Downloading required components ...")
-
 	// get stack snap option
 	stackName, err := snapctl.Get("stack").Run()
 	if err != nil {
@@ -39,12 +37,13 @@ func downloadRequiredComponents() {
 
 	// install components
 	for _, component := range stack.Components {
+		fmt.Println("Installing component:", component)
 		err = snapctl.InstallComponents(component).Run()
 		if err != nil {
 			if strings.Contains(err.Error(), "cannot install components for a snap that is unknown to the store") {
-				fmt.Printf("Skip component installation. Install a local build: sudo snap install <path to %s component>\n", component)
+				fmt.Printf("Skipped: Install a local build: sudo snap install <path to %s component>\n", component)
 			} else if strings.Contains(err.Error(), "already installed") {
-				fmt.Println("Skip component installation: already installed:", component)
+				continue
 			} else {
 				fmt.Println("Error installing component:", err)
 				os.Exit(1)
