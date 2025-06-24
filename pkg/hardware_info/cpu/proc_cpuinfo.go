@@ -7,21 +7,6 @@ import (
 	"strings"
 )
 
-func procCpuInfo() ([]ProcCpuInfo, error) {
-
-	architecture, err := hostArchitecture()
-	if err != nil {
-		return []ProcCpuInfo{}, err
-	}
-
-	procCpuInfoBytes, err := hostProcCpuInfo()
-	if err != nil {
-		return nil, err
-	}
-
-	return parseProcCpuInfo(procCpuInfoBytes, architecture)
-}
-
 func hostProcCpuInfo() (string, error) {
 	// cat /proc/cpuinfo
 	cpuInfoBytes, err := os.ReadFile("/proc/cpuinfo")

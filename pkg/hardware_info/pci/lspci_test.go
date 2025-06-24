@@ -32,7 +32,7 @@ func TestParseLsCpu(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			pciDevices, err := ParseLsPci(lsPci, true)
+			pciDevices, err := ParseLsPci(string(lsPci), true)
 			if err != nil {
 				t.Fatal(err)
 			}
