@@ -23,6 +23,15 @@ func Info() (map[string]types.DirStats, error) {
 		info[dir] = dirInfo
 	}
 
+	if len(dirInfos) != len(directories) {
+		return nil, fmt.Errorf("df did not return info for all dirs")
+	}
+
+	var info = make(map[string]types.DirStats)
+	for i, dir := range directories {
+		info[dir] = dirInfos[i]
+	}
+
 	return info, nil
 }
 
