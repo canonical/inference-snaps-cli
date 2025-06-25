@@ -10,6 +10,8 @@ import (
 	"github.com/canonical/stack-utils/pkg/types"
 )
 
+// hostDf runs the df command on the host to obtain stats about the provided paths.
+// This only works from inside a confined snap if the mount-observe interface is connected - which is super-privileged.
 func hostDf(paths ...string) (string, error) {
 	// LC_ALL=POSIX df -P --block-size=1 / /var/lib/snapd/snaps
 	command := exec.Command("df")
