@@ -257,8 +257,8 @@ func TestFindStackEmpty(t *testing.T) {
 			TotalRam:  200000000,
 			TotalSwap: 200000000,
 		},
-		Disk: map[string]*types.DirStats{
-			"/var/lib/snapd/snaps": &types.DirStats{
+		Disk: map[string]types.DirStats{
+			"/var/lib/snapd/snaps": {
 				Total: 0,
 				Avail: 400000000,
 			},
@@ -288,9 +288,9 @@ func TestDiskCheck(t *testing.T) {
 		Avail: 400000000,
 	}
 	hwInfo := types.HwInfo{}
-	hwInfo.Disk = make(map[string]*types.DirStats)
-	hwInfo.Disk["/"] = &dirStat
-	hwInfo.Disk["/var/lib/snapd/snaps"] = &dirStat
+	hwInfo.Disk = make(map[string]types.DirStats)
+	hwInfo.Disk["/"] = dirStat
+	hwInfo.Disk["/var/lib/snapd/snaps"] = dirStat
 
 	stackDisk := "300M"
 	stack := types.Stack{DiskSpace: &stackDisk}
@@ -303,7 +303,11 @@ func TestDiskCheck(t *testing.T) {
 		t.Fatalf("disk should be enough: %v", reasons)
 	}
 
-	dirStat.Avail = 100000000
+	dirStat = types.DirStats{
+		Total: 0,
+		Avail: 100000000,
+	}
+	hwInfo.Disk["/var/lib/snapd/snaps"] = dirStat
 	result, reasons, err = checkStack(hwInfo, stack)
 	if err != nil {
 		t.Fatal(err)
@@ -375,8 +379,8 @@ func TestNoCpuInHwInfo(t *testing.T) {
 		t.Fatal("No Disk space in hardware_info should return err")
 	}
 
-	hwInfo.Disk = make(map[string]*types.DirStats)
-	hwInfo.Disk["/"] = &types.DirStats{
+	hwInfo.Disk = make(map[string]types.DirStats)
+	hwInfo.Disk["/"] = types.DirStats{
 		Avail: 6000000000,
 	}
 
