@@ -11,14 +11,23 @@ var directories = []string{
 	"/var/lib/snapd/snaps", // https://snapcraft.io/docs/system-snap-directory
 }
 
+// Info returns the total size and available size for root and snap dirs on the host system, using the statfs syscall.
 func Info() (map[string]types.DirStats, error) {
-	hostDfData, err := hostDf(directories...)
-	if err != nil {
-		return nil, err
+	var info = make(map[string]types.DirStats)
+
+	for _, dir := range directories {
+		dirInfo, err := statFs(dir)
+		if err != nil {
+			return nil, err
+		}
+		info[dir] = dirInfo
 	}
-	return InfoFromData(hostDfData)
+
+	return info, nil
 }
 
+// InfoFromData returns the total size and available size of the root and snap dirs, taking a string in which represents
+// the  output of the df command.
 func InfoFromData(dfData string) (map[string]types.DirStats, error) {
 	dirInfos, err := parseDf(dfData)
 	if err != nil {
