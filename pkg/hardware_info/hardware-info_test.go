@@ -39,6 +39,20 @@ func TestGetFromFiles(t *testing.T) {
 				t.Fatal(err)
 			}
 
+			// Ignore friendly names during deep equal, as it depends on the version of the pci-id database
+			for i := range hwInfo.PciDevices {
+				hwInfo.PciDevices[i].VendorName = nil
+				hwInfo.PciDevices[i].DeviceName = nil
+				hwInfo.PciDevices[i].SubvendorName = nil
+				hwInfo.PciDevices[i].SubdeviceName = nil
+			}
+			for i := range hardwareInfo.PciDevices {
+				hardwareInfo.PciDevices[i].VendorName = nil
+				hardwareInfo.PciDevices[i].DeviceName = nil
+				hardwareInfo.PciDevices[i].SubvendorName = nil
+				hardwareInfo.PciDevices[i].SubdeviceName = nil
+			}
+
 			if diff := deep.Equal(hwInfo, hardwareInfo); diff != nil {
 				t.Error(diff)
 			}
