@@ -1,1 +1,1 @@
-Testflinger machine 202303-31419
+Testflinger machine 202303-31419 aka Penguru
