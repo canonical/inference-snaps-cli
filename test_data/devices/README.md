@@ -22,21 +22,10 @@ lspci -vmmnD
 uname -m
 ```
 
-## disk.json
-
-Normally obtained with `hardware-info`, the total and available disk space can also be looked up with `df`.
+## disk.txt
 
 ```
-{
-  "/": {
-    "total": <bytes>,
-    "avail": <bytes>
-  },
-  "/var/lib/snapd/snaps": {
-    "total": <bytes>,
-    "avail": <bytes>
-  }
-}
+LC_ALL=POSIX df --portability --block-size=1 / /var/lib/snapd/snaps
 ```
 
 ## meminfo.txt

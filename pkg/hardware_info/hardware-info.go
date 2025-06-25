@@ -60,14 +60,15 @@ func GetFromFiles(t *testing.T, device string, friendlyNames bool) (types.HwInfo
 	hwInfo.Memory = memInfo
 
 	// disk
-	diskData, err := os.ReadFile(devicePath + "disk.json")
+	dfInfo, err := os.ReadFile(devicePath + "disk.txt")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = json.Unmarshal(diskData, &hwInfo.Disk)
+	diskInfo, err := disk.InfoFromData(string(dfInfo))
 	if err != nil {
 		t.Fatal(err)
 	}
+	hwInfo.Disk = diskInfo
 
 	// cpu
 	unameMachine, err := os.ReadFile(devicePath + "uname-m.txt")
