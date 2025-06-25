@@ -1,7 +1,7 @@
 # Machine hardware info
 
 Each subdirectory represents a single machine.
-This directory contains files with raw data from the respective machine.
+This directory contains files with raw hardware info data from the respective machine.
 It optionally contains a `hardware-info.json` file which is the output of the `cmd/hardware-info` application.
 
 ## cpuinfo.txt
@@ -39,15 +39,10 @@ Normally obtained with `hardware-info`, the total and available disk space can a
 }
 ```
 
-## memory.txt
-
-Memory and swap sizes can be looked up with `cat /proc/meminfo`.
+## meminfo.txt
 
 ```
-{
-  "total_ram": <bytes>,
-  "total_swap": <bytes>
-}
+cat /proc/meminfo
 ```
 
 ## additional-properties.json (optional)
