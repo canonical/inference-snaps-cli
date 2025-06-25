@@ -253,7 +253,7 @@ func testInvalidHw(t *testing.T, stackName string, hwName string) {
 
 func TestFindStackEmpty(t *testing.T) {
 	hwInfo := types.HwInfo{
-		Memory: &types.MemoryInfo{
+		Memory: types.MemoryInfo{
 			TotalRam:  200000000,
 			TotalSwap: 200000000,
 		},
@@ -315,7 +315,7 @@ func TestDiskCheck(t *testing.T) {
 
 func TestMemoryCheck(t *testing.T) {
 	hwInfo := types.HwInfo{
-		Memory: &types.MemoryInfo{
+		Memory: types.MemoryInfo{
 			TotalRam:  200000000,
 			TotalSwap: 200000000,
 		},
@@ -364,7 +364,7 @@ func TestNoCpuInHwInfo(t *testing.T) {
 		t.Fatalf("No Memory in hardware_info should return err")
 	}
 
-	hwInfo.Memory = &types.MemoryInfo{
+	hwInfo.Memory = types.MemoryInfo{
 		TotalRam:  17000000000,
 		TotalSwap: 2000000000,
 	}
