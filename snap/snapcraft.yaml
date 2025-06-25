@@ -53,6 +53,7 @@ apps:
     plugs:
       - hardware-observe
       - opengl
+      - mount-observe
     command: bin/hardware-info
 
   select-stack:
