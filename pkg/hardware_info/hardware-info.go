@@ -49,14 +49,15 @@ func GetFromFiles(t *testing.T, device string, friendlyNames bool) (types.HwInfo
 	devicePath := "../../test_data/devices/" + device + "/"
 
 	// memory
-	memoryData, err := os.ReadFile(devicePath + "memory.json")
+	procMemInfo, err := os.ReadFile(devicePath + "meminfo.txt")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = json.Unmarshal(memoryData, &hwInfo.Memory)
+	memInfo, err := memory.InfoFromData(string(procMemInfo))
 	if err != nil {
 		t.Fatal(err)
 	}
+	hwInfo.Memory = memInfo
 
 	// disk
 	diskData, err := os.ReadFile(devicePath + "disk.json")
