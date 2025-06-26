@@ -5,9 +5,16 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/canonical/go-snapctl"
 	"github.com/canonical/stack-utils/pkg/types"
+)
+
+const (
+	snapdUnknownSnapError = "cannot install components for a snap that is unknown to the store"
+	snapdTimeoutError     = "timeout exceeded while waiting for response"
 )
 
 func downloadRequiredComponents() {
@@ -36,18 +43,35 @@ func downloadRequiredComponents() {
 	}
 
 	// install components
+	// Messages presented to the user should use the term "download" for snapctl install +component.
 	for _, component := range stack.Components {
-		fmt.Println("Installing component:", component)
+		stopProgress := startProgressDots("Downloading " + component + " ")
 		err = snapctl.InstallComponents(component).Run()
+		stopProgress()
 		if err != nil {
-			if strings.Contains(err.Error(), "cannot install components for a snap that is unknown to the store") {
-				fmt.Printf("Skipped: Install a local build: sudo snap install <path to %s component>\n", component)
+			if strings.Contains(err.Error(), snapdUnknownSnapError) {
+				fmt.Printf("Error: snap not known to the store. Install a local build of component: %s\n", component)
+				continue
+			} else if strings.Contains(err.Error(), snapdTimeoutError) {
+				fmt.Printf("Error: timeout exceeded while waiting for download of %s\n", component)
+				fmt.Println("Please monitor the progress using the 'snap changes' command and continue when the component installation is complete.")
+				os.Exit(1)
 			} else if strings.Contains(err.Error(), "already installed") {
 				continue
 			} else {
-				fmt.Println("Error installing component:", err)
+				fmt.Printf("Error downloading component: %s: %s\n", component, err)
 				os.Exit(1)
 			}
 		}
+		fmt.Println("Downloaded " + component)
 	}
+}
+
+func startProgressDots(prefix string) (stop func()) {
+	dots := []string{".", "..", "..."}
+	s := spinner.New(dots, time.Second)
+	s.Prefix = prefix
+	s.Start()
+
+	return s.Stop
 }
