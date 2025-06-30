@@ -23,7 +23,7 @@ var devices = []string{
 func TestGetFromFiles(t *testing.T) {
 	for _, device := range devices {
 		t.Run(device, func(t *testing.T) {
-			hwInfo, err := GetFromFiles(t, device, true)
+			hwInfo, err := GetFromRawData(t, device, true)
 			if err != nil {
 				t.Error(err)
 			}

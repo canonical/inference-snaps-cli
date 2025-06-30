@@ -13,7 +13,7 @@ func TestHostSnapDir(t *testing.T) {
 
 	dirInfos, err := parseDf(dfData)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("can't parse df output: %v", err)
 	}
 	t.Log(dirInfos)
 }

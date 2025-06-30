@@ -11,10 +11,10 @@ func Info() (types.MemoryInfo, error) {
 	if err != nil {
 		return types.MemoryInfo{}, fmt.Errorf("failed to look up host /proc/meminfo: %v", err)
 	}
-	return InfoFromData(hostProcMemInfoData)
+	return InfoFromRawData(hostProcMemInfoData)
 }
 
-func InfoFromData(procMemInfoData string) (types.MemoryInfo, error) {
+func InfoFromRawData(procMemInfoData string) (types.MemoryInfo, error) {
 	machineMemInfo, err := parseProcMemInfo(procMemInfoData)
 	if err != nil {
 		return types.MemoryInfo{}, fmt.Errorf("failed to parse /proc/meminfo data: %v", err)

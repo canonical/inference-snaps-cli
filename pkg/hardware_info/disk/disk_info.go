@@ -26,12 +26,12 @@ func Info() (map[string]types.DirStats, error) {
 	return info, nil
 }
 
-// InfoFromData returns the total size and available size of the root and snap dirs, taking a string in which represents
+// InfoFromRawData returns the total size and available size of the root and snap dirs, taking a string in which represents
 // the  output of the df command.
-func InfoFromData(dfData string) (map[string]types.DirStats, error) {
+func InfoFromRawData(dfData string) (map[string]types.DirStats, error) {
 	dirInfos, err := parseDf(dfData)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse df: %v", err)
+		return nil, fmt.Errorf("error parsing df: %v", err)
 	}
 
 	if len(dirInfos) != len(directories) {

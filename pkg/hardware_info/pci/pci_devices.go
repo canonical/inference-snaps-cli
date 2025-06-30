@@ -24,7 +24,7 @@ func Devices(friendlyNames bool) ([]types.PciDevice, error) {
 	if err != nil {
 		return nil, err
 	}
-	devices, err := DevicesFromData(hostLsPciData, friendlyNames)
+	devices, err := DevicesFromRawData(hostLsPciData, friendlyNames)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func Devices(friendlyNames bool) ([]types.PciDevice, error) {
 	return devices, nil
 }
 
-func DevicesFromData(lspciData string, friendlyNames bool) ([]types.PciDevice, error) {
+func DevicesFromRawData(lspciData string, friendlyNames bool) ([]types.PciDevice, error) {
 	devices, err := ParseLsPci(lspciData, friendlyNames)
 	if err != nil {
 		return nil, err

@@ -19,12 +19,12 @@ func Info() ([]types.CpuInfo, error) {
 		return []types.CpuInfo{}, err
 	}
 
-	cpus, err := InfoFromData(hostProcCpu, hostUname)
+	cpus, err := InfoFromRawData(hostProcCpu, hostUname)
 
 	return cpus, nil
 }
 
-func InfoFromData(procCpuInfoData string, uname string) ([]types.CpuInfo, error) {
+func InfoFromRawData(procCpuInfoData string, uname string) ([]types.CpuInfo, error) {
 	architecture, err := debianArchitecture(uname)
 
 	machineProcCpuInfo, err := parseProcCpuInfo(procCpuInfoData, architecture)

@@ -42,8 +42,8 @@ func Get(friendlyNames bool) (types.HwInfo, error) {
 	return hwInfo, nil
 }
 
-// GetFromFiles is mainly used during testing, but also from other packages, and therefore needs to be exported
-func GetFromFiles(t *testing.T, device string, friendlyNames bool) (types.HwInfo, error) {
+// GetFromRawData is mainly used during testing, but also from other packages, and therefore needs to be exported
+func GetFromRawData(t *testing.T, device string, friendlyNames bool) (types.HwInfo, error) {
 	var hwInfo types.HwInfo
 
 	devicePath := "../../test_data/devices/" + device + "/"
@@ -53,7 +53,7 @@ func GetFromFiles(t *testing.T, device string, friendlyNames bool) (types.HwInfo
 	if err != nil {
 		t.Fatal(err)
 	}
-	memInfo, err := memory.InfoFromData(string(procMemInfo))
+	memInfo, err := memory.InfoFromRawData(string(procMemInfo))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +64,7 @@ func GetFromFiles(t *testing.T, device string, friendlyNames bool) (types.HwInfo
 	if err != nil {
 		t.Fatal(err)
 	}
-	diskInfo, err := disk.InfoFromData(string(dfInfo))
+	diskInfo, err := disk.InfoFromRawData(string(dfInfo))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +79,7 @@ func GetFromFiles(t *testing.T, device string, friendlyNames bool) (types.HwInfo
 	if err != nil {
 		t.Fatal(err)
 	}
-	cpuInfo, err := cpu.InfoFromData(string(procCpuInfo), string(unameMachine))
+	cpuInfo, err := cpu.InfoFromRawData(string(procCpuInfo), string(unameMachine))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -90,7 +90,7 @@ func GetFromFiles(t *testing.T, device string, friendlyNames bool) (types.HwInfo
 	if err != nil {
 		t.Fatal(err)
 	}
-	pciDevices, err := pci.DevicesFromData(string(pciData), friendlyNames)
+	pciDevices, err := pci.DevicesFromRawData(string(pciData), friendlyNames)
 	if err != nil {
 		t.Fatal(err)
 	}
