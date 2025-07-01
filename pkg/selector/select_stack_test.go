@@ -154,10 +154,11 @@ var stackTestSets = map[string]stackTestSet{
 		},
 	},
 
-	"intel-dgpu": {
+	"intel-gpu": {
 		ValidDevices: []string{
 			"i7-2600k+arc-a580",
 			"mustang",
+			"xps13-9350",
 		},
 		InvalidDevices: []string{
 			"ampere-one-m-banshee-12",
@@ -170,7 +171,6 @@ var stackTestSets = map[string]stackTestSet{
 			"raspberry-pi-5",
 			"raspberry-pi-5+hailo-8",
 			"xps13-7390",
-			"xps13-9350",
 		},
 	},
 
