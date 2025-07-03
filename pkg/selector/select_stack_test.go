@@ -411,7 +411,7 @@ func TestNoCpuInHwInfo(t *testing.T) {
 		// All fields are nil or zero
 	}
 
-	data, err := os.ReadFile("../../test_data/stacks/example-cpu-avx512/stack.yaml")
+	data, err := os.ReadFile("../../test_data/stacks/cpu-avx512/stack.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
