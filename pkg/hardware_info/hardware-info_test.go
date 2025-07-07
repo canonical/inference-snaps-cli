@@ -14,6 +14,7 @@ var devices = []string{
 	"asus-ux301l",
 	"hp-proliant-rl300-gen11-altra",
 	"hp-proliant-rl300-gen11-altra-max",
+	//"i7-1165G7", // Invalid lspci as it's from a too old version
 	"i7-2600k+arc-a580",
 	"mustang",
 	"raspberry-pi-5",
