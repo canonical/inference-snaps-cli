@@ -10,6 +10,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/canonical/go-snapctl"
 	"github.com/canonical/stack-utils/pkg/types"
+	"golang.org/x/term"
 )
 
 const (
@@ -45,7 +46,7 @@ func downloadRequiredComponents() {
 	// install components
 	// Messages presented to the user should use the term "download" for snapctl install +component.
 	for _, component := range stack.Components {
-		stopProgress := startProgressDots("Downloading " + component + " ")
+		stopProgress := startProgress("Downloading " + component)
 		err = snapctl.InstallComponents(component).Run()
 		stopProgress()
 		if err != nil {
@@ -67,11 +68,15 @@ func downloadRequiredComponents() {
 	}
 }
 
-func startProgressDots(prefix string) (stop func()) {
+func startProgress(prefix string) (stop func()) {
 	dots := []string{".", "..", "..."}
 	s := spinner.New(dots, time.Second)
-	s.Prefix = prefix
-	s.Start()
+	if term.IsTerminal(int(os.Stdout.Fd())) {
+		s.Prefix = prefix + " "
+		s.Start()
+	} else {
+		fmt.Println(prefix + " ...")
+	}
 
 	return s.Stop
 }
