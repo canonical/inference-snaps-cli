@@ -97,5 +97,5 @@ func validateStackStruct(manifestFilePath string, stack types.Stack) error {
 		return fmt.Errorf("required field is not set: config.model")
 	}
 
-	return nil
+	return stackDevices(stack.Devices)
 }
