@@ -40,13 +40,29 @@ func stackDevice(device types.StackDevice) error {
 }
 
 func gpu(device types.StackDevice) error {
+	extraFields := []string{"VRam", "ComputeCapability"}
+
+	err := bus(device, extraFields)
+	if err != nil {
+		return fmt.Errorf("gpu: %v", err)
+	}
+
 	return nil
 }
 
 func npu(device types.StackDevice) error {
+	err := bus(device, nil)
+	if err != nil {
+		return fmt.Errorf("npu: %v", err)
+	}
 	return nil
 }
 
 func typelessDevice(device types.StackDevice) error {
+	err := bus(device, nil)
+	if err != nil {
+		return fmt.Errorf("typeless device: %v", err)
+	}
+
 	return nil
 }
