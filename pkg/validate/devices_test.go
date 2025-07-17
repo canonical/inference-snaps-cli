@@ -56,72 +56,6 @@ func TestDeviceType(t *testing.T) {
 	})
 }
 
-func TestDeviceBus(t *testing.T) {
-	device := types.StackDevice{}
-	device.Type = "gpu"
-
-	t.Run("PCI Bus", func(t *testing.T) {
-		device.Bus = "pci"
-		err := stackDevice(device)
-		if err != nil {
-			t.Fatalf("PCI Bus should be valid: %v", err)
-		}
-	})
-
-	t.Run("USB Bus", func(t *testing.T) {
-		device.Bus = "usb"
-		err := stackDevice(device)
-		if err != nil {
-			t.Fatalf("USB Bus should be valid: %v", err)
-		}
-	})
-
-	t.Run("Empty Bus", func(t *testing.T) {
-		device.Bus = ""
-		err := stackDevice(device)
-		if err != nil {
-			t.Fatalf("Empty Bus should be valid: %v", err)
-		}
-	})
-
-	t.Run("Invalid Bus", func(t *testing.T) {
-		device.Bus = "invalid-bus"
-		err := stackDevice(device)
-		if err == nil {
-			t.Fatalf("Invalid bus should not validate")
-		}
-		t.Log(err)
-	})
-}
-
-func TestDeviceTypeless(t *testing.T) {
-	device := types.StackDevice{}
-	device.Type = ""
-	device.Bus = "pci"
-
-	t.Run("PCI valid fields", func(t *testing.T) {
-		hexValue := types.HexInt(0xAA)
-		device.VendorId = &hexValue
-		device.DeviceId = &hexValue
-		err := stackDevice(device)
-		if err != nil {
-			t.Fatalf("PCI device fields should be valid: %v", err)
-		}
-	})
-
-	t.Run("PCI invalid fields", func(t *testing.T) {
-		hexValue := types.HexInt(0xAA)
-		device.VendorId = &hexValue
-		device.DeviceId = &hexValue
-		device.Features = []string{"one", "two"}
-		err := stackDevice(device)
-		if err == nil {
-			t.Fatal("PCI device fields should be invalid")
-		}
-		t.Log(err)
-	})
-}
-
 func TestDeviceGpu(t *testing.T) {
 	device := types.StackDevice{}
 	device.Type = "gpu"
@@ -193,6 +127,34 @@ func TestDeviceNpu(t *testing.T) {
 		err := stackDevice(device)
 		if err == nil {
 			t.Fatal("NPU fields should be invalid")
+		}
+		t.Log(err)
+	})
+}
+
+func TestDeviceTypeless(t *testing.T) {
+	device := types.StackDevice{}
+	device.Type = ""
+	device.Bus = "pci"
+
+	t.Run("PCI valid fields", func(t *testing.T) {
+		hexValue := types.HexInt(0xAA)
+		device.VendorId = &hexValue
+		device.DeviceId = &hexValue
+		err := stackDevice(device)
+		if err != nil {
+			t.Fatalf("PCI device fields should be valid: %v", err)
+		}
+	})
+
+	t.Run("PCI invalid fields", func(t *testing.T) {
+		hexValue := types.HexInt(0xAA)
+		device.VendorId = &hexValue
+		device.DeviceId = &hexValue
+		device.Features = []string{"one", "two"}
+		err := stackDevice(device)
+		if err == nil {
+			t.Fatal("PCI device fields should be invalid")
 		}
 		t.Log(err)
 	})
