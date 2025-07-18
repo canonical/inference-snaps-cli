@@ -60,7 +60,7 @@ func TestUnknownField(t *testing.T) {
 	data, _ := yaml.Marshal(templateManifest())
 	data = append(data, []byte("unknown-field: test\n")...)
 
-	err := validateStackYaml("test/stack.yaml", data)
+	err := validateStackYaml("test", data)
 	if err == nil {
 		t.Fatal("Unknown field should fail")
 	}
@@ -71,7 +71,7 @@ func TestNameRequired(t *testing.T) {
 	manifest := templateManifest()
 	manifest.Name = ""
 
-	err := validateStackStruct("test/stack.yaml", manifest)
+	err := validateStackStruct("test", manifest)
 	if err == nil {
 		t.Fatal("name field is required")
 	}
@@ -83,7 +83,7 @@ func TestDescriptionRequired(t *testing.T) {
 	manifest := templateManifest()
 	manifest.Description = ""
 
-	err := validateStackStruct("test/stack.yaml", manifest)
+	err := validateStackStruct("test", manifest)
 	if err == nil {
 		t.Fatal("description is required")
 	}
@@ -95,7 +95,7 @@ func TestVendorRequired(t *testing.T) {
 	manifest := templateManifest()
 	manifest.Vendor = ""
 
-	err := validateStackStruct("test/stack.yaml", manifest)
+	err := validateStackStruct("test", manifest)
 	if err == nil {
 		t.Fatal("vendor is required")
 	}
@@ -107,7 +107,7 @@ func TestGradeRequired(t *testing.T) {
 	manifest := templateManifest()
 	manifest.Grade = ""
 
-	err := validateStackStruct("test/stack.yaml", manifest)
+	err := validateStackStruct("test", manifest)
 	if err == nil {
 		t.Fatal("grade is required")
 	}
@@ -121,23 +121,23 @@ func TestGradeValid(t *testing.T) {
 	t.Run("grade stable", func(t *testing.T) {
 		manifest.Grade = "stable"
 
-		err := validateStackStruct("test/stack.yaml", manifest)
+		err := validateStackStruct("test", manifest)
 		if err != nil {
-			t.Fatal("grade stable should be valid")
+			t.Fatalf("grade stable should be valid: %v", err)
 		}
 	})
 	t.Run("grade devel", func(t *testing.T) {
 		manifest.Grade = "devel"
 
-		err := validateStackStruct("test/stack.yaml", manifest)
+		err := validateStackStruct("test", manifest)
 		if err != nil {
-			t.Fatal("grade devel should be valid")
+			t.Fatalf("grade devel should be valid: %v", err)
 		}
 	})
 	t.Run("grade invalid", func(t *testing.T) {
 		manifest.Grade = "invalid-grade"
 
-		err := validateStackStruct("test/stack.yaml", manifest)
+		err := validateStackStruct("test", manifest)
 		if err == nil {
 			t.Fatal("grade invalid")
 		}
@@ -153,7 +153,7 @@ func TestMemoryValues(t *testing.T) {
 		value := "1G"
 		manifest.Memory = &value
 
-		err := validateStackStruct("test/stack.yaml", manifest)
+		err := validateStackStruct("test", manifest)
 		if err != nil {
 			t.Logf("memory should be valid: %v", err)
 		}
@@ -163,7 +163,7 @@ func TestMemoryValues(t *testing.T) {
 		value := "512M"
 		manifest.Memory = &value
 
-		err := validateStackStruct("test/stack.yaml", manifest)
+		err := validateStackStruct("test", manifest)
 		if err != nil {
 			t.Logf("memory should be valid: %v", err)
 		}
@@ -175,7 +175,7 @@ func TestMemoryValues(t *testing.T) {
 		value := "abc"
 		manifest.Memory = &value
 
-		err := validateStackStruct("test/stack.yaml", manifest)
+		err := validateStackStruct("test", manifest)
 		if err == nil {
 			t.Fatal("non-numeric memory should be invalid")
 		}
@@ -191,7 +191,7 @@ func TestDiskValues(t *testing.T) {
 		value := "1G"
 		manifest.DiskSpace = &value
 
-		err := validateStackStruct("test/stack.yaml", manifest)
+		err := validateStackStruct("test", manifest)
 		if err != nil {
 			t.Logf("disk should be valid: %v", err)
 		}
@@ -201,7 +201,7 @@ func TestDiskValues(t *testing.T) {
 		value := "512M"
 		manifest.DiskSpace = &value
 
-		err := validateStackStruct("test/stack.yaml", manifest)
+		err := validateStackStruct("test", manifest)
 		if err != nil {
 			t.Logf("disk should be valid: %v", err)
 		}
@@ -213,7 +213,7 @@ func TestDiskValues(t *testing.T) {
 		value := "abc"
 		manifest.DiskSpace = &value
 
-		err := validateStackStruct("test/stack.yaml", manifest)
+		err := validateStackStruct("test", manifest)
 		if err == nil {
 			t.Fatal("non-numeric disk should be invalid")
 		}
@@ -226,7 +226,7 @@ func TestConfigEngine(t *testing.T) {
 	manifest := templateManifest()
 	manifest.Configurations = map[string]interface{}{"model": "test"}
 
-	err := validateStackStruct("test/stack.yaml", manifest)
+	err := validateStackStruct("test", manifest)
 	if err == nil {
 		t.Fatal("missing config.engine field should be invalid")
 	}
@@ -237,7 +237,7 @@ func TestConfigModel(t *testing.T) {
 	manifest := templateManifest()
 	manifest.Configurations = map[string]interface{}{"engine": "test"}
 
-	err := validateStackStruct("test/stack.yaml", manifest)
+	err := validateStackStruct("test", manifest)
 	if err == nil {
 		t.Fatal("missing config.model field should be invalid")
 	}
