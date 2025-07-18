@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -41,4 +42,19 @@ func StringToBytes(sizeString string) (uint64, error) {
 	sizeBytes = sizeBytes * scaling
 
 	return sizeBytes, nil
+}
+
+func SplitPathIntoDirectories(p string) []string {
+	var parts []string
+	for {
+		dir, file := filepath.Split(p)
+		if file != "" {
+			parts = append([]string{file}, parts...)
+		}
+		if dir == "" || dir == "/" || dir == "\\" { // Handle root directory and empty path
+			break
+		}
+		p = strings.TrimSuffix(dir, string(filepath.Separator)) // Remove trailing separator
+	}
+	return parts
 }

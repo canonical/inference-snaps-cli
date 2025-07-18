@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/canonical/stack-utils/pkg/types"
 	"github.com/canonical/stack-utils/pkg/utils"
@@ -24,11 +22,21 @@ func Stack(manifestFilePath string) error {
 		return fmt.Errorf("error reading file: %v", err)
 	}
 
-	return validateStackYaml(manifestFilePath, yamlData)
+	// Get stack name from path
+	stackName := stackNameFromPath(manifestFilePath)
+
+	return validateStackYaml(stackName, yamlData)
 }
 
-func validateStackYaml(manifestFilePath string, yamlData []byte) error {
+func stackNameFromPath(manifestFilePath string) string {
+	parts := utils.SplitPathIntoDirectories(manifestFilePath)
+	if len(parts) < 2 {
+		return ""
+	}
+	return parts[len(parts)-2] // second last part: stack-name/stack.yaml
+}
 
+func validateStackYaml(expectedStackName string, yamlData []byte) error {
 	yamlData = bytes.TrimSpace(yamlData)
 	if len(yamlData) == 0 {
 		return errors.New("empty yaml data")
@@ -46,18 +54,19 @@ func validateStackYaml(manifestFilePath string, yamlData []byte) error {
 		return fmt.Errorf("error decoding: %v", err)
 	}
 
-	return validateStackStruct(manifestFilePath, stack)
+	return validateStackStruct(expectedStackName, stack)
 }
 
-func validateStackStruct(manifestFilePath string, stack types.Stack) error {
+func validateStackStruct(expectedStackName string, stack types.Stack) error {
 	if stack.Name == "" {
 		return fmt.Errorf("required field is not set: name")
 	}
 
-	// The name inside the manifest file should be the same as the one in the file path
-	expectedPath := filepath.Join(stack.Name, "stack.yaml")
-	if !strings.HasSuffix(manifestFilePath, expectedPath) {
-		return fmt.Errorf("stack dir name should equal name in manifest: %s != %s", manifestFilePath, stack.Name)
+	// Only do stack name matching test if expected name is set
+	if expectedStackName != "" {
+		if stack.Name != expectedStackName {
+			return fmt.Errorf("stack dir name should equal name in manifest: %s != %s", expectedStackName, stack.Name)
+		}
 	}
 
 	if stack.Description == "" {
