@@ -11,7 +11,7 @@ import (
 
 func cpu(device types.StackDevice) error {
 	if device.Architecture == nil {
-		return fmt.Errorf("architecture field required: %v", device.Architecture)
+		return fmt.Errorf("architecture field required")
 	}
 
 	switch *device.Architecture {
@@ -25,7 +25,12 @@ func cpu(device types.StackDevice) error {
 }
 
 func cpuAmd64(device types.StackDevice) error {
-	validFields := []string{"Type", "Architecture", "ManufacturerId", "Flags"}
+	validFields := []string{
+		"Type",
+		"Architecture",
+		"ManufacturerId",
+		"Flags",
+	}
 
 	t := reflect.TypeOf(device)
 	v := reflect.ValueOf(device)
@@ -45,7 +50,13 @@ func cpuAmd64(device types.StackDevice) error {
 }
 
 func cpuArm64(device types.StackDevice) error {
-	validFields := []string{"Type", "Architecture", "ImplementerId", "PartNumber", "Features"}
+	validFields := []string{
+		"Type",
+		"Architecture",
+		"ImplementerId",
+		"PartNumber",
+		"Features",
+	}
 
 	t := reflect.TypeOf(device)
 	v := reflect.ValueOf(device)

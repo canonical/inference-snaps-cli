@@ -17,7 +17,7 @@ func stackDevices(devices types.StackDevices) error {
 	for i, device := range devices.Any {
 		err := stackDevice(device)
 		if err != nil {
-			return fmt.Errorf("invalid device: any %d/%d: %v", i+1, len(devices.All), err)
+			return fmt.Errorf("invalid device: any %d/%d: %v", i+1, len(devices.Any), err)
 		}
 	}
 
@@ -27,20 +27,36 @@ func stackDevices(devices types.StackDevices) error {
 func stackDevice(device types.StackDevice) error {
 	switch device.Type {
 	case "cpu":
-		return cpu(device)
+		err := cpu(device)
+		if err != nil {
+			return fmt.Errorf("cpu: %v", err)
+		}
 	case "gpu":
-		return gpu(device)
+		err := gpu(device)
+		if err != nil {
+			return fmt.Errorf("gpu: %v", err)
+		}
 	case "npu":
-		return npu(device)
+		err := npu(device)
+		if err != nil {
+			return fmt.Errorf("npu: %v", err)
+		}
 	case "":
-		return typelessDevice(device)
+		err := typelessDevice(device)
+		if err != nil {
+			return fmt.Errorf("typeless: %v", err)
+		}
 	default:
 		return fmt.Errorf("invalid device type: %v", device.Type)
 	}
+	return nil
 }
 
 func gpu(device types.StackDevice) error {
-	extraFields := []string{"VRam", "ComputeCapability"}
+	extraFields := []string{
+		"VRam",
+		"ComputeCapability",
+	}
 
 	err := bus(device, extraFields)
 	if err != nil {

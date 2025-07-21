@@ -66,6 +66,11 @@ func main() {
 	case "validate":
 		validateCmd.Parse(os.Args[2:])
 		stackFiles := validateCmd.Args()
+		if len(stackFiles) == 0 {
+			fmt.Println("Error: no stack manifest specified")
+			os.Exit(1)
+		}
+
 		validateStackManifests(stackFiles...)
 
 	default:

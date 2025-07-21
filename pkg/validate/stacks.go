@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
+	"slices"
 
 	"github.com/canonical/stack-utils/pkg/types"
 	"github.com/canonical/stack-utils/pkg/utils"
@@ -12,6 +14,11 @@ import (
 )
 
 func Stack(manifestFilePath string) error {
+	fileName := filepath.Base(manifestFilePath)
+	if !slices.Contains([]string{"stack.yml", "stack.yaml"}, fileName) {
+		return fmt.Errorf("stack manifest file must be called stack.yaml: %s", manifestFilePath)
+	}
+
 	_, err := os.Stat(manifestFilePath)
 	if err != nil {
 		return fmt.Errorf("error getting file info: %v", err)
@@ -98,12 +105,10 @@ func validateStackStruct(expectedStackName string, stack types.Stack) error {
 		}
 	}
 
-	if _, ok := stack.Configurations["engine"]; !ok {
-		return fmt.Errorf("required field is not set: config.engine")
-	}
-
-	if _, ok := stack.Configurations["model"]; !ok {
-		return fmt.Errorf("required field is not set: config.model")
+	for key, val := range stack.Configurations {
+		if !utils.IsPrimitive(val) {
+			return fmt.Errorf("configuration field %s is not a primitive value: %v", key, val)
+		}
 	}
 
 	return stackDevices(stack.Devices)

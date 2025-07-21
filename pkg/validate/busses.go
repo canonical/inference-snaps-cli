@@ -22,12 +22,16 @@ func bus(device types.StackDevice, extraFields []string) error {
 }
 
 func usb(device types.StackDevice, extraFields []string) error {
-	// Not implemented
-	return nil
+	return fmt.Errorf("usb device validation not implemented")
 }
 
 func pci(device types.StackDevice, extraFields []string) error {
-	validFields := []string{"Type", "Bus", "VendorId", "DeviceId"}
+	validFields := []string{
+		"Type",
+		"Bus",
+		"VendorId",
+		"DeviceId",
+	}
 	validFields = append(validFields, extraFields...)
 
 	t := reflect.TypeOf(device)

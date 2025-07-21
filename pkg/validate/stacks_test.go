@@ -12,15 +12,18 @@ import (
 func templateManifest() types.Stack {
 	memDisk := "1"
 	manifest := types.Stack{
-		Name:           "test",
-		Description:    "test",
-		Vendor:         "test",
-		Grade:          "stable",
-		Devices:        types.StackDevices{},
-		Memory:         &memDisk,
-		DiskSpace:      &memDisk,
-		Components:     nil,
-		Configurations: map[string]interface{}{"engine": "test", "model": "test"},
+		Name:        "test",
+		Description: "test",
+		Vendor:      "test",
+		Grade:       "stable",
+		Devices:     types.StackDevices{},
+		Memory:      &memDisk,
+		DiskSpace:   &memDisk,
+		Components:  nil,
+		Configurations: map[string]interface{}{
+			"engine": "test",
+			"model":  "test",
+		},
 	}
 	return manifest
 }
@@ -222,24 +225,23 @@ func TestDiskValues(t *testing.T) {
 
 }
 
-func TestConfigEngine(t *testing.T) {
+func TestConfig(t *testing.T) {
 	manifest := templateManifest()
-	manifest.Configurations = map[string]interface{}{"model": "test"}
 
-	err := validateStackStruct("test", manifest)
-	if err == nil {
-		t.Fatal("missing config.engine field should be invalid")
-	}
-	t.Log(err)
-}
+	t.Run("config is primitive", func(t *testing.T) {
+		manifest.Configurations = map[string]interface{}{"model": true}
+		err := validateStackStruct("test", manifest)
+		if err != nil {
+			t.Fatalf("primitive model field should be valid: %v", err)
+		}
+	})
 
-func TestConfigModel(t *testing.T) {
-	manifest := templateManifest()
-	manifest.Configurations = map[string]interface{}{"engine": "test"}
-
-	err := validateStackStruct("test", manifest)
-	if err == nil {
-		t.Fatal("missing config.model field should be invalid")
-	}
-	t.Log(err)
+	t.Run("config is not primitive", func(t *testing.T) {
+		manifest.Configurations = map[string]interface{}{"model": []string{"one", "two"}}
+		err := validateStackStruct("test", manifest)
+		if err == nil {
+			t.Fatal("non-primitive model field should be invalid")
+		}
+		t.Log(err)
+	})
 }
