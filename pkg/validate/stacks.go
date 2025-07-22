@@ -5,8 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
-	"slices"
+	"strings"
 
 	"github.com/canonical/stack-utils/pkg/types"
 	"github.com/canonical/stack-utils/pkg/utils"
@@ -14,8 +13,8 @@ import (
 )
 
 func Stack(manifestFilePath string) error {
-	fileName := filepath.Base(manifestFilePath)
-	if !slices.Contains([]string{"stack.yml", "stack.yaml"}, fileName) {
+
+	if !strings.HasSuffix(manifestFilePath, "stack.yaml") {
 		return fmt.Errorf("stack manifest file must be called stack.yaml: %s", manifestFilePath)
 	}
 
