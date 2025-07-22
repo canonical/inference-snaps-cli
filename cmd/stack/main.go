@@ -8,7 +8,7 @@ import (
 	"github.com/canonical/go-snapctl/env"
 )
 
-var stacksDir = env.Snap + "/stacks"
+var stacksDir = env.Snap() + "/stacks"
 
 func main() {
 	// stack select [--auto]
@@ -24,6 +24,13 @@ func main() {
 
 	// stack validate
 	validateCmd := flag.NewFlagSet("validate", flag.ExitOnError)
+
+	// stack list [--all]
+	listCmd := flag.NewFlagSet("list", flag.ExitOnError)
+	listAll := listCmd.Bool("all", false, "Also list incompatible stacks")
+
+	// stack info <stack>
+	infoCmd := flag.NewFlagSet("info", flag.ExitOnError)
 
 	if len(os.Args) < 2 {
 		fmt.Println("expected a subcommands")
@@ -72,6 +79,20 @@ func main() {
 		}
 
 		validateStackManifests(stackFiles...)
+
+	case "list":
+		listCmd.Parse(os.Args[2:])
+		listStacks(*listAll)
+
+	case "info":
+		infoCmd.Parse(os.Args[2:])
+		if len(infoCmd.Args()) < 1 {
+			fmt.Println("Error: a stack name is required")
+		}
+		if len(infoCmd.Args()) != 1 {
+			fmt.Println("Error: only one stack name can be specified")
+		}
+		stackInfo(infoCmd.Args()[0])
 
 	default:
 		fmt.Println("unexpected subcommands")
