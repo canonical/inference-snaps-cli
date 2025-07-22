@@ -45,6 +45,7 @@ func StringToBytes(sizeString string) (uint64, error) {
 	return sizeBytes, nil
 }
 
+// SplitPathIntoDirectories takes a file path and returns a slice of strings containing the individual directory names that makes up the path
 func SplitPathIntoDirectories(p string) []string {
 	var parts []string
 	for {
