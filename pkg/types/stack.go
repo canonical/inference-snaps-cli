@@ -32,28 +32,28 @@ type StackDevices struct {
 }
 
 type StackDevice struct {
-	Type string `yaml:"type" json:"type"`         // cpu, gpu, npu or nil
-	Bus  string `yaml:"bus" json:"bus,omitempty"` // pci, usb or nil
+	Type string `yaml:"type,omitempty" json:"type,omitempty"` // cpu, gpu, npu or nil
+	Bus  string `yaml:"bus,omitempty" json:"bus,omitempty"`   // pci, usb or nil
 
 	// CPUs
-	Architecture *string `yaml:"architecture" json:"architecture,omitempty"`
+	Architecture *string `yaml:"architecture,omitempty" json:"architecture,omitempty"`
 
 	// CPU x86
-	ManufacturerId *string  `yaml:"manufacturer-id" json:"manufacturer-id,omitempty"`
-	Flags          []string `yaml:"flags" json:"flags,omitempty"`
+	ManufacturerId *string  `yaml:"manufacturer-id,omitempty" json:"manufacturer-id,omitempty"`
+	Flags          []string `yaml:"flags,omitempty" json:"flags,omitempty"`
 
 	// CPU arm64
-	ImplementerId *HexInt  `yaml:"implementer-id" json:"implementer-id,omitempty"`
-	PartNumber    *HexInt  `yaml:"part-number" json:"part-number,omitempty"`
-	Features      []string `yaml:"features" json:"features,omitempty"`
+	ImplementerId *HexInt  `yaml:"implementer-id,omitempty" json:"implementer-id,omitempty"`
+	PartNumber    *HexInt  `yaml:"part-number,omitempty" json:"part-number,omitempty"`
+	Features      []string `yaml:"features,omitempty" json:"features,omitempty"`
 
 	// PCI
-	VendorId *HexInt `yaml:"vendor-id" json:"vendor-id,omitempty"`
-	DeviceId *HexInt `yaml:"device-id" json:"device-id,omitempty"`
+	VendorId *HexInt `yaml:"vendor-id,omitempty" json:"vendor-id,omitempty"`
+	DeviceId *HexInt `yaml:"device-id,omitempty" json:"device-id,omitempty"`
 
 	// GPU additional properties
-	VRam              *string `yaml:"vram" json:"vram,omitempty"`
-	ComputeCapability *string `yaml:"compute-capability" json:"compute-capability,omitempty"`
+	VRam              *string `yaml:"vram,omitempty" json:"vram,omitempty"`
+	ComputeCapability *string `yaml:"compute-capability,omitempty" json:"compute-capability,omitempty"`
 
 	// NPU
 	// no additional properties for now

@@ -24,7 +24,10 @@ func listStacks(includeIncompatible bool) {
 	if err != nil {
 		log.Fatalf("Error parsing stacks: %v\n", err)
 	}
-	printStacks(stacks, includeIncompatible)
+	err = printStacks(stacks, includeIncompatible)
+	if err != nil {
+		log.Fatalf("Error printing list: %v\n", err)
+	}
 }
 
 func parseStacksJson(stacksJson string) (map[string]types.ScoredStack, error) {
