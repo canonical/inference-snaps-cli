@@ -13,5 +13,10 @@ func get(key string) {
 		fmt.Printf("Error getting value: %v\n", err)
 		os.Exit(1)
 	}
+
+	if value == "" {
+		fmt.Printf("No value set for key '%s'\n", key)
+		os.Exit(1)
+	}
 	fmt.Println(value)
 }
