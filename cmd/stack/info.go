@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 
+	"github.com/alecthomas/chroma/v2/quick"
 	"github.com/canonical/go-snapctl"
 	"github.com/canonical/stack-utils/pkg/types"
 	"gopkg.in/yaml.v3"
@@ -54,7 +56,11 @@ func printStackInfo(stack types.ScoredStack) error {
 	if err != nil {
 		return fmt.Errorf("error converting stack to yaml: %v", err)
 	}
-	fmt.Println(string(stackYaml))
+	
+	err = quick.Highlight(os.Stdout, string(stackYaml), "yaml", "terminal", "colorful")
+	if err != nil {
+		return fmt.Errorf("error formatting yaml: %v", err)
+	}
 
 	return nil
 }
