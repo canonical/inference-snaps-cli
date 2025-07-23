@@ -8,13 +8,14 @@ import (
 	"github.com/canonical/go-snapctl/env"
 )
 
-var stacksDir = env.Snap + "/stacks"
+var stacksDir = env.Snap() + "/stacks"
 
 func main() {
-	// stack select [--auto]
-	// stack select [<stack>]
-	selectCmd := flag.NewFlagSet("select", flag.ExitOnError)
-	selectAuto := selectCmd.Bool("auto", false, "Automatically select a compatible stack")
+	// stack use [--yes] [--auto]
+	// stack use [--yes] [<stack>]
+	useCmd := flag.NewFlagSet("use", flag.ExitOnError)
+	useAuto := useCmd.Bool("auto", false, "Automatically select a compatible stack")
+	useYes := useCmd.Bool("yes", false, "Assume yes for downloading new components")
 
 	// stack load
 	loadCmd := flag.NewFlagSet("load", flag.ExitOnError)
@@ -32,19 +33,27 @@ func main() {
 
 	switch os.Args[1] {
 
-	case "select":
-		selectCmd.Parse(os.Args[2:])
+	case "use":
+		useCmd.Parse(os.Args[2:])
 
-		if *selectAuto {
-			if len(selectCmd.Args()) != 0 {
+		if *useAuto {
+			if len(useCmd.Args()) != 0 {
 				fmt.Println("Error: cannot specify stack with --auto flag")
 				os.Exit(1)
 			}
-			autoSelectStacks()
+			err := autoSelectStacks(*useYes)
+			if err != nil {
+				fmt.Println("Error: failed to automatically set used stack:", err)
+				os.Exit(1)
+			}
 		} else {
-			stack := selectCmd.Args()
+			stack := useCmd.Args()
 			if len(stack) == 1 {
-				selectStack(stack[0])
+				err := useStack(stack[0], *useYes)
+				if err != nil {
+					fmt.Println("Error: failed use stack:", err)
+					os.Exit(1)
+				}
 			} else if len(stack) == 0 {
 				fmt.Println("Error: stack name not specified")
 				os.Exit(1)
