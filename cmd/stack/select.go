@@ -37,11 +37,11 @@ func autoSelectStacks(assumeYes bool) error {
 
 	for _, stack := range scoredStacks {
 		if stack.Score == 0 {
-			fmt.Printf("❌ Stack %s not selected: %s\n", stack.Name, strings.Join(stack.Notes, ", "))
+			fmt.Printf("❌ %s - not compatible: %s\n", stack.Name, strings.Join(stack.Notes, ", "))
 		} else if stack.Grade != "stable" {
-			fmt.Printf("⏺️ Stack %s grade is %s. Score = %d\n", stack.Name, stack.Grade, stack.Score)
+			fmt.Printf("⏺️ %s - score = %d, grade = %s\n", stack.Name, stack.Score, stack.Grade)
 		} else {
-			fmt.Printf("✅ Stack %s matches. Score = %d\n", stack.Name, stack.Score)
+			fmt.Printf("✅ %s - compatible, score = %d\n", stack.Name, stack.Score)
 		}
 	}
 
