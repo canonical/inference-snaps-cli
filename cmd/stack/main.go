@@ -88,9 +88,11 @@ func main() {
 		infoCmd.Parse(os.Args[2:])
 		if len(infoCmd.Args()) < 1 {
 			fmt.Println("Error: a stack name is required")
+			os.Exit(1)
 		}
 		if len(infoCmd.Args()) != 1 {
 			fmt.Println("Error: only one stack name can be specified")
+			os.Exit(1)
 		}
 		stackInfo(infoCmd.Args()[0])
 
