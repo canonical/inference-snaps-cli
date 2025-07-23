@@ -12,17 +12,16 @@ import (
 	"github.com/canonical/stack-utils/pkg/hardware_info"
 	"github.com/canonical/stack-utils/pkg/selector"
 	"github.com/canonical/stack-utils/pkg/types"
+	"golang.org/x/term"
 )
 
-func autoSelectStacks(downloadComponentsNoPrompt bool) error {
+func autoSelectStacks(assumeYes bool) error {
 	fmt.Println("Automatically selecting a compatible stack ...")
 
 	allStacks, err := selector.LoadStacksFromDir(stacksDir)
 	if err != nil {
 		return fmt.Errorf("error loading stacks: %v", err)
 	}
-
-	fmt.Printf("Found %d stacks\n", len(allStacks))
 
 	// get hardware info
 	hardwareInfo, err := hardware_info.Get(false)
@@ -66,14 +65,16 @@ func autoSelectStacks(downloadComponentsNoPrompt bool) error {
 	}
 
 	fmt.Println("Selected stack for your hardware configuration:", topStack.Name)
+	// Empty line before printing installation details
+	fmt.Println()
 
-	return useStack(topStack.Name, downloadComponentsNoPrompt)
+	return useStack(topStack.Name, assumeYes)
 }
 
 /*
 useStack changes the stack that is used by the snap
 */
-func useStack(stackName string, downloadComponentsNoPrompt bool) error {
+func useStack(stackName string, assumeYes bool) error {
 
 	stackJson, err := snapctl.Get("stacks." + stackName).Document().Run()
 	if err != nil {
@@ -98,14 +99,17 @@ func useStack(stackName string, downloadComponentsNoPrompt bool) error {
 		}
 		fmt.Println("This can take a long time to complete.")
 
-		if !downloadComponentsNoPrompt {
-			fmt.Println("Are you sure you want to continue? (y/n)")
-			if !checkConfirmation() {
+		// Only ask for confirmation of download if it is an interactive terminal
+		if !assumeYes && term.IsTerminal(int(os.Stdin.Fd())) {
+			if !confirmationPrompt("Are you sure you want to continue?") {
 				fmt.Println("Exiting. No changes applied.")
 				return nil
 			}
 		}
 	}
+
+	// Empty line before printing component and config details
+	fmt.Println()
 
 	// First change the stack, then download the components. Even if a timeout occurs, it will complete in the background.
 	err = setStackOptions(stack)
@@ -205,11 +209,12 @@ func setStackOptions(stack types.ScoredStack) error {
 	return nil
 }
 
-// checkConfirmation prompts the user for a yes/no answer and returns true for 'y', false for 'n'.
-func checkConfirmation() bool {
+// confirmationPrompt prompts the user for a yes/no answer and returns true for 'y', false for 'n'.
+func confirmationPrompt(prompt string) bool {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
+		fmt.Printf("%s [y/n] ", prompt)
 		input, _ := reader.ReadString('\n')
 		input = strings.ToLower(strings.TrimSpace(input))
 

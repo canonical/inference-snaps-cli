@@ -11,11 +11,11 @@ import (
 var stacksDir = env.Snap() + "/stacks"
 
 func main() {
-	// stack use [--yes] [--auto]
-	// stack use [--yes] [<stack>]
+	// stack use [--assume-yes] [--auto]
+	// stack use [--assume-yes] [<stack>]
 	useCmd := flag.NewFlagSet("use", flag.ExitOnError)
 	useAuto := useCmd.Bool("auto", false, "Automatically select a compatible stack")
-	useYes := useCmd.Bool("yes", false, "Assume yes for downloading new components")
+	useAssumeYes := useCmd.Bool("assume-yes", false, "Assume yes for downloading new components")
 
 	// stack load
 	loadCmd := flag.NewFlagSet("load", flag.ExitOnError)
@@ -41,7 +41,7 @@ func main() {
 				fmt.Println("Error: cannot specify stack with --auto flag")
 				os.Exit(1)
 			}
-			err := autoSelectStacks(*useYes)
+			err := autoSelectStacks(*useAssumeYes)
 			if err != nil {
 				fmt.Println("Error: failed to automatically set used stack:", err)
 				os.Exit(1)
@@ -49,7 +49,7 @@ func main() {
 		} else {
 			stack := useCmd.Args()
 			if len(stack) == 1 {
-				err := useStack(stack[0], *useYes)
+				err := useStack(stack[0], *useAssumeYes)
 				if err != nil {
 					fmt.Println("Error: failed use stack:", err)
 					os.Exit(1)
