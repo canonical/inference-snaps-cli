@@ -1,6 +1,7 @@
 {
   "stacks": {
     "ampere-altra": {
+      "compatible": false,
       "components": [
         "llama-aio",
         "model-distill-qwen-7b-q4-k-m-gguf"
@@ -21,7 +22,6 @@
           {
             "bus": "pci",
             "device-id": "e100",
-            "type": "",
             "vendor-id": "1def"
           }
         ]
@@ -30,9 +30,14 @@
       "grade": "stable",
       "memory": "4G",
       "name": "ampere-altra",
+      "notes": [
+        "devices all: required cpu device not found"
+      ],
+      "score": 0,
       "vendor": "Canonical Ltd"
     },
     "ampere-one": {
+      "compatible": false,
       "components": [
         "llama-aio-ampereone",
         "model-distill-qwen-7b-q4-k-m-gguf"
@@ -62,9 +67,14 @@
       "grade": "devel",
       "memory": "4G",
       "name": "ampere-one",
+      "notes": [
+        "devices any: required device not found"
+      ],
+      "score": 0,
       "vendor": "Canonical Ltd"
     },
     "cpu": {
+      "compatible": true,
       "components": [
         "llamacpp",
         "model-distill-qwen-7b-q4-k-m-gguf"
@@ -101,9 +111,11 @@
       "grade": "stable",
       "memory": "4G",
       "name": "cpu",
+      "score": 17,
       "vendor": "Canonical Ltd"
     },
     "cpu-avx512": {
+      "compatible": false,
       "components": [
         "llamacpp-avx512",
         "model-distill-qwen-7b-q4-k-m-gguf"
@@ -136,9 +148,14 @@
       "grade": "stable",
       "memory": "4G",
       "name": "cpu-avx512",
+      "notes": [
+        "devices any: required device not found"
+      ],
+      "score": 0,
       "vendor": "Canonical Ltd"
     },
     "cpu-legacy": {
+      "compatible": true,
       "components": [
         "llamacpp-legacy",
         "model-distill-qwen-7b-q4-k-m-gguf"
@@ -165,9 +182,11 @@
       "grade": "stable",
       "memory": "4G",
       "name": "cpu-legacy",
+      "score": 14,
       "vendor": "Canonical Ltd"
     },
     "cpu-tiny": {
+      "compatible": true,
       "components": [
         "llamacpp",
         "model-distill-qwen-1-5b-q8-0-gguf"
@@ -204,9 +223,11 @@
       "grade": "devel",
       "memory": "2G",
       "name": "cpu-tiny",
+      "score": 17,
       "vendor": "Canonical Ltd"
     },
     "cuda": {
+      "compatible": false,
       "components": [
         "llamacpp-cuda",
         "model-distill-qwen-7b-q4-k-m-gguf"
@@ -241,15 +262,19 @@
       "grade": "stable",
       "memory": "4G",
       "name": "cuda",
+      "notes": [
+        "devices all: required pci device not found"
+      ],
+      "score": 0,
       "vendor": "Canonical Ltd"
     },
     "intel-gpu": {
+      "compatible": false,
       "components": [
         "openvino-model-server",
         "model-distill-qwen-7b-openvino-int4"
       ],
       "configurations": {
-        "api-base-path": "v3",
         "engine": "openvino-model-server",
         "http.base-path": "v3",
         "model": "model-distill-qwen-7b-openvino-int4",
@@ -696,9 +721,14 @@
       "grade": "stable",
       "memory": "4G",
       "name": "intel-gpu",
+      "notes": [
+        "devices any: required device not found"
+      ],
+      "score": 0,
       "vendor": "Intel Corporation"
     },
     "intel-npu": {
+      "compatible": false,
       "components": [
         "openvino-model-server",
         "model-distill-qwen-7b-openvino-int4"
@@ -735,6 +765,10 @@
       "grade": "stable",
       "memory": "4G",
       "name": "intel-npu",
+      "notes": [
+        "devices any: required device not found"
+      ],
+      "score": 0,
       "vendor": "Intel Corporation"
     }
   }
