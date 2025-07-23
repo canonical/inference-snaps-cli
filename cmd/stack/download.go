@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -17,29 +16,29 @@ const (
 	snapdTimeoutError     = "timeout exceeded while waiting for response"
 )
 
-func downloadRequiredComponents() {
+func download() error {
+	return downloadRequiredComponents()
+}
+
+func downloadRequiredComponents() error {
 	// get stack snap option
 	stackName, err := snapctl.Get("stack").Run()
 	if err != nil {
-		fmt.Println("Error getting stack from snap options:", err)
-		os.Exit(1)
+		return fmt.Errorf("error getting 'stack' from snap options: %s", err)
 	}
 	if stackName == "" {
-		fmt.Println("Stack snap option is empty")
-		os.Exit(1)
+		return fmt.Errorf("'stack' snap option is empty")
 	}
 
 	// get stacks.<new-stack> snap option for the list of components
 	stackJson, err := snapctl.Get("stacks." + stackName).Run()
 	if err != nil {
-		fmt.Println("Error getting stack definition from snap options:", err)
-		os.Exit(1)
+		return fmt.Errorf("error getting 'stacks' from snap options: %s", err)
 	}
 	var stack types.ScoredStack
 	err = json.Unmarshal([]byte(stackJson), &stack)
 	if err != nil {
-		fmt.Println("Error deserializing stack definition from snap options:", err)
-		os.Exit(1)
+		return fmt.Errorf("error deserializing 'stacks': %s", err)
 	}
 
 	// install components
@@ -50,21 +49,22 @@ func downloadRequiredComponents() {
 		stopProgress()
 		if err != nil {
 			if strings.Contains(err.Error(), snapdUnknownSnapError) {
-				fmt.Printf("Error: snap not known to the store. Install a local build of component: %s\n", component)
+				fmt.Printf("Error: snap not known to the store. Install a local build of component: %s", component)
 				continue
 			} else if strings.Contains(err.Error(), snapdTimeoutError) {
-				fmt.Printf("Error: timeout exceeded while waiting for download of %s\n", component)
-				fmt.Println("Please monitor the progress using the 'snap changes' command and continue when the component installation is complete.")
-				os.Exit(1)
+				msg := "timeout exceeded while waiting for download of: " + component +
+					"\nPlease monitor the progress using the 'snap changes' command and continue when the component installation is complete."
+				return fmt.Errorf(msg)
 			} else if strings.Contains(err.Error(), "already installed") {
 				continue
 			} else {
-				fmt.Printf("Error downloading component: %s: %s\n", component, err)
-				os.Exit(1)
+				return fmt.Errorf("error downloading component: %s: %s", component, err)
 			}
 		}
 		fmt.Println("Downloaded " + component)
 	}
+
+	return nil
 }
 
 func startProgressDots(prefix string) (stop func()) {

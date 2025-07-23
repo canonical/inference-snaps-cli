@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/canonical/go-snapctl/env"
@@ -11,35 +12,24 @@ import (
 var stacksDir = env.Snap() + "/stacks"
 
 func main() {
-	// stack select [--auto]
-	// stack select [<stack>]
-	selectCmd := flag.NewFlagSet("select", flag.ExitOnError)
-	selectAuto := selectCmd.Bool("auto", false, "Automatically select a compatible stack")
-
-	// stack get
-	getCmd := flag.NewFlagSet("get", flag.ExitOnError)
-	// stack set
-	setCmd := flag.NewFlagSet("set", flag.ExitOnError)
-	// stack unset
-	unsetCmd := flag.NewFlagSet("unset", flag.ExitOnError)
-
-	// stack load
-	loadCmd := flag.NewFlagSet("load", flag.ExitOnError)
-
-	// stack download
-	downloadCmd := flag.NewFlagSet("download", flag.ExitOnError)
-
-	// stack validate
-	validateCmd := flag.NewFlagSet("validate", flag.ExitOnError)
+	log.SetFlags(0)
 
 	if len(os.Args) < 2 {
-		fmt.Println("expected a subcommands")
-		os.Exit(1)
+		log.Fatalln("No subcommand provided, expected one of: select, load, download, validate")
 	}
 
-	switch os.Args[1] {
+	if err := run(os.Args[2:]); err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+}
 
-	case "select":
+func run(args []string) error {
+
+	switch args[1] {
+
+	case "select": // deprecated - do not touch
+		selectCmd := flag.NewFlagSet("select", flag.ExitOnError)
+		selectAuto := selectCmd.Bool("auto", false, "Automatically select a compatible stack")
 		selectCmd.Parse(os.Args[2:])
 
 		if *selectAuto {
@@ -62,51 +52,36 @@ func main() {
 		}
 
 	case "get":
-		getCmd.Parse(os.Args[2:])
-		if len(getCmd.Args()) != 1 {
-			fmt.Println("Error: expected one config key as input")
-			os.Exit(1)
-		}
-		get(getCmd.Args()[0])
+		return get(args)
 
 	case "set":
-		setCmd.Parse(os.Args[2:])
-		if len(setCmd.Args()) != 1 {
-			fmt.Println("Error: expected one key=value pair as input")
-			os.Exit(1)
-		}
-		set(setCmd.Args()[0])
+		return set(args)
 
 	case "unset":
-		unsetCmd.Parse(os.Args[2:])
-		if len(unsetCmd.Args()) != 1 {
-			fmt.Println("Error: expected one config key as input")
-			os.Exit(1)
-		}
-		unset(unsetCmd.Args()[0])
+		return unset(args)
 
 	case "load":
-		loadCmd.Parse(os.Args[2:])
-		loadStacksToSnapOptions()
+		if len(args) != 0 {
+			return fmt.Errorf("'load' sub-command does not support arguments")
+		}
+
+		return load()
 
 	case "download":
-		downloadCmd.Parse(os.Args[2:])
-		downloadRequiredComponents()
+		if len(args) != 0 {
+			return fmt.Errorf("'download' sub-command does not support arguments")
+		}
+
+		return download()
 
 	// stack validate stacks/*/stack.yaml
 	case "validate":
-		validateCmd.Parse(os.Args[2:])
-		stackFiles := validateCmd.Args()
-		if len(stackFiles) == 0 {
-			fmt.Println("Error: no stack manifest specified")
-			os.Exit(1)
-		}
-
-		validateStackManifests(stackFiles...)
+		return validate(args)
 
 	default:
-		fmt.Println("unexpected subcommands")
-		os.Exit(1)
+		return fmt.Errorf("unexpected sub-command: '%s'", args[1])
 	}
+
+	return nil
 
 }
