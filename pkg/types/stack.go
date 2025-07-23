@@ -6,10 +6,10 @@ type StackSelection struct {
 }
 
 type ScoredStack struct {
-	Stack
-	Score      int      `json:"score"`
-	Compatible bool     `json:"compatible"`
-	Notes      []string `json:"notes,omitempty"`
+	Stack      `yaml:",inline"`
+	Score      int      `yaml:"score" json:"score"`
+	Compatible bool     `yaml:"compatible" json:"compatible"`
+	Notes      []string `yaml:"notes,omitempty" json:"notes,omitempty"`
 }
 
 type Stack struct {
@@ -19,16 +19,16 @@ type Stack struct {
 	Grade       string `yaml:"grade" json:"grade"`
 
 	Devices   StackDevices `yaml:"devices" json:"devices"`
-	Memory    *string      `yaml:"memory" json:"memory"`
-	DiskSpace *string      `yaml:"disk-space" json:"disk-space"`
+	Memory    *string      `yaml:"memory,omitempty" json:"memory"`
+	DiskSpace *string      `yaml:"disk-space,omitempty" json:"disk-space"`
 
 	Components     []string  `yaml:"components" json:"components"`
 	Configurations StackConf `yaml:"configurations" json:"configurations"`
 }
 
 type StackDevices struct {
-	Any []StackDevice `yaml:"any" json:"any"`
-	All []StackDevice `yaml:"all" json:"all"`
+	Any []StackDevice `yaml:"any,omitempty" json:"any"`
+	All []StackDevice `yaml:"all,omitempty" json:"all"`
 }
 
 type StackDevice struct {
