@@ -10,7 +10,7 @@ import (
 func get(key string) {
 	value, err := snapctl.Get(key).Run()
 	if err != nil {
-		fmt.Printf("Error getting value: %v\n", err)
+		fmt.Printf("Error getting value of '%s': %v\n", key, err)
 		os.Exit(1)
 	}
 
