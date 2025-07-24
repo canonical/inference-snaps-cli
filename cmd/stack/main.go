@@ -17,6 +17,13 @@ func main() {
 	useAuto := useCmd.Bool("auto", false, "Automatically select a compatible stack")
 	useAssumeYes := useCmd.Bool("assume-yes", false, "Assume yes for downloading new components")
 
+	// stack get
+	getCmd := flag.NewFlagSet("get", flag.ExitOnError)
+	// stack set
+	setCmd := flag.NewFlagSet("set", flag.ExitOnError)
+	// stack unset
+	unsetCmd := flag.NewFlagSet("unset", flag.ExitOnError)
+
 	// stack load
 	loadCmd := flag.NewFlagSet("load", flag.ExitOnError)
 
@@ -25,6 +32,13 @@ func main() {
 
 	// stack validate
 	validateCmd := flag.NewFlagSet("validate", flag.ExitOnError)
+
+	// stack list [--all]
+	listCmd := flag.NewFlagSet("list", flag.ExitOnError)
+	listAll := listCmd.Bool("all", false, "Also list incompatible stacks")
+
+	// stack info <stack>
+	infoCmd := flag.NewFlagSet("info", flag.ExitOnError)
 
 	if len(os.Args) < 2 {
 		fmt.Println("expected a subcommands")
@@ -63,6 +77,30 @@ func main() {
 			}
 		}
 
+	case "get":
+		getCmd.Parse(os.Args[2:])
+		if len(getCmd.Args()) != 1 {
+			fmt.Println("Error: expected one config key as input")
+			os.Exit(1)
+		}
+		get(getCmd.Args()[0])
+
+	case "set":
+		setCmd.Parse(os.Args[2:])
+		if len(setCmd.Args()) != 1 {
+			fmt.Println("Error: expected one key=value pair as input")
+			os.Exit(1)
+		}
+		set(setCmd.Args()[0])
+
+	case "unset":
+		unsetCmd.Parse(os.Args[2:])
+		if len(unsetCmd.Args()) != 1 {
+			fmt.Println("Error: expected one config key as input")
+			os.Exit(1)
+		}
+		unset(unsetCmd.Args()[0])
+
 	case "load":
 		loadCmd.Parse(os.Args[2:])
 		loadStacksToSnapOptions()
@@ -81,6 +119,22 @@ func main() {
 		}
 
 		validateStackManifests(stackFiles...)
+
+	case "list":
+		listCmd.Parse(os.Args[2:])
+		listStacks(*listAll)
+
+	case "info":
+		infoCmd.Parse(os.Args[2:])
+		if len(infoCmd.Args()) < 1 {
+			fmt.Println("Error: a stack name is required")
+			os.Exit(1)
+		}
+		if len(infoCmd.Args()) != 1 {
+			fmt.Println("Error: only one stack name can be specified")
+			os.Exit(1)
+		}
+		stackInfo(infoCmd.Args()[0])
 
 	default:
 		fmt.Println("unexpected subcommands")
