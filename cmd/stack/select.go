@@ -92,10 +92,9 @@ func useStack(stackName string, assumeYes bool) error {
 	}
 	if len(components) > 0 {
 		// ask user if they want to continue
-		if len(components) > 1 {
-			fmt.Printf("%d components need to be downloaded and installed.\n", len(components))
-		} else {
-			fmt.Printf("A new component needs to be downloaded and installed.\n")
+		fmt.Println("Need to download and install the following components:")
+		for _, component := range components {
+			fmt.Printf("\t%s\n", component)
 		}
 		fmt.Println("This can take a long time to complete.")
 
@@ -111,7 +110,8 @@ func useStack(stackName string, assumeYes bool) error {
 	// Empty line before printing component and config details
 	fmt.Println()
 
-	// First change the stack, then download the components. Even if a timeout occurs, it will complete in the background.
+	// First change the stack, then download the components.
+	// Even if a timeout occurs, the download is expected to complete in the background.
 	err = setStackOptions(stack)
 	if err != nil {
 		return fmt.Errorf("error setting stack options: %v", err)
@@ -163,14 +163,14 @@ func componentInstalled(component string) (bool, error) {
 }
 
 func setStackOptions(stack types.ScoredStack) error {
-
 	// set stack config option
 	err := snapctl.Set("stack", stack.Name).Run()
 	if err != nil {
 		return fmt.Errorf(`error setting snap option "stack": %v`, err)
 	}
 
-	// set other config options - todo: clear beforehand
+	// set other config options
+	// TODO: clear beforehand
 	for confKey, confVal := range stack.Configurations {
 		valJson, err := json.Marshal(confVal)
 		if err != nil {
