@@ -64,9 +64,7 @@ func autoSelectStacks(assumeYes bool) error {
 		return fmt.Errorf("error selecting a stack: %v", err)
 	}
 
-	fmt.Println("Selected stack for your hardware configuration:", topStack.Name)
-	// Empty line before printing installation details
-	fmt.Println()
+	fmt.Printf("Selected stack for your hardware configuration: %s\n\n", topStack.Name)
 
 	return useStack(topStack.Name, assumeYes)
 }
@@ -105,10 +103,10 @@ func useStack(stackName string, assumeYes bool) error {
 				return nil
 			}
 		}
-	}
 
-	// Empty line before printing component and config details
-	fmt.Println()
+		// Leave a blank line after printing component list and optional confirmation, before printing component installation progress
+		fmt.Println()
+	}
 
 	// First change the stack, then download the components.
 	// Even if a timeout occurs, the download is expected to complete in the background.
