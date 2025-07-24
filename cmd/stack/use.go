@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -17,28 +18,48 @@ import (
 )
 
 func use(args []string) error {
-	useCmd := flag.NewFlagSet("use", flag.ExitOnError)
-	useAuto := useCmd.Bool("auto", false, "Automatically select a compatible stack")
-	useAssumeYes := useCmd.Bool("assume-yes", false, "Assume yes for downloading new components")
+	flag := flag.NewFlagSet("use", flag.ExitOnError)
+	help := helpFlag(flag)
+	auto := flag.Bool("auto", false, "Automatically select a compatible stack")
+	assumeYes := flag.Bool("assume-yes", false, "Assume yes for downloading new components")
 
-	useCmd.Parse(args)
+	fmt.Println("use:", args)
 
-	if *useAuto {
-		if len(useCmd.Args()) != 0 {
+	flag.Parse(args)
+	fmt.Println("use args:", flag.Args())
+
+	// keep the non-flag arguments
+	args = flag.Args()
+
+	flag.Usage = func() {
+		log.Printf("Usage:")
+		log.Printf("  %s use <stack>", snapInstanceName)
+		log.Printf("  %s use --auto", snapInstanceName)
+
+		log.Printf("\nFlags:")
+		flag.PrintDefaults()
+	}
+
+	if *help {
+		flag.Usage()
+		return nil
+	}
+
+	if *auto {
+		if len(args) != 0 {
 			return fmt.Errorf("cannot specify stack with --auto flag")
 		}
-		err := autoSelectStacks(*useAssumeYes)
+		err := autoSelectStacks(*assumeYes)
 		if err != nil {
 			return fmt.Errorf("failed to automatically set used stack: %s", err)
 		}
 	} else {
-		stack := useCmd.Args()
-		if len(stack) == 1 {
-			err := useStack(stack[0], *useAssumeYes)
+		if len(args) == 1 {
+			err := useStack(args[0], *assumeYes)
 			if err != nil {
-				return fmt.Errorf("failed use stack: %s", err)
+				return fmt.Errorf("failed to use stack: %s", err)
 			}
-		} else if len(stack) == 0 {
+		} else if len(args) == 0 {
 			return fmt.Errorf("stack name not specified")
 		} else {
 			return fmt.Errorf("too many arguments")
