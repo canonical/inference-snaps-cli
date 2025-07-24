@@ -45,13 +45,6 @@ func run(args []string) error {
 
 		return load()
 
-	case "download":
-		if len(args) != 0 {
-			return fmt.Errorf("'download' sub-command does not support arguments")
-		}
-
-		return download()
-
 	// stack validate stacks/*/stack.yaml
 	case "validate":
 		return validate(args)

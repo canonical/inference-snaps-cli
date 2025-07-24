@@ -25,12 +25,12 @@ func loadStacksToSnapOptions() error {
 	for _, stack := range allStacks {
 		stackJson, err := json.Marshal(stack)
 		if err != nil {
-			return fmt.Errorf("error serializing stacks:", err)
+			return fmt.Errorf("error serializing stacks: %s", err)
 		}
 
 		err = snapctl.Set("stacks."+stack.Name, string(stackJson)).Document().Run()
 		if err != nil {
-			return fmt.Errorf("error setting stacks option:", err)
+			return fmt.Errorf("error setting stacks option: %s", err)
 		}
 	}
 

@@ -1,14 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
 	"github.com/canonical/go-snapctl"
-	"github.com/canonical/stack-utils/pkg/types"
 )
 
 const (
@@ -16,35 +14,7 @@ const (
 	snapdTimeoutError     = "timeout exceeded while waiting for response"
 )
 
-func download() error {
-	return downloadRequiredComponents()
-}
-
-func downloadRequiredComponents() error {
-	// get stack snap option
-	stackName, err := snapctl.Get("stack").Run()
-	if err != nil {
-		return fmt.Errorf("error getting 'stack' from snap options: %s", err)
-	}
-	if stackName == "" {
-		return fmt.Errorf("'stack' snap option is empty")
-	}
-
-	// get stacks.<new-stack> snap option for the list of components
-	stackJson, err := snapctl.Get("stacks." + stackName).Run()
-	if err != nil {
-		return fmt.Errorf("error getting 'stacks' from snap options: %s", err)
-	}
-	var stack types.ScoredStack
-	err = json.Unmarshal([]byte(stackJson), &stack)
-	if err != nil {
-		return fmt.Errorf("error deserializing 'stacks': %s", err)
-	}
-
-	downloadComponents(stack.Components)
-}
-
-func downloadComponents(components []string) {
+func downloadComponents(components []string) error {
 	// install components
 	// Messages presented to the user should use the term "download" for snapctl install +component.
 	for _, component := range components {
