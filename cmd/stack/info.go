@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -10,6 +11,25 @@ import (
 	"github.com/canonical/stack-utils/pkg/types"
 	"gopkg.in/yaml.v3"
 )
+
+func info(args []string) error {
+	infoCmd := flag.NewFlagSet("info", flag.ExitOnError)
+	infoCmd.Parse(args)
+
+	if len(args) != 1 {
+		return fmt.Errorf("expected one stack name as input")
+	}
+
+	stackName := args[0]
+	// check: can this arg be present and empty?
+	// if stackName == "" {
+	// 	return fmt.Errorf("stack name cannot be empty")
+	// }
+
+	stackInfo(stackName)
+
+	return nil
+}
 
 func stackInfo(stackName string) {
 	stackJson, err := snapctl.Get("stacks." + stackName).Document().Run()

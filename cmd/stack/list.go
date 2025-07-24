@@ -1,8 +1,8 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"log"
 	"maps"
 	"os"
 	"slices"
@@ -15,20 +15,31 @@ import (
 	"github.com/olekukonko/tablewriter/tw"
 )
 
-func listStacks(includeIncompatible bool) {
+func list(args []string) error {
+	listCmd := flag.NewFlagSet("list", flag.ExitOnError)
+	listAll := listCmd.Bool("all", false, "Also list incompatible stacks")
+
+	listCmd.Parse(args)
+	return listStacks(*listAll)
+}
+
+func listStacks(includeIncompatible bool) error {
 	stacksJson, err := snapctl.Get("stacks").Document().Run()
 	if err != nil {
-		log.Fatalf("Error loading stacks: %v\n", err)
+		return fmt.Errorf("error loading stacks: %v", err)
 	}
 
 	stacks, err := parseStacksJson(stacksJson)
 	if err != nil {
-		log.Fatalf("Error parsing stacks: %v\n", err)
+		return fmt.Errorf("error parsing stacks: %v", err)
 	}
+
 	err = printStacks(stacks, includeIncompatible)
 	if err != nil {
-		log.Fatalf("Error printing list: %v\n", err)
+		return fmt.Errorf("error printing list: %v", err)
 	}
+
+	return nil
 }
 
 func printStacks(stacks map[string]types.ScoredStack, includeIncompatible bool) error {

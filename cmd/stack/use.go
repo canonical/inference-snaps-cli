@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"strings"
@@ -14,6 +15,38 @@ import (
 	"github.com/canonical/stack-utils/pkg/types"
 	"golang.org/x/term"
 )
+
+func use(args []string) error {
+	useCmd := flag.NewFlagSet("use", flag.ExitOnError)
+	useAuto := useCmd.Bool("auto", false, "Automatically select a compatible stack")
+	useAssumeYes := useCmd.Bool("assume-yes", false, "Assume yes for downloading new components")
+
+	useCmd.Parse(args)
+
+	if *useAuto {
+		if len(useCmd.Args()) != 0 {
+			return fmt.Errorf("cannot specify stack with --auto flag")
+		}
+		err := autoSelectStacks(*useAssumeYes)
+		if err != nil {
+			return fmt.Errorf("failed to automatically set used stack: %s", err)
+		}
+	} else {
+		stack := useCmd.Args()
+		if len(stack) == 1 {
+			err := useStack(stack[0], *useAssumeYes)
+			if err != nil {
+				return fmt.Errorf("failed use stack: %s", err)
+			}
+		} else if len(stack) == 0 {
+			return fmt.Errorf("stack name not specified")
+		} else {
+			return fmt.Errorf("too many arguments")
+		}
+	}
+
+	return nil
+}
 
 func autoSelectStacks(assumeYes bool) error {
 	fmt.Println("Automatically selecting a compatible stack ...")
