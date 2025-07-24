@@ -41,11 +41,15 @@ func downloadRequiredComponents() error {
 		return fmt.Errorf("error deserializing 'stacks': %s", err)
 	}
 
+	downloadComponents(stack.Components)
+}
+
+func downloadComponents(components []string) {
 	// install components
 	// Messages presented to the user should use the term "download" for snapctl install +component.
-	for _, component := range stack.Components {
+	for _, component := range components {
 		stopProgress := startProgressDots("Downloading " + component + " ")
-		err = snapctl.InstallComponents(component).Run()
+		err := snapctl.InstallComponents(component).Run()
 		stopProgress()
 		if err != nil {
 			if strings.Contains(err.Error(), snapdUnknownSnapError) {
