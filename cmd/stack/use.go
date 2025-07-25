@@ -26,8 +26,9 @@ func init() {
 		Use:   "use [<stack>]",
 		Short: "Select a stack",
 		// Long:  "",
-		Args: cobra.MaximumNArgs(1),
-		RunE: use,
+		Args:         cobra.MaximumNArgs(1),
+		RunE:         use,
+		SilenceUsage: true,
 	}
 
 	// flags
@@ -118,8 +119,6 @@ func autoSelectStacks(assumeYes bool) error {
 useStack changes the stack that is used by the snap
 */
 func useStack(stackName string, assumeYes bool) error {
-	fmt.Println(assumeYes)
-
 	stackJson, err := snapctl.Get("stacks." + stackName).Document().Run()
 	if err != nil {
 		return fmt.Errorf("error loading stack: %v", err)

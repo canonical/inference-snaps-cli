@@ -11,7 +11,10 @@ var (
 	stacksDir = env.Snap() + "/stacks"
 	// rootCmd is the base command
 	// It gets populated with subcommands via init functions
-	rootCmd = &cobra.Command{Use: env.SnapInstanceName()}
+	rootCmd = &cobra.Command{
+		Use:          env.SnapInstanceName(),
+		SilenceUsage: true,
+	}
 )
 
 func main() {
