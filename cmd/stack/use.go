@@ -26,9 +26,8 @@ func init() {
 		Use:   "use [<stack>]",
 		Short: "Select a stack",
 		// Long:  "",
-		Args:         cobra.MaximumNArgs(1),
-		RunE:         use,
-		SilenceUsage: true,
+		Args: cobra.ExactArgs(1),
+		RunE: use,
 	}
 
 	// flags
