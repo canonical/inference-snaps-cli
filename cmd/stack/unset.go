@@ -25,7 +25,7 @@ func unset(_ *cobra.Command, args []string) error {
 func unsetValue(key string) error {
 	err := snapctl.Unset(key).Run()
 	if err != nil {
-		return fmt.Errorf("error unsetting value of '%s': %v", key, err)
+		return fmt.Errorf("error unsetting value of %q: %v", key, err)
 	}
 
 	return nil

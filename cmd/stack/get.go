@@ -25,11 +25,11 @@ func get(_ *cobra.Command, args []string) error {
 func getValue(key string) error {
 	value, err := snapctl.Get(key).Run()
 	if err != nil {
-		return fmt.Errorf("error getting value of '%s': %v", key, err)
+		return fmt.Errorf("error getting value of %q: %v", key, err)
 	}
 
 	if value == "" {
-		return fmt.Errorf("no value set for key '%s'", key)
+		return fmt.Errorf("no value set for key %q", key)
 	}
 
 	// print config value

@@ -195,13 +195,13 @@ func componentInstalled(component string) (bool, error) {
 		if os.IsNotExist(err) {
 			return false, nil
 		} else {
-			return false, fmt.Errorf(`error checking component directory "%s": %v\n`, component, err)
+			return false, fmt.Errorf("error checking component directory %q: %v\n", component, err)
 		}
 	} else {
 		if info.IsDir() {
 			return true, nil
 		} else {
-			return false, fmt.Errorf(`component "%s" exists but is not a directory`, component)
+			return false, fmt.Errorf("component %q exists but is not a directory", component)
 		}
 	}
 }
@@ -218,11 +218,11 @@ func setStackOptions(stack types.ScoredStack) error {
 	for confKey, confVal := range stack.Configurations {
 		valJson, err := json.Marshal(confVal)
 		if err != nil {
-			return fmt.Errorf(`error serializing configuration "%s": %v - %v\n`, confKey, confVal, err)
+			return fmt.Errorf("error serializing configuration %q: %v - %v", confKey, confVal, err)
 		}
 		err = snapctl.Set(confKey, string(valJson)).Document().Run()
 		if err != nil {
-			return fmt.Errorf(`error setting snap option "%s": %v`, confKey, err)
+			return fmt.Errorf("error setting snap option %q: %v", confKey, err)
 		}
 	}
 

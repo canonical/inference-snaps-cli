@@ -37,7 +37,7 @@ func setValue(keyValue string) error {
 
 	err := snapctl.Set(key, value).Run()
 	if err != nil {
-		return fmt.Errorf("error setting value '%s' for '%s': %v", value, key, err)
+		return fmt.Errorf("error setting value %q for %q: %v", value, key, err)
 	}
 
 	return nil
