@@ -11,6 +11,7 @@ import (
 	"github.com/canonical/go-snapctl/env"
 	"github.com/canonical/stack-utils/pkg/hardware_info"
 	"github.com/canonical/stack-utils/pkg/selector"
+	"github.com/canonical/stack-utils/pkg/snap_store"
 	"github.com/canonical/stack-utils/pkg/types"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
@@ -178,10 +179,21 @@ func useStack(stackName string, assumeYes bool) error {
 		return fmt.Errorf("error checking installed components: %v", err)
 	}
 	if len(components) > 0 {
+		// Get component sizes from store
+		storeComponents, storeErr := snap_store.GetComponentsOfCurrentSnap()
+
 		// ask user if they want to continue
 		fmt.Println("Need to download and install the following components:")
-		for _, component := range components {
-			fmt.Printf("\t%s\n", component)
+		for _, componentName := range components {
+			fmt.Printf("\t%s", componentName)
+			// Only append the size if no errors occurred
+			if storeErr == nil {
+				compSize, err := snap_store.ComponentSize(storeComponents, componentName)
+				if err == nil {
+					fmt.Printf(" (%s)", utils.FmtBytes(uint64(compSize)))
+				}
+			}
+			fmt.Println()
 		}
 		fmt.Println("This can take a long time to complete.")
 
