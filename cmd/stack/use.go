@@ -3,9 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
-	"flag"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -14,58 +12,51 @@ import (
 	"github.com/canonical/stack-utils/pkg/hardware_info"
 	"github.com/canonical/stack-utils/pkg/selector"
 	"github.com/canonical/stack-utils/pkg/types"
+	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
 
-func use(args []string) error {
-	flag := flag.NewFlagSet("use", flag.ExitOnError)
-	help := helpFlag(flag)
-	auto := flag.Bool("auto", false, "Automatically select a compatible stack")
-	assumeYes := flag.Bool("assume-yes", false, "Assume yes for downloading new components")
+var (
+	useAuto      bool
+	useAssumeYes bool
+)
 
-	fmt.Println("use:", args)
-
-	flag.Parse(args)
-	fmt.Println("use args:", flag.Args())
-
-	// keep the non-flag arguments
-	args = flag.Args()
-
-	flag.Usage = func() {
-		log.Printf("Usage:")
-		log.Printf("  %s use <stack>", snapInstanceName)
-		log.Printf("  %s use --auto", snapInstanceName)
-
-		log.Printf("\nFlags:")
-		flag.PrintDefaults()
+func init() {
+	useCmd := &cobra.Command{
+		Use:   "use [<stack>]",
+		Short: "Select a stack",
+		// Long:  "",
+		Args: cobra.MaximumNArgs(1),
+		RunE: use,
 	}
 
-	if *help {
-		flag.Usage()
-		return nil
-	}
+	// flags
+	useCmd.PersistentFlags().BoolVar(&useAuto, "auto", false, "Automatically select a compatible stack")
+	useCmd.PersistentFlags().BoolVar(&useAssumeYes, "assume-yes", false, "Assume yes for downloading new components")
 
-	if *auto {
+	rootCmd.AddCommand(useCmd)
+}
+
+func use(cmd *cobra.Command, args []string) error {
+
+	if useAuto {
 		if len(args) != 0 {
 			return fmt.Errorf("cannot specify stack with --auto flag")
 		}
-		err := autoSelectStacks(*assumeYes)
+		err := autoSelectStacks(useAssumeYes)
 		if err != nil {
 			return fmt.Errorf("failed to automatically set used stack: %s", err)
 		}
 	} else {
 		if len(args) == 1 {
-			err := useStack(args[0], *assumeYes)
+			err := useStack(args[0], useAssumeYes)
 			if err != nil {
 				return fmt.Errorf("failed to use stack: %s", err)
 			}
-		} else if len(args) == 0 {
-			return fmt.Errorf("stack name not specified")
 		} else {
-			return fmt.Errorf("too many arguments")
+			return fmt.Errorf("stack name not specified")
 		}
 	}
-
 	return nil
 }
 

@@ -1,39 +1,26 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"log"
-	"strings"
 
 	"github.com/canonical/go-snapctl"
+	"github.com/spf13/cobra"
 )
 
-func get(args []string) error {
-	flag := flag.NewFlagSet("get", flag.ExitOnError)
-	help := helpFlag(flag)
+var getCmd *cobra.Command
 
-	fmt.Println("get:", args)
-
-	flag.Parse(args)
-	fmt.Println("get args:", flag.Args())
-
-	// keep the non-flag arguments
-	args = flag.Args()
-
-	flag.Usage = func() {
-		log.Printf("Usage:\n\t%s get <key>", snapInstanceName)
+func init() {
+	getCmd = &cobra.Command{
+		Use:   "get <key>",
+		Short: "Print configuration option",
+		// Long:  "Print configuration option",
+		Args: cobra.ExactArgs(1),
+		RunE: get,
 	}
+	rootCmd.AddCommand(getCmd)
+}
 
-	if *help {
-		flag.Usage()
-		return nil
-	}
-
-	if len(args) != 1 {
-		return fmt.Errorf("expected one config key as input, got %q", strings.Join(args, " "))
-	}
-
+func get(cmd *cobra.Command, args []string) error {
 	return getValue(args[0])
 }
 
