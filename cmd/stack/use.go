@@ -22,7 +22,7 @@ var (
 )
 
 func init() {
-	useCmd := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "use [<stack>]",
 		Short: "Select a stack",
 		// Long:  "",
@@ -31,13 +31,13 @@ func init() {
 	}
 
 	// flags
-	useCmd.PersistentFlags().BoolVar(&useAuto, "auto", false, "Automatically select a compatible stack")
-	useCmd.PersistentFlags().BoolVar(&useAssumeYes, "assume-yes", false, "Assume yes for downloading new components")
+	cmd.PersistentFlags().BoolVar(&useAuto, "auto", false, "automatically select a compatible stack")
+	cmd.PersistentFlags().BoolVar(&useAssumeYes, "assume-yes", false, "assume yes for downloading new components")
 
-	rootCmd.AddCommand(useCmd)
+	rootCmd.AddCommand(cmd)
 }
 
-func use(cmd *cobra.Command, args []string) error {
+func use(_ *cobra.Command, args []string) error {
 
 	if useAuto {
 		if len(args) != 0 {
@@ -118,6 +118,7 @@ func autoSelectStacks(assumeYes bool) error {
 useStack changes the stack that is used by the snap
 */
 func useStack(stackName string, assumeYes bool) error {
+	fmt.Println(assumeYes)
 
 	stackJson, err := snapctl.Get("stacks." + stackName).Document().Run()
 	if err != nil {

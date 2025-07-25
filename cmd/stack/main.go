@@ -9,7 +9,9 @@ import (
 
 var (
 	stacksDir = env.Snap() + "/stacks"
-	rootCmd   = &cobra.Command{Use: env.SnapInstanceName()}
+	// rootCmd is the base command
+	// It gets populated with subcommands via init functions
+	rootCmd = &cobra.Command{Use: env.SnapInstanceName()}
 )
 
 func main() {

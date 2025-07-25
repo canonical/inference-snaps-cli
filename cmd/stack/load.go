@@ -6,9 +6,21 @@ import (
 
 	"github.com/canonical/go-snapctl"
 	"github.com/canonical/stack-utils/pkg/selector"
+	"github.com/spf13/cobra"
 )
 
-func load() error {
+func init() {
+	cmd := &cobra.Command{
+		Use:   "load",
+		Short: "Initialize snap configurations",
+		// Long:  "",
+		Args: cobra.NoArgs,
+		RunE: load,
+	}
+	rootCmd.AddCommand(cmd)
+}
+
+func load(_ *cobra.Command, _ []string) error {
 	return loadStacksToSnapOptions()
 }
 

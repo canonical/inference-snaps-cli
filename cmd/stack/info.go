@@ -1,50 +1,46 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/alecthomas/chroma/v2/quick"
 	"github.com/canonical/go-snapctl"
 	"github.com/canonical/stack-utils/pkg/types"
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
 
-func info(args []string) error {
-	infoCmd := flag.NewFlagSet("info", flag.ExitOnError)
-	infoCmd.Parse(args)
-
-	if len(args) != 1 {
-		return fmt.Errorf("expected one stack name as input")
+func init() {
+	cmd := &cobra.Command{
+		Use:   "info <stack>",
+		Short: "Print information about a stack",
+		// Long:  "",
+		Args: cobra.ExactArgs(1),
+		RunE: info,
 	}
-
-	stackName := args[0]
-	// check: can this arg be present and empty?
-	// if stackName == "" {
-	// 	return fmt.Errorf("stack name cannot be empty")
-	// }
-
-	stackInfo(stackName)
-
-	return nil
+	rootCmd.AddCommand(cmd)
 }
 
-func stackInfo(stackName string) {
+func info(_ *cobra.Command, args []string) error {
+	return stackInfo(args[0])
+}
+func stackInfo(stackName string) error {
 	stackJson, err := snapctl.Get("stacks." + stackName).Document().Run()
 	if err != nil {
-		log.Fatalf("Error loading stack: %v\n", err)
+		return fmt.Errorf("error loading stack: %v", err)
 	}
 
 	stack, err := parseStackJson(stackJson)
 	if err != nil {
-		log.Fatalf("Error parsing stack: %v\n", err)
+		return fmt.Errorf("error parsing stack: %v", err)
 	}
+
 	err = printStackInfo(stack)
 	if err != nil {
-		log.Fatalf("Error printing stack info: %v\n", err)
+		return fmt.Errorf("error printing stack info: %v", err)
 	}
+	return nil
 }
 
 func printStackInfo(stack types.ScoredStack) error {

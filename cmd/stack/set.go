@@ -5,12 +5,21 @@ import (
 	"strings"
 
 	"github.com/canonical/go-snapctl"
+	"github.com/spf13/cobra"
 )
 
-func set(args []string) error {
-	if len(args) != 1 {
-		return fmt.Errorf("expected one key=value pair as input")
+func init() {
+	cmd := &cobra.Command{
+		Use:   "set <key>",
+		Short: "Set configuration option",
+		// Long:  "",
+		Args: cobra.ExactArgs(1),
+		RunE: set,
 	}
+	rootCmd.AddCommand(cmd)
+}
+
+func set(_ *cobra.Command, args []string) error {
 	return setValue(args[0])
 }
 
@@ -21,6 +30,9 @@ func setValue(keyValue string) error {
 
 	// The value itself can contain an equal sign, so we split only on the first occurrence
 	parts := strings.SplitN(keyValue, "=", 2)
+	if len(parts) != 2 {
+		return fmt.Errorf("expected key=value, got %q", keyValue)
+	}
 	key, value := parts[0], parts[1]
 
 	err := snapctl.Set(key, value).Run()

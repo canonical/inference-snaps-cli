@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"maps"
 	"os"
@@ -13,14 +12,30 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/olekukonko/tablewriter/renderer"
 	"github.com/olekukonko/tablewriter/tw"
+	"github.com/spf13/cobra"
 )
 
-func list(args []string) error {
-	listCmd := flag.NewFlagSet("list", flag.ExitOnError)
-	listAll := listCmd.Bool("all", false, "Also list incompatible stacks")
+var (
+	listAll bool
+)
 
-	listCmd.Parse(args)
-	return listStacks(*listAll)
+func init() {
+	cmd := &cobra.Command{
+		Use:   "list",
+		Short: "List available stacks",
+		// Long:  "",
+		Args: cobra.NoArgs,
+		RunE: list,
+	}
+
+	// flags
+	cmd.PersistentFlags().BoolVar(&listAll, "all", false, "include incompatible stacks")
+
+	rootCmd.AddCommand(cmd)
+}
+
+func list(_ *cobra.Command, _ []string) error {
+	return listStacks(listAll)
 }
 
 func listStacks(includeIncompatible bool) error {

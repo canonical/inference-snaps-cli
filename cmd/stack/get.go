@@ -7,20 +7,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var getCmd *cobra.Command
-
 func init() {
-	getCmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "get <key>",
 		Short: "Print configuration option",
-		// Long:  "Print configuration option",
+		// Long:  "",
 		Args: cobra.ExactArgs(1),
 		RunE: get,
 	}
-	rootCmd.AddCommand(getCmd)
+	rootCmd.AddCommand(cmd)
 }
 
-func get(cmd *cobra.Command, args []string) error {
+func get(_ *cobra.Command, args []string) error {
 	return getValue(args[0])
 }
 
