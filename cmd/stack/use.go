@@ -26,6 +26,8 @@ func init() {
 		Use:   "use [<stack>]",
 		Short: "Select a stack",
 		// Long:  "",
+		// stack use <stack> requires 1 argument
+		// stack use --auto does not support any arguments
 		Args: cobra.MaximumNArgs(1),
 		RunE: use,
 	}
