@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -42,7 +43,10 @@ func snapStatus() error {
 
 	printStack(stack, stack.Name == autoStack.Name)
 	fmt.Println("")
-	printServer(stack)
+	err = printServer(stack)
+	if err != nil {
+		return fmt.Errorf("error showing server status: %v", err)
+	}
 	fmt.Println("")
 
 	return nil
@@ -105,32 +109,28 @@ func printStack(stack types.ScoredStack, auto bool) {
 	}
 }
 
-func printServer(stack types.ScoredStack) {
+func printServer(stack types.ScoredStack) error {
 	apiBasePath := "v1"
 	if val, ok := stack.Configurations["http.base-path"]; ok {
 		apiBasePath = val.(string)
 	}
 	httpPort, err := snapctl.Get("http.port").Run()
 	if err != nil {
-		fmt.Printf("error loading http port: %v", err)
-		return
+		return fmt.Errorf("error getting http port: %v", err)
 	}
 
 	// Depend on existing check server scripts for status
-	checkExitCode := 0
 	checkScript := os.ExpandEnv("$SNAP/stacks/" + stack.Name + "/check-server")
 	cmd := exec.Command(checkScript)
 	if err := cmd.Start(); err != nil {
-		fmt.Printf("cmd.Start: %v", err)
-		return
+		return fmt.Errorf("error checking server: %v", err)
 	}
 
+	checkExitCode := 0
 	if err := cmd.Wait(); err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			checkExitCode = exiterr.ExitCode()
-		} else {
-			fmt.Errorf("cmd.Wait: %v", err)
-			return
+		var exitError *exec.ExitError
+		if errors.As(err, &exitError) {
+			checkExitCode = exitError.ExitCode()
 		}
 	}
 
@@ -149,4 +149,6 @@ func printServer(stack types.ScoredStack) {
 	fmt.Printf("Server:\n")
 	fmt.Printf("  Status: %s\n", statusText)
 	fmt.Printf("  OpenAI endpoint: http://localhost:%s/%s\n", httpPort, apiBasePath)
+
+	return nil
 }
