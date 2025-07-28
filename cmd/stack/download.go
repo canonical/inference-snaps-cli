@@ -23,7 +23,7 @@ func downloadComponents(components []string) error {
 		stopProgress()
 		if err != nil {
 			if strings.Contains(err.Error(), snapdUnknownSnapError) {
-				fmt.Printf("Error: snap not known to the store. Install a local build of component: %s", component)
+				fmt.Println("Error: snap not known to the store. Install a local build of component: %s", component)
 				continue
 			} else if strings.Contains(err.Error(), snapdTimeoutError) {
 				msg := "timeout exceeded while waiting for download of: " + component +

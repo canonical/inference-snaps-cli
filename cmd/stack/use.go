@@ -193,7 +193,7 @@ func componentInstalled(component string) (bool, error) {
 		if os.IsNotExist(err) {
 			return false, nil
 		} else {
-			return false, fmt.Errorf("error checking component directory %q: %v\n", component, err)
+			return false, fmt.Errorf("error checking component directory %q: %v", component, err)
 		}
 	} else {
 		if info.IsDir() {
