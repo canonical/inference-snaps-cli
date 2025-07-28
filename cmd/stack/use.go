@@ -186,7 +186,10 @@ func useStack(stackName string, assumeYes bool) error {
 
 	if len(components) > 0 {
 		// This is blocking, but there is a timeout
-		downloadComponents(stack.Components)
+		err = downloadComponents(stack.Components)
+		if err != nil {
+			return fmt.Errorf("error downloading components: %v", err)
+		}
 	}
 
 	// TODO restart service

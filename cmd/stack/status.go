@@ -10,43 +10,23 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	statusAll bool
-)
-
 func init() {
 	cmd := &cobra.Command{
 		Use:   "status",
-		Short: "Show the status of the model snap",
-		// Long:  "",
-		Args: cobra.NoArgs,
-		RunE: status,
+		Short: "Show the status",
+		Long:  "Show the status of the model snap",
+		Args:  cobra.NoArgs,
+		RunE:  status,
 	}
-
-	// flags
-	cmd.PersistentFlags().BoolVar(&statusAll, "all", false, "include hardware information")
 
 	rootCmd.AddCommand(cmd)
 }
 
 func status(_ *cobra.Command, _ []string) error {
-	return snapStatus(statusAll)
+	return snapStatus()
 }
 
-func snapStatus(showHardware bool) error {
-	/*
-		$ mymodel status
-		Stack: intel-gpu (auto)
-		Model: mymodel-7b-distill-int4
-		Engine: openvino-model-server
-
-		Server:
-		    Status: starting|online|offline
-		    OpenAI endpoint: http://localhost:8080/v1
-
-		[--all]:
-		Hardware and resources:
-	*/
+func snapStatus() error {
 	scoredStacks, err := scoredStacksFromOptions()
 	if err != nil {
 		return fmt.Errorf("error loading scored stacks: %v", err)
@@ -63,10 +43,6 @@ func snapStatus(showHardware bool) error {
 	printStack(stack, stack.Name == autoStack.Name)
 	fmt.Println("")
 	printServer(stack)
-	if showHardware {
-		fmt.Println("")
-		printHardware(stack)
-	}
 	fmt.Println("")
 
 	return nil
@@ -173,8 +149,4 @@ func printServer(stack types.ScoredStack) {
 	fmt.Printf("Server:\n")
 	fmt.Printf("  Status: %s\n", statusText)
 	fmt.Printf("  OpenAI endpoint: http://localhost:%s/%s\n", httpPort, apiBasePath)
-}
-
-func printHardware(stack types.ScoredStack) {
-
 }
