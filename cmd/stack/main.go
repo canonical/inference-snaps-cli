@@ -17,6 +17,13 @@ var (
 	}
 )
 
+func init() {
+	rootCmd.AddGroup(
+		&cobra.Group{ID: "stacks", Title: "Stack Management Commands:"},
+		&cobra.Group{ID: "config", Title: "Configuration Commands:"},
+	)
+}
+
 func main() {
 	// disable logging timestamps
 	log.SetFlags(0)
