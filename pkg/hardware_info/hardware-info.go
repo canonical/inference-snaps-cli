@@ -36,7 +36,7 @@ func Get(friendlyNames bool) (types.HwInfo, error) {
 
 	pciDevices, err := pci.Devices(friendlyNames)
 	if err != nil {
-		return hwInfo, err
+		return hwInfo, fmt.Errorf("error getting pci devices: %v", err)
 	}
 	hwInfo.PciDevices = pciDevices
 

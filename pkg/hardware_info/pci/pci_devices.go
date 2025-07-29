@@ -40,7 +40,7 @@ func Devices(friendlyNames bool) ([]types.PciDevice, error) {
 func DevicesFromRawData(lspciData string, friendlyNames bool) ([]types.PciDevice, error) {
 	devices, err := ParseLsPci(lspciData, friendlyNames)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error parsing lspci data: %v", err)
 	}
 
 	return devices, nil
@@ -57,7 +57,7 @@ func friendlyNames(device types.PciDevice) (types.PciFriendlyNames, error) {
 		var err error
 		pciDb, err = pcidb.New()
 		if err != nil {
-			return friendlyNames, err
+			return friendlyNames, fmt.Errorf("error opening pci database: %v", err)
 		}
 	}
 
