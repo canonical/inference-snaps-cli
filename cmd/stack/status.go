@@ -35,7 +35,8 @@ func snapStatus() error {
 	if err != nil {
 		return fmt.Errorf("error loading scored stacks: %v", err)
 	}
-	autoStack, err := topStack(scoredStacks)
+
+	autoStack, err := selector.TopStack(scoredStacks)
 	if err != nil {
 		if errors.Is(err, selector.ErrorNoCompatibleStacks) {
 			compatibleStacks = false
@@ -125,7 +126,7 @@ func printServer(stack types.ScoredStack) error {
 		if !ok {
 			return fmt.Errorf("unexpected type for base path: %v", val)
 		}
-		
+
 	}
 	httpPort, err := snapctl.Get("http.port").Run()
 	if err != nil {

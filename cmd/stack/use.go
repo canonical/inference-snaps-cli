@@ -68,7 +68,7 @@ func use(_ *cobra.Command, args []string) error {
 
 		fmt.Println("Automatically selecting a compatible stack ...")
 
-		selectedStack, err := topStack(scoredStacks)
+		selectedStack, err := selector.TopStack(scoredStacks)
 		if err != nil {
 			return fmt.Errorf("error finding top stack: %v", err)
 		}
@@ -128,15 +128,6 @@ func stacksToSnapOptions(scoredStacks []types.ScoredStack) error {
 		}
 	}
 	return nil
-}
-
-func topStack(scoredStacks []types.ScoredStack) (*types.ScoredStack, error) {
-	// find top stack
-	selectedStack, err := selector.TopStack(scoredStacks)
-	if err != nil {
-		return nil, fmt.Errorf("error selecting a stack: %w", err)
-	}
-	return selectedStack, nil
 }
 
 /*
