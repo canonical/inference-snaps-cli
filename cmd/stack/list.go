@@ -63,7 +63,7 @@ func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
 	if includeIncompatible {
 		headers = []string{"Stack Name", "Vendor", "Description", "Compatible", "Notes"}
 	} else {
-		headers = []string{"Stack Name", "Vendor", "Description", "Compatible"}
+		headers = []string{"Stack Name", "Vendor", "Description"}
 	}
 	data := [][]string{headers}
 
@@ -79,19 +79,18 @@ func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
 	for _, stack := range stacks {
 		stackInfo := []string{stack.Name, stack.Vendor, stack.Description}
 
-		// Compatible column is: yes|no|grade
-		if stack.Compatible && stack.Grade == "stable" {
-			stackInfo = append(stackInfo, "yes")
-		} else if stack.Compatible {
-			stackInfo = append(stackInfo, stack.Grade)
-		} else {
-			stackInfo = append(stackInfo, "no")
-		}
-
 		if includeIncompatible {
+			// Compatible column is: yes|no|grade
+			if stack.Compatible && stack.Grade == "stable" {
+				stackInfo = append(stackInfo, "yes")
+			} else if stack.Compatible {
+				stackInfo = append(stackInfo, stack.Grade)
+			} else {
+				stackInfo = append(stackInfo, "no")
+			}
 			stackInfo = append(stackInfo, strings.Join(stack.Notes, ", "))
 			data = append(data, stackInfo)
-		} else if stack.Compatible {
+		} else if stack.Compatible && stack.Grade == "stable" {
 			data = append(data, stackInfo)
 		}
 	}
