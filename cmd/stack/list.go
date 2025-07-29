@@ -60,33 +60,38 @@ func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
 
 	var headers []string
 	if includeIncompatible {
-		headers = []string{"Stack Name", "Vendor", "Description", "Status", "Notes"}
+		headers = []string{"Stack Name", "Vendor", "Description", "Compatible", "Notes"}
 	} else {
-		headers = []string{"Stack Name", "Vendor", "Description", "Status"}
+		headers = []string{"Stack Name", "Vendor", "Description", "Compatible"}
 	}
 	data := [][]string{headers}
 
 	// Sort by Score in descending order
 	sort.Slice(stacks, func(i, j int) bool {
+		// Stable stacks with equal score should be listed first
+		if stacks[i].Score == stacks[j].Score {
+			return stacks[i].Grade == "stable"
+		}
 		return stacks[i].Score > stacks[j].Score
 	})
 
 	for _, stack := range stacks {
 		stackInfo := []string{stack.Name, stack.Vendor, stack.Description}
-		stackStatus := fmt.Sprintf("grade: %s\nscore: %d", stack.Grade, stack.Score)
-		if includeIncompatible {
-			if stack.Score == 0 {
-				stackStatus = "incompatible\n" + stackStatus
-			} else {
-				stackStatus = "compatible\n" + stackStatus
-			}
-			stackInfo = append(stackInfo, stackStatus, strings.Join(stack.Notes, ", "))
-			data = append(data, stackInfo)
+
+		// Compatible column is: yes|no|grade
+		if stack.Compatible && stack.Grade == "stable" {
+			stackInfo = append(stackInfo, "yes")
+		} else if stack.Compatible {
+			stackInfo = append(stackInfo, stack.Grade)
 		} else {
-			stackInfo = append(stackInfo, stackStatus)
-			if stack.Score > 0 {
-				data = append(data, stackInfo)
-			}
+			stackInfo = append(stackInfo, "no")
+		}
+
+		if includeIncompatible {
+			stackInfo = append(stackInfo, strings.Join(stack.Notes, ", "))
+			data = append(data, stackInfo)
+		} else if stack.Compatible {
+			data = append(data, stackInfo)
 		}
 	}
 
