@@ -37,7 +37,7 @@ func snapStatus() error {
 	}
 	autoStack, err := topStack(scoredStacks)
 	if err != nil {
-		if errors.Is(err, selector.ErrorNoCompatibleStack) {
+		if errors.Is(err, selector.ErrorNoCompatibleStacks) {
 			compatibleStacks = false
 		} else {
 			return fmt.Errorf("error loading top stack: %v", err)
