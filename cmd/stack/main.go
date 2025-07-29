@@ -17,13 +17,6 @@ var (
 	}
 )
 
-func init() {
-	rootCmd.AddGroup(
-		&cobra.Group{ID: "stacks", Title: "Stack Management Commands:"},
-		&cobra.Group{ID: "config", Title: "Configuration Commands:"},
-	)
-}
-
 func main() {
 	// disable logging timestamps
 	log.SetFlags(0)
@@ -32,6 +25,14 @@ func main() {
 	if rootCmd.Use == "" {
 		rootCmd.Use = "app"
 	}
+
+	// Define groups for subcommands - used in usage help text
+	rootCmd.AddGroup(
+		&cobra.Group{ID: "stacks", Title: "Stack Management Commands:"},
+		&cobra.Group{ID: "config", Title: "Configuration Commands:"},
+	)
+	// Hide the 'completion' command from help text
+	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 
 	rootCmd.Execute()
 }
