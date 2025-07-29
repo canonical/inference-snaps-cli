@@ -121,7 +121,11 @@ func printStack(stack types.ScoredStack, auto bool) {
 func printServer(stack types.ScoredStack) error {
 	apiBasePath := "v1"
 	if val, ok := stack.Configurations["http.base-path"]; ok {
-		apiBasePath = val.(string)
+		apiBasePath, ok = val.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type for base path: %v", val)
+		}
+		
 	}
 	httpPort, err := snapctl.Get("http.port").Run()
 	if err != nil {
