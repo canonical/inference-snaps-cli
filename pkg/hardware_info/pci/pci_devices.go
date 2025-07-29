@@ -2,6 +2,7 @@ package pci
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/canonical/stack-utils/pkg/constants"
 	"github.com/canonical/stack-utils/pkg/hardware_info/pci/amd"
@@ -22,14 +23,15 @@ func Devices(friendlyNames bool) ([]types.PciDevice, error) {
 
 	hostLsPciData, err := hostLsPci()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting host lspci data: %v", err)
 	}
-	devices, err := DevicesFromRawData(hostLsPciData, friendlyNames)
+	devices, err := ParseLsPci(hostLsPciData, friendlyNames)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error parsing lspci data: %v", err)
 	}
 
 	// Additional properties are obtained by running vendor specific tools on the host
+	// Errors are not fatal, and are printed to stderr
 	devices = additionalProperties(devices)
 
 	return devices, nil
@@ -107,22 +109,32 @@ func friendlyNames(device types.PciDevice) (types.PciFriendlyNames, error) {
 
 /*
 additionalProperties returns devices with their AdditionalProperties field populated with device specific properties.
+Additional properties are obtained by running vendor specific tools on the host system.
 No error is returned as a failure to look up properties is considered non-fatal, and likely due to missing drivers.
 Errors are instead logged to STDERR.
-Additional properties are obtained by running vendor specific tools on the host system.
 */
 func additionalProperties(devices []types.PciDevice) []types.PciDevice {
+	var err error
 
 	for i, device := range devices {
 		var properties map[string]string
 
 		switch device.VendorId {
 		case constants.PciVendorAmd:
-			properties = amd.AdditionalProperties(device)
+			properties, err = amd.AdditionalProperties(device)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error getting additional properties: AMD: %v", err)
+			}
 		case constants.PciVendorNvidia:
-			properties = nvidia.AdditionalProperties(device)
+			properties, err = nvidia.AdditionalProperties(device)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error getting additional properties: NVIDIA: %v", err)
+			}
 		case constants.PciVendorIntel:
-			properties = intel.AdditionalProperties(device)
+			properties, err = intel.AdditionalProperties(device)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error getting additional properties: Intel: %v", err)
+			}
 		default:
 			// Unhandled vendor
 		}
