@@ -134,7 +134,7 @@ func topStack(scoredStacks []types.ScoredStack) (*types.ScoredStack, error) {
 	// find top stack
 	selectedStack, err := selector.TopStack(scoredStacks)
 	if err != nil {
-		return nil, fmt.Errorf("error selecting a stack: %v", err)
+		return nil, fmt.Errorf("error selecting a stack: %w", err)
 	}
 	return selectedStack, nil
 }

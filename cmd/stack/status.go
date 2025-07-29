@@ -7,6 +7,7 @@ import (
 	"os/exec"
 
 	"github.com/canonical/go-snapctl"
+	"github.com/canonical/stack-utils/pkg/selector"
 	"github.com/canonical/stack-utils/pkg/types"
 	"github.com/spf13/cobra"
 )
@@ -28,20 +29,28 @@ func status(_ *cobra.Command, _ []string) error {
 }
 
 func snapStatus() error {
+	// Find the top stack
+	compatibleStacks := true
 	scoredStacks, err := scoredStacksFromOptions()
 	if err != nil {
 		return fmt.Errorf("error loading scored stacks: %v", err)
 	}
 	autoStack, err := topStack(scoredStacks)
 	if err != nil {
-		return fmt.Errorf("error loading top stack: %v", err)
+		if errors.Is(err, selector.ErrorNoCompatibleStack) {
+			compatibleStacks = false
+		} else {
+			return fmt.Errorf("error loading top stack: %v", err)
+		}
 	}
+
+	// Find the selected stack
 	stack, err := selectedStackFromOptions()
 	if err != nil {
 		return fmt.Errorf("error loading selected stack: %v", err)
 	}
 
-	printStack(stack, stack.Name == autoStack.Name)
+	printStack(stack, compatibleStacks && stack.Name == autoStack.Name)
 	fmt.Println("")
 	err = printServer(stack)
 	if err != nil {
