@@ -123,17 +123,17 @@ func additionalProperties(devices []types.PciDevice) []types.PciDevice {
 		case constants.PciVendorAmd:
 			properties, err = amd.AdditionalProperties(device)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "error getting additional properties: AMD: %v", err)
+				fmt.Fprintf(os.Stderr, "error getting additional properties: AMD: %v\n", err)
 			}
 		case constants.PciVendorNvidia:
 			properties, err = nvidia.AdditionalProperties(device)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "error getting additional properties: NVIDIA: %v", err)
+				fmt.Fprintf(os.Stderr, "error getting additional properties: NVIDIA: %v\n", err)
 			}
 		case constants.PciVendorIntel:
 			properties, err = intel.AdditionalProperties(device)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "error getting additional properties: Intel: %v", err)
+				fmt.Fprintf(os.Stderr, "error getting additional properties: Intel: %v\n", err)
 			}
 		default:
 			// Unhandled vendor
