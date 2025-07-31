@@ -8,12 +8,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	systemPrettyOutput  bool
-	systemFriendlyNames bool
-	systemFileOutput    string
-)
-
 func init() {
 	cmd := &cobra.Command{
 		Use:   "system",
@@ -27,7 +21,7 @@ func init() {
 }
 
 func system(_ *cobra.Command, args []string) error {
-	hwInfo, err := hardware_info.Get(false)
+	hwInfo, err := hardware_info.Get(true)
 	if err != nil {
 		return fmt.Errorf("failed to get hardware info: %s", err)
 	}
