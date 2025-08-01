@@ -12,7 +12,7 @@ import (
 func Info() ([]types.CpuInfo, error) {
 	hostProcCpu, err := hostProcCpuInfo()
 	if err != nil {
-		return nil, fmt.Errorf("error getting host /proc/cpuinfo: %v", err)
+		return nil, fmt.Errorf("failed to look up host /proc/cpuinfo: %v", err)
 	}
 
 	hostUname, err := hostUnameMachine()
