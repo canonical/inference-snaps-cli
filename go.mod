@@ -3,7 +3,7 @@ module github.com/canonical/stack-utils
 go 1.24
 
 require (
-	github.com/alecthomas/chroma/v2 v2.19.0
+	github.com/alecthomas/chroma/v2 v2.20.0
 	github.com/briandowns/spinner v1.23.2
 	github.com/canonical/go-snapctl v1.0.0-beta.3
 	github.com/fatih/color v1.18.0
