@@ -18,11 +18,60 @@ parts:
     stage-packages:
       - pciutils
       - nvidia-utils
+
+  opencl:
+    # Includes all the compute runtime and OpenCL bits needed for Intel GPU support
+    plugin: nil
+    stage-packages:
       - clinfo
-      - mesa-opencl-icd
-      - ocl-icd-libopencl1
-      - on amd64:
-        - intel-opencl-icd
+    build-packages:
+      - jq
+      - wget
+    override-build: |
+      # Download and install legacy and latest Intel OpenCL Runtime
+      # Method from https://github.com/linuxserver/docker-mods/blob/jellyfin-opencl-intel/Dockerfile
+      
+      MOD_VERSION=$(curl -sX GET "https://api.github.com/repos/intel/compute-runtime/releases/latest" | jq -r '.tag_name');
+      echo "Latest version: $MOD_VERSION"
+      
+      echo "Download legacy1 debs from v24.35.30872.22"
+      COMP_RT_URLS_LEGACY1=$(curl -sX GET "https://api.github.com/repos/intel/compute-runtime/releases/tags/24.35.30872.22" | jq -r '.body' | grep wget | grep -v .sum | grep -v .ddeb | sed 's|wget ||g')
+      mkdir -p opencl-intel-legacy1
+      for i in $COMP_RT_URLS_LEGACY1; do
+        echo "Downloading: ${i%$'\r'}"
+        curl -fS --retry 3 --retry-connrefused -o opencl-intel-legacy1/$(basename "${i%$'\r'}") -L "${i%$'\r'}"
+      done
+      
+      echo "Downloading latest debs"
+      COMP_RT_URLS=$(curl -sX GET "https://api.github.com/repos/intel/compute-runtime/releases/tags/${MOD_VERSION}" | jq -r '.body' | grep wget | grep -v .sum | grep -v .ddeb | sed 's|wget ||g')
+      mkdir -p opencl-intel
+      for i in $COMP_RT_URLS; do
+        echo "Downloading: ${i%$'\r'}"
+        curl -fS --retry 3 --retry-connrefused -o opencl-intel/$(basename "${i%$'\r'}") -L "${i%$'\r'}"
+      done
+      
+      cd $SNAPCRAFT_PART_BUILD/opencl-intel-legacy1
+      dpkg --root=$CRAFT_PART_INSTALL --force-all -i *.deb
+      
+      cd $SNAPCRAFT_PART_BUILD/opencl-intel
+      dpkg --root=$CRAFT_PART_INSTALL --force-all -i *.deb
+
+      # Fix paths to the Intel Installable Client Drivers (ICDs) for OpenCL
+      base_path="/snap/${SNAPCRAFT_PROJECT_NAME}/current" # assume project name is snap instance name
+      
+      intel_icd="${CRAFT_PART_INSTALL}"/etc/OpenCL/vendors/intel.icd
+      intel_icd_so_path=$(cat ${intel_icd})
+      echo "${base_path}""${intel_icd_so_path}" > "${intel_icd}"
+      
+      intel_legacy1_icd="${CRAFT_PART_INSTALL}"/etc/OpenCL/vendors/intel_legacy1.icd
+      intel_legacy1_icd_so_path=$(cat ${intel_legacy1_icd})
+      echo "${base_path}""${intel_legacy1_icd_so_path}" > "${intel_legacy1_icd}"
+
+      # Fix broken symlinks
+      cd "${CRAFT_PART_INSTALL}"
+      ln -sf "${base_path}"/usr/bin/ocloc-24.39.1 etc/alternatives/ocloc
+      ln -sf "${base_path}"/etc/alternatives/ocloc usr/bin/ocloc
+      craftctl default
 
   # To use `version: git` in this file, we require git as a build dependency.
   # This is fixed but not published yet. See https://github.com/canonical/snapcraft/issues/4944
@@ -57,3 +106,12 @@ apps:
     plugs:
       - home
     command: bin/stack
+
+  clinfo:
+    environment:
+      OCL_ICD_VENDORS: "$SNAP/etc/OpenCL/vendors"
+    plugs:
+      - hardware-observe
+      - opengl
+      - network
+    command: usr/bin/clinfo
