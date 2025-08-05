@@ -175,7 +175,7 @@ func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
 					Global: tw.Padding{
 						Left:      tw.Space, // Bug: making this empty causes the last char in a field to be cut off
 						Right:     tw.Space,
-						Top:       tw.Empty,
+						Top:       tw.Space,
 						Bottom:    tw.Empty,
 						Overwrite: true,
 					},
