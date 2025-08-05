@@ -159,10 +159,10 @@ func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
 				},
 				Padding: tw.CellPadding{
 					Global: tw.Padding{
-						Left:      " ",
-						Right:     " ",
-						Top:       "",
-						Bottom:    "",
+						Left:      tw.Space, // Bug: making this empty causes the last char in a field to be cut off
+						Right:     tw.Space,
+						Top:       tw.Empty,
+						Bottom:    tw.Empty,
 						Overwrite: true,
 					},
 				},
@@ -172,10 +172,10 @@ func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
 				Alignment:  tw.CellAlignment{Global: tw.AlignLeft},     // Left-align rows
 				Padding: tw.CellPadding{
 					Global: tw.Padding{
-						Left:      " ",
-						Right:     " ",
-						Top:       "",
-						Bottom:    "",
+						Left:      tw.Space, // Bug: making this empty causes the last char in a field to be cut off
+						Right:     tw.Space,
+						Top:       tw.Empty,
+						Bottom:    tw.Empty,
 						Overwrite: true,
 					},
 				},
