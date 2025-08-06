@@ -68,9 +68,9 @@ func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
 
 	var headers []string
 	if includeIncompatible {
-		headers = []string{"stack Name", "vendor", "description", "compat"}
+		headers = []string{"stack", "vendor", "description", "compat"}
 	} else {
-		headers = []string{"stack Name", "vendor", "description"}
+		headers = []string{"stack", "vendor", "description"}
 	}
 	data := [][]string{headers}
 
@@ -160,7 +160,7 @@ func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
 			MaxWidth: tableMaxWidth,
 			Widths: tw.CellWidth{
 				PerColumn: tw.Mapper[int, int]{
-					0: stackNameMaxLen,        // Name
+					0: stackNameMaxLen,        // Stack name
 					1: stackVendorMaxLen,      // Vendor
 					2: stackDescriptionMaxLen, // Description
 					// 3:  0, // Compatible, not set because cell value is shorten than min width
