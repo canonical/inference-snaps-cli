@@ -68,9 +68,9 @@ func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
 
 	var headers []string
 	if includeIncompatible {
-		headers = []string{"stack Name", "vendor", "summary", "compat"}
+		headers = []string{"stack Name", "vendor", "description", "compat"}
 	} else {
-		headers = []string{"stack Name", "vendor", "summary"}
+		headers = []string{"stack Name", "vendor", "description"}
 	}
 	data := [][]string{headers}
 
