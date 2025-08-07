@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"sort"
-	"strings"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -42,18 +41,25 @@ func list(_ *cobra.Command, _ []string) error {
 	return listStacks(listAll)
 }
 
-func listStacks(includeIncompatible bool) error {
+func listStacks(all bool) error {
 	stacksJson, err := snapctl.Get("stacks").Document().Run()
 	if err != nil {
 		return fmt.Errorf("error loading stacks: %v", err)
 	}
+
+	// Uncomment for testing
+	// stacksJsonB, err := os.ReadFile("test_data/snap-options/stacks.json")
+	// if err != nil {
+	// 	return fmt.Errorf("error loading stacks: %v", err)
+	// }
+	// stacksJson = string(stacksJsonB)
 
 	stacks, err := parseStacksJson(stacksJson)
 	if err != nil {
 		return fmt.Errorf("error parsing stacks: %v", err)
 	}
 
-	err = printStacks(stacks, includeIncompatible)
+	err = printStacks(stacks, all)
 	if err != nil {
 		return fmt.Errorf("error printing list: %v", err)
 	}
@@ -61,13 +67,13 @@ func listStacks(includeIncompatible bool) error {
 	return nil
 }
 
-func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
+func printStacks(stacks []types.ScoredStack, all bool) error {
 
 	var headers []string
-	if includeIncompatible {
-		headers = []string{"Stack Name", "Vendor", "Description", "Compatible"}
+	if all {
+		headers = []string{"stack", "vendor", "description", "compat"}
 	} else {
-		headers = []string{"Stack Name", "Vendor", "Description"}
+		headers = []string{"stack", "vendor", "description"}
 	}
 	data := [][]string{headers}
 
@@ -80,22 +86,27 @@ func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
 		return stacks[i].Score > stacks[j].Score
 	})
 
+	var stackNameMaxLen, stackVendorMaxLen int
 	for _, stack := range stacks {
 		stackInfo := []string{stack.Name, stack.Vendor, stack.Description}
 
-		if includeIncompatible {
-			// Compatible column is: yes|no|grade
+		if all ||
+			(stack.Compatible && stack.Grade == "stable") {
+
+			stackNameMaxLen = max(stackNameMaxLen, len(stack.Name))
+			stackVendorMaxLen = max(stackVendorMaxLen, len(stack.Vendor))
+		}
+
+		if all {
 			compatibleStr := ""
 			if stack.Compatible && stack.Grade == "stable" {
-				compatibleStr = "Yes"
+				compatibleStr = "yes"
 			} else if stack.Compatible {
-				compatibleStr = cases.Title(language.Und).String(stack.Grade)
+				compatibleStr = "beta"
 			} else {
-				compatibleStr = "No"
+				compatibleStr = "no"
 			}
-			if len(stack.Notes) > 0 {
-				compatibleStr = compatibleStr + "\n" + strings.Join(stack.Notes, ", ")
-			}
+
 			stackInfo = append(stackInfo, compatibleStr)
 			data = append(data, stackInfo)
 		} else if stack.Compatible && stack.Grade == "stable" {
@@ -104,7 +115,7 @@ func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
 	}
 
 	if len(data) == 1 {
-		if includeIncompatible {
+		if all {
 			_, err := fmt.Fprintln(os.Stderr, "No stacks found.")
 			return err
 		} else {
@@ -117,18 +128,11 @@ func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
 	colorCfg := renderer.ColorizedConfig{
 		Header: renderer.Tint{
 			FG: renderer.Colors{color.Bold}, // Green bold headers
-			BG: renderer.Colors{},
 		},
 		Column: renderer.Tint{
 			FG: renderer.Colors{color.Reset},
 			BG: renderer.Colors{color.Reset},
 		},
-		Footer: renderer.Tint{
-			FG: renderer.Colors{color.Reset, color.Bold},
-			BG: renderer.Colors{color.Reset},
-		},
-		//Border:    renderer.Tint{FG: renderer.Colors{color.Reset}}, // White borders
-		//Separator: renderer.Tint{FG: renderer.Colors{color.Reset}}, // White separators
 		Borders: tw.BorderNone,
 		Settings: tw.Settings{
 			Separators: tw.Separators{ShowHeader: tw.Off, ShowFooter: tw.Off, BetweenRows: tw.Off, BetweenColumns: tw.Off},
@@ -143,46 +147,35 @@ func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
 	}
 
 	tableMaxWidth := 80
-	if includeIncompatible {
-		tableMaxWidth = 120
+
+	// Increase to account for paddings
+	stackNameMaxLen += 2
+	stackVendorMaxLen += 2
+	// Description column fills the remaining space
+	stackDescriptionMaxLen := tableMaxWidth - (stackNameMaxLen + stackVendorMaxLen)
+	if all {
+		// Reserve space for Compatible column
+		stackDescriptionMaxLen -= len(headers[3]) + 2
 	}
 
 	table := tablewriter.NewTable(os.Stdout,
 		tablewriter.WithRenderer(renderer.NewColorized(colorCfg)),
 		tablewriter.WithConfig(tablewriter.Config{
 			MaxWidth: tableMaxWidth,
+			Widths: tw.CellWidth{
+				PerColumn: tw.Mapper[int, int]{
+					0: stackNameMaxLen,        // Stack name
+					1: stackVendorMaxLen,      // Vendor
+					2: stackDescriptionMaxLen, // Description
+					// 3:  0, // Compatible, not set because cell value is shorter than min width
+				},
+			},
 			Header: tw.CellConfig{
 				Alignment: tw.CellAlignment{Global: tw.AlignLeft},
-				Formatting: tw.CellFormatting{
-					AutoWrap:   tw.WrapNone,
-					MergeMode:  tw.MergeNone,
-					AutoFormat: tw.On,
-				},
-				Padding: tw.CellPadding{
-					Global: tw.Padding{
-						Left:      tw.Space, // Bug: making this empty causes the last char in a field to be cut off
-						Right:     tw.Space,
-						Top:       tw.Empty,
-						Bottom:    tw.Empty,
-						Overwrite: true,
-					},
-				},
 			},
 			Row: tw.CellConfig{
-				Formatting: tw.CellFormatting{AutoWrap: tw.WrapNormal}, // Wrap long content
-				Alignment:  tw.CellAlignment{Global: tw.AlignLeft},     // Left-align rows
-				Padding: tw.CellPadding{
-					Global: tw.Padding{
-						Left:      tw.Space, // Bug: making this empty causes the last char in a field to be cut off
-						Right:     tw.Space,
-						Top:       tw.Empty,
-						Bottom:    tw.Space,
-						Overwrite: true,
-					},
-				},
-			},
-			Footer: tw.CellConfig{
-				Alignment: tw.CellAlignment{Global: tw.AlignRight},
+				Formatting: tw.CellFormatting{AutoWrap: tw.WrapTruncate},
+				Alignment:  tw.CellAlignment{Global: tw.AlignLeft},
 			},
 		}),
 	)
