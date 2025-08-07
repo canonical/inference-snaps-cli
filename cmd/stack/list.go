@@ -151,7 +151,8 @@ func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
 	// Description column fills the remaining space
 	stackDescriptionMaxLen := tableMaxWidth - (stackNameMaxLen + stackVendorMaxLen)
 	if includeIncompatible {
-		stackDescriptionMaxLen -= len(headers[3]) + 2 // Reserve space for Compatible column
+		// Reserve space for Compatible column
+		stackDescriptionMaxLen -= len(headers[3]) + 2
 	}
 
 	table := tablewriter.NewTable(os.Stdout,
