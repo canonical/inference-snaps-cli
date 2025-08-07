@@ -11,8 +11,8 @@ require (
 	github.com/jaypipes/pcidb v1.0.1
 	github.com/olekukonko/tablewriter v1.0.9
 	github.com/spf13/cobra v1.9.1
-	golang.org/x/sys v0.34.0
-	golang.org/x/term v0.33.0
+	golang.org/x/sys v0.35.0
+	golang.org/x/term v0.34.0
 	golang.org/x/text v0.27.0
 	gopkg.in/yaml.v3 v3.0.1
 )
