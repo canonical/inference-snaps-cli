@@ -38,7 +38,7 @@ func list(_ *cobra.Command, _ []string) error {
 	return listStacks(listAll)
 }
 
-func listStacks(includeIncompatible bool) error {
+func listStacks(all bool) error {
 	stacksJson, err := snapctl.Get("stacks").Document().Run()
 	if err != nil {
 		return fmt.Errorf("error loading stacks: %v", err)
@@ -56,7 +56,7 @@ func listStacks(includeIncompatible bool) error {
 		return fmt.Errorf("error parsing stacks: %v", err)
 	}
 
-	err = printStacks(stacks, includeIncompatible)
+	err = printStacks(stacks, all)
 	if err != nil {
 		return fmt.Errorf("error printing list: %v", err)
 	}
@@ -64,10 +64,10 @@ func listStacks(includeIncompatible bool) error {
 	return nil
 }
 
-func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
+func printStacks(stacks []types.ScoredStack, all bool) error {
 
 	var headers []string
-	if includeIncompatible {
+	if all {
 		headers = []string{"stack", "vendor", "description", "compat"}
 	} else {
 		headers = []string{"stack", "vendor", "description"}
@@ -87,14 +87,14 @@ func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
 	for _, stack := range stacks {
 		stackInfo := []string{stack.Name, stack.Vendor, stack.Description}
 
-		if includeIncompatible ||
+		if all ||
 			(stack.Compatible && stack.Grade == "stable") {
 
 			stackNameMaxLen = max(stackNameMaxLen, len(stack.Name))
 			stackVendorMaxLen = max(stackVendorMaxLen, len(stack.Vendor))
 		}
 
-		if includeIncompatible {
+		if all {
 			compatibleStr := ""
 			if stack.Compatible && stack.Grade == "stable" {
 				compatibleStr = "yes"
@@ -112,7 +112,7 @@ func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
 	}
 
 	if len(data) == 1 {
-		if includeIncompatible {
+		if all {
 			_, err := fmt.Fprintln(os.Stderr, "No stacks found.")
 			return err
 		} else {
@@ -150,7 +150,7 @@ func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
 	stackVendorMaxLen += 2
 	// Description column fills the remaining space
 	stackDescriptionMaxLen := tableMaxWidth - (stackNameMaxLen + stackVendorMaxLen)
-	if includeIncompatible {
+	if all {
 		// Reserve space for Compatible column
 		stackDescriptionMaxLen -= len(headers[3]) + 2
 	}
@@ -164,7 +164,7 @@ func printStacks(stacks []types.ScoredStack, includeIncompatible bool) error {
 					0: stackNameMaxLen,        // Stack name
 					1: stackVendorMaxLen,      // Vendor
 					2: stackDescriptionMaxLen, // Description
-					// 3:  0, // Compatible, not set because cell value is shorten than min width
+					// 3:  0, // Compatible, not set because cell value is shorter than min width
 				},
 			},
 			Header: tw.CellConfig{
