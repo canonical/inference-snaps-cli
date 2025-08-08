@@ -59,11 +59,11 @@ func listStacks(all bool) error {
 
 func printStacks(stacks []types.ScoredStack, all bool) error {
 
-	var headers = []string{"stack", "vendor", "description"}
+	var headerRow = []string{"stack", "vendor", "description"}
 	if all {
-		headers = append(headers, "compat")
+		headerRow = append(headerRow, "compat")
 	}
-	data := [][]string{headers}
+	tableRows := [][]string{headerRow}
 
 	// Sort by Score in descending order
 	sort.Slice(stacks, func(i, j int) bool {
@@ -76,7 +76,7 @@ func printStacks(stacks []types.ScoredStack, all bool) error {
 
 	var stackNameMaxLen, stackVendorMaxLen int
 	for _, stack := range stacks {
-		stackLine := []string{stack.Name, stack.Vendor, stack.Description}
+		row := []string{stack.Name, stack.Vendor, stack.Description}
 
 		// Only for stacks that will be printed, find max name and vendor lengths
 		if all || (stack.Compatible && stack.Grade == "stable") {
@@ -94,14 +94,14 @@ func printStacks(stacks []types.ScoredStack, all bool) error {
 				compatibleStr = "no"
 			}
 
-			stackLine = append(stackLine, compatibleStr)
-			data = append(data, stackLine)
+			row = append(row, compatibleStr)
+			tableRows = append(tableRows, row)
 		} else if stack.Compatible && stack.Grade == "stable" {
-			data = append(data, stackLine)
+			tableRows = append(tableRows, row)
 		}
 	}
 
-	if len(data) == 1 {
+	if len(tableRows) == 1 {
 		if all {
 			_, err := fmt.Fprintln(os.Stderr, "No stacks found.")
 			return err
@@ -120,7 +120,7 @@ func printStacks(stacks []types.ScoredStack, all bool) error {
 	stackDescriptionMaxLen := tableMaxWidth - (stackNameMaxLen + stackVendorMaxLen)
 	if all {
 		// Reserve space for Compatible column if included
-		stackDescriptionMaxLen -= len(headers[3]) + 2
+		stackDescriptionMaxLen -= len(headerRow[3]) + 2
 	}
 
 	options := []tablewriter.Option{
@@ -165,8 +165,8 @@ func printStacks(stacks []types.ScoredStack, all bool) error {
 	}
 
 	table := tablewriter.NewTable(os.Stdout, options...)
-	table.Header(data[0])
-	err := table.Bulk(data[1:])
+	table.Header(tableRows[0])
+	err := table.Bulk(tableRows[1:])
 	if err != nil {
 		return fmt.Errorf("error adding data to table: %v", err)
 	}
