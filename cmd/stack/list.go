@@ -5,9 +5,6 @@ import (
 	"os"
 	"sort"
 
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-
 	"github.com/canonical/go-snapctl"
 	"github.com/canonical/stack-utils/pkg/types"
 	"github.com/fatih/color"
@@ -47,13 +44,6 @@ func listStacks(all bool) error {
 		return fmt.Errorf("error loading stacks: %v", err)
 	}
 
-	// Uncomment for testing
-	// stacksJsonB, err := os.ReadFile("test_data/snap-options/stacks.json")
-	// if err != nil {
-	// 	return fmt.Errorf("error loading stacks: %v", err)
-	// }
-	// stacksJson = string(stacksJsonB)
-
 	stacks, err := parseStacksJson(stacksJson)
 	if err != nil {
 		return fmt.Errorf("error parsing stacks: %v", err)
@@ -69,11 +59,9 @@ func listStacks(all bool) error {
 
 func printStacks(stacks []types.ScoredStack, all bool) error {
 
-	var headers []string
+	var headers = []string{"stack", "vendor", "description"}
 	if all {
-		headers = []string{"stack", "vendor", "description", "compat"}
-	} else {
-		headers = []string{"stack", "vendor", "description"}
+		headers = append(headers, "compat")
 	}
 	data := [][]string{headers}
 
@@ -88,11 +76,10 @@ func printStacks(stacks []types.ScoredStack, all bool) error {
 
 	var stackNameMaxLen, stackVendorMaxLen int
 	for _, stack := range stacks {
-		stackInfo := []string{stack.Name, stack.Vendor, stack.Description}
+		stackLine := []string{stack.Name, stack.Vendor, stack.Description}
 
-		if all ||
-			(stack.Compatible && stack.Grade == "stable") {
-
+		// Only for stacks that will be printed, find max name and vendor lengths
+		if all || (stack.Compatible && stack.Grade == "stable") {
 			stackNameMaxLen = max(stackNameMaxLen, len(stack.Name))
 			stackVendorMaxLen = max(stackVendorMaxLen, len(stack.Vendor))
 		}
@@ -107,10 +94,10 @@ func printStacks(stacks []types.ScoredStack, all bool) error {
 				compatibleStr = "no"
 			}
 
-			stackInfo = append(stackInfo, compatibleStr)
-			data = append(data, stackInfo)
+			stackLine = append(stackLine, compatibleStr)
+			data = append(data, stackLine)
 		} else if stack.Compatible && stack.Grade == "stable" {
-			data = append(data, stackInfo)
+			data = append(data, stackLine)
 		}
 	}
 
@@ -124,42 +111,39 @@ func printStacks(stacks []types.ScoredStack, all bool) error {
 		}
 	}
 
-	// Configure colors: green headers, cyan/magenta rows, yellow footer
-	colorCfg := renderer.ColorizedConfig{
-		Header: renderer.Tint{
-			FG: renderer.Colors{color.Bold}, // Green bold headers
-		},
-		Column: renderer.Tint{
-			FG: renderer.Colors{color.Reset},
-			BG: renderer.Colors{color.Reset},
-		},
-		Borders: tw.BorderNone,
-		Settings: tw.Settings{
-			Separators: tw.Separators{ShowHeader: tw.Off, ShowFooter: tw.Off, BetweenRows: tw.Off, BetweenColumns: tw.Off},
-			Lines: tw.Lines{
-				ShowTop:        tw.Off,
-				ShowBottom:     tw.Off,
-				ShowHeaderLine: tw.Off,
-				ShowFooterLine: tw.Off,
-			},
-			CompactMode: tw.On,
-		},
-	}
-
 	tableMaxWidth := 80
 
-	// Increase to account for paddings
+	// Increase column widths to account for paddings
 	stackNameMaxLen += 2
 	stackVendorMaxLen += 2
 	// Description column fills the remaining space
 	stackDescriptionMaxLen := tableMaxWidth - (stackNameMaxLen + stackVendorMaxLen)
 	if all {
-		// Reserve space for Compatible column
+		// Reserve space for Compatible column if included
 		stackDescriptionMaxLen -= len(headers[3]) + 2
 	}
 
-	table := tablewriter.NewTable(os.Stdout,
-		tablewriter.WithRenderer(renderer.NewColorized(colorCfg)),
+	options := []tablewriter.Option{
+		tablewriter.WithRenderer(renderer.NewColorized(renderer.ColorizedConfig{
+			Header: renderer.Tint{
+				FG: renderer.Colors{color.Bold}, // Bold headers
+			},
+			Column: renderer.Tint{
+				FG: renderer.Colors{color.Reset},
+				BG: renderer.Colors{color.Reset},
+			},
+			Borders: tw.BorderNone,
+			Settings: tw.Settings{
+				Separators: tw.Separators{ShowHeader: tw.Off, ShowFooter: tw.Off, BetweenRows: tw.Off, BetweenColumns: tw.Off},
+				Lines: tw.Lines{
+					ShowTop:        tw.Off,
+					ShowBottom:     tw.Off,
+					ShowHeaderLine: tw.Off,
+					ShowFooterLine: tw.Off,
+				},
+				CompactMode: tw.On,
+			},
+		})),
 		tablewriter.WithConfig(tablewriter.Config{
 			MaxWidth: tableMaxWidth,
 			Widths: tw.CellWidth{
@@ -178,8 +162,9 @@ func printStacks(stacks []types.ScoredStack, all bool) error {
 				Alignment:  tw.CellAlignment{Global: tw.AlignLeft},
 			},
 		}),
-	)
+	}
 
+	table := tablewriter.NewTable(os.Stdout, options...)
 	table.Header(data[0])
 	err := table.Bulk(data[1:])
 	if err != nil {
