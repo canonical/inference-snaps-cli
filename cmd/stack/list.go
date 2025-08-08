@@ -5,9 +5,6 @@ import (
 	"os"
 	"sort"
 
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-
 	"github.com/canonical/go-snapctl"
 	"github.com/canonical/stack-utils/pkg/types"
 	"github.com/fatih/color"
