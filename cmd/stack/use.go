@@ -13,6 +13,7 @@ import (
 	"github.com/canonical/stack-utils/pkg/selector"
 	"github.com/canonical/stack-utils/pkg/snap_store"
 	"github.com/canonical/stack-utils/pkg/types"
+	"github.com/canonical/stack-utils/pkg/utils"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
