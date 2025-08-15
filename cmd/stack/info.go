@@ -18,8 +18,8 @@ func init() {
 		// Long:  "",
 		GroupID:           "stacks",
 		Args:              cobra.ExactArgs(1),
-		RunE:              info,
 		ValidArgsFunction: infoValidArgs,
+		RunE:              info,
 	}
 	rootCmd.AddCommand(cmd)
 }
