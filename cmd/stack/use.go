@@ -184,16 +184,17 @@ func useStack(stackName string, assumeYes bool) error {
 		componentSizes, err := snap_store.ComponentSizes()
 		if err != nil {
 			// If component size lookup failed, continue but log the error
-			fmt.Fprintf(os.Stderr, "Error getting component sizes: %v", err)
+			fmt.Fprintf(os.Stderr, "Error getting component sizes: %v\n", err)
 		}
 
-		// Format list of components with optional size if it is known
+		// Format list of components, adding size if it is known
 		var componentList []string
 		for _, componentName := range components {
 			line := fmt.Sprintf("\t%s", componentName)
 			if size, ok := componentSizes[componentName]; ok {
 				line += fmt.Sprintf(" (%s)", utils.FmtBytes(uint64(size)))
 			}
+			componentList = append(componentList, line)
 		}
 
 		fmt.Println("Need to download and install the following components:")

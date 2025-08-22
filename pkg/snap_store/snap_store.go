@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func ComponentSizes() (map[string]int64, error) {
@@ -31,7 +32,11 @@ func componentsOfCurrentSnap() ([]snapResources, error) {
 
 	snapRevisionStr := os.Getenv("SNAP_REVISION")
 	if snapRevisionStr == "" {
-		return nil, fmt.Errorf("SNAP_REVISION is not set. Likely not installed from the store")
+		return nil, fmt.Errorf("SNAP_REVISION is not set")
+	}
+
+	if strings.HasPrefix(snapRevisionStr, "x") {
+		return nil, fmt.Errorf("not installed from store")
 	}
 
 	snapRevision, err := strconv.ParseInt(snapRevisionStr, 10, 64)
