@@ -180,21 +180,25 @@ func useStack(stackName string, assumeYes bool) error {
 		return fmt.Errorf("error checking installed components: %v", err)
 	}
 	if len(components) > 0 {
-		// Get component sizes from store
-		storeComponents, storeErr := snap_store.GetComponentsOfCurrentSnap()
+		// Look up component sizes from the snap store
+		componentSizes, err := snap_store.ComponentSizes()
+		if err != nil {
+			// If component size lookup failed, continue but log the error
+			fmt.Fprintf(os.Stderr, "Error getting component sizes: %v", err)
+		}
 
-		// ask user if they want to continue
-		fmt.Println("Need to download and install the following components:")
+		// Format list of components with optional size if it is known
+		var componentList []string
 		for _, componentName := range components {
-			fmt.Printf("\t%s", componentName)
-			// Only append the size if no errors occurred
-			if storeErr == nil {
-				compSize, err := snap_store.ComponentSize(storeComponents, componentName)
-				if err == nil {
-					fmt.Printf(" (%s)", utils.FmtBytes(uint64(compSize)))
-				}
+			line := fmt.Sprintf("\t%s", componentName)
+			if size, ok := componentSizes[componentName]; ok {
+				line += fmt.Sprintf(" (%s)", utils.FmtBytes(uint64(size)))
 			}
-			fmt.Println()
+		}
+
+		fmt.Println("Need to download and install the following components:")
+		for _, component := range componentList {
+			fmt.Println(component)
 		}
 		fmt.Println("This can take a long time to complete.")
 

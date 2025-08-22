@@ -1,6 +1,6 @@
 package snap_store
 
-type SnapInfo struct {
+type snapInfoResponse struct {
 	ChannelMap   []interface{} `json:"channel-map"`
 	DefaultTrack interface{}   `json:"default-track"`
 	Name         string        `json:"name"`
@@ -23,27 +23,27 @@ type SnapInfo struct {
 	SnapId string `json:"snap-id"`
 }
 
-type SnapRefreshRequest struct {
-	Context []SnapRefreshContext `json:"context"`
-	Actions []SnapRefreshActions `json:"actions"`
+type snapRefreshRequest struct {
+	Context []snapRefreshContext `json:"context"`
+	Actions []snapRefreshActions `json:"actions"`
 	Fields  []string             `json:"fields"`
 }
 
-type SnapRefreshContext struct {
+type snapRefreshContext struct {
 	SnapId          string `json:"snap-id"`
 	InstanceKey     string `json:"instance-key"`
 	Revision        int    `json:"revision"`
 	TrackingChannel string `json:"tracking-channel"`
 }
 
-type SnapRefreshActions struct {
+type snapRefreshActions struct {
 	Action      string `json:"action"`
 	InstanceKey string `json:"instance-key"`
 	SnapId      string `json:"snap-id"`
 	Revision    int    `json:"revision"`
 }
 
-type SnapRefreshResponse struct {
+type snapRefreshResponse struct {
 	ErrorList []interface{} `json:"error-list"`
 	Results   []struct {
 		InstanceKey string      `json:"instance-key"`
@@ -51,13 +51,13 @@ type SnapRefreshResponse struct {
 		ReleasedAt  interface{} `json:"released-at"`
 		Result      string      `json:"result"`
 		Snap        struct {
-			Resources []SnapResources `json:"resources"`
+			Resources []snapResources `json:"resources"`
 		} `json:"snap"`
 		SnapId string `json:"snap-id"`
 	} `json:"results"`
 }
 
-type SnapResources struct {
+type snapResources struct {
 	Architectures []string `json:"architectures"`
 	CreatedAt     string   `json:"created-at"`
 	Description   string   `json:"description"`

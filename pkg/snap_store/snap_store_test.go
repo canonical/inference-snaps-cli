@@ -3,7 +3,7 @@ package snap_store
 import "testing"
 
 func TestSnapInfo(t *testing.T) {
-	info, err := Info("deepseek-r1")
+	info, err := snapInfo("deepseek-r1")
 	if err != nil {
 		t.Fatalf("error fetching info: %v", err)
 	}
@@ -11,7 +11,7 @@ func TestSnapInfo(t *testing.T) {
 }
 
 func TestGetComponents(t *testing.T) {
-	components, err := Components("nr1Yeg25CSgcFmDpHD448ngXkZwSXPFA", 53, "amd64")
+	components, err := snapComponents("nr1Yeg25CSgcFmDpHD448ngXkZwSXPFA", 53, "amd64")
 	if err != nil {
 		t.Fatalf("error fetching components: %v", err)
 	}

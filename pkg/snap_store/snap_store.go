@@ -9,29 +9,54 @@ import (
 	"strconv"
 )
 
-func GetComponentsOfCurrentSnap() ([]SnapResources, error) {
+func ComponentSizes() (map[string]int64, error) {
+	components, err := componentsOfCurrentSnap()
+	if err != nil {
+		return nil, fmt.Errorf("error finding components of current snap: %v", err)
+	}
+
+	componentSizes := make(map[string]int64)
+	for _, component := range components {
+		componentSizes[component.Name] = component.Download.Size
+	}
+
+	return componentSizes, nil
+}
+
+func componentsOfCurrentSnap() ([]snapResources, error) {
 	snapName := os.Getenv("SNAP_NAME")
 	if snapName == "" {
-		return nil, fmt.Errorf("error: SNAP_NAME must be set - likely not inside a snap")
+		return nil, fmt.Errorf("SNAP_NAME is not set. Likely not inside a snap")
 	}
-	snapInfo, err := Info(os.Getenv("SNAP_NAME"))
-	if err != nil {
-		return nil, fmt.Errorf("error getting snap info: %v", err)
+
+	snapRevisionStr := os.Getenv("SNAP_REVISION")
+	if snapRevisionStr == "" {
+		return nil, fmt.Errorf("SNAP_REVISION is not set. Likely not installed from the store")
 	}
-	snapRevision, err := strconv.ParseInt(os.Getenv("SNAP_REVISION"), 10, 64)
+
+	snapRevision, err := strconv.ParseInt(snapRevisionStr, 10, 64)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing snap revision: %v", err)
 	}
-	components, err := Components(snapInfo.SnapId, int(snapRevision), os.Getenv("SNAP_ARCH"))
+
+	info, err := snapInfo(snapName)
+	if err != nil {
+		return nil, fmt.Errorf("error getting snap info: %v", err)
+	}
+
+	components, err := snapComponents(info.SnapId, int(snapRevision), os.Getenv("SNAP_ARCH"))
 	if err != nil {
 		return nil, fmt.Errorf("error getting components: %v", err)
 	}
+
 	return components, nil
 }
 
-func Info(snapName string) (SnapInfo, error) {
-	info := SnapInfo{}
-	// curl -H 'Snap-Device-Series: 24' http://api.snapcraft.io/v2/snaps/info/$SNAP_NAME
+// snapInfo fetches information about a respective snap from the store, based on its name
+// Docs: https://api.snapcraft.io/docs/info.html
+func snapInfo(snapName string) (snapInfoResponse, error) {
+	info := snapInfoResponse{}
+
 	url := "https://api.snapcraft.io/v2/snaps/info/" + snapName
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -49,9 +74,8 @@ func Info(snapName string) (SnapInfo, error) {
 	}
 	defer resp.Body.Close()
 
-	// Check for a successful HTTP status code
 	if resp.StatusCode != http.StatusOK {
-		return info, fmt.Errorf("received non-OK HTTP status: %d", resp.StatusCode)
+		return info, fmt.Errorf("HTTP status not OK: %d", resp.StatusCode)
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(&info)
@@ -62,17 +86,41 @@ func Info(snapName string) (SnapInfo, error) {
 	return info, nil
 }
 
-// SNAP_REVISION SNAP_ARCH
-func Components(snapId string, revision int, snapArch string) ([]SnapResources, error) {
-	request := SnapRefreshRequest{
-		Context: []SnapRefreshContext{
+func snapComponents(snapId string, revision int, snapArch string) ([]snapResources, error) {
+	/*
+		From sniffing the traffic between snapd and the snap store, we see the refresh endpoint is used to look up available
+		components for the respective snap, their revisions, their sizes, and their download URLs.
+	*/
+	refreshResponse, err := snapRefresh(snapId, revision, snapArch)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching refresh data from store: %v", err)
+	}
+
+	if len(refreshResponse.Results) == 0 {
+		return nil, fmt.Errorf("store returned no refresh results")
+	}
+
+	for _, result := range refreshResponse.Results {
+		if result.SnapId == snapId {
+			return result.Snap.Resources, nil
+		}
+	}
+
+	return nil, fmt.Errorf("no refresh results found for snap id %s", snapId)
+}
+
+// snapRefresh makes a call to the store to fetch refresh information
+// Docs: https://api.snapcraft.io/docs/refresh.html
+func snapRefresh(snapId string, revision int, snapArch string) (snapRefreshResponse, error) {
+	request := snapRefreshRequest{
+		Context: []snapRefreshContext{
 			{
 				SnapId:          snapId,
 				InstanceKey:     snapId,
 				Revision:        revision,
 				TrackingChannel: "",
 			}},
-		Actions: []SnapRefreshActions{
+		Actions: []snapRefreshActions{
 			{
 				Action:      "refresh",
 				InstanceKey: snapId,
@@ -84,14 +132,14 @@ func Components(snapId string, revision int, snapArch string) ([]SnapResources, 
 	}
 	requestJson, err := json.Marshal(request)
 	if err != nil {
-		return nil, fmt.Errorf("error marshalling request json: %v", err)
+		return snapRefreshResponse{}, fmt.Errorf("error marshalling request to json: %v", err)
 	}
 
 	url := "https://api.snapcraft.io/v2/snaps/refresh"
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(requestJson))
 	if err != nil {
-		return nil, fmt.Errorf("error creating new http request: %v", err)
+		return snapRefreshResponse{}, fmt.Errorf("error creating new http request: %v", err)
 	}
 
 	req.Header.Add("Snap-Device-Series", "16")
@@ -102,33 +150,19 @@ func Components(snapId string, revision int, snapArch string) ([]SnapResources, 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("error making HTTP request: %v", err)
+		return snapRefreshResponse{}, fmt.Errorf("error making HTTP request: %v", err)
 	}
 	defer resp.Body.Close()
 
-	// Check for a successful HTTP status code
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("received non-OK HTTP status: %d", resp.StatusCode)
+		return snapRefreshResponse{}, fmt.Errorf("HTTP status not OK: %d", resp.StatusCode)
 	}
 
-	var response SnapRefreshResponse
+	var response snapRefreshResponse
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
-		return nil, fmt.Errorf("error decoding JSON: %v", err)
+		return snapRefreshResponse{}, fmt.Errorf("error decoding JSON: %v", err)
 	}
 
-	if len(response.Results) == 0 {
-		return nil, fmt.Errorf("no results found for snap id %s", snapId)
-	}
-
-	return response.Results[0].Snap.Resources, nil
-}
-
-func ComponentSize(components []SnapResources, componentName string) (int64, error) {
-	for _, component := range components {
-		if component.Name == componentName {
-			return component.Download.Size, nil
-		}
-	}
-	return 0, fmt.Errorf("component %s not found", componentName)
+	return response, nil
 }
