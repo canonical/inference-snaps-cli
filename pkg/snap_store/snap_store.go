@@ -92,8 +92,8 @@ func snapInfo(snapName string) (*snapInfoResponse, error) {
 
 func snapComponents(snapId string, revision int, snapArch string) ([]snapResources, error) {
 	/*
-		From sniffing the traffic between snapd and the snap store, we see the refresh endpoint is used to look up available
-		components for the respective snap, their revisions, their sizes, and their download URLs.
+		From sniffing the traffic between snapd and the snap store, we see the refresh endpoint is used to look up
+		available components for the respective snap, their revisions, their sizes, and their download URLs.
 	*/
 	refreshResponse, err := snapRefresh(snapId, revision, snapArch)
 	if err != nil {
