@@ -1,7 +1,6 @@
 package pci
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -46,12 +45,7 @@ func TestParseLsCpu(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			pciDevices, err := ParseLsPci(string(lsPci), true)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			_, err = json.MarshalIndent(pciDevices, "", "  ")
+			_, err = ParseLsPci(string(lsPci), true)
 			if err != nil {
 				t.Fatal(err)
 			}
