@@ -2,30 +2,46 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"testing"
 )
 
-var hwInfoFiles = []string{
-	//"../../test_data/devices/ampere-one-m-banshee-12/hardware-info.json",
-	//"../../test_data/devices/ampere-one-siryn/hardware-info.json",
-	//"../../test_data/devices/ampere-one-x-banshee-8/hardware-info.json",
-	"../../test_data/devices/hp-proliant-rl300-gen11-altra/hardware-info.json",
-	"../../test_data/devices/hp-proliant-rl300-gen11-altra-max/hardware-info.json",
-	"../../test_data/devices/i7-2600k+arc-a580/hardware-info.json",
-	"../../test_data/devices/i7-10510U/hardware-info.json",
-	"../../test_data/devices/mustang/hardware-info.json",
-	//"../../test_data/devices/orange-pi-rv2/hardware-info.json",
-	"../../test_data/devices/raspberry-pi-5/hardware-info.json",
-	"../../test_data/devices/raspberry-pi-5+hailo-8/hardware-info.json",
-	"../../test_data/devices/xps13-7390/hardware-info.json",
-	//"../../test_data/devices/xps13-9350/hardware-info.json",
+func getDirectories(dirPath string) ([]string, error) {
+	entries, err := os.ReadDir(dirPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read directory: %w", err)
+	}
+
+	var directories []string
+	for _, entry := range entries {
+		if entry.IsDir() {
+			directories = append(directories, entry.Name())
+		}
+	}
+	return directories, nil
 }
 
 func TestParseHwInfo(t *testing.T) {
-	for _, hwInfoFile := range hwInfoFiles {
-		t.Run(hwInfoFile, func(t *testing.T) {
+	devices, err := getDirectories("../../test_data/devices")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, device := range devices {
+		hwInfoFile := "../../test_data/devices/" + device + "/hardware-info.json"
+		t.Run(device, func(t *testing.T) {
+			_, err := os.Stat(hwInfoFile)
+			if err != nil {
+				if os.IsNotExist(err) {
+					// Device does not have hardware-info test data, skipping
+					return
+				} else {
+					t.Fatal(err)
+				}
+			}
+
 			file, err := os.Open(hwInfoFile)
 			if err != nil {
 				t.Fatal(err)
