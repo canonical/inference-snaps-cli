@@ -2,29 +2,15 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"testing"
+
+	"github.com/canonical/stack-utils/pkg/utils"
 )
 
-func getDirectories(dirPath string) ([]string, error) {
-	entries, err := os.ReadDir(dirPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read directory: %w", err)
-	}
-
-	var directories []string
-	for _, entry := range entries {
-		if entry.IsDir() {
-			directories = append(directories, entry.Name())
-		}
-	}
-	return directories, nil
-}
-
 func TestParseHwInfo(t *testing.T) {
-	devices, err := getDirectories("../../test_data/devices")
+	devices, err := utils.SubDirectories("../../test_data/devices")
 	if err != nil {
 		t.Fatal(err)
 	}
