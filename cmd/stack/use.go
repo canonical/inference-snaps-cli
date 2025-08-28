@@ -86,7 +86,7 @@ func use(_ *cobra.Command, args []string) error {
 			if stack.Score == 0 {
 				fmt.Printf("❌ %s - not compatible: %s\n", stack.Name, strings.Join(stack.Notes, ", "))
 			} else if stack.Grade != "stable" {
-				fmt.Printf("⏺️ %s - score = %d, grade = %s\n", stack.Name, stack.Score, stack.Grade)
+				fmt.Printf("🟠 %s - score = %d, grade = %s\n", stack.Name, stack.Score, stack.Grade)
 			} else {
 				fmt.Printf("✅ %s - compatible, score = %d\n", stack.Name, stack.Score)
 			}
