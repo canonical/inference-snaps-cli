@@ -29,7 +29,7 @@ func main() {
 	// Define groups for subcommands - used in usage help text
 	rootCmd.AddGroup(
 		&cobra.Group{ID: "basics", Title: "Basic Commands:"},
-		&cobra.Group{ID: "variants", Title: "Variant Management Commands:"},
+		&cobra.Group{ID: "variants", Title: "Management Commands:"},
 		&cobra.Group{ID: "config", Title: "Configuration Commands:"},
 	)
 	// Hide the 'completion' command from help text

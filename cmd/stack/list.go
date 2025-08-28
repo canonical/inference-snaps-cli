@@ -20,7 +20,7 @@ var (
 
 func init() {
 	cmd := &cobra.Command{
-		Use:   "list",
+		Use:   "list-variants",
 		Short: "List available variants",
 		// Long:  "",
 		GroupID:           "variants",
@@ -30,7 +30,7 @@ func init() {
 	}
 
 	// flags
-	cmd.PersistentFlags().BoolVar(&listAll, "all", false, "include incompatible variants")
+	cmd.PersistentFlags().BoolVar(&listAll, "all", false, "include beta and incompatible variants")
 
 	rootCmd.AddCommand(cmd)
 }

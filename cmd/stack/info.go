@@ -13,7 +13,7 @@ import (
 
 func init() {
 	cmd := &cobra.Command{
-		Use:   "info <variant>",
+		Use:   "variant <variant>",
 		Short: "Print information about a variant",
 		// Long:  "",
 		GroupID:           "variants",

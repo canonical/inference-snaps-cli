@@ -25,7 +25,7 @@ var (
 
 func init() {
 	cmd := &cobra.Command{
-		Use:   "use [<variant>]",
+		Use:   "use-variant [<variant>]",
 		Short: "Select a variant",
 		// Long:  "",
 		GroupID: "variants",
