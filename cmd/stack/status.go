@@ -35,7 +35,7 @@ func snapStatus() error {
 	compatibleStacks := true
 	scoredStacks, err := scoredStacksFromOptions()
 	if err != nil {
-		return fmt.Errorf("error loading scored stacks: %v", err)
+		return fmt.Errorf("error loading scored variants: %v", err)
 	}
 
 	autoStack, err := selector.TopStack(scoredStacks)
@@ -43,14 +43,14 @@ func snapStatus() error {
 		if errors.Is(err, selector.ErrorNoCompatibleStacks) {
 			compatibleStacks = false
 		} else {
-			return fmt.Errorf("error loading top stack: %v", err)
+			return fmt.Errorf("error loading top variant: %v", err)
 		}
 	}
 
 	// Find the selected stack
 	stack, err := selectedStackFromOptions()
 	if err != nil {
-		return fmt.Errorf("error loading selected stack: %v", err)
+		return fmt.Errorf("error loading selected variant: %v", err)
 	}
 
 	printStack(stack, compatibleStacks && stack.Name == autoStack.Name)
@@ -67,12 +67,12 @@ func snapStatus() error {
 func scoredStacksFromOptions() ([]types.ScoredStack, error) {
 	stacksJson, err := snapctl.Get("stacks").Document().Run()
 	if err != nil {
-		return nil, fmt.Errorf("error loading stacks: %v", err)
+		return nil, fmt.Errorf("error loading variants: %v", err)
 	}
 
 	stacksMap, err := parseStacksJson(stacksJson)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing stacks: %v", err)
+		return nil, fmt.Errorf("error parsing variants: %v", err)
 	}
 
 	// map to slice
@@ -87,17 +87,17 @@ func scoredStacksFromOptions() ([]types.ScoredStack, error) {
 func selectedStackFromOptions() (types.ScoredStack, error) {
 	selectedStackName, err := snapctl.Get("stack").Run()
 	if err != nil {
-		return types.ScoredStack{}, fmt.Errorf("error loading selected stack: %v", err)
+		return types.ScoredStack{}, fmt.Errorf("error loading selected variant: %v", err)
 	}
 
 	stackJson, err := snapctl.Get("stacks." + selectedStackName).Document().Run()
 	if err != nil {
-		return types.ScoredStack{}, fmt.Errorf("error loading stack: %v", err)
+		return types.ScoredStack{}, fmt.Errorf("error loading variant: %v", err)
 	}
 
 	stack, err := parseStackJson(stackJson)
 	if err != nil {
-		return types.ScoredStack{}, fmt.Errorf("error parsing stack: %v", err)
+		return types.ScoredStack{}, fmt.Errorf("error parsing variant: %v", err)
 	}
 
 	return stack, nil
@@ -108,7 +108,7 @@ func printStack(stack types.ScoredStack, auto bool) {
 	if auto {
 		autoString = " (auto)"
 	}
-	fmt.Printf("Stack: %s%s\n", stack.Name, autoString)
+	fmt.Printf("Variant: %s%s\n", stack.Name, autoString)
 
 	if val, ok := stack.Configurations["model"]; ok {
 		fmt.Printf("  Model: %s\n", val)

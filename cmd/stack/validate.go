@@ -14,7 +14,7 @@ func validate(args []string) error {
 	stackFiles := validateCmd.Args()
 
 	if len(stackFiles) == 0 {
-		return fmt.Errorf("no stack manifest specified")
+		return fmt.Errorf("no variant manifest specified")
 	}
 
 	return validateStackManifests(stackFiles...)

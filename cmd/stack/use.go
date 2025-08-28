@@ -25,10 +25,10 @@ var (
 
 func init() {
 	cmd := &cobra.Command{
-		Use:   "use [<stack>]",
-		Short: "Select a stack",
+		Use:   "use [<variant>]",
+		Short: "Select a variant",
 		// Long:  "",
-		GroupID: "stacks",
+		GroupID: "variants",
 		// stack use <stack> requires 1 argument
 		// stack use --auto does not support any arguments
 		Args:              cobra.MaximumNArgs(1),
@@ -37,7 +37,7 @@ func init() {
 	}
 
 	// flags
-	cmd.PersistentFlags().BoolVar(&useAuto, "auto", false, "automatically select a compatible stack")
+	cmd.PersistentFlags().BoolVar(&useAuto, "auto", false, "automatically select a compatible variant")
 	cmd.PersistentFlags().BoolVar(&useAssumeYes, "assume-yes", false, "assume yes for downloading new components")
 
 	rootCmd.AddCommand(cmd)
@@ -46,13 +46,13 @@ func init() {
 func useValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
 	stacksJson, err := snapctl.Get("stacks").Document().Run()
 	if err != nil {
-		fmt.Printf("Error loading stacks: %v", err)
+		fmt.Printf("Error loading variants: %v", err)
 		return nil, cobra.ShellCompDirectiveError
 	}
 
 	stacks, err := parseStacksJson(stacksJson)
 	if err != nil {
-		fmt.Printf("Error parsing stacks: %v", err)
+		fmt.Printf("Error parsing variants: %v", err)
 		return nil, cobra.ShellCompDirectiveError
 	}
 
@@ -74,12 +74,12 @@ func use(_ *cobra.Command, args []string) error {
 
 	if useAuto {
 		if len(args) != 0 {
-			return fmt.Errorf("cannot specify stack with --auto flag")
+			return fmt.Errorf("cannot specify variant with --auto flag")
 		}
 
 		scoredStacks, err := scoreStacks()
 		if err != nil {
-			return fmt.Errorf("error scoring stacks: %v", err)
+			return fmt.Errorf("error scoring variants: %v", err)
 		}
 
 		for _, stack := range scoredStacks {
@@ -94,31 +94,31 @@ func use(_ *cobra.Command, args []string) error {
 
 		err = stacksToSnapOptions(scoredStacks)
 		if err != nil {
-			return fmt.Errorf("error saving scored stacks: %v", err)
+			return fmt.Errorf("error saving scored variants: %v", err)
 		}
 
-		fmt.Println("Automatically selecting a compatible stack ...")
+		fmt.Println("Automatically selecting a compatible variant ...")
 
 		selectedStack, err := selector.TopStack(scoredStacks)
 		if err != nil {
-			return fmt.Errorf("error finding top stack: %v", err)
+			return fmt.Errorf("error finding top variant: %v", err)
 		}
 
-		fmt.Printf("Selected stack for your hardware configuration: %s\n\n", selectedStack.Name)
+		fmt.Printf("Selected variant for your hardware configuration: %s\n\n", selectedStack.Name)
 
 		err = useStack(selectedStack.Name, useAssumeYes)
 		if err != nil {
-			return fmt.Errorf("failed to use stack: %s", err)
+			return fmt.Errorf("failed to use variant: %s", err)
 		}
 
 	} else {
 		if len(args) == 1 {
 			err := useStack(args[0], useAssumeYes)
 			if err != nil {
-				return fmt.Errorf("failed to use stack: %s", err)
+				return fmt.Errorf("failed to use variant: %s", err)
 			}
 		} else {
-			return fmt.Errorf("stack name not specified")
+			return fmt.Errorf("variant name not specified")
 		}
 	}
 	return nil
@@ -127,7 +127,7 @@ func use(_ *cobra.Command, args []string) error {
 func scoreStacks() ([]types.ScoredStack, error) {
 	allStacks, err := selector.LoadStacksFromDir(stacksDir)
 	if err != nil {
-		return nil, fmt.Errorf("error loading stacks: %v", err)
+		return nil, fmt.Errorf("error loading variants: %v", err)
 	}
 
 	// get hardware info
@@ -139,7 +139,7 @@ func scoreStacks() ([]types.ScoredStack, error) {
 	// score stacks
 	scoredStacks, err := selector.ScoreStacks(hardwareInfo, allStacks)
 	if err != nil {
-		return nil, fmt.Errorf("error scoring stacks: %v", err)
+		return nil, fmt.Errorf("error scoring variants: %v", err)
 	}
 
 	return scoredStacks, nil
@@ -150,12 +150,12 @@ func stacksToSnapOptions(scoredStacks []types.ScoredStack) error {
 	for _, stack := range scoredStacks {
 		stackJson, err := json.Marshal(stack)
 		if err != nil {
-			return fmt.Errorf("error serializing stacks: %v", err)
+			return fmt.Errorf("error serializing variants: %v", err)
 		}
 
 		err = snapctl.Set("stacks."+stack.Name, string(stackJson)).Document().Run()
 		if err != nil {
-			return fmt.Errorf("error setting stacks option: %v", err)
+			return fmt.Errorf("error setting variant option: %v", err)
 		}
 	}
 	return nil
@@ -167,12 +167,12 @@ useStack changes the stack that is used by the snap
 func useStack(stackName string, assumeYes bool) error {
 	stackJson, err := snapctl.Get("stacks." + stackName).Document().Run()
 	if err != nil {
-		return fmt.Errorf("error loading stack: %v", err)
+		return fmt.Errorf("error loading variant: %v", err)
 	}
 
 	stack, err := parseStackJson(stackJson)
 	if err != nil {
-		return fmt.Errorf("error parsing stack: %v", err)
+		return fmt.Errorf("error parsing variant: %v", err)
 	}
 
 	components, err := missingComponents(stack.Components)
@@ -219,7 +219,7 @@ func useStack(stackName string, assumeYes bool) error {
 	// Even if a timeout occurs, the download is expected to complete in the background.
 	err = setStackOptions(stack)
 	if err != nil {
-		return fmt.Errorf("error setting stack options: %v", err)
+		return fmt.Errorf("error setting variant options: %v", err)
 	}
 
 	if len(components) > 0 {
@@ -274,7 +274,7 @@ func setStackOptions(stack types.ScoredStack) error {
 	// set stack config option
 	err := snapctl.Set("stack", stack.Name).Run()
 	if err != nil {
-		return fmt.Errorf(`error setting snap option "stack": %v`, err)
+		return fmt.Errorf(`error setting snap option "variant": %v`, err)
 	}
 
 	// set other config options

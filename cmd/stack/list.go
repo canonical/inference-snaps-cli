@@ -21,16 +21,16 @@ var (
 func init() {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List available stacks",
+		Short: "List available variants",
 		// Long:  "",
-		GroupID:           "stacks",
+		GroupID:           "variants",
 		Args:              cobra.NoArgs,
 		ValidArgsFunction: cobra.NoFileCompletions,
 		RunE:              list,
 	}
 
 	// flags
-	cmd.PersistentFlags().BoolVar(&listAll, "all", false, "include incompatible stacks")
+	cmd.PersistentFlags().BoolVar(&listAll, "all", false, "include incompatible variants")
 
 	rootCmd.AddCommand(cmd)
 }
@@ -42,12 +42,12 @@ func list(_ *cobra.Command, _ []string) error {
 func listStacks(all bool) error {
 	stacksJson, err := snapctl.Get("stacks").Document().Run()
 	if err != nil {
-		return fmt.Errorf("error loading stacks: %v", err)
+		return fmt.Errorf("error loading variants: %v", err)
 	}
 
 	stacks, err := parseStacksJson(stacksJson)
 	if err != nil {
-		return fmt.Errorf("error parsing stacks: %v", err)
+		return fmt.Errorf("error parsing variants: %v", err)
 	}
 
 	err = printStacks(stacks, all)
@@ -60,7 +60,7 @@ func listStacks(all bool) error {
 
 func printStacks(stacks []types.ScoredStack, all bool) error {
 
-	var headerRow = []string{"stack", "vendor", "description"}
+	var headerRow = []string{"variant", "vendor", "description"}
 	if all {
 		headerRow = append(headerRow, "compat")
 	}
@@ -104,10 +104,10 @@ func printStacks(stacks []types.ScoredStack, all bool) error {
 
 	if len(tableRows) == 1 {
 		if all {
-			_, err := fmt.Fprintln(os.Stderr, "No stacks found.")
+			_, err := fmt.Fprintln(os.Stderr, "No variants found.")
 			return err
 		} else {
-			_, err := fmt.Fprintln(os.Stderr, "No compatible stacks found.")
+			_, err := fmt.Fprintln(os.Stderr, "No compatible variants found.")
 			return err
 		}
 	}
