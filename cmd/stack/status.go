@@ -1,15 +1,20 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 
-	"github.com/canonical/go-snapctl"
 	"github.com/canonical/stack-utils/pkg/selector"
 	"github.com/canonical/stack-utils/pkg/types"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
+)
+
+var (
+	statusFormat string
 )
 
 func init() {
@@ -23,148 +28,146 @@ func init() {
 		RunE:              status,
 	}
 
+	// flags
+	cmd.PersistentFlags().StringVar(&statusFormat, "format", "", "return the status as yaml or json")
+
 	rootCmd.AddCommand(cmd)
 }
 
 func status(_ *cobra.Command, _ []string) error {
-	return snapStatus()
+	var statusText string
+	var err error
+
+	switch statusFormat {
+	case "json":
+		statusText, err = statusJson()
+		if err != nil {
+			return fmt.Errorf("error getting json status: %v", err)
+		}
+	case "yaml":
+		statusText, err = statusYaml()
+		if err != nil {
+			return fmt.Errorf("error getting yaml status: %v", err)
+		}
+	default:
+		statusText, err = statusHuman()
+		if err != nil {
+			return fmt.Errorf("error getting status: %v", err)
+		}
+	}
+
+	fmt.Print(statusText)
+
+	return nil
 }
 
-func snapStatus() error {
-	// Find the top stack
+func statusYaml() (string, error) {
+	statusStr, err := statusStruct()
+	if err != nil {
+		return "", fmt.Errorf("error getting status: %v", err)
+	}
+	yamlStr, err := yaml.Marshal(statusStr)
+	if err != nil {
+		return "", fmt.Errorf("error marshalling yaml: %v", err)
+	}
+	return string(yamlStr), nil
+}
+
+func statusJson() (string, error) {
+	statusStr, err := statusStruct()
+	if err != nil {
+		return "", fmt.Errorf("error getting status: %v", err)
+	}
+	jsonStr, err := json.Marshal(statusStr)
+	if err != nil {
+		return "", fmt.Errorf("error marshalling json: %v", err)
+	}
+	return string(jsonStr), nil
+}
+
+func statusHuman() (string, error) {
+	// Find the selected stack
+	stack, err := selectedStackFromOptions()
+	if err != nil {
+		return "", fmt.Errorf("error loading selected variant: %v", err)
+	}
+
+	// Get all stacks with scores
 	compatibleStacks := true
 	scoredStacks, err := scoredStacksFromOptions()
 	if err != nil {
-		return fmt.Errorf("error loading scored variants: %v", err)
+		return "", fmt.Errorf("error loading scored variants: %v", err)
 	}
 
+	// Find top stack
 	autoStack, err := selector.TopStack(scoredStacks)
 	if err != nil {
 		if errors.Is(err, selector.ErrorNoCompatibleStacks) {
 			compatibleStacks = false
 		} else {
-			return fmt.Errorf("error loading top variant: %v", err)
+			return "", fmt.Errorf("error loading top variant: %v", err)
 		}
 	}
 
-	// Find the selected stack
-	stack, err := selectedStackFromOptions()
+	stackStatusText := statusHumanStack(stack, compatibleStacks && stack.Name == autoStack.Name)
+
+	// TODO check if all required snap components are available, otherwise print "Downloading resources..."
+
+	serverStatusText, err := statusHumanServer(stack)
 	if err != nil {
-		return fmt.Errorf("error loading selected variant: %v", err)
+		return "", fmt.Errorf("error getting server status: %v", err)
 	}
 
-	printStack(stack, compatibleStacks && stack.Name == autoStack.Name)
-	fmt.Println("")
-	err = printServer(stack)
-	if err != nil {
-		return fmt.Errorf("error showing server status: %v", err)
-	}
-	fmt.Println("")
-
-	return nil
+	return fmt.Sprintf("%s\n%s", stackStatusText, serverStatusText), nil
 }
 
-func scoredStacksFromOptions() ([]types.ScoredStack, error) {
-	stacksJson, err := snapctl.Get("stacks").Document().Run()
-	if err != nil {
-		return nil, fmt.Errorf("error loading variants: %v", err)
-	}
-
-	stacksMap, err := parseStacksJson(stacksJson)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing variants: %v", err)
-	}
-
-	// map to slice
-	var stacks []types.ScoredStack
-	for _, stack := range stacksMap {
-		stacks = append(stacks, stack)
-	}
-
-	return stacks, nil
-}
-
-func selectedStackFromOptions() (types.ScoredStack, error) {
-	selectedStackName, err := snapctl.Get("stack").Run()
-	if err != nil {
-		return types.ScoredStack{}, fmt.Errorf("error loading selected variant: %v", err)
-	}
-
-	stackJson, err := snapctl.Get("stacks." + selectedStackName).Document().Run()
-	if err != nil {
-		return types.ScoredStack{}, fmt.Errorf("error loading variant: %v", err)
-	}
-
-	stack, err := parseStackJson(stackJson)
-	if err != nil {
-		return types.ScoredStack{}, fmt.Errorf("error parsing variant: %v", err)
-	}
-
-	return stack, nil
-}
-
-func printStack(stack types.ScoredStack, auto bool) {
-	autoString := ""
+func statusHumanStack(stack types.ScoredStack, auto bool) string {
+	bold := color.New(color.Bold).SprintFunc()
+	variantString := fmt.Sprintf("Using %s", bold(stack.Name))
 	if auto {
-		autoString = " (auto)"
+		variantString += " (automatically selected)"
 	}
-	fmt.Printf("Variant: %s%s\n", stack.Name, autoString)
-
-	if val, ok := stack.Configurations["model"]; ok {
-		fmt.Printf("  Model: %s\n", val)
-	}
-	if val, ok := stack.Configurations["engine"]; ok {
-		fmt.Printf("  Engine: %s\n", val)
-	}
-	if val, ok := stack.Configurations["multimodel-projector"]; ok {
-		fmt.Printf("  Multimodal projector: %s\n", val)
-	}
+	return variantString
 }
 
-func printServer(stack types.ScoredStack) error {
-	apiBasePath := "v1"
-	if val, ok := stack.Configurations["http.base-path"]; ok {
-		apiBasePath, ok = val.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type for base path: %v", val)
-		}
+func statusHumanServer(stack types.ScoredStack) (string, error) {
+	// Start, stop, log commands
+	startCmd := fmt.Sprintf(`Run "sudo snap start %s" to start the model runtime.`, os.Getenv("SNAP_INSTANCE_NAME"))
+	stopCmd := fmt.Sprintf(`Run "sudo snap stop %s" to stop the model runtime.`, os.Getenv("SNAP_INSTANCE_NAME"))
+	logsCmd := fmt.Sprintf(`Run "sudo snap logs %s" to view the model runtime logs.`, os.Getenv("SNAP_INSTANCE_NAME"))
 
-	}
-	httpPort, err := snapctl.Get("http.port").Run()
+	apiUrls, err := serverApiUrls(stack)
 	if err != nil {
-		return fmt.Errorf("error getting http port: %v", err)
+		return "", fmt.Errorf("error getting api urls: %v", err)
 	}
 
-	// Depend on existing check server scripts for status
-	checkScript := os.ExpandEnv("$SNAP/stacks/" + stack.Name + "/check-server")
-	cmd := exec.Command(checkScript)
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("error checking server: %v", err)
+	checkExitCode, err := serverStatusCode(stack.Name)
+	if err != nil {
+		return "", fmt.Errorf("error checking server status: %v", err)
 	}
 
-	checkExitCode := 0
-	if err := cmd.Wait(); err != nil {
-		var exitError *exec.ExitError
-		if errors.As(err, &exitError) {
-			checkExitCode = exitError.ExitCode()
-		}
-	}
-
-	statusText := "online"
+	statusText := ""
 	switch checkExitCode {
 	case 0:
-		statusText = "online"
+		statusText = "\n"
+		if urlValue, ok := apiUrls[openAi]; ok {
+			statusText += fmt.Sprintf("OpenAI API at %s\n", urlValue.String())
+		}
+		// TODO if we can detect that the server is OVMS, we can add "OpenVINO API at http://localhost:8080/v1"
+		statusText += "\n"
+		statusText += fmt.Sprintf("%s\n", stopCmd)
+
 	case 1:
-		statusText = "starting"
+		statusText = "Starting runtime...\n"
 	case 2:
-		statusText = "offline"
+		statusText = "Runtime stopped.\n"
+		statusText += "\n"
+		statusText += fmt.Sprintf("%s\n", startCmd)
 	default:
-		statusText = fmt.Sprintf("unknown (exit code %d)", checkExitCode)
+		statusText = fmt.Sprintf("Runtime error: unknown exit code %d\n", checkExitCode)
+		statusText += "\n"
+		statusText += fmt.Sprintf("%s\n", logsCmd)
 	}
 
-	fmt.Printf("Server:\n")
-	fmt.Printf("  Status: %s\n", statusText)
-	fmt.Printf("  OpenAI endpoint: http://localhost:%s/%s\n", httpPort, apiBasePath)
-
-	return nil
+	return statusText, nil
 }
