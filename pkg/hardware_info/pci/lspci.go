@@ -37,7 +37,7 @@ func ParseLsPci(inputString string, includeFriendlyNames bool) ([]types.PciDevic
 				// Parse slot value into bus number: 0000:3b:00.0 -> 3B
 				parts := strings.Split(value, ":")
 				if len(parts) != 3 {
-					return nil, fmt.Errorf("invalid format: pci slot: %s", value)
+					return nil, fmt.Errorf("unexpected format for pci slot: %s", value)
 				}
 				busNumber, err := strconv.ParseUint(parts[1], 16, 8)
 				if err != nil {
