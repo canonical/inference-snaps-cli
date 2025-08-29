@@ -56,7 +56,7 @@ func status(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	fmt.Print(statusText)
+	fmt.Println(statusText)
 
 	return nil
 }
@@ -78,7 +78,7 @@ func statusJson() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error getting status: %v", err)
 	}
-	jsonStr, err := json.Marshal(statusStr)
+	jsonStr, err := json.MarshalIndent(statusStr, "", "  ")
 	if err != nil {
 		return "", fmt.Errorf("error marshalling json: %v", err)
 	}
@@ -118,7 +118,7 @@ func statusHuman() (string, error) {
 		return "", fmt.Errorf("error getting server status: %v", err)
 	}
 
-	return fmt.Sprintf("%s\n%s", stackStatusText, serverStatusText), nil
+	return fmt.Sprintf("%s\n\n%s", stackStatusText, serverStatusText), nil
 }
 
 func statusHumanStack(stack types.ScoredStack, auto bool) string {
@@ -150,23 +150,23 @@ func statusHumanServer(stack types.ScoredStack) (string, error) {
 	switch checkExitCode {
 	case 0:
 		statusText = "\n"
-		if urlValue, ok := apiUrls[openAi]; ok {
-			statusText += fmt.Sprintf("OpenAI API at %s\n", urlValue.String())
+		if apiUrl, ok := apiUrls[openAi]; ok {
+			statusText += fmt.Sprintf("OpenAI API at %s\n", apiUrl)
 		}
 		// TODO if we can detect that the server is OVMS, we can add "OpenVINO API at http://localhost:8080/v1"
 		statusText += "\n"
-		statusText += fmt.Sprintf("%s\n", stopCmd)
+		statusText += fmt.Sprintf("%s", stopCmd)
 
 	case 1:
 		statusText = "Starting runtime...\n"
 	case 2:
 		statusText = "Runtime stopped.\n"
 		statusText += "\n"
-		statusText += fmt.Sprintf("%s\n", startCmd)
+		statusText += fmt.Sprintf("%s", startCmd)
 	default:
 		statusText = fmt.Sprintf("Runtime error: unknown exit code %d\n", checkExitCode)
 		statusText += "\n"
-		statusText += fmt.Sprintf("%s\n", logsCmd)
+		statusText += fmt.Sprintf("%s", logsCmd)
 	}
 
 	return statusText, nil

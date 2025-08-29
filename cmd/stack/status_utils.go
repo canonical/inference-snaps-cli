@@ -16,9 +16,9 @@ const (
 )
 
 type Status struct {
-	Variant   string             `json:"variant" yaml:"variant"`
-	Status    string             `json:"status" yaml:"status"`
-	Endpoints map[string]url.URL `json:"endpoints" yaml:"endpoints"`
+	Variant   string            `json:"variant" yaml:"variant"`
+	Status    string            `json:"status" yaml:"status"`
+	Endpoints map[string]string `json:"endpoints" yaml:"endpoints"`
 }
 
 func scoredStacksFromOptions() ([]types.ScoredStack, error) {
@@ -94,7 +94,7 @@ func statusStruct() (*Status, error) {
 	return &statusStr, nil
 }
 
-func serverApiUrls(stack types.ScoredStack) (map[string]url.URL, error) {
+func serverApiUrls(stack types.ScoredStack) (map[string]string, error) {
 	// Build API URL
 	apiBasePath := "v1"
 	if val, ok := stack.Configurations["http.base-path"]; ok {
@@ -111,7 +111,7 @@ func serverApiUrls(stack types.ScoredStack) (map[string]url.URL, error) {
 
 	openaiHost := fmt.Sprintf("localhost:%s", httpPort)
 	openaiUrl := url.URL{Scheme: "http", Host: openaiHost, Path: apiBasePath}
-	return map[string]url.URL{openAi: openaiUrl}, nil
+	return map[string]string{openAi: openaiUrl.String()}, nil
 
 	// TODO add additional api endpoints like openvino on http://localhost:8080/v1
 }

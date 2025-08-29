@@ -7,6 +7,11 @@ import (
 	"github.com/canonical/stack-utils/pkg/hardware_info"
 	"github.com/canonical/stack-utils/pkg/validate"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
+)
+
+var (
+	debugMachineInfoFormat string
 )
 
 func init() {
@@ -24,6 +29,7 @@ func init() {
 		ValidArgsFunction: cobra.NoFileCompletions,
 		RunE:              machineInfo,
 	}
+	machineInfoCmd.PersistentFlags().StringVar(&debugMachineInfoFormat, "format", "", "return the machine info as yaml or json")
 	debugCmd.AddCommand(machineInfoCmd)
 
 	validateCmd := &cobra.Command{
@@ -43,13 +49,25 @@ func machineInfo(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get hardware info: %s", err)
 	}
 
-	jsonString, err := json.MarshalIndent(hwInfo, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal to JSON: %s", err)
+	var hwInfoStr string
+	switch debugMachineInfoFormat {
+	case "", "json": // Unset defaults to json
+		jsonString, err := json.MarshalIndent(hwInfo, "", "  ")
+		if err != nil {
+			return fmt.Errorf("failed to marshal to JSON: %s", err)
+		}
+		hwInfoStr = string(jsonString)
+	case "yaml":
+		yamlString, err := yaml.Marshal(hwInfo)
+		if err != nil {
+			return fmt.Errorf("failed to marshal to YAML: %s", err)
+		}
+		hwInfoStr = string(yamlString)
+	default:
+		return fmt.Errorf("unknown format %q", debugMachineInfoFormat)
 	}
 
-	// print the JSON output
-	fmt.Println(string(jsonString))
+	fmt.Println(hwInfoStr)
 
 	return nil
 }
