@@ -20,6 +20,9 @@ func Stack(manifestFilePath string) error {
 
 	_, err := os.Stat(manifestFilePath)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("stack manifest file does not exist: %s", manifestFilePath)
+		}
 		return fmt.Errorf("error getting file info: %v", err)
 	}
 

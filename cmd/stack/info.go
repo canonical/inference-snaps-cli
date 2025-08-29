@@ -13,10 +13,10 @@ import (
 
 func init() {
 	cmd := &cobra.Command{
-		Use:   "info <stack>",
-		Short: "Print information about a stack",
+		Use:   "variant <variant>",
+		Short: "Print information about a variant",
 		// Long:  "",
-		GroupID:           "stacks",
+		GroupID:           "variants",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: infoValidArgs,
 		RunE:              info,
@@ -31,13 +31,13 @@ func info(_ *cobra.Command, args []string) error {
 func infoValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
 	stacksJson, err := snapctl.Get("stacks").Document().Run()
 	if err != nil {
-		fmt.Printf("Error loading stacks: %v", err)
+		fmt.Printf("Error loading variants: %v", err)
 		return nil, cobra.ShellCompDirectiveError
 	}
 
 	stacks, err := parseStacksJson(stacksJson)
 	if err != nil {
-		fmt.Printf("Error parsing stacks: %v", err)
+		fmt.Printf("Error parsing variants: %v", err)
 		return nil, cobra.ShellCompDirectiveError
 	}
 
@@ -52,17 +52,17 @@ func infoValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]cobr
 func stackInfo(stackName string) error {
 	stackJson, err := snapctl.Get("stacks." + stackName).Document().Run()
 	if err != nil {
-		return fmt.Errorf("error loading stack: %v", err)
+		return fmt.Errorf("error loading variant: %v", err)
 	}
 
 	stack, err := parseStackJson(stackJson)
 	if err != nil {
-		return fmt.Errorf("error parsing stack: %v", err)
+		return fmt.Errorf("error parsing variant: %v", err)
 	}
 
 	err = printStackInfo(stack)
 	if err != nil {
-		return fmt.Errorf("error printing stack info: %v", err)
+		return fmt.Errorf("error printing variant info: %v", err)
 	}
 	return nil
 }
@@ -70,7 +70,7 @@ func stackInfo(stackName string) error {
 func printStackInfo(stack types.ScoredStack) error {
 	stackYaml, err := yaml.Marshal(stack)
 	if err != nil {
-		return fmt.Errorf("error converting stack to yaml: %v", err)
+		return fmt.Errorf("error converting variant to yaml: %v", err)
 	}
 
 	err = quick.Highlight(os.Stdout, string(stackYaml), "yaml", "terminal", "colorful")

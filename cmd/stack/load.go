@@ -27,11 +27,11 @@ func load(_ *cobra.Command, _ []string) error {
 }
 
 func loadStacksToSnapOptions() error {
-	fmt.Println("Loading stacks to snap options ...")
+	fmt.Println("Loading variants to snap options ...")
 
 	allStacks, err := selector.LoadStacksFromDir(stacksDir)
 	if err != nil {
-		return fmt.Errorf("error loading stacks: %v", err)
+		return fmt.Errorf("error loading variants: %v", err)
 	}
 
 	// set all stacks as snap options
@@ -39,12 +39,12 @@ func loadStacksToSnapOptions() error {
 	for _, stack := range allStacks {
 		stackJson, err := json.Marshal(stack)
 		if err != nil {
-			return fmt.Errorf("error serializing stacks: %s", err)
+			return fmt.Errorf("error serializing variants: %s", err)
 		}
 
 		err = snapctl.Set("stacks."+stack.Name, string(stackJson)).Document().Run()
 		if err != nil {
-			return fmt.Errorf("error setting stacks option: %s", err)
+			return fmt.Errorf("error setting variants option: %s", err)
 		}
 	}
 
