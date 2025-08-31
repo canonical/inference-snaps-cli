@@ -8,7 +8,7 @@ require (
 	github.com/canonical/go-snapctl v1.0.0-beta.3
 	github.com/fatih/color v1.18.0
 	github.com/go-test/deep v1.1.1
-	github.com/jaypipes/pcidb v1.1.0
+	github.com/jaypipes/pcidb v1.1.1
 	github.com/olekukonko/tablewriter v1.0.9
 	github.com/spf13/cobra v1.9.1
 	golang.org/x/sys v0.35.0
