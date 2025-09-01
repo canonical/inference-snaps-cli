@@ -23,7 +23,7 @@ var (
 	useAssumeYes bool
 )
 
-func init() {
+func addUseCommand() {
 	cmd := &cobra.Command{
 		Use:   "use-variant [<variant>]",
 		Short: "Select a variant",

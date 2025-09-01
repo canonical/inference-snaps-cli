@@ -14,7 +14,7 @@ var (
 	debugMachineInfoFormat string
 )
 
-func init() {
+func addDebugCommand() {
 	debugCmd := &cobra.Command{
 		Use:   "debug",
 		Short: "Debugging commands",

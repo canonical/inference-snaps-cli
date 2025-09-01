@@ -18,6 +18,23 @@ var (
 )
 
 func main() {
+	cobra.EnableCommandSorting = false
+
+	rootCmd.AddGroup(&cobra.Group{ID: "basics", Title: "Basic Commands:"})
+	addStatusCommand()
+	addChatCommand()
+
+	rootCmd.AddGroup(&cobra.Group{ID: "config", Title: "Configuration Commands:"})
+	addGetCommand()
+	addSetCommand()
+	addUnsetCommand()
+
+	rootCmd.AddGroup(&cobra.Group{ID: "variants", Title: "Management Commands:"})
+	addListCommand()
+	addInfoCommand()
+	addUseCommand()
+	addPruneCommand()
+
 	// disable logging timestamps
 	log.SetFlags(0)
 
@@ -26,12 +43,6 @@ func main() {
 		rootCmd.Use = "app"
 	}
 
-	// Define groups for subcommands - used in usage help text
-	rootCmd.AddGroup(
-		&cobra.Group{ID: "basics", Title: "Basic Commands:"},
-		&cobra.Group{ID: "variants", Title: "Management Commands:"},
-		&cobra.Group{ID: "config", Title: "Configuration Commands:"},
-	)
 	// Hide the 'completion' command from help text
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 
