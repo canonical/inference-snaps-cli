@@ -18,7 +18,7 @@ var (
 	listAll bool
 )
 
-func init() {
+func addListCommand() {
 	cmd := &cobra.Command{
 		Use:   "list-variants",
 		Short: "List available variants",

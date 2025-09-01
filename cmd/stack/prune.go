@@ -11,7 +11,7 @@ var (
 	pruneAll bool
 )
 
-func init() {
+func addPruneCommand() {
 	cmd := &cobra.Command{
 		Use:   "prune-variant [<variant>]",
 		Short: "Remove unused variant resources",

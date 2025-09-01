@@ -17,7 +17,7 @@ var (
 	statusFormat string
 )
 
-func init() {
+func addStatusCommand() {
 	cmd := &cobra.Command{
 		Use:               "status",
 		Short:             "Show the status",

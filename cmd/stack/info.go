@@ -11,9 +11,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func init() {
+func addInfoCommand() {
 	cmd := &cobra.Command{
-		Use:   "variant <variant>",
+		Use:   "show-variant <variant>",
 		Short: "Print information about a variant",
 		// Long:  "",
 		GroupID:           "variants",
