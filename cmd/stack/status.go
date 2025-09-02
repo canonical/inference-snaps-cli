@@ -136,7 +136,7 @@ func printServer(stack types.ScoredStack) error {
 	}
 
 	// Depend on existing check server scripts for status
-	checkScript := os.ExpandEnv("$SNAP/stacks/" + stack.Name + "/check-server")
+	checkScript := os.ExpandEnv("$SNAP/bin/check-server")
 	cmd := exec.Command(checkScript)
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("error checking server: %v", err)

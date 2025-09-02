@@ -1,3 +1,20 @@
+/*
+model use --auto
+* Hardware info
+* Score stacks
+* Top stack
+* continue with model use
+
+model use
+* find required components
+* ask user if missing components should be downloaded
+* set stack snap option
+* run stack init to set stack configurations
+* download components
+... can timeout and exit here
+* for each component
+  - run component init to set component configurations
+*/
 package main
 
 import (
@@ -5,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/canonical/go-snapctl"
@@ -226,13 +244,40 @@ func useStack(stackName string, assumeYes bool) error {
 		// This is blocking, but there is a timeout
 		err = downloadComponents(stack.Components)
 		if err != nil {
-			return fmt.Errorf("error downloading components: %v", err)
+			//return fmt.Errorf("error downloading components: %v", err)
+			fmt.Fprintf(os.Stderr, "Error downloading components: %v\n", err)
+		}
+	}
+
+	for _, component := range stack.Components {
+		err = setComponentOptions(component)
+		if err != nil {
+			return fmt.Errorf("error setting component options: %v", err)
 		}
 	}
 
 	// TODO restart service
 
 	return nil
+}
+
+// confirmationPrompt prompts the user for a yes/no answer and returns true for 'y', false for 'n'.
+func confirmationPrompt(prompt string) bool {
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Printf("%s [y/n] ", prompt)
+		input, _ := reader.ReadString('\n')
+		input = strings.ToLower(strings.TrimSpace(input))
+
+		if input == "y" || input == "yes" {
+			return true
+		} else if input == "n" || input == "no" {
+			return false
+		} else {
+			fmt.Println(`Invalid input. Please enter "y" or "n".`)
+		}
+	}
 }
 
 func missingComponents(components []string) ([]string, error) {
@@ -290,24 +335,42 @@ func setStackOptions(stack types.ScoredStack) error {
 		}
 	}
 
+	// Run stack init file if it exists
+	initFilePath := fmt.Sprintf("%s/stacks/%s/init", env.Snap(), stack.Name)
+	_, err = os.Stat(initFilePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// Stack does not have an init file
+			fmt.Fprintf(os.Stderr, "Notice: stack does not have an init file: %s\n", stack.Name)
+		} else {
+			return fmt.Errorf("error checking stack init file %q: %v", initFilePath, err)
+		}
+	} else {
+		_, err := exec.Command(initFilePath).Output()
+		if err != nil {
+			return fmt.Errorf("error executing stack init script: %v", err)
+		}
+	}
+
 	return nil
 }
 
-// confirmationPrompt prompts the user for a yes/no answer and returns true for 'y', false for 'n'.
-func confirmationPrompt(prompt string) bool {
-	reader := bufio.NewReader(os.Stdin)
-
-	for {
-		fmt.Printf("%s [y/n] ", prompt)
-		input, _ := reader.ReadString('\n')
-		input = strings.ToLower(strings.TrimSpace(input))
-
-		if input == "y" || input == "yes" {
-			return true
-		} else if input == "n" || input == "no" {
-			return false
+func setComponentOptions(component string) error {
+	// run component init file if it exists
+	initFilePath := fmt.Sprintf("/snap/%s/components/%s/%s/init", env.SnapInstanceName(), env.SnapRevision(), component)
+	_, err := os.Stat(initFilePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// Component does not have an init file
+			fmt.Fprintf(os.Stderr, "Notice: component does not have an init file: %s", component)
 		} else {
-			fmt.Println(`Invalid input. Please enter "y" or "n".`)
+			return fmt.Errorf("error checking component init file %q: %v", initFilePath, err)
+		}
+	} else {
+		_, err := exec.Command(initFilePath).Output()
+		if err != nil {
+			return fmt.Errorf("error executing component init script: %v", err)
 		}
 	}
+	return nil
 }
