@@ -1,74 +1,12 @@
 package selector
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
-	"github.com/canonical/stack-utils/pkg/hardware_info"
 	"github.com/canonical/stack-utils/pkg/types"
 	"gopkg.in/yaml.v3"
 )
-
-func testValidHw(t *testing.T, stackName string, hwName string) {
-	stackManifestFile := fmt.Sprintf("../../test_data/stacks/%s/stack.yaml", stackName)
-
-	hardwareInfo, err := hardware_info.GetFromRawData(t, hwName, true)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	data, err := os.ReadFile(stackManifestFile)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var stack types.Stack
-	err = yaml.Unmarshal(data, &stack)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Valid hardware for stack
-	score, reasons, err := checkStack(hardwareInfo, stack)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if score == 0 {
-		t.Fatalf("Stack should match: %v", reasons)
-	}
-	t.Logf("Matching score: %d", score)
-
-}
-
-func testInvalidHw(t *testing.T, stackName string, hwName string) {
-	stackManifestFile := fmt.Sprintf("../../test_data/stacks/%s/stack.yaml", stackName)
-
-	hardwareInfo, err := hardware_info.GetFromRawData(t, hwName, true)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	data, err := os.ReadFile(stackManifestFile)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var stack types.Stack
-	err = yaml.Unmarshal(data, &stack)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	score, _, err := checkStack(hardwareInfo, stack)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if score != 0 {
-		t.Fatalf("Stack should not match: %s", hwName)
-	}
-	t.Logf("Matching score: %d", score)
-}
 
 func TestFindStackEmpty(t *testing.T) {
 	hwInfo := types.HwInfo{
@@ -209,6 +147,3 @@ func TestNoCpuInHwInfo(t *testing.T) {
 		t.Fatal("No CPU in hardware_info should return err")
 	}
 }
-
-// Test that the expected stack is chosen from a list of stacks
-// device, stacks, expected stack
