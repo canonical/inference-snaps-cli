@@ -25,7 +25,7 @@ func TestGetFromFiles(t *testing.T) {
 			}
 
 			var hardwareInfo types.HwInfo
-			devicePath := "../../test_data/devices/" + device + "/"
+			devicePath := "../../test_data/machines/" + device + "/"
 			hardwareInfoData, err := os.ReadFile(devicePath + "hardware-info.json")
 			if err != nil {
 				t.Fatal(err)
