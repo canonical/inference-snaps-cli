@@ -65,3 +65,16 @@ func TestGetFromFiles(t *testing.T) {
 		})
 	}
 }
+
+func TestDumpHwInfoFromFiles(t *testing.T) {
+	machine := "system76-addw4"
+	hwInfo, err := GetFromRawData(t, machine, true)
+	if err != nil {
+		t.Error(err)
+	}
+	jsonData, err := json.MarshalIndent(hwInfo, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(jsonData))
+}

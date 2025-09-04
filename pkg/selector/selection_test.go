@@ -21,26 +21,37 @@ type machineTopStack struct {
 
 var topStackSets = []machineTopStack{
 	{
+		// Ampere One machine should use ampere stack, not generic arm neon stack
 		machine:  "ampere-one-m-banshee-12",
 		stacks:   []string{"ampere", "arm-neon"},
 		topStack: "ampere",
 	},
 	{
+		// Ampere Altra machine should use ampere-altra stack, not generic arm neon stack
 		machine:  "hp-proliant-rl300-gen11-altra",
 		stacks:   []string{"ampere-altra", "arm-neon"},
 		topStack: "ampere-altra",
 	},
 	{
+		// Machine with Intel CPU and Intel GPU should use GPU
 		machine:  "mustang",
 		stacks:   []string{"cpu-avx1", "cpu-avx2", "cpu-avx512", "intel-cpu", "intel-gpu"},
 		topStack: "intel-gpu",
 	},
 	{
+		// Machine with Intel iGPU and NVIDIA dGPU should use NVIDIA dGPU
+		machine:  "system76-addw4",
+		stacks:   []string{"cpu-avx1", "cpu-avx2", "generic-cuda", "intel-cpu", "intel-gpu"},
+		topStack: "generic-cuda",
+	},
+	{
+		// Machine with avx2 should prefer avx2 stack
 		machine:  "xps13-7390",
 		stacks:   []string{"cpu-avx1", "cpu-avx2"},
 		topStack: "cpu-avx2",
 	},
 	{
+		// Machine with Intel CPU should prefer intel-cpu stack above generic cpu stacks
 		machine:  "xps13-7390",
 		stacks:   []string{"cpu-avx1", "cpu-avx2", "intel-cpu"},
 		topStack: "intel-cpu",
