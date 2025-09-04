@@ -5,6 +5,7 @@ const (
 	TpuVendor = 200
 
 	PciDevice            = 100
+	PciDeviceExternal    = 50
 	PciDeviceId          = 30
 	PciVendorId          = 20
 	PciDeviceType        = 10

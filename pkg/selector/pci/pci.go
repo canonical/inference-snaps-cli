@@ -41,6 +41,11 @@ func checkPciDevice(stackDevice types.StackDevice, pciDevice types.PciDevice) (i
 		}
 	}
 
+	// Prefer dGPU above iGPU. PCI devices on bus 0 is considered internal, and anything else as external/discrete
+	if pciDevice.BusNumber > 0 {
+		currentDeviceScore += weights.PciDeviceExternal
+	}
+
 	if stackDevice.VendorId != nil {
 		if *stackDevice.VendorId == pciDevice.VendorId {
 			currentDeviceScore += weights.PciVendorId
