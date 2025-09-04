@@ -21,15 +21,35 @@ type machineTopStack struct {
 
 var topStackSets = []machineTopStack{
 	{
+		machine:  "ampere-one-m-banshee-12",
+		stacks:   []string{"ampere", "arm-neon"},
+		topStack: "ampere",
+	},
+	{
+		machine:  "hp-proliant-rl300-gen11-altra",
+		stacks:   []string{"ampere-altra", "arm-neon"},
+		topStack: "ampere-altra",
+	},
+	{
+		machine:  "mustang",
+		stacks:   []string{"cpu-avx1", "cpu-avx2", "cpu-avx512", "intel-cpu", "intel-gpu"},
+		topStack: "intel-gpu",
+	},
+	{
 		machine:  "xps13-7390",
-		stacks:   []string{"cpu-avx1", "cpu-avx2", "cpu-avx512"},
+		stacks:   []string{"cpu-avx1", "cpu-avx2"},
 		topStack: "cpu-avx2",
+	},
+	{
+		machine:  "xps13-7390",
+		stacks:   []string{"cpu-avx1", "cpu-avx2", "intel-cpu"},
+		topStack: "intel-cpu",
 	},
 }
 
 func TestTopStack(t *testing.T) {
 	for _, testSet := range topStackSets {
-		t.Run(testSet.machine+" - "+testSet.topStack, func(t *testing.T) {
+		t.Run(testSet.machine+"/"+testSet.topStack, func(t *testing.T) {
 			var stacks []types.Stack
 			for _, stackName := range testSet.stacks {
 				stackManifestFile := fmt.Sprintf("../../test_data/stacks/%s/stack.yaml", stackName)
