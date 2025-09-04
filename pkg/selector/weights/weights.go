@@ -12,7 +12,7 @@ const (
 	GpuComputeCapability = 10
 
 	CpuDevice = 10
-	CpuModel  = 3
-	CpuVendor = 2
+	CpuModel  = 8
+	CpuVendor = 6
 	CpuFlag   = 1
 )
