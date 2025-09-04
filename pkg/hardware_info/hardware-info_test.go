@@ -67,7 +67,7 @@ func TestGetFromFiles(t *testing.T) {
 }
 
 func TestDumpHwInfoFromFiles(t *testing.T) {
-	machine := "system76-addw4"
+	machine := "i5-3570k+arc-a580+gtx1080ti"
 	hwInfo, err := GetFromRawData(t, machine, true)
 	if err != nil {
 		t.Error(err)
