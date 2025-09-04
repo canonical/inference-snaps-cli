@@ -3,6 +3,7 @@ package selector
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/canonical/stack-utils/pkg/hardware_info"
@@ -33,16 +34,22 @@ var topStackSets = []machineTopStack{
 		topStack: "ampere-altra",
 	},
 	{
+		// Old CPU with Intel dGPU and NVIDIA dGPU - using intel-gpu because nvidia requires newer CPU flags
+		machine:  "i5-3570k+arc-a580+gtx1080ti",
+		stacks:   []string{"cpu-avx1", "cuda-generic", "intel-cpu", "intel-gpu"},
+		topStack: "intel-gpu",
+	},
+	{
 		// Machine with Intel CPU and Intel GPU should use GPU
 		machine:  "mustang",
 		stacks:   []string{"cpu-avx1", "cpu-avx2", "cpu-avx512", "intel-cpu", "intel-gpu"},
 		topStack: "intel-gpu",
 	},
 	{
-		// Machine with Intel iGPU and NVIDIA dGPU should use NVIDIA dGPU
+		// Machine with Intel iGPU and NVIDIA dGPU - always try and offload to dGPU if possible
 		machine:  "system76-addw4",
-		stacks:   []string{"cpu-avx1", "cpu-avx2", "generic-cuda", "intel-cpu", "intel-gpu"},
-		topStack: "generic-cuda",
+		stacks:   []string{"cpu-avx1", "cpu-avx2", "cuda-generic", "intel-cpu", "intel-gpu"},
+		topStack: "cuda-generic",
 	},
 	{
 		// Machine with avx2 should prefer avx2 stack
@@ -94,6 +101,9 @@ func TestTopStack(t *testing.T) {
 			}
 
 			if topStack.Name != testSet.topStack {
+				for _, stack := range scoredStacks {
+					t.Logf("%s=%d %s", stack.Name, stack.Score, strings.Join(stack.Notes, ", "))
+				}
 				t.Errorf("Top stack name: %s, expected: %s", topStack.Name, testSet.topStack)
 			}
 		})

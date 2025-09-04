@@ -191,8 +191,10 @@ var validInvalidSets = map[string]testValidInvalid{
 		},
 	},
 
-	"generic-cuda": {
-		ValidMachines: []string{},
+	"cuda-generic": {
+		ValidMachines: []string{
+			"system76-addw4",
+		},
 		InvalidMachines: []string{
 			"ampere-one-m-banshee-12",
 			"ampere-one-siryn",
@@ -209,7 +211,6 @@ var validInvalidSets = map[string]testValidInvalid{
 			//"orange-pi-rv2",
 			"raspberry-pi-5",
 			"raspberry-pi-5+hailo-8",
-			"system76-addw4",
 			"xps13-7390",
 			"xps13-9350",
 		},
