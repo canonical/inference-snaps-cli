@@ -26,7 +26,7 @@ iterateCpus:
 			if *stackDevice.Architecture == cpu.Architecture {
 				// architecture matches - no additional weight
 			} else {
-				reasons = append(reasons, fmt.Sprintf("Incorrect CPU architecture: %s = %s", *stackDevice.Architecture, cpu.Architecture))
+				reasons = append(reasons, fmt.Sprintf("cpu architecture mismatch: %s", *stackDevice.Architecture))
 				continue
 			}
 		}
@@ -40,7 +40,7 @@ iterateCpus:
 			if *stackDevice.ManufacturerId == cpu.ManufacturerId {
 				cpuScore += weights.CpuVendor
 			} else {
-				reasons = append(reasons, fmt.Sprintf("Manufacturer ID does not match: %s = %s", *stackDevice.ManufacturerId, cpu.ManufacturerId))
+				reasons = append(reasons, fmt.Sprintf("cpu manufacturer id mismatch: %s", *stackDevice.ManufacturerId))
 				continue
 			}
 		}
@@ -48,7 +48,7 @@ iterateCpus:
 		// amd64 flags
 		for _, flag := range stackDevice.Flags {
 			if !slices.Contains(cpu.Flags, flag) {
-				reasons = append(reasons, fmt.Sprintf("Required flag not found: %s", flag))
+				reasons = append(reasons, fmt.Sprintf("cpu flag not found: %s", flag))
 				continue iterateCpus
 			}
 			cpuScore += weights.CpuFlag
@@ -63,7 +63,7 @@ iterateCpus:
 			if *stackDevice.ImplementerId == cpu.ImplementerId {
 				cpuScore += weights.CpuVendor
 			} else {
-				reasons = append(reasons, fmt.Sprintf("Implementer ID does not match: %x = %x", *stackDevice.ImplementerId, cpu.ImplementerId))
+				reasons = append(reasons, fmt.Sprintf("cpu implementer id mismatch: %x", *stackDevice.ImplementerId))
 				continue
 			}
 		}
@@ -73,7 +73,7 @@ iterateCpus:
 			if *stackDevice.PartNumber == cpu.PartNumber {
 				cpusScore += weights.CpuModel
 			} else {
-				reasons = append(reasons, fmt.Sprintf("Part Number does not match: %x = %x", *stackDevice.PartNumber, cpu.PartNumber))
+				reasons = append(reasons, fmt.Sprintf("cpu part number mismatch: %x", *stackDevice.PartNumber))
 				continue
 			}
 		}
@@ -81,7 +81,7 @@ iterateCpus:
 		// arm64 features
 		for _, feature := range stackDevice.Features {
 			if !slices.Contains(cpu.Features, feature) {
-				reasons = append(reasons, fmt.Sprintf("Required feature not found: %s", feature))
+				reasons = append(reasons, fmt.Sprintf("cpu feature not found: %s", feature))
 				continue iterateCpus
 			}
 			cpuScore += weights.CpuFlag

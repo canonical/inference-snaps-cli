@@ -8,6 +8,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+/*
+If the model snap has no stacks defined, scoring should pass, but finding a top stack should not be possible.
+*/
 func TestFindStackEmpty(t *testing.T) {
 	hwInfo := types.HwInfo{
 		Memory: types.MemoryInfo{
@@ -32,10 +35,10 @@ func TestFindStackEmpty(t *testing.T) {
 	}
 	topStack, err := TopStack(scoredStacks)
 	if err == nil {
-		t.Fatal("Empty stack dir should return an error for top stack")
+		t.Fatal("TopStack should return an error if no stacks are provided")
 	}
 	if topStack != nil {
-		t.Fatal("No stack should be found in empty stacks dir")
+		t.Fatal("No top stack should be returned if no stacks are provided")
 	}
 }
 
