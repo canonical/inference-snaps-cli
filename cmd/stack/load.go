@@ -42,7 +42,7 @@ func loadStacksToSnapOptions() error {
 			return fmt.Errorf("error serializing engines: %s", err)
 		}
 
-		err = snapctl.Set("stacks."+stack.Name, string(stackJson)).Document().Run()
+		err = snapctl.Set("engines."+stack.Name, string(stackJson)).Document().Run()
 		if err != nil {
 			return fmt.Errorf("error setting engines option: %s", err)
 		}

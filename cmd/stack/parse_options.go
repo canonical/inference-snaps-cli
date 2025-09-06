@@ -13,7 +13,7 @@ func parseStacksJson(stacksJson string) ([]types.ScoredStack, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error parsing json: %v", err)
 	}
-	if stacksMap, ok := stacksOption["stacks"]; ok {
+	if stacksMap, ok := stacksOption["engines"]; ok {
 		var stacksSlice []types.ScoredStack
 		for _, stack := range stacksMap {
 			stacksSlice = append(stacksSlice, stack)

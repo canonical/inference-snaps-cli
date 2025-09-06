@@ -29,7 +29,7 @@ func info(_ *cobra.Command, args []string) error {
 }
 
 func infoValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
-	stacksJson, err := snapctl.Get("stacks").Document().Run()
+	stacksJson, err := snapctl.Get("engines").Document().Run()
 	if err != nil {
 		fmt.Printf("Error loading engines: %v", err)
 		return nil, cobra.ShellCompDirectiveError
@@ -50,7 +50,7 @@ func infoValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]cobr
 }
 
 func stackInfo(stackName string) error {
-	stackJson, err := snapctl.Get("stacks." + stackName).Document().Run()
+	stackJson, err := snapctl.Get("engines." + stackName).Document().Run()
 	if err != nil {
 		return fmt.Errorf("error loading engine: %v", err)
 	}

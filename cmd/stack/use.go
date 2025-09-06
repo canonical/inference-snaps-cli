@@ -44,7 +44,7 @@ func addUseCommand() {
 }
 
 func useValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
-	stacksJson, err := snapctl.Get("stacks").Document().Run()
+	stacksJson, err := snapctl.Get("engines").Document().Run()
 	if err != nil {
 		fmt.Printf("Error loading engines: %v", err)
 		return nil, cobra.ShellCompDirectiveError
@@ -153,7 +153,7 @@ func stacksToSnapOptions(scoredStacks []types.ScoredStack) error {
 			return fmt.Errorf("error serializing engines: %v", err)
 		}
 
-		err = snapctl.Set("stacks."+stack.Name, string(stackJson)).Document().Run()
+		err = snapctl.Set("engines."+stack.Name, string(stackJson)).Document().Run()
 		if err != nil {
 			return fmt.Errorf("error setting engine option: %v", err)
 		}
@@ -165,7 +165,7 @@ func stacksToSnapOptions(scoredStacks []types.ScoredStack) error {
 useStack changes the stack that is used by the snap
 */
 func useStack(stackName string, assumeYes bool) error {
-	stackJson, err := snapctl.Get("stacks." + stackName).Document().Run()
+	stackJson, err := snapctl.Get("engines." + stackName).Document().Run()
 	if err != nil {
 		return fmt.Errorf("error loading engine: %v", err)
 	}
@@ -272,7 +272,7 @@ func componentInstalled(component string) (bool, error) {
 
 func setStackOptions(stack types.ScoredStack) error {
 	// set stack config option
-	err := snapctl.Set("stack", stack.Name).Run()
+	err := snapctl.Set("engine", stack.Name).Run()
 	if err != nil {
 		return fmt.Errorf(`error setting snap option "engine": %v`, err)
 	}

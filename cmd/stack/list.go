@@ -40,7 +40,7 @@ func list(_ *cobra.Command, _ []string) error {
 }
 
 func listStacks(all bool) error {
-	stacksJson, err := snapctl.Get("stacks").Document().Run()
+	stacksJson, err := snapctl.Get("engines").Document().Run()
 	if err != nil {
 		return fmt.Errorf("error loading engines: %v", err)
 	}

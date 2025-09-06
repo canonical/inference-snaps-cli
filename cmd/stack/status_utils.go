@@ -22,7 +22,7 @@ type Status struct {
 }
 
 func scoredStacksFromOptions() ([]types.ScoredStack, error) {
-	stacksJson, err := snapctl.Get("stacks").Document().Run()
+	stacksJson, err := snapctl.Get("engines").Document().Run()
 	if err != nil {
 		return nil, fmt.Errorf("error loading engines: %v", err)
 	}
@@ -43,12 +43,12 @@ func scoredStacksFromOptions() ([]types.ScoredStack, error) {
 }
 
 func selectedStackFromOptions() (types.ScoredStack, error) {
-	selectedStackName, err := snapctl.Get("stack").Run()
+	selectedStackName, err := snapctl.Get("engine").Run()
 	if err != nil {
 		return types.ScoredStack{}, fmt.Errorf("error loading selected engine: %v", err)
 	}
 
-	stackJson, err := snapctl.Get("stacks." + selectedStackName).Document().Run()
+	stackJson, err := snapctl.Get("engines." + selectedStackName).Document().Run()
 	if err != nil {
 		return types.ScoredStack{}, fmt.Errorf("error loading engine: %v", err)
 	}
