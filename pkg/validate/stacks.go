@@ -14,8 +14,8 @@ import (
 
 func Stack(manifestFilePath string) error {
 
-	if !strings.HasSuffix(manifestFilePath, "stack.yaml") {
-		return fmt.Errorf("stack manifest file must be called stack.yaml: %s", manifestFilePath)
+	if !strings.HasSuffix(manifestFilePath, "engine.yaml") {
+		return fmt.Errorf("stack manifest file must be called engine.yaml: %s", manifestFilePath)
 	}
 
 	_, err := os.Stat(manifestFilePath)
@@ -42,7 +42,7 @@ func stackNameFromPath(manifestFilePath string) string {
 	if len(parts) < 2 {
 		return ""
 	}
-	return parts[len(parts)-2] // second last part: stack-name/stack.yaml
+	return parts[len(parts)-2] // second last part: stack-name/engine.yaml
 }
 
 func validateStackYaml(expectedStackName string, yamlData []byte) error {

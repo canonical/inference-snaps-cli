@@ -29,7 +29,7 @@ func load(_ *cobra.Command, _ []string) error {
 func loadStacksToSnapOptions() error {
 	fmt.Println("Loading engines to snap options ...")
 
-	allStacks, err := selector.LoadStacksFromDir(enginesDir)
+	allStacks, err := selector.LoadManifestsFromDir(enginesDir)
 	if err != nil {
 		return fmt.Errorf("error loading engines: %v", err)
 	}

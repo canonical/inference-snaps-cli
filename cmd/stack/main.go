@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	enginesDir = env.Snap() + "/stacks" // TODO change to "engines"
+	enginesDir = env.Snap() + "/engines"
 	// rootCmd is the base command
 	// It gets populated with subcommands via init functions
 	rootCmd = &cobra.Command{

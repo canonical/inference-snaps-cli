@@ -33,6 +33,7 @@ func scoredStacksFromOptions() ([]types.ScoredStack, error) {
 	}
 
 	// map to slice
+	// TODO: Not a map. This is appending a slice to another
 	var stacks []types.ScoredStack
 	for _, stack := range stacksMap {
 		stacks = append(stacks, stack)
@@ -118,7 +119,7 @@ func serverApiUrls(stack types.ScoredStack) (map[string]string, error) {
 
 func serverStatusCode(stackName string) (int, error) {
 	// Depend on existing check server scripts for status
-	checkScript := os.ExpandEnv("$SNAP/stacks/" + stackName + "/check-server")
+	checkScript := os.ExpandEnv("$SNAP/engines/" + stackName + "/check-server")
 	cmd := exec.Command(checkScript)
 	if err := cmd.Start(); err != nil {
 		return 0, fmt.Errorf("error checking server: %v", err)

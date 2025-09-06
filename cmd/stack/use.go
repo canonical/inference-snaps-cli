@@ -125,7 +125,7 @@ func use(_ *cobra.Command, args []string) error {
 }
 
 func scoreStacks() ([]types.ScoredStack, error) {
-	allStacks, err := selector.LoadStacksFromDir(enginesDir)
+	allStacks, err := selector.LoadManifestsFromDir(enginesDir)
 	if err != nil {
 		return nil, fmt.Errorf("error loading engines: %v", err)
 	}
