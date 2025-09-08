@@ -23,15 +23,15 @@ func downloadComponents(components []string) error {
 		stopProgress()
 		if err != nil {
 			if strings.Contains(err.Error(), snapdUnknownSnapError) {
-				return fmt.Errorf("snap not known to the store. Install a local build of component: %s", component)
+				return fmt.Errorf("snap not known to the store: install a local build of %q", component)
 			} else if strings.Contains(err.Error(), snapdTimeoutError) {
-				msg := "timeout exceeded while waiting for download of: %s" +
+				msg := "timeout exceeded while waiting for download of %q" +
 					"\nPlease monitor the progress using the 'snap changes' command and continue when the component installation is complete."
 				return fmt.Errorf(msg, component)
 			} else if strings.Contains(err.Error(), "already installed") {
 				continue
 			} else {
-				return fmt.Errorf("error downloading component: %s: %s", component, err)
+				return fmt.Errorf("error downloading %q: %s", component, err)
 			}
 		}
 		fmt.Println("Downloaded " + component)

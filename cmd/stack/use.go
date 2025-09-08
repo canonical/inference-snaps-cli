@@ -236,7 +236,7 @@ func useStack(stackName string, assumeYes bool) error {
 		return fmt.Errorf("error restarting snap service: %v", err)
 	}
 
-	fmt.Println("Engine successfully changed to", stackName)
+	fmt.Printf("Engine successfully changed to %q\n", stackName)
 	return nil
 }
 
