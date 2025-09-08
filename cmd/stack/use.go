@@ -230,8 +230,13 @@ func useStack(stackName string, assumeYes bool) error {
 		}
 	}
 
-	// TODO restart service
+	fmt.Println("Restarting the snap service ...")
+	err = snapctl.Restart(snapInstanceName).Run()
+	if err != nil {
+		return fmt.Errorf("error restarting snap service: %v", err)
+	}
 
+	fmt.Println("Engine successfully changed to", stackName)
 	return nil
 }
 
