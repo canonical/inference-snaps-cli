@@ -42,7 +42,7 @@ func installComponents(components []string) error {
 }
 
 func startProgressSpinner(prefix string) (stop func()) {
-	s := spinner.New(spinner.CharSets[9], time.Second)
+	s := spinner.New(spinner.CharSets[9], time.Millisecond*200)
 	s.Prefix = prefix
 	s.Start()
 
