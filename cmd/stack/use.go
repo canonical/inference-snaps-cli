@@ -224,9 +224,9 @@ func useStack(stackName string, assumeYes bool) error {
 
 	if len(components) > 0 {
 		// This is blocking, but there is a timeout
-		err = downloadComponents(stack.Components)
+		err = installComponents(stack.Components)
 		if err != nil {
-			return fmt.Errorf("error downloading components: %v", err)
+			return fmt.Errorf("error installing components: %v", err)
 		}
 	}
 
