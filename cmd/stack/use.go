@@ -230,6 +230,7 @@ func useStack(stackName string, assumeYes bool) error {
 		}
 	}
 
+	fmt.Println()
 	fmt.Println("Restarting the snap service ...")
 	err = snapctl.Restart(snapInstanceName).Run()
 	if err != nil {
