@@ -1,10 +1,5 @@
 package types
 
-type StackSelection struct {
-	Stacks   []ScoredStack `json:"stacks"`
-	TopStack string        `json:"top-stack"`
-}
-
 type ScoredStack struct {
 	Stack      `yaml:",inline"`
 	Score      int      `yaml:"score" json:"score"`

@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func Stack(manifestFilePath string) error {
+func Engine(manifestFilePath string) error {
 
 	if !strings.HasSuffix(manifestFilePath, "engine.yaml") {
 		return fmt.Errorf("stack manifest file must be called engine.yaml: %s", manifestFilePath)
@@ -32,12 +32,12 @@ func Stack(manifestFilePath string) error {
 	}
 
 	// Get stack name from path
-	stackName := stackNameFromPath(manifestFilePath)
+	stackName := engineNameFromPath(manifestFilePath)
 
-	return validateStackYaml(stackName, yamlData)
+	return validateEngineManifestYaml(stackName, yamlData)
 }
 
-func stackNameFromPath(manifestFilePath string) string {
+func engineNameFromPath(manifestFilePath string) string {
 	parts := utils.SplitPathIntoDirectories(manifestFilePath)
 	if len(parts) < 2 {
 		return ""
@@ -45,7 +45,7 @@ func stackNameFromPath(manifestFilePath string) string {
 	return parts[len(parts)-2] // second last part: stack-name/engine.yaml
 }
 
-func validateStackYaml(expectedStackName string, yamlData []byte) error {
+func validateEngineManifestYaml(expectedStackName string, yamlData []byte) error {
 	yamlData = bytes.TrimSpace(yamlData)
 	if len(yamlData) == 0 {
 		return errors.New("empty yaml data")
@@ -63,18 +63,18 @@ func validateStackYaml(expectedStackName string, yamlData []byte) error {
 		return fmt.Errorf("error decoding: %v", err)
 	}
 
-	return validateStackStruct(expectedStackName, stack)
+	return validateEngineStruct(expectedStackName, stack)
 }
 
-func validateStackStruct(expectedStackName string, stack types.Stack) error {
+func validateEngineStruct(expectedEngineName string, stack types.Stack) error {
 	if stack.Name == "" {
 		return fmt.Errorf("required field is not set: name")
 	}
 
-	// Only do stack name matching test if expected name is set
-	if expectedStackName != "" {
-		if stack.Name != expectedStackName {
-			return fmt.Errorf("stack dir name should equal name in manifest: %s != %s", expectedStackName, stack.Name)
+	// Only do engine name matching test if expected name is set
+	if expectedEngineName != "" {
+		if stack.Name != expectedEngineName {
+			return fmt.Errorf("engine directory name should match name in manifest: %s != %s", expectedEngineName, stack.Name)
 		}
 	}
 

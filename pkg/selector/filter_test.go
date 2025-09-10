@@ -29,13 +29,13 @@ func TestFindStackEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	scoredStacks, err := ScoreStacks(hwInfo, allStacks)
+	scoredStacks, err := ScoreEngines(hwInfo, allStacks)
 	if err != nil {
 		t.Fatal(err)
 	}
-	topStack, err := TopStack(scoredStacks)
+	topStack, err := TopEngine(scoredStacks)
 	if err == nil {
-		t.Fatal("TopStack should return an error if no stacks are provided")
+		t.Fatal("TopEngine should return an error if no stacks are provided")
 	}
 	if topStack != nil {
 		t.Fatal("No top stack should be returned if no stacks are provided")

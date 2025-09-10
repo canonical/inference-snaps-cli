@@ -36,7 +36,7 @@ func addDebugCommand() {
 		Use:   "validate-engines",
 		Short: "Validate engine manifest files",
 		Args:  cobra.MinimumNArgs(1),
-		RunE:  validateStackManifests,
+		RunE:  validateEngineManifests,
 	}
 	debugCmd.AddCommand(validateCmd)
 
@@ -72,14 +72,14 @@ func machineInfo(_ *cobra.Command, args []string) error {
 	return nil
 }
 
-func validateStackManifests(_ *cobra.Command, args []string) error {
+func validateEngineManifests(_ *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("no engine manifest specified")
 	}
 
 	allManifestsValid := true
 	for _, manifestPath := range args {
-		err := validate.Stack(manifestPath)
+		err := validate.Engine(manifestPath)
 		if err != nil {
 			allManifestsValid = false
 			fmt.Printf("❌ %s: %s\n", manifestPath, err)

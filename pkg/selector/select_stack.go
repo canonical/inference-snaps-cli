@@ -14,9 +14,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var ErrorNoCompatibleStacks = errors.New("no compatible stacks found")
+var ErrorNoCompatibleEngine = errors.New("no compatible stacks found")
 
-func TopStack(scoredStacks []types.ScoredStack) (*types.ScoredStack, error) {
+func TopEngine(scoredStacks []types.ScoredStack) (*types.ScoredStack, error) {
 	var compatibleStacks []types.ScoredStack
 
 	for _, stack := range scoredStacks {
@@ -26,7 +26,7 @@ func TopStack(scoredStacks []types.ScoredStack) (*types.ScoredStack, error) {
 	}
 
 	if len(compatibleStacks) == 0 {
-		return nil, ErrorNoCompatibleStacks
+		return nil, ErrorNoCompatibleEngine
 	}
 
 	// Sort by score (high to low) and return highest match
@@ -74,7 +74,7 @@ func LoadManifestsFromDir(manifestsDir string) ([]types.Stack, error) {
 	return manifests, nil
 }
 
-func ScoreStacks(hardwareInfo types.HwInfo, stacks []types.Stack) ([]types.ScoredStack, error) {
+func ScoreEngines(hardwareInfo types.HwInfo, stacks []types.Stack) ([]types.ScoredStack, error) {
 	var scoredStacks []types.ScoredStack
 
 	for _, currentStack := range stacks {

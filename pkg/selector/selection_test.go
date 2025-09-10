@@ -90,12 +90,12 @@ func TestTopStack(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			scoredStacks, err := ScoreStacks(hardwareInfo, stacks)
+			scoredStacks, err := ScoreEngines(hardwareInfo, stacks)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			topStack, err := TopStack(scoredStacks)
+			topStack, err := TopEngine(scoredStacks)
 			if err != nil {
 				t.Fatal(err)
 			}
