@@ -77,6 +77,12 @@ parts:
     source: .
     source-type: local
 
+  engines:
+    plugin: dump
+    source: test_data/engines
+    organize:
+      "*": engines/
+
 apps:
   stack-utils:
     plugs:
