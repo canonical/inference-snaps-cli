@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/canonical/go-snapctl/env"
-	"github.com/canonical/stack-utils/cmd/cli"
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +37,7 @@ func main() {
 	addUseCommand()
 
 	// other commands (help is added by default)
-	cli.addDebugCommand()
+	addDebugCommand()
 
 	// disable logging timestamps
 	log.SetFlags(0)

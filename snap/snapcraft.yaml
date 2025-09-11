@@ -92,11 +92,6 @@ apps:
       - opengl
     command: bin/cli
 
-  select-engine:
-    plugs:
-      - home
-    command: bin/select-engine
-
   clinfo:
     plugs:
       - hardware-observe
