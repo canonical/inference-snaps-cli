@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/canonical/stack-utils/pkg/types"
+	"github.com/canonical/stack-utils/pkg/engines"
 )
 
-func parseEnginesJson(enginesJson string) ([]types.ScoredStack, error) {
-	var enginesOption map[string]map[string]types.ScoredStack
+func parseEnginesJson(enginesJson string) ([]engines.ScoredManifest, error) {
+	var enginesOption map[string]map[string]engines.ScoredManifest
 	err := json.Unmarshal([]byte(enginesJson), &enginesOption)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing json: %v", err)
 	}
 	if enginesMap, ok := enginesOption["engines"]; ok {
-		var enginesSlice []types.ScoredStack
+		var enginesSlice []engines.ScoredManifest
 		for _, engine := range enginesMap {
 			enginesSlice = append(enginesSlice, engine)
 		}
@@ -23,25 +23,25 @@ func parseEnginesJson(enginesJson string) ([]types.ScoredStack, error) {
 	return nil, fmt.Errorf("no engines found")
 }
 
-func parseEngineJson(engineJson string) (types.ScoredStack, error) {
-	var engineOption map[string]types.ScoredStack
+func parseEngineJson(engineJson string) (engines.ScoredManifest, error) {
+	var engineOption map[string]engines.ScoredManifest
 
 	err := json.Unmarshal([]byte(engineJson), &engineOption)
 	if err != nil {
-		return types.ScoredStack{}, fmt.Errorf("error parsing json: %v", err)
+		return engines.ScoredManifest{}, fmt.Errorf("error parsing json: %v", err)
 	}
 
 	if len(engineOption) == 0 {
-		return types.ScoredStack{}, fmt.Errorf("engine not found")
+		return engines.ScoredManifest{}, fmt.Errorf("engine not found")
 	}
 
 	if len(engineOption) > 1 {
-		return types.ScoredStack{}, fmt.Errorf("only one engine expected in json")
+		return engines.ScoredManifest{}, fmt.Errorf("only one engine expected in json")
 	}
 
 	for _, engine := range engineOption {
 		return engine, nil
 	}
 
-	return types.ScoredStack{}, fmt.Errorf("unexpected error occurred")
+	return engines.ScoredManifest{}, fmt.Errorf("unexpected error occurred")
 }

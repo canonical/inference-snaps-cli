@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/canonical/stack-utils/pkg/engines"
 	"github.com/canonical/stack-utils/pkg/selector"
 	"github.com/canonical/stack-utils/pkg/types"
 
@@ -15,8 +16,8 @@ import (
 )
 
 type EngineSelection struct {
-	Engines   []types.ScoredStack `json:"engines"`
-	TopEngine string              `json:"top-engine"`
+	Engines   []engines.ScoredManifest `json:"engines"`
+	TopEngine string                   `json:"top-engine"`
 }
 
 func main() {

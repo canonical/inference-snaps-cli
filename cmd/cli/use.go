@@ -9,10 +9,10 @@ import (
 
 	"github.com/canonical/go-snapctl"
 	"github.com/canonical/go-snapctl/env"
+	"github.com/canonical/stack-utils/pkg/engines"
 	"github.com/canonical/stack-utils/pkg/hardware_info"
 	"github.com/canonical/stack-utils/pkg/selector"
 	"github.com/canonical/stack-utils/pkg/snap_store"
-	"github.com/canonical/stack-utils/pkg/types"
 	"github.com/canonical/stack-utils/pkg/utils"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
@@ -124,7 +124,7 @@ func use(_ *cobra.Command, args []string) error {
 	return nil
 }
 
-func scoreEngines() ([]types.ScoredStack, error) {
+func scoreEngines() ([]engines.ScoredManifest, error) {
 	allEngines, err := selector.LoadManifestsFromDir(enginesDir)
 	if err != nil {
 		return nil, fmt.Errorf("error loading engines: %v", err)
@@ -145,7 +145,7 @@ func scoreEngines() ([]types.ScoredStack, error) {
 	return scoredEngines, nil
 }
 
-func enginesToSnapOptions(scoredEngines []types.ScoredStack) error {
+func enginesToSnapOptions(scoredEngines []engines.ScoredManifest) error {
 	// set all scored engines as snap options
 	for _, engine := range scoredEngines {
 		engineJson, err := json.Marshal(engine)
@@ -287,7 +287,7 @@ func componentInstalled(component string) (bool, error) {
 	}
 }
 
-func setEngineOptions(engine types.ScoredStack) error {
+func setEngineOptions(engine engines.ScoredManifest) error {
 	// set engine config option
 	err := snapctl.Set("engine", engine.Name).Run()
 	if err != nil {

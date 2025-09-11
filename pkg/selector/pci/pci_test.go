@@ -3,6 +3,7 @@ package pci
 import (
 	"testing"
 
+	"github.com/canonical/stack-utils/pkg/engines"
 	"github.com/canonical/stack-utils/pkg/types"
 )
 
@@ -21,7 +22,7 @@ func TestCheckGpuVendor(t *testing.T) {
 		},
 	}
 
-	stackDevice := types.StackDevice{
+	stackDevice := engines.Device{
 		Type:     "gpu",
 		Bus:      "pci",
 		VendorId: &gpuVendorId,
@@ -69,7 +70,7 @@ func TestCheckGpuVram(t *testing.T) {
 	}
 
 	stackVram := "4G"
-	stackDevice := types.StackDevice{
+	stackDevice := engines.Device{
 		Type:     "gpu",
 		Bus:      "pci",
 		VendorId: nil,

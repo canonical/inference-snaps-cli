@@ -3,11 +3,12 @@ package pci
 import (
 	"fmt"
 
+	"github.com/canonical/stack-utils/pkg/engines"
 	"github.com/canonical/stack-utils/pkg/selector/weights"
 	"github.com/canonical/stack-utils/pkg/types"
 )
 
-func Match(stackDevice types.StackDevice, pcis []types.PciDevice) (int, []string, error) {
+func Match(stackDevice engines.Device, pcis []types.PciDevice) (int, []string, error) {
 	var reasons []string
 	maxDeviceScore := 0
 
@@ -28,7 +29,7 @@ func Match(stackDevice types.StackDevice, pcis []types.PciDevice) (int, []string
 	return maxDeviceScore, reasons, nil
 }
 
-func checkPciDevice(stackDevice types.StackDevice, pciDevice types.PciDevice) (int, []string, error) {
+func checkPciDevice(stackDevice engines.Device, pciDevice types.PciDevice) (int, []string, error) {
 	var reasons []string
 	currentDeviceScore := 0
 

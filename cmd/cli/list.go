@@ -6,7 +6,7 @@ import (
 	"sort"
 
 	"github.com/canonical/go-snapctl"
-	"github.com/canonical/stack-utils/pkg/types"
+	"github.com/canonical/stack-utils/pkg/engines"
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
 	"github.com/olekukonko/tablewriter/renderer"
@@ -58,7 +58,7 @@ func listEngines(all bool) error {
 	return nil
 }
 
-func printEngines(engines []types.ScoredStack, all bool) error {
+func printEngines(engines []engines.ScoredManifest, all bool) error {
 
 	var headerRow = []string{"engine", "vendor", "description"}
 	if all {

@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/canonical/stack-utils/pkg/engines"
 	"github.com/canonical/stack-utils/pkg/hardware_info"
-	"github.com/canonical/stack-utils/pkg/types"
 	"gopkg.in/yaml.v3"
 )
 
@@ -296,7 +296,7 @@ func testValidHw(t *testing.T, stackName string, hwName string) {
 		t.Fatal(err)
 	}
 
-	var stack types.Stack
+	var stack engines.Manifest
 	err = yaml.Unmarshal(data, &stack)
 	if err != nil {
 		t.Fatal(err)
@@ -327,7 +327,7 @@ func testInvalidHw(t *testing.T, stackName string, hwName string) {
 		t.Fatal(err)
 	}
 
-	var stack types.Stack
+	var stack engines.Manifest
 	err = yaml.Unmarshal(data, &stack)
 	if err != nil {
 		t.Fatal(err)

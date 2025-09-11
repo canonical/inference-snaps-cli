@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/canonical/stack-utils/pkg/engines"
 	"github.com/canonical/stack-utils/pkg/selector/weights"
 	"github.com/canonical/stack-utils/pkg/types"
 )
@@ -13,7 +14,7 @@ Match takes a Stack Manifest Device with type CPU, and checks if it matches any 
 A score, a string slice with reasons and an error are returned. If there is a matching CPU on the system, the score will be positive and the error will be nil.
 If no CPU is found, the score will be zero and there will be one or more reasons for the mismatch. In case of a runtime error, the error value will be non-nil.
 */
-func Match(stackDevice types.StackDevice, cpus []types.CpuInfo) (int, []string, error) {
+func Match(stackDevice engines.Device, cpus []types.CpuInfo) (int, []string, error) {
 	cpusScore := 0
 	var reasons []string
 

@@ -4,12 +4,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/canonical/stack-utils/pkg/engines"
 	"github.com/canonical/stack-utils/pkg/types"
 )
 
 func TestCheckCpuVendor(t *testing.T) {
 	manufacturerId := "GenuineIntel"
-	stackDevice := types.StackDevice{
+	stackDevice := engines.Device{
 		Type:           "cpu",
 		Bus:            "",
 		ManufacturerId: &manufacturerId,
@@ -42,7 +43,7 @@ func TestCheckCpuVendor(t *testing.T) {
 
 func TestCheckCpuFlags(t *testing.T) {
 	manufacturerId := "GenuineIntel"
-	stackDevice := types.StackDevice{
+	stackDevice := engines.Device{
 		Type:           "cpu",
 		Bus:            "",
 		ManufacturerId: &manufacturerId,

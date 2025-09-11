@@ -8,7 +8,7 @@ import (
 	"os/exec"
 
 	"github.com/canonical/go-snapctl"
-	"github.com/canonical/stack-utils/pkg/types"
+	"github.com/canonical/stack-utils/pkg/engines"
 )
 
 const (
@@ -21,7 +21,7 @@ type Status struct {
 	Endpoints map[string]string `json:"endpoints" yaml:"endpoints"`
 }
 
-func scoredEnginesFromOptions() ([]types.ScoredStack, error) {
+func scoredEnginesFromOptions() ([]engines.ScoredManifest, error) {
 	engineJson, err := snapctl.Get("engines").Document().Run()
 	if err != nil {
 		return nil, fmt.Errorf("error loading engines: %v", err)
@@ -35,20 +35,20 @@ func scoredEnginesFromOptions() ([]types.ScoredStack, error) {
 	return engines, nil
 }
 
-func selectedEngineFromOptions() (types.ScoredStack, error) {
+func selectedEngineFromOptions() (engines.ScoredManifest, error) {
 	selectedEngineName, err := snapctl.Get("engine").Run()
 	if err != nil {
-		return types.ScoredStack{}, fmt.Errorf("error loading selected engine: %v", err)
+		return engines.ScoredManifest{}, fmt.Errorf("error loading selected engine: %v", err)
 	}
 
 	enginesJson, err := snapctl.Get("engines." + selectedEngineName).Document().Run()
 	if err != nil {
-		return types.ScoredStack{}, fmt.Errorf("error loading engine: %v", err)
+		return engines.ScoredManifest{}, fmt.Errorf("error loading engine: %v", err)
 	}
 
 	engine, err := parseEngineJson(enginesJson)
 	if err != nil {
-		return types.ScoredStack{}, fmt.Errorf("error parsing engine: %v", err)
+		return engines.ScoredManifest{}, fmt.Errorf("error parsing engine: %v", err)
 	}
 
 	return engine, nil
@@ -88,7 +88,7 @@ func statusStruct() (*Status, error) {
 	return &statusStr, nil
 }
 
-func serverApiUrls(engine types.ScoredStack) (map[string]string, error) {
+func serverApiUrls(engine engines.ScoredManifest) (map[string]string, error) {
 	// Build API URL
 	apiBasePath := "v1"
 	if val, ok := engine.Configurations["http.base-path"]; ok {

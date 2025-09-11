@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/canonical/stack-utils/pkg/engines"
 	"github.com/canonical/stack-utils/pkg/types"
 	"gopkg.in/yaml.v3"
 )
@@ -53,7 +54,7 @@ func TestDiskCheck(t *testing.T) {
 	hwInfo.Disk["/var/lib/snapd/snaps"] = dirStat
 
 	stackDisk := "300M"
-	stack := types.Stack{DiskSpace: &stackDisk}
+	stack := engines.Manifest{DiskSpace: &stackDisk}
 
 	result, reasons, err := checkStack(hwInfo, stack)
 	if err != nil {
@@ -86,7 +87,7 @@ func TestMemoryCheck(t *testing.T) {
 	}
 
 	stackMemory := "300M"
-	stack := types.Stack{Memory: &stackMemory}
+	stack := engines.Manifest{Memory: &stackMemory}
 
 	result, reasons, err := checkStack(hwInfo, stack)
 	if err != nil {
@@ -116,7 +117,7 @@ func TestNoCpuInHwInfo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var currentStack types.Stack
+	var currentStack engines.Manifest
 	err = yaml.Unmarshal(data, &currentStack)
 	if err != nil {
 		t.Fatal(err)

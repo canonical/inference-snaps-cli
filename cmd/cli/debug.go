@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/canonical/stack-utils/pkg/engines"
 	"github.com/canonical/stack-utils/pkg/hardware_info"
-	"github.com/canonical/stack-utils/pkg/validate"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -79,7 +79,7 @@ func validateEngineManifests(_ *cobra.Command, args []string) error {
 
 	allManifestsValid := true
 	for _, manifestPath := range args {
-		err := validate.Engine(manifestPath)
+		err := engines.Validate(manifestPath)
 		if err != nil {
 			allManifestsValid = false
 			fmt.Printf("❌ %s: %s\n", manifestPath, err)

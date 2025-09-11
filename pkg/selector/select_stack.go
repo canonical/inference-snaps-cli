@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/canonical/stack-utils/pkg/engines"
 	"github.com/canonical/stack-utils/pkg/selector/cpu"
 	"github.com/canonical/stack-utils/pkg/selector/pci"
 	"github.com/canonical/stack-utils/pkg/types"
@@ -16,8 +17,8 @@ import (
 
 var ErrorNoCompatibleEngine = errors.New("no compatible stacks found")
 
-func TopEngine(scoredStacks []types.ScoredStack) (*types.ScoredStack, error) {
-	var compatibleStacks []types.ScoredStack
+func TopEngine(scoredStacks []engines.ScoredManifest) (*engines.ScoredManifest, error) {
+	var compatibleStacks []engines.ScoredManifest
 
 	for _, stack := range scoredStacks {
 		if stack.Score > 0 && stack.Grade == "stable" {
@@ -38,8 +39,8 @@ func TopEngine(scoredStacks []types.ScoredStack) (*types.ScoredStack, error) {
 	return &compatibleStacks[0], nil
 }
 
-func LoadManifestsFromDir(manifestsDir string) ([]types.Stack, error) {
-	var manifests []types.Stack
+func LoadManifestsFromDir(manifestsDir string) ([]engines.Manifest, error) {
+	var manifests []engines.Manifest
 
 	// Sanitize dir path
 	if !strings.HasSuffix(manifestsDir, "/") {
@@ -63,7 +64,7 @@ func LoadManifestsFromDir(manifestsDir string) ([]types.Stack, error) {
 			return nil, fmt.Errorf("%s: %s", manifestsDir+file.Name(), err)
 		}
 
-		var manifest types.Stack
+		var manifest engines.Manifest
 		err = yaml.Unmarshal(data, &manifest)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %s", manifestsDir, err)
@@ -74,8 +75,8 @@ func LoadManifestsFromDir(manifestsDir string) ([]types.Stack, error) {
 	return manifests, nil
 }
 
-func ScoreEngines(hardwareInfo types.HwInfo, stacks []types.Stack) ([]types.ScoredStack, error) {
-	var scoredStacks []types.ScoredStack
+func ScoreEngines(hardwareInfo types.HwInfo, stacks []engines.Manifest) ([]engines.ScoredManifest, error) {
+	var scoredStacks []engines.ScoredManifest
 
 	for _, currentStack := range stacks {
 		score, reasons, err := checkStack(hardwareInfo, currentStack)
@@ -83,8 +84,8 @@ func ScoreEngines(hardwareInfo types.HwInfo, stacks []types.Stack) ([]types.Scor
 			return nil, err
 		}
 
-		scoredStack := types.ScoredStack{
-			Stack:      currentStack,
+		scoredStack := engines.ScoredManifest{
+			Manifest:   currentStack,
 			Score:      score,
 			Compatible: true,
 		}
@@ -100,7 +101,7 @@ func ScoreEngines(hardwareInfo types.HwInfo, stacks []types.Stack) ([]types.Scor
 	return scoredStacks, nil
 }
 
-func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, []string, error) {
+func checkStack(hardwareInfo types.HwInfo, stack engines.Manifest) (int, []string, error) {
 	stackScore := 0
 	var reasons []string
 
@@ -173,7 +174,7 @@ func checkStack(hardwareInfo types.HwInfo, stack types.Stack) (int, []string, er
 	return stackScore, reasons, nil
 }
 
-func checkDevicesAll(hardwareInfo types.HwInfo, stackDevices []types.StackDevice) (int, []string, error) {
+func checkDevicesAll(hardwareInfo types.HwInfo, stackDevices []engines.Device) (int, []string, error) {
 	devicesFound := 0
 	extraScore := 0
 	var reasons []string
@@ -226,7 +227,7 @@ func checkDevicesAll(hardwareInfo types.HwInfo, stackDevices []types.StackDevice
 	return extraScore, reasons, nil
 }
 
-func checkDevicesAny(hardwareInfo types.HwInfo, stackDevices []types.StackDevice) (int, []string, error) {
+func checkDevicesAny(hardwareInfo types.HwInfo, stackDevices []engines.Device) (int, []string, error) {
 	devicesFound := 0
 	extraScore := 0
 	var reasons []string

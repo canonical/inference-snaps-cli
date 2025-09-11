@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/canonical/stack-utils/pkg/engines"
 	"github.com/canonical/stack-utils/pkg/hardware_info"
-	"github.com/canonical/stack-utils/pkg/types"
 	"gopkg.in/yaml.v3"
 )
 
@@ -68,7 +68,7 @@ var topStackSets = []machineTopStack{
 func TestTopStack(t *testing.T) {
 	for _, testSet := range topStackSets {
 		t.Run(testSet.machine+"/"+testSet.topStack, func(t *testing.T) {
-			var stacks []types.Stack
+			var stacks []engines.Manifest
 			for _, stackName := range testSet.stacks {
 				stackManifestFile := fmt.Sprintf("../../test_data/engines/%s/engine.yaml", stackName)
 				data, err := os.ReadFile(stackManifestFile)
@@ -76,7 +76,7 @@ func TestTopStack(t *testing.T) {
 					t.Fatal(err)
 				}
 
-				var stack types.Stack
+				var stack engines.Manifest
 				err = yaml.Unmarshal(data, &stack)
 				if err != nil {
 					t.Fatal(err)

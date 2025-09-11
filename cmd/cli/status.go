@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/canonical/stack-utils/pkg/engines"
 	"github.com/canonical/stack-utils/pkg/selector"
-	"github.com/canonical/stack-utils/pkg/types"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -120,7 +120,7 @@ func statusHuman() (string, error) {
 	return fmt.Sprintf("%s\n\n%s", engineStatusText, serverStatusText), nil
 }
 
-func statusHumanEngine(engine types.ScoredStack, auto bool) string {
+func statusHumanEngine(engine engines.ScoredManifest, auto bool) string {
 	bold := color.New(color.Bold).SprintFunc()
 	engineString := fmt.Sprintf("Using %s", bold(engine.Name))
 	if auto {
@@ -129,7 +129,7 @@ func statusHumanEngine(engine types.ScoredStack, auto bool) string {
 	return engineString
 }
 
-func statusHumanServer(engine types.ScoredStack) (string, error) {
+func statusHumanServer(engine engines.ScoredManifest) (string, error) {
 	// Start, stop, log commands
 	startCmd := fmt.Sprintf(`Run "sudo snap start %s" to start the server.`, snapInstanceName)
 	stopCmd := fmt.Sprintf(`Run "sudo snap stop %s" to stop the server.`, snapInstanceName)

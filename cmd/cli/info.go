@@ -6,7 +6,7 @@ import (
 
 	"github.com/alecthomas/chroma/v2/quick"
 	"github.com/canonical/go-snapctl"
-	"github.com/canonical/stack-utils/pkg/types"
+	"github.com/canonical/stack-utils/pkg/engines"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -67,7 +67,7 @@ func engineInfo(engineName string) error {
 	return nil
 }
 
-func printEngineInfo(engine types.ScoredStack) error {
+func printEngineInfo(engine engines.ScoredManifest) error {
 	engineYaml, err := yaml.Marshal(engine)
 	if err != nil {
 		return fmt.Errorf("error converting engine to yaml: %v", err)
