@@ -1,0 +1,9 @@
+name: cpu-devel
+description: Requires any CPU but is grade devel
+vendor: Canonical Ltd
+grade: devel
+devices:
+  any:
+    - type: cpu
+memory: 1G
+disk-space: 2G

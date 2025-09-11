@@ -22,11 +22,9 @@ type EngineSelection struct {
 
 func main() {
 	var enginesDir string
-	var listAll bool
 	var prettyOutput bool
 
 	flag.StringVar(&enginesDir, "engines", "engines", "Override the path to the engines directory.")
-	flag.BoolVar(&listAll, "all", false, "List all available engines.")
 	flag.BoolVar(&prettyOutput, "pretty", false, "Pretty print JSON.")
 
 	flag.Parse()
@@ -53,19 +51,24 @@ func main() {
 	// Print summary on STDERR
 	for _, engine := range scoredEngines {
 		engineSelection.Engines = append(engineSelection.Engines, engine)
+
 		if engine.Score == 0 {
-			log.Printf(color.RedString("x %s - %s"), engine.Name, strings.Join(engine.Notes, ", "))
+			fmt.Fprintf(os.Stderr, "❌ %s - not compatible: %s\n", engine.Name, strings.Join(engine.Notes, ", "))
+		} else if engine.Grade != "stable" {
+			fmt.Fprintf(os.Stderr, "🟠 %s - score = %d, grade = %s\n", engine.Name, engine.Score, engine.Grade)
 		} else {
-			log.Printf(color.GreenString("✓ %s - score = %d"), engine.Name, engine.Score)
+			fmt.Fprintf(os.Stderr, "✅ %s - compatible, score = %d\n", engine.Name, engine.Score)
 		}
 	}
 
-	topEngine, err := selector.TopEngine(scoredEngines)
+	selectedEngine, err := selector.TopEngine(scoredEngines)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintf(os.Stderr, "error finding top engine: %v", err)
 	}
-	engineSelection.TopEngine = topEngine.Name
-	log.Printf(color.GreenString("Top engine: %s - score = %d"), topEngine.Name, topEngine.Score)
+	engineSelection.TopEngine = selectedEngine.Name
+
+	greenBold := color.New(color.FgGreen, color.Bold).SprintFunc()
+	fmt.Fprintf(os.Stderr, greenBold("Selected engine for your hardware configuration: %s\n\n"), selectedEngine.Name)
 
 	var resultStr []byte
 	if prettyOutput {
