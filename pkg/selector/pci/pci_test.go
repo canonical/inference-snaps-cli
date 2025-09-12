@@ -22,13 +22,13 @@ func TestCheckGpuVendor(t *testing.T) {
 		},
 	}
 
-	stackDevice := engines.Device{
+	device := engines.Device{
 		Type:     "gpu",
 		Bus:      "pci",
 		VendorId: &gpuVendorId,
 	}
 
-	score, reasons, err := checkPciDevice(stackDevice, hwInfoGpu)
+	score, reasons, err := checkPciDevice(device, hwInfoGpu)
 	if err != nil {
 		t.Error(err)
 	}
@@ -38,7 +38,7 @@ func TestCheckGpuVendor(t *testing.T) {
 
 	// Same value, upper case string
 	gpuVendorId = types.HexInt(0xB33F)
-	score, reasons, err = checkPciDevice(stackDevice, hwInfoGpu)
+	score, reasons, err = checkPciDevice(device, hwInfoGpu)
 	if err != nil {
 		t.Error(err)
 	}
@@ -47,7 +47,7 @@ func TestCheckGpuVendor(t *testing.T) {
 	}
 
 	gpuVendorId = types.HexInt(0x1337)
-	score, reasons, err = checkPciDevice(stackDevice, hwInfoGpu)
+	score, reasons, err = checkPciDevice(device, hwInfoGpu)
 	if err != nil {
 		t.Error(err)
 	}
@@ -69,15 +69,15 @@ func TestCheckGpuVram(t *testing.T) {
 		},
 	}
 
-	stackVram := "4G"
-	stackDevice := engines.Device{
+	requiredVram := "4G"
+	device := engines.Device{
 		Type:     "gpu",
 		Bus:      "pci",
 		VendorId: nil,
-		VRam:     &stackVram,
+		VRam:     &requiredVram,
 	}
 
-	score, reasons, err := checkPciDevice(stackDevice, hwInfoGpu)
+	score, reasons, err := checkPciDevice(device, hwInfoGpu)
 	if err != nil {
 		t.Error(err)
 	}
@@ -85,8 +85,8 @@ func TestCheckGpuVram(t *testing.T) {
 		t.Fatalf("GPU vram should be enough: %v", reasons)
 	}
 
-	stackVram = "24G"
-	score, reasons, err = checkPciDevice(stackDevice, hwInfoGpu)
+	requiredVram = "24G"
+	score, reasons, err = checkPciDevice(device, hwInfoGpu)
 	if err != nil {
 		t.Error(err)
 	}

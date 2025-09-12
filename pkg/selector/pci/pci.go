@@ -8,12 +8,12 @@ import (
 	"github.com/canonical/stack-utils/pkg/types"
 )
 
-func Match(stackDevice engines.Device, pcis []types.PciDevice) (int, []string, error) {
+func Match(device engines.Device, pcis []types.PciDevice) (int, []string, error) {
 	var reasons []string
 	maxDeviceScore := 0
 
 	for _, pciDevice := range pcis {
-		deviceScore, deviceReasons, err := checkPciDevice(stackDevice, pciDevice)
+		deviceScore, deviceReasons, err := checkPciDevice(device, pciDevice)
 		reasons = append(reasons, deviceReasons...)
 		if err != nil {
 			return 0, reasons, err
@@ -29,17 +29,17 @@ func Match(stackDevice engines.Device, pcis []types.PciDevice) (int, []string, e
 	return maxDeviceScore, reasons, nil
 }
 
-func checkPciDevice(stackDevice engines.Device, pciDevice types.PciDevice) (int, []string, error) {
+func checkPciDevice(device engines.Device, pciDevice types.PciDevice) (int, []string, error) {
 	var reasons []string
 	currentDeviceScore := 0
 
 	// Device type: tpu, npu, gpu, etc
-	if stackDevice.Type != "" {
-		match := checkType(stackDevice.Type, pciDevice)
+	if device.Type != "" {
+		match := checkType(device.Type, pciDevice)
 		if match {
 			currentDeviceScore += weights.PciDeviceType
 		} else {
-			reasons = append(reasons, fmt.Sprintf("pci device type mismatch: %s", stackDevice.Type))
+			reasons = append(reasons, fmt.Sprintf("pci device type mismatch: %s", device.Type))
 			return 0, reasons, nil
 		}
 	}
@@ -50,28 +50,28 @@ func checkPciDevice(stackDevice engines.Device, pciDevice types.PciDevice) (int,
 		currentDeviceScore += weights.PciDeviceExternal
 	}
 
-	if stackDevice.VendorId != nil {
-		if *stackDevice.VendorId == pciDevice.VendorId {
+	if device.VendorId != nil {
+		if *device.VendorId == pciDevice.VendorId {
 			currentDeviceScore += weights.PciVendorId
 		} else {
-			reasons = append(reasons, fmt.Sprintf("pci vendor id mismatch: %04x", *stackDevice.VendorId))
+			reasons = append(reasons, fmt.Sprintf("pci vendor id mismatch: %04x", *device.VendorId))
 			return 0, reasons, nil
 		}
 
 		// A model ID is only unique per vendor ID namespace. Only check it if the vendor is a match
-		if stackDevice.DeviceId != nil {
-			if *stackDevice.DeviceId == pciDevice.DeviceId {
+		if device.DeviceId != nil {
+			if *device.DeviceId == pciDevice.DeviceId {
 				currentDeviceScore += weights.PciDeviceId
 			} else {
-				reasons = append(reasons, fmt.Sprintf("pci device id mismatch: %04x", *stackDevice.DeviceId))
+				reasons = append(reasons, fmt.Sprintf("pci device id mismatch: %04x", *device.DeviceId))
 				return 0, reasons, nil
 			}
 		}
 	}
 
 	// Check additional properties
-	if hasAdditionalProperties(stackDevice) {
-		propsScore, propReasons, err := checkProperties(stackDevice, pciDevice)
+	if hasAdditionalProperties(device) {
+		propsScore, propReasons, err := checkProperties(device, pciDevice)
 		reasons = append(reasons, propReasons...)
 		if err != nil {
 			return 0, reasons, err

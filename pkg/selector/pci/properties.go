@@ -7,11 +7,11 @@ import (
 	"github.com/canonical/stack-utils/pkg/utils"
 )
 
-func hasAdditionalProperties(stackDevice engines.Device) bool {
-	if stackDevice.VRam != nil {
+func hasAdditionalProperties(device engines.Device) bool {
+	if device.VRam != nil {
 		return true
 	}
-	if stackDevice.ComputeCapability != nil {
+	if device.ComputeCapability != nil {
 		return true
 	}
 
