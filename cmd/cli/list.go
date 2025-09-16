@@ -93,7 +93,6 @@ func printEnginesTable(scoredEngines []engines.ScoredManifest) error {
 	engineVendorMaxLen += 2
 	// Description column fills the remaining space
 	engineDescriptionMaxLen := tableMaxWidth - (engineNameMaxLen + engineVendorMaxLen)
-
 	// Reserve space for Compatible column
 	engineDescriptionMaxLen -= len(headerRow[3]) + 2
 
