@@ -13,9 +13,9 @@ import (
 
 func addInfoCommand() {
 	cmd := &cobra.Command{
-		Use:   "show-engine <engine>",
-		Short: "Print information about an engine",
-		// Long:  "",
+		Use:               "show-engine [<engine>]",
+		Short:             "Print information about an engine",
+		Long:              "Print information about the currently selected engine, or the specified engine",
 		GroupID:           "engines",
 		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: showEngineValidArgs,
