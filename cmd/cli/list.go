@@ -22,17 +22,13 @@ func addListCommand() {
 		GroupID:           "engines",
 		Args:              cobra.NoArgs,
 		ValidArgsFunction: cobra.NoFileCompletions,
-		RunE:              list,
+		RunE:              listEngines,
 	}
 
 	rootCmd.AddCommand(cmd)
 }
 
-func list(_ *cobra.Command, _ []string) error {
-	return listEngines()
-}
-
-func listEngines() error {
+func listEngines(_ *cobra.Command, _ []string) error {
 	enginesJson, err := snapctl.Get("engines").Document().Run()
 	if err != nil {
 		return fmt.Errorf("error loading engines: %v", err)
@@ -43,7 +39,7 @@ func listEngines() error {
 		return fmt.Errorf("error parsing engines: %v", err)
 	}
 
-	err = printEngines(scoredEngines)
+	err = printEnginesTable(scoredEngines)
 	if err != nil {
 		return fmt.Errorf("error printing list: %v", err)
 	}
@@ -51,8 +47,7 @@ func listEngines() error {
 	return nil
 }
 
-func printEngines(scoredEngines []engines.ScoredManifest) error {
-
+func printEnginesTable(scoredEngines []engines.ScoredManifest) error {
 	var headerRow = []string{"engine", "vendor", "description", "compat"}
 	tableRows := [][]string{headerRow}
 
