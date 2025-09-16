@@ -75,3 +75,11 @@ func TestIsPrimitive(t *testing.T) {
 		t.Fatal("string slice should not be primitive")
 	}
 }
+
+func TestIsRootUser(t *testing.T) {
+	if IsRootUser() {
+		t.Log("root")
+	} else {
+		t.Log("not root")
+	}
+}

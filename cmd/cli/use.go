@@ -71,6 +71,9 @@ func useValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]cobra
 }
 
 func use(_ *cobra.Command, args []string) error {
+	if !utils.IsRootUser() {
+		return fmt.Errorf("No permission to change engine. Please try again using sudo.")
+	}
 
 	if useAuto {
 		if len(args) != 0 {
