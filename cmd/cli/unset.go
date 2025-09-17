@@ -23,7 +23,7 @@ func addUnsetCommand() {
 
 func unset(_ *cobra.Command, args []string) error {
 	if !utils.IsRootUser() {
-		return fmt.Errorf("No permission to unset configurations. Please try again using sudo.")
+		return ErrPermissionDenied
 	}
 	return unsetValue(args[0])
 }

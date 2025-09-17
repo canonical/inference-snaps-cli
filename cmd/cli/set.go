@@ -24,7 +24,7 @@ func addSetCommand() {
 
 func set(_ *cobra.Command, args []string) error {
 	if !utils.IsRootUser() {
-		return fmt.Errorf("permission denied, try again with sudo")
+		return ErrPermissionDenied
 	}
 	return setValue(args[0])
 }
