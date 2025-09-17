@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/alecthomas/chroma/v2/quick"
-	"github.com/canonical/go-snapctl"
 	"github.com/canonical/stack-utils/pkg/engines"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -26,7 +25,7 @@ func addInfoCommand() {
 
 func showEngine(_ *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		currentEngine, err := snapctl.Get("engine").Run()
+		currentEngine, err := cache.GetActiveEngine()
 		if err != nil {
 			return fmt.Errorf("could not get currently selected engine: %v", err)
 		}
@@ -41,7 +40,7 @@ func showEngine(_ *cobra.Command, args []string) error {
 }
 
 func showEngineValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
-	enginesJson, err := snapctl.Get("engines").Document().Run()
+	enginesJson, err := config.Get("engines")
 	if err != nil {
 		fmt.Printf("Error loading engines: %v", err)
 		return nil, cobra.ShellCompDirectiveError
@@ -62,7 +61,7 @@ func showEngineValidArgs(cmd *cobra.Command, args []string, toComplete string) (
 }
 
 func engineInfo(engineName string) error {
-	enginesJson, err := snapctl.Get("engines." + engineName).Document().Run()
+	enginesJson, err := config.Get("engines." + engineName)
 	if err != nil {
 		return fmt.Errorf("error loading engine: %v", err)
 	}
