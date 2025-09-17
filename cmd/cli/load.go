@@ -25,7 +25,7 @@ func init() {
 
 func load(_ *cobra.Command, _ []string) error {
 	if !utils.IsRootUser() {
-		return fmt.Errorf("No permission to load engines. Please try again using sudo.")
+		return fmt.Errorf("permission denied, try again with sudo")
 	}
 	return loadEnginesToSnapOptions()
 }

@@ -76,10 +76,11 @@ func TestIsPrimitive(t *testing.T) {
 	}
 }
 
+// This is for manual testing
 func TestIsRootUser(t *testing.T) {
 	if IsRootUser() {
-		t.Log("root")
+		t.Log("User is root!")
 	} else {
-		t.Log("not root")
+		t.Log("User is not root")
 	}
 }
