@@ -10,6 +10,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var (
+	showNoColor bool
+)
+
 func addInfoCommand() {
 	cmd := &cobra.Command{
 		Use:               "show-engine [<engine>]",
@@ -20,6 +24,10 @@ func addInfoCommand() {
 		ValidArgsFunction: showEngineValidArgs,
 		RunE:              showEngine,
 	}
+
+	// flags
+	cmd.PersistentFlags().BoolVar(&showNoColor, "no-color", false, "disable color and syntax highlighting")
+
 	rootCmd.AddCommand(cmd)
 }
 
@@ -84,9 +92,14 @@ func printEngineInfo(engine engines.ScoredManifest) error {
 		return fmt.Errorf("error converting engine to yaml: %v", err)
 	}
 
-	err = quick.Highlight(os.Stdout, string(engineYaml), "yaml", "terminal", "colorful")
-	if err != nil {
-		return fmt.Errorf("error formatting yaml: %v", err)
+	if showNoColor {
+		fmt.Print(string(engineYaml))
+		return nil
+	} else {
+		err = quick.Highlight(os.Stdout, string(engineYaml), "yaml", "terminal", "colorful")
+		if err != nil {
+			return fmt.Errorf("error formatting yaml: %v", err)
+		}
 	}
 
 	return nil
