@@ -30,5 +30,9 @@ func (s *SnapctlStorage) Get(key string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	// TODO: query as document to distinguish between empty and not found
+	if val == "" {
+		return nil, ErrorNotFound
+	}
 	return []byte(val), nil
 }

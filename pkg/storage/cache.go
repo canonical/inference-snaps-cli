@@ -38,11 +38,10 @@ func (c cache) SetActiveEngine(engine string) error {
 func (c *cache) GetActiveEngine() (string, error) {
 	data, err := c.storage.Get(activeEngineKey)
 	if err != nil {
+		if errors.Is(err, ErrorNotFound) { // cache miss
+			return "", ErrNoCache
+		}
 		return "", err
-	}
-
-	if len(data) == 0 { // cache miss
-		return "", ErrNoCache
 	}
 
 	return string(data), nil

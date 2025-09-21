@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/canonical/stack-utils/pkg/selector"
+	"github.com/canonical/stack-utils/pkg/storage"
 	"github.com/canonical/stack-utils/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -39,7 +40,7 @@ func loadEnginesToSnapOptions() error {
 	// set all engines as snap options
 	// TODO: change to also handle engine deletions
 	for _, engine := range allEngines {
-		err = config.SetDocument("engines."+engine.Name, engine)
+		err = config.SetDocument("engines."+engine.Name, engine, storage.PackageConfig)
 		if err != nil {
 			return fmt.Errorf("error setting engines option: %s", err)
 		}

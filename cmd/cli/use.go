@@ -152,7 +152,7 @@ func scoreEngines() ([]engines.ScoredManifest, error) {
 func enginesToSnapOptions(scoredEngines []engines.ScoredManifest) error {
 	// set all scored engines as snap options
 	for _, engine := range scoredEngines {
-		err := config.SetDocument("engines."+engine.Name, engine)
+		err := config.SetDocument("engines."+engine.Name, engine, storage.PackageConfig)
 		if err != nil {
 			return fmt.Errorf("error setting engine option: %v", err)
 		}
@@ -300,7 +300,7 @@ func setEngineOptions(engine engines.ScoredManifest) error {
 	// set other config options
 	// TODO: clear beforehand
 	for confKey, confVal := range engine.Configurations {
-		err = config.SetDocument(confKey, confVal)
+		err = config.SetDocument(confKey, confVal, storage.EngineConfig)
 		if err != nil {
 			return fmt.Errorf("error setting snap option %q: %v", confKey, err)
 		}
