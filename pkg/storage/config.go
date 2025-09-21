@@ -96,6 +96,10 @@ func (c *config) GetAll() (map[string]any, error) {
 	return finalMap, nil
 }
 
+func (c config) Unset(key string, confType configType) error {
+	return c.storage.Unset(c.nestKeys(confType, key))
+}
+
 // flattenMap creates a single-level map with dot-separated keys
 func (c *config) flattenMap(input map[string]any) map[string]any {
 	flatMap := make(map[string]any)
@@ -122,5 +126,10 @@ func (c *config) flattenMap(input map[string]any) map[string]any {
 
 // nestKeys creates a dot-separated key with the expected prefix
 func (c *config) nestKeys(confType configType, key string) string {
-	return strings.Join([]string{configKeyPrefix, string(confType), key}, ".")
+	if key == "." { // special case, referencing the parent
+		return strings.Join([]string{configKeyPrefix, string(confType)}, ".")
+	} else {
+		return strings.Join([]string{configKeyPrefix, string(confType), key}, ".")
+	}
+
 }

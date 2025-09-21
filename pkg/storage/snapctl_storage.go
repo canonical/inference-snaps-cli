@@ -36,3 +36,11 @@ func (s *SnapctlStorage) Get(key string) ([]byte, error) {
 	}
 	return []byte(val), nil
 }
+
+func (s *SnapctlStorage) Unset(key string) error {
+	err := snapctl.Unset(key).Run()
+	if err != nil {
+		return err
+	}
+	return nil
+}

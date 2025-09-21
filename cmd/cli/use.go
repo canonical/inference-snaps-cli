@@ -239,9 +239,15 @@ func useEngine(engineName string, assumeYes bool) error {
 		fmt.Println()
 	}
 
+	// unset all engine configurations
+	err = config.Unset(".", storage.EngineConfig)
+	if err != nil {
+		return fmt.Errorf("error un-setting current engine configurations: %v", err)
+	}
+
 	err = setEngineOptions(engine)
 	if err != nil {
-		return fmt.Errorf("error setting engine options: %v", err)
+		return fmt.Errorf("error setting new engine configurations: %v", err)
 	}
 
 	fmt.Println("Restarting the snap service ...")
