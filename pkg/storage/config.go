@@ -78,17 +78,18 @@ func (c *config) GetAll() (map[string]any, error) {
 		return nil, err
 	}
 
+	// Drop the "engines" object (manifests and scores) from output
 	// TODO: remove once no longer using the deprecated "engines" config
-	delete(valMap["package"].(map[string]any), "engines")
+	delete(values[string(PackageConfig)].(map[string]any), "engines")
 
 	var finalMap = make(map[string]any)
 
-	loadOrderKeys := []string{"package", "engine", "user"}
-	for _, key := range loadOrderKeys {
-		if _, found := valMap[key]; found {
+	// Load configurations in the order of precedence
+	for _, k := range confPrecedence {
+		if v, found := values[string(k)]; found {
 			maps.Copy(
 				finalMap,
-				c.flattenMap(valMap[key].(map[string]any)),
+				c.flattenMap(v.(map[string]any)),
 			)
 		}
 	}
