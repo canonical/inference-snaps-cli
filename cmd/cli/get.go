@@ -34,12 +34,20 @@ func getValue(key string) error {
 		return fmt.Errorf("error getting value of %q: %v", key, err)
 	}
 
-	if value == "" {
+	if len(value) == 0 {
 		return fmt.Errorf("no value set for key %q", key)
 	}
 
-	// print config value
-	fmt.Println(value)
+	if len(value) == 1 {
+		fmt.Println(value[key])
+	} else {
+		// print as yaml
+		yamlOutput, err := yaml.Marshal(value)
+		if err != nil {
+			return fmt.Errorf("error serializing value: %v", err)
+		}
+		fmt.Printf("%s", yamlOutput) // the yaml output ends with a newline
+	}
 
 	return nil
 }
@@ -56,7 +64,7 @@ func getValues() error {
 	if err != nil {
 		return fmt.Errorf("error serializing values: %v", err)
 	}
-	fmt.Printf("%s\n", yamlOutput)
+	fmt.Printf("%s", yamlOutput) // the yaml output ends with a newline
 
 	return nil
 }

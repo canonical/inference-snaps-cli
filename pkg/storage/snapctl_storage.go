@@ -2,6 +2,7 @@ package storage
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/canonical/go-snapctl"
 )
@@ -25,16 +26,30 @@ func (s *SnapctlStorage) SetDocument(key string, value any) error {
 	return snapctl.Set(key, string(b)).Document().Run()
 }
 
-func (s *SnapctlStorage) Get(key string) ([]byte, error) {
-	val, err := snapctl.Get(key).Run()
+func (s *SnapctlStorage) Get(key string) (map[string]any, error) {
+	valJson, err := snapctl.Get(key).Run()
 	if err != nil {
 		return nil, err
 	}
-	// TODO: query as document to distinguish between empty and not found
-	if val == "" {
+	if valJson == "" {
 		return nil, ErrorNotFound
 	}
-	return []byte(val), nil
+
+	var valMap map[string]any
+	if strings.HasPrefix(valJson, "{") && strings.HasSuffix(valJson, "}") {
+		// Object value, parse as JSON
+		err = json.Unmarshal([]byte(valJson), &valMap)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// Primitive value, return as-is
+		valMap = map[string]any{
+			key: valJson,
+		}
+	}
+
+	return valMap, nil
 }
 
 func (s *SnapctlStorage) Unset(key string) error {

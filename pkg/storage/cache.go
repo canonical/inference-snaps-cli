@@ -4,25 +4,27 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/canonical/stack-utils/pkg/hardware_info"
 	"github.com/canonical/stack-utils/pkg/types"
 )
 
 type cache struct {
-	storage storage
+	storage             storage
+	machineInfoTempFile string
 }
 
 func NewCache() *cache {
 	return &cache{
-		storage: NewSnapctlStorage(), // hardcoded since that's the only supported backend
+		storage:             NewSnapctlStorage(), // hardcoded since that's the only supported backend
+		machineInfoTempFile: "/tmp/machine-info.json",
 	}
 }
 
 const (
 	cacheKeyPrefix  = "cache."
 	activeEngineKey = cacheKeyPrefix + "active-engine"
-	machineInfoKey  = cacheKeyPrefix + "machine-info"
 )
 
 var ErrNoCache = errors.New("no cache")
@@ -44,38 +46,42 @@ func (c *cache) GetActiveEngine() (string, error) {
 		return "", err
 	}
 
-	return string(data), nil
+	return data[activeEngineKey].(string), nil
 }
 
-func (c *cache) SetMachineInfo(info types.HwInfo) error {
-	return c.storage.SetDocument(machineInfoKey, info)
+func (c *cache) setMachineInfo(machine types.HwInfo) error {
+
+	b, err := json.Marshal(machine)
+	if err != nil {
+		return fmt.Errorf("error marshalling machine info to json: %v", err)
+	}
+
+	err = os.WriteFile(c.machineInfoTempFile, b, 0644)
+	if err != nil {
+		return fmt.Errorf("error writing machine info to temp file: %v", err)
+	}
+
+	return nil
 }
 
 func (c *cache) GetMachineInfo() (*types.HwInfo, error) {
 
-	data, err := c.storage.Get(machineInfoKey)
+	b, err := os.ReadFile(c.machineInfoTempFile)
+	if err != nil {
+		if os.IsNotExist(err) { // cache miss
+			return c.loadMachineInfo()
+		}
+
+		return nil, fmt.Errorf("error reading machine info from temp file: %v", err)
+	}
+
+	var machine types.HwInfo
+	err = json.Unmarshal(b, &machine)
 	if err != nil {
 		return nil, err
 	}
 
-	var machine *types.HwInfo
-	if len(data) == 0 { // cache miss
-		machine, err = c.loadMachineInfo()
-		if err != nil {
-			return nil, err
-		}
-		err = c.SetMachineInfo(*machine)
-		if err != nil {
-			return nil, fmt.Errorf("error caching machine info: %v", err)
-		}
-	} else {
-		err = json.Unmarshal(data, machine)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return machine, err
+	return &machine, err
 }
 
 func (c *cache) loadMachineInfo() (*types.HwInfo, error) {
@@ -84,10 +90,10 @@ func (c *cache) loadMachineInfo() (*types.HwInfo, error) {
 		return nil, fmt.Errorf("error getting machine info: %v", err)
 	}
 
-	err = c.SetMachineInfo(machine)
+	err = c.setMachineInfo(*machine)
 	if err != nil {
 		return nil, fmt.Errorf("error caching machine info: %v", err)
 	}
 
-	return &machine, nil
+	return machine, nil
 }

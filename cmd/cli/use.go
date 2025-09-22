@@ -10,7 +10,6 @@ import (
 	"github.com/canonical/go-snapctl"
 	"github.com/canonical/go-snapctl/env"
 	"github.com/canonical/stack-utils/pkg/engines"
-	"github.com/canonical/stack-utils/pkg/hardware_info"
 	"github.com/canonical/stack-utils/pkg/selector"
 	"github.com/canonical/stack-utils/pkg/snap_store"
 	"github.com/canonical/stack-utils/pkg/storage"
@@ -45,22 +44,16 @@ func addUseCommand() {
 }
 
 func useValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
-	enginesJson, err := config.Get("engines")
+	scoredEngines, err := scoreEngines()
 	if err != nil {
-		fmt.Printf("Error loading engines: %v", err)
-		return nil, cobra.ShellCompDirectiveError
-	}
-
-	engines, err := parseEnginesJson(enginesJson)
-	if err != nil {
-		fmt.Printf("Error parsing engines: %v", err)
-		return nil, cobra.ShellCompDirectiveError
+		fmt.Println("Error scoring engines: %v", err)
+		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
 
 	var engineNames []cobra.Completion
-	for i := range engines {
-		if engines[i].Compatible {
-			engineNames = append(engineNames, engines[i].Name)
+	for i := range scoredEngines {
+		if scoredEngines[i].Compatible {
+			engineNames = append(engineNames, scoredEngines[i].Name)
 		}
 	}
 	if len(engineNames) == 0 {
@@ -96,11 +89,6 @@ func use(_ *cobra.Command, args []string) error {
 			}
 		}
 
-		err = enginesToSnapOptions(scoredEngines)
-		if err != nil {
-			return fmt.Errorf("error saving scored engines: %v", err)
-		}
-
 		fmt.Println("Automatically selecting a compatible engine ...")
 
 		selectedEngine, err := selector.TopEngine(scoredEngines)
@@ -134,14 +122,13 @@ func scoreEngines() ([]engines.ScoredManifest, error) {
 		return nil, fmt.Errorf("error loading engines: %v", err)
 	}
 
-	// get hardware info
-	hardwareInfo, err := hardware_info.Get(false)
+	machineInfo, err := cache.GetMachineInfo()
 	if err != nil {
 		return nil, fmt.Errorf("error getting hardware info: %v", err)
 	}
 
 	// score engines
-	scoredEngines, err := selector.ScoreEngines(hardwareInfo, allEngines)
+	scoredEngines, err := selector.ScoreEngines(machineInfo, allEngines)
 	if err != nil {
 		return nil, fmt.Errorf("error scoring engines: %v", err)
 	}
@@ -149,29 +136,12 @@ func scoreEngines() ([]engines.ScoredManifest, error) {
 	return scoredEngines, nil
 }
 
-func enginesToSnapOptions(scoredEngines []engines.ScoredManifest) error {
-	// set all scored engines as snap options
-	for _, engine := range scoredEngines {
-		err := config.SetDocument("engines."+engine.Name, engine, storage.PackageConfig)
-		if err != nil {
-			return fmt.Errorf("error setting engine option: %v", err)
-		}
-	}
-	return nil
-}
-
-/*
-useEngine changes the engine that is used by the snap
-*/
+// useEngine changes the engine that is used by the snap
 func useEngine(engineName string, assumeYes bool) error {
-	engineJson, err := config.Get("engines." + engineName)
-	if err != nil {
-		return fmt.Errorf("error loading engine: %v", err)
-	}
 
-	engine, err := parseEngineJson(engineJson)
+	engine, err := selector.LoadManifestFromDir(enginesDir, engineName)
 	if err != nil {
-		return fmt.Errorf("error parsing engine: %v", err)
+		return fmt.Errorf("error loading engine manifest: %v", err)
 	}
 
 	components, err := missingComponents(engine.Components)
@@ -296,7 +266,7 @@ func componentInstalled(component string) (bool, error) {
 	}
 }
 
-func setEngineOptions(engine engines.ScoredManifest) error {
+func setEngineOptions(engine *engines.Manifest) error {
 	// set engine config option
 	err := cache.SetActiveEngine(engine.Name)
 	if err != nil {

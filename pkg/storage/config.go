@@ -1,8 +1,6 @@
 package storage
 
 import (
-	"encoding/json"
-	"errors"
 	"maps"
 	"strings"
 )
@@ -35,56 +33,52 @@ const (
 	UserConfig    configType = "user"
 )
 
+// Set sets a configuration value
 func (c config) Set(key, value string, confType configType) error {
 	return c.storage.Set(c.nestKeys(confType, key), value)
 }
 
-// Deprecated
-// Remove once migration from config to cache is complete
+// SetDocument sets a configuration value that is primitive or an object
 func (c config) SetDocument(key string, value any, confType configType) error {
 	return c.storage.SetDocument(c.nestKeys(confType, key), value)
 }
 
-// Get returns one configuration field, after applying precedence rules
-// If the value is an object, it is returned as a JSON string
-// TODO: change this to return a flattened map[string]any to better support object values
-func (c *config) Get(key string) (string, error) {
-	var value string
-
-	// Load configurations in the order of precedence
-	for _, confType := range confPrecedence {
-		data, err := c.storage.Get(c.nestKeys(confType, key))
-		if err != nil {
-			if errors.Is(err, ErrorNotFound) {
-				continue
-			}
-			return "", err
-		}
-		value = string(data)
+// Get returns one or more configuration fields in as a flat map, after applying precedence rules
+// If the value is a single primitive value, the map will have one entry with the full key
+func (c *config) Get(key string) (map[string]any, error) {
+	configs, err := c.loadConfigs()
+	if err != nil {
+		return nil, err
 	}
 
-	return value, nil
+	// Filter to needed keys
+	for k := range configs {
+		if !strings.HasPrefix(k, key) {
+			delete(configs, k)
+		}
+	}
+
+	return configs, nil
 }
 
-// GetAll returns all configurations as a flattened map, after applying precedence rules
+// GetAll returns all configurations as a flattened map
 func (c *config) GetAll() (map[string]any, error) {
-	data, err := c.storage.Get(configKeyPrefix)
+	return c.loadConfigs()
+}
+
+func (c config) Unset(key string, confType configType) error {
+	return c.storage.Unset(c.nestKeys(confType, key))
+}
+
+// loadConfigs loads all configurations as a flattened map, after applying precedence rules
+func (c *config) loadConfigs() (map[string]any, error) {
+	values, err := c.storage.Get(configKeyPrefix)
 	if err != nil {
 		return nil, err
 	}
-	var valMap map[string]any
-	err = json.Unmarshal(data, &valMap)
-	if err != nil {
-		return nil, err
-	}
-
-	// Drop the "engines" object (manifests and scores) from output
-	// TODO: remove once no longer using the deprecated "engines" config
-	delete(values[string(PackageConfig)].(map[string]any), "engines")
-
-	var finalMap = make(map[string]any)
 
 	// Load configurations in the order of precedence
+	var finalMap = make(map[string]any)
 	for _, k := range confPrecedence {
 		if v, found := values[string(k)]; found {
 			maps.Copy(
@@ -95,10 +89,6 @@ func (c *config) GetAll() (map[string]any, error) {
 	}
 
 	return finalMap, nil
-}
-
-func (c config) Unset(key string, confType configType) error {
-	return c.storage.Unset(c.nestKeys(confType, key))
 }
 
 // flattenMap creates a single-level map with dot-separated keys
@@ -132,5 +122,4 @@ func (c *config) nestKeys(confType configType, key string) string {
 	} else {
 		return strings.Join([]string{configKeyPrefix, string(confType), key}, ".")
 	}
-
 }
