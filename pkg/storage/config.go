@@ -34,12 +34,12 @@ const (
 )
 
 // Set sets a configuration value
-func (c config) Set(key, value string, confType configType) error {
+func (c *config) Set(key, value string, confType configType) error {
 	return c.storage.Set(c.nestKeys(confType, key), value)
 }
 
 // SetDocument sets a configuration value that is primitive or an object
-func (c config) SetDocument(key string, value any, confType configType) error {
+func (c *config) SetDocument(key string, value any, confType configType) error {
 	return c.storage.SetDocument(c.nestKeys(confType, key), value)
 }
 
@@ -66,7 +66,7 @@ func (c *config) GetAll() (map[string]any, error) {
 	return c.loadConfigs()
 }
 
-func (c config) Unset(key string, confType configType) error {
+func (c *config) Unset(key string, confType configType) error {
 	return c.storage.Unset(c.nestKeys(confType, key))
 }
 
