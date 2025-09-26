@@ -42,15 +42,15 @@ func showEngine(_ *cobra.Command, args []string) error {
 }
 
 func showEngineValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
-	engines, err := selector.LoadManifestsFromDir(enginesDir)
+	manifests, err := selector.LoadManifestsFromDir(enginesDir)
 	if err != nil {
-		fmt.Println("Error loading engines: %v", err)
+		fmt.Printf("Error loading engines: %v\n", err)
 		return nil, cobra.ShellCompDirectiveError
 	}
 
 	var engineNames []cobra.Completion
-	for i := range engines {
-		engineNames = append(engineNames, engines[i].Name)
+	for i := range manifests {
+		engineNames = append(engineNames, manifests[i].Name)
 	}
 
 	return engineNames, cobra.ShellCompDirectiveNoSpace

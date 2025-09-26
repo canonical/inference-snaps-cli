@@ -46,7 +46,7 @@ func addUseCommand() {
 func useValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
 	scoredEngines, err := scoreEngines()
 	if err != nil {
-		fmt.Println("Error scoring engines: %v", err)
+		fmt.Printf("Error scoring engines: %v\n", err)
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
 
