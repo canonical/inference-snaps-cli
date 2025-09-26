@@ -76,6 +76,8 @@ parts:
       - go/1.24/stable
     source: .
     source-type: local
+    organize:
+      bin/cli: bin/stack-utils
 
   engines:
     plugin: dump
@@ -90,7 +92,7 @@ apps:
       - home
       - network
       - opengl
-    command: bin/cli
+    command: bin/stack-utils
 
   clinfo:
     plugs:

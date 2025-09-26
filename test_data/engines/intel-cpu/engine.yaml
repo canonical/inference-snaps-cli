@@ -10,4 +10,5 @@ devices:
 
 memory: 5G
 disk-space: 10G
-
+configurations:
+  http.base-path: v3

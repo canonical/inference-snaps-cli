@@ -15,4 +15,6 @@ devices:
       # compute-capability: 5.0
 memory: 2G
 disk-space: 5G
-
+configurations:
+  http.base-path: v1
+  gpu-layers: 29
