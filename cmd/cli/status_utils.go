@@ -90,8 +90,20 @@ func serverApiUrls(engine *engines.ScoredManifest) (map[string]string, error) {
 		return nil, fmt.Errorf("error getting http port: %v", err)
 	}
 	httpPort := httpPortMap["http.port"]
+	httpPortStr := ""
 
-	openaiHost := fmt.Sprintf("localhost:%s", httpPort)
+	switch v := httpPort.(type) {
+	case int, uint, int8, uint8, int16, uint16, int32, uint32, int64, uint64:
+		httpPortStr = fmt.Sprintf("%d", v)
+	case float32, float64:
+		httpPortStr = fmt.Sprintf("%.0f", v)
+	case string:
+		httpPortStr = v
+	default:
+		return nil, fmt.Errorf("unexpected type for http port: %v", v)
+	}
+
+	openaiHost := fmt.Sprintf("localhost:%s", httpPortStr)
 	openaiUrl := url.URL{Scheme: "http", Host: openaiHost, Path: apiBasePath}
 	return map[string]string{openAi: openaiUrl.String()}, nil
 
