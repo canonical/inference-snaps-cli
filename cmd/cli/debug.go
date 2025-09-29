@@ -161,13 +161,13 @@ func debugSelectEngine(_ *cobra.Command, args []string) error {
 
 	var resultStr string
 	switch debugOutputFormat {
-	case "", "json": // Unset defaults to json
+	case "json":
 		jsonString, err := json.MarshalIndent(engineSelection, "", "  ")
 		if err != nil {
 			return fmt.Errorf("failed to marshal to JSON: %s", err)
 		}
 		resultStr = string(jsonString)
-	case "yaml":
+	case "", "yaml": // Unset defaults to yaml
 		yamlString, err := yaml.Marshal(engineSelection)
 		if err != nil {
 			return fmt.Errorf("failed to marshal to YAML: %s", err)

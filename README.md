@@ -45,8 +45,8 @@ A summary of the current host machine can be obtained by running:
 stack-utils debug machine-info
 ```
 
-This will print out a summary of the host system to `STDOUT` in JSON format.
-The output format can be changed to yaml by addign `--format yaml` to the command.
+This will print out a summary of the host system to `STDOUT` in YAML format.
+The output format can be changed to JSON by setting `--format json` to the command.
 
 Errors and warnings are printed to STDERR.
 This allows piping the output to another application.
