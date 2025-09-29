@@ -16,8 +16,9 @@ import (
 )
 
 var (
-	debugOutputFormat string
-	debugEnginesDir   string
+	debugMachineInfoFormat string
+	debugSelectFormat      string
+	debugEnginesDir        string
 )
 
 func addDebugCommand() {
@@ -35,7 +36,7 @@ func addDebugCommand() {
 		ValidArgsFunction: cobra.NoFileCompletions,
 		RunE:              machineInfo,
 	}
-	machineInfoCmd.PersistentFlags().StringVar(&debugOutputFormat, "format", "yaml", "Print information about the machine")
+	machineInfoCmd.PersistentFlags().StringVar(&debugMachineInfoFormat, "format", "yaml", "Print information about the machine")
 	debugCmd.AddCommand(machineInfoCmd)
 
 	validateCmd := &cobra.Command{
@@ -52,7 +53,7 @@ func addDebugCommand() {
 		Long:  "Test which engine will be chosen from a directory of engines, given the machine information piped in via stdin",
 		RunE:  debugSelectEngine,
 	}
-	selectCmd.PersistentFlags().StringVar(&debugOutputFormat, "format", "json", "Print engine selection results")
+	selectCmd.PersistentFlags().StringVar(&debugSelectFormat, "format", "yaml", "Print engine selection results")
 	// If engines flag is set, override the globally defined engines directory
 	selectCmd.PersistentFlags().StringVar(&debugEnginesDir, "engines", enginesDir, "directory containing engines, from which one should be selected")
 	debugCmd.AddCommand(selectCmd)
@@ -67,7 +68,7 @@ func machineInfo(_ *cobra.Command, args []string) error {
 	}
 
 	var hwInfoStr string
-	switch debugOutputFormat {
+	switch debugMachineInfoFormat {
 	case "json":
 		jsonString, err := json.MarshalIndent(hwInfo, "", "  ")
 		if err != nil {
@@ -81,7 +82,7 @@ func machineInfo(_ *cobra.Command, args []string) error {
 		}
 		hwInfoStr = string(yamlString)
 	default:
-		return fmt.Errorf("unknown format %q", debugOutputFormat)
+		return fmt.Errorf("unknown format %q", debugMachineInfoFormat)
 	}
 
 	fmt.Println(hwInfoStr)
@@ -160,7 +161,7 @@ func debugSelectEngine(_ *cobra.Command, args []string) error {
 	fmt.Fprintf(os.Stderr, greenBold("Selected engine for your hardware configuration: %s\n\n"), selectedEngine.Name)
 
 	var resultStr string
-	switch debugOutputFormat {
+	switch debugSelectFormat {
 	case "json":
 		jsonString, err := json.MarshalIndent(engineSelection, "", "  ")
 		if err != nil {
@@ -174,7 +175,7 @@ func debugSelectEngine(_ *cobra.Command, args []string) error {
 		}
 		resultStr = string(yamlString)
 	default:
-		return fmt.Errorf("unknown format %q", debugOutputFormat)
+		return fmt.Errorf("unknown format %q", debugSelectFormat)
 	}
 
 	fmt.Println(resultStr)
