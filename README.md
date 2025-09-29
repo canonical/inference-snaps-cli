@@ -53,7 +53,7 @@ This allows piping the output to another application.
 
 ### Select Engine
 
-The machine info can be piped into `select-engine`.
+The machine info in JSON format can be piped into `select-engine`.
 You need to provide the location of the engine definitions from which the selection should be made.
 
 The result is written as json to STDOUT, while any other log messages are available on STDERR.

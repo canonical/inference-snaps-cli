@@ -35,7 +35,7 @@ func addDebugCommand() {
 		ValidArgsFunction: cobra.NoFileCompletions,
 		RunE:              machineInfo,
 	}
-	machineInfoCmd.PersistentFlags().StringVar(&debugOutputFormat, "format", "", "return the machine info as yaml or json")
+	machineInfoCmd.PersistentFlags().StringVar(&debugOutputFormat, "format", "yaml", "return information about the machine")
 	debugCmd.AddCommand(machineInfoCmd)
 
 	validateCmd := &cobra.Command{
@@ -52,7 +52,7 @@ func addDebugCommand() {
 		Long:  "Test which engine will be chosen from a directory of engines, given the machine information piped in via stdin",
 		RunE:  debugSelectEngine,
 	}
-	selectCmd.PersistentFlags().StringVar(&debugOutputFormat, "format", "", "return the machine info as yaml or json")
+	selectCmd.PersistentFlags().StringVar(&debugOutputFormat, "format", "json", "return selection results")
 	// If engines flag is set, override the globally defined engines directory
 	selectCmd.PersistentFlags().StringVar(&debugEnginesDir, "engines", enginesDir, "directory containing engines, from which one should be selected")
 	debugCmd.AddCommand(selectCmd)
@@ -68,7 +68,7 @@ func machineInfo(_ *cobra.Command, args []string) error {
 
 	var hwInfoStr string
 	switch debugOutputFormat {
-	case "", "json": // Unset defaults to json
+	case "json":
 		jsonString, err := json.MarshalIndent(hwInfo, "", "  ")
 		if err != nil {
 			return fmt.Errorf("failed to marshal to JSON: %s", err)
@@ -167,7 +167,7 @@ func debugSelectEngine(_ *cobra.Command, args []string) error {
 			return fmt.Errorf("failed to marshal to JSON: %s", err)
 		}
 		resultStr = string(jsonString)
-	case "", "yaml": // Unset defaults to yaml
+	case "yaml":
 		yamlString, err := yaml.Marshal(engineSelection)
 		if err != nil {
 			return fmt.Errorf("failed to marshal to YAML: %s", err)
