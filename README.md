@@ -37,7 +37,7 @@ To build and install from source, refer to [here](#build-snap).
 
 ## Usage
 
-The following assumes use of the stack-utils snap to use the binaries.
+The following assumes use of the stack-utils snap to use the CLI.
 
 ### Machine Info
 
@@ -56,7 +56,7 @@ This allows piping the output to another application.
 ### Select Engine
 
 This command can be used to perform engine selection using static data.
-This is useful for testing purposes.
+It is useful for testing purposes.
 
 To use, pipe the machine info in JSON format into `select-engine`.
 You also need to provide the location of the engine manifests from which the selection should be made.
