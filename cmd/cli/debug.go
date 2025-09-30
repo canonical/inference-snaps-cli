@@ -36,7 +36,7 @@ func addDebugCommand() {
 		ValidArgsFunction: cobra.NoFileCompletions,
 		RunE:              machineInfo,
 	}
-	machineInfoCmd.PersistentFlags().StringVar(&debugMachineInfoFormat, "format", "yaml", "Print information about the machine")
+	machineInfoCmd.PersistentFlags().StringVar(&debugMachineInfoFormat, "format", "yaml", "output format")
 	debugCmd.AddCommand(machineInfoCmd)
 
 	validateCmd := &cobra.Command{
@@ -53,9 +53,9 @@ func addDebugCommand() {
 		Long:  "Test which engine will be chosen from a directory of engines, given the machine information piped in via stdin",
 		RunE:  debugSelectEngine,
 	}
-	selectCmd.PersistentFlags().StringVar(&debugSelectFormat, "format", "yaml", "Print engine selection results")
+	selectCmd.PersistentFlags().StringVar(&debugSelectFormat, "format", "yaml", "engine selection results format")
 	// If engines flag is set, override the globally defined engines directory
-	selectCmd.PersistentFlags().StringVar(&debugEnginesDir, "engines", enginesDir, "directory containing engines, from which one should be selected")
+	selectCmd.PersistentFlags().StringVar(&debugEnginesDir, "engines", enginesDir, "engine manifests directory")
 	debugCmd.AddCommand(selectCmd)
 
 	rootCmd.AddCommand(debugCmd)
