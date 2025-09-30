@@ -48,7 +48,6 @@ stack-utils debug machine-info
 ```
 
 This prints a machine-readable summary of the host system. 
-The output format can be changed to JSON by setting `--format=json`.
 
 Errors and warnings are printed as standard errors.
 This allows piping the output to another application.
