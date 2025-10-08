@@ -18,6 +18,15 @@ layout:
   # NVIDIA icd specifies only the shared object name: libnvidia-opencl.so.1
   # libnvidia-opencl.so.1 is inside /snap/stack-utils/x3/usr/lib/x86_64-linux-gnu/, which is already in LD_LIBRARY_PATH
 
+plugs:
+  intel-npu:
+    interface: custom-device
+    custom-device: intel-npu-device
+  npu-libs:
+    interface: content
+    content: npu-libs-2404
+    target: $SNAP/npu-libs
+
 parts:
   system-utilities:
     plugin: nil

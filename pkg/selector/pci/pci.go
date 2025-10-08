@@ -70,17 +70,15 @@ func checkPciDevice(device engines.Device, pciDevice types.PciDevice) (int, []st
 	}
 
 	// Check additional properties
-	if hasAdditionalProperties(device) {
-		propsScore, propReasons, err := checkProperties(device, pciDevice)
-		reasons = append(reasons, propReasons...)
-		if err != nil {
-			return 0, reasons, err
-		}
-		if propsScore > 0 {
-			currentDeviceScore += propsScore
-		} else {
-			return 0, reasons, nil
-		}
+	propsScore, propReasons, err := checkProperties(device, pciDevice)
+	reasons = append(reasons, propReasons...)
+	if err != nil {
+		return 0, reasons, err
+	}
+	if propsScore > 0 {
+		currentDeviceScore += propsScore
+	} else {
+		return 0, reasons, nil
 	}
 
 	return currentDeviceScore, reasons, nil

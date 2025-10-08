@@ -4,10 +4,11 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/canonical/famous-models-cli/pkg/types"
 	"github.com/canonical/go-snapctl"
 )
 
-func npuProperties(pciDevice string) (map[string]string, error) {
+func npuProperties(pciDevice types.PciDevice) (map[string]string, error) {
 	properties := make(map[string]string)
 
 	// We need to verify that the NPU driver is installed and available

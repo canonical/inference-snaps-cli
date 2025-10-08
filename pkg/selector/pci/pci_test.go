@@ -94,3 +94,42 @@ func TestCheckGpuVram(t *testing.T) {
 		t.Fatal("GPU vram should NOT be enough")
 	}
 }
+
+func TestCheckNpuDriver(t *testing.T) {
+	npuVendorId := types.HexInt(0x8086)
+	npuDeviceId := types.HexInt(0x643e)
+
+	hwInfo := types.PciDevice{
+		DeviceClass: 0x1200,
+		VendorId:    npuVendorId,
+		DeviceId:    npuDeviceId,
+		SubvendorId: nil,
+		SubdeviceId: nil,
+		AdditionalProperties: map[string]string{
+			"has_driver": "true",
+		},
+	}
+
+	device := engines.Device{
+		Bus:      "pci",
+		VendorId: &npuVendorId,
+		DeviceId: &npuDeviceId,
+	}
+
+	score, reasons, err := checkPciDevice(device, hwInfo)
+	if err != nil {
+		t.Error(err)
+	}
+	if score == 0 {
+		t.Fatalf("NPU with driver should match: %v", reasons)
+	}
+
+	hwInfo.AdditionalProperties["has_driver"] = "false"
+	score, reasons, err = checkPciDevice(device, hwInfo)
+	if err != nil {
+		t.Error(err)
+	}
+	if score > 0 {
+		t.Fatal("NPU without driver should NOT match")
+	}
+}

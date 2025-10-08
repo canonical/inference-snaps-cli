@@ -50,6 +50,8 @@ func checkProperties(device engines.Device, pciDevice types.PciDevice) (int, []s
 		if !hasDriver {
 			reasons = append(reasons, "device driver not installed")
 			return 0, reasons, nil
+		} else {
+			extraScore += weights.HasDriver
 		}
 	}
 

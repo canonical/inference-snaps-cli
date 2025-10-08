@@ -11,6 +11,7 @@ const (
 	PciDeviceType        = 10
 	GpuVRam              = 10
 	GpuComputeCapability = 10
+	HasDriver            = 10
 
 	CpuDevice = 10
 	CpuModel  = 8
