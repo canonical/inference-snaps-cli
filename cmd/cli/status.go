@@ -37,6 +37,7 @@ func status(_ *cobra.Command, _ []string) error {
 	var statusText string
 	var err error
 
+	stopProgress := startProgressSpinner("Getting status ")
 	switch statusFormat {
 	case "json":
 		statusText, err = statusJson()
@@ -54,6 +55,7 @@ func status(_ *cobra.Command, _ []string) error {
 			return fmt.Errorf("error getting status: %v", err)
 		}
 	}
+	stopProgress()
 
 	fmt.Println(statusText)
 
