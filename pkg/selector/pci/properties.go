@@ -1,6 +1,9 @@
 package pci
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/canonical/famous-models-cli/pkg/engines"
 	"github.com/canonical/famous-models-cli/pkg/selector/weights"
 	"github.com/canonical/famous-models-cli/pkg/types"
@@ -36,7 +39,19 @@ func checkProperties(device engines.Device, pciDevice types.PciDevice) (int, []s
 		}
 	}
 
-	// TODO compute-capability
+	// TODO compute_capability
+
+	// has_driver - if this field is set, we can definitely say the driver is, or is not available
+	if hasDriverStr, ok := pciDevice.AdditionalProperties["has_driver"]; ok {
+		hasDriver, err := strconv.ParseBool(hasDriverStr)
+		if err != nil {
+			return 0, reasons, fmt.Errorf("error parsing has_driver property: %v", err)
+		}
+		if !hasDriver {
+			reasons = append(reasons, "device driver not installed")
+			return 0, reasons, nil
+		}
+	}
 
 	return extraScore, reasons, nil
 }

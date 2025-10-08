@@ -24,7 +24,13 @@ func AdditionalProperties(pciDevice types.PciDevice) (map[string]string, error) 
 		}
 	}
 
-	// Future: handle other Intel device classes like NPUs
+	// 12 00 - Processing accelerators (NPUs)
+	if pciDevice.DeviceClass == 0x1200 {
+		properties, err = npuProperties(pciDevice)
+		if err != nil {
+			return nil, fmt.Errorf("error getting npu properties: %v", err)
+		}
+	}
 
 	return properties, nil
 }
