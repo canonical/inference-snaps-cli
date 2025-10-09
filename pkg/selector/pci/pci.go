@@ -6,6 +6,7 @@ import (
 	"github.com/canonical/famous-models-cli/pkg/engines"
 	"github.com/canonical/famous-models-cli/pkg/selector/weights"
 	"github.com/canonical/famous-models-cli/pkg/types"
+	"github.com/canonical/go-snapctl"
 )
 
 func Match(device engines.Device, pcis []types.PciDevice) (int, []string, error) {
@@ -79,6 +80,18 @@ func checkPciDevice(device engines.Device, pciDevice types.PciDevice) (int, []st
 		if propsScore > 0 {
 			currentDeviceScore += propsScore
 		} else {
+			return 0, reasons, nil
+		}
+	}
+
+	// Check drivers
+	for _, connection := range device.SnapConnections {
+		connected, err := snapctl.IsConnected(connection).Run()
+		if err != nil {
+			return 0, reasons, fmt.Errorf("error checking snap connection %q: %v", connection, err)
+		}
+		if !connected {
+			reasons = append(reasons, fmt.Sprintf("%q is not connected", connection))
 			return 0, reasons, nil
 		}
 	}

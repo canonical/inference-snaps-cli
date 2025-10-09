@@ -11,11 +11,11 @@ func TestCheckGpuVendor(t *testing.T) {
 	gpuVendorId := types.HexInt(0xb33f)
 
 	hwInfoGpu := types.PciDevice{
-		DeviceClass:          0x0300,
-		VendorId:             gpuVendorId,
-		DeviceId:             0,
-		SubvendorId:          nil,
-		SubdeviceId:          nil,
+		DeviceClass: 0x0300,
+		VendorId:    gpuVendorId,
+		DeviceId:    0,
+		SubvendorId: nil,
+		SubdeviceId: nil,
 		AdditionalProperties: map[string]string{
 			//VRam:              nil,
 			//ComputeCapability: nil,
@@ -92,5 +92,42 @@ func TestCheckGpuVram(t *testing.T) {
 	}
 	if score > 0 {
 		t.Fatal("GPU vram should NOT be enough")
+	}
+}
+
+func TestCheckNpuDriver(t *testing.T) {
+	npuVendorId := types.HexInt(0x8086)
+	npuDeviceId := types.HexInt(0x643e)
+
+	hwInfo := types.PciDevice{
+		DeviceClass: 0x1200,
+		VendorId:    npuVendorId,
+		DeviceId:    npuDeviceId,
+		SubvendorId: nil,
+		SubdeviceId: nil,
+	}
+
+	device := engines.Device{
+		Bus:             "pci",
+		VendorId:        &npuVendorId,
+		DeviceId:        &npuDeviceId,
+		SnapConnections: []string{"intel-npu", "npu-libs"},
+	}
+
+	score, reasons, err := checkPciDevice(device, hwInfo)
+	if err != nil {
+		t.Error(err)
+	}
+	if score == 0 {
+		t.Fatalf("NPU with driver should match: %v", reasons)
+	}
+
+	// TODO clear interfaces
+	score, reasons, err = checkPciDevice(device, hwInfo)
+	if err != nil {
+		t.Error(err)
+	}
+	if score > 0 {
+		t.Fatal("NPU without driver should NOT match")
 	}
 }
