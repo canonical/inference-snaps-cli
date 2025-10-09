@@ -26,9 +26,10 @@ func addSetCommand() {
 	}
 
 	// flags
-	// TODO: hide these flags
 	cmd.PersistentFlags().BoolVar(&setPackageConfig, "package", false, "set package configurations")
+	cmd.PersistentFlags().MarkHidden("package")
 	cmd.PersistentFlags().BoolVar(&setEngineConfig, "engine", false, "set engine configuration")
+	cmd.PersistentFlags().MarkHidden("engine")
 
 	rootCmd.AddCommand(cmd)
 }
