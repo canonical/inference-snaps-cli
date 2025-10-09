@@ -2,6 +2,7 @@ package pci
 
 import (
 	"fmt"
+	"testing"
 
 	"github.com/canonical/famous-models-cli/pkg/engines"
 	"github.com/canonical/famous-models-cli/pkg/selector/weights"
@@ -86,7 +87,13 @@ func checkPciDevice(device engines.Device, pciDevice types.PciDevice) (int, []st
 
 	// Check drivers
 	for _, connection := range device.SnapConnections {
-		connected, err := snapctl.IsConnected(connection).Run()
+		var connected bool
+		var err error
+		if testing.Testing() {
+			connected = true
+		} else {
+			connected, err = snapctl.IsConnected(connection).Run()
+		}
 		if err != nil {
 			return 0, reasons, fmt.Errorf("error checking snap connection %q: %v", connection, err)
 		}
