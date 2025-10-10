@@ -87,13 +87,7 @@ func checkPciDevice(device engines.Device, pciDevice types.PciDevice) (int, []st
 
 	// Check drivers
 	for _, connection := range device.SnapConnections {
-		var connected bool
-		var err error
-		if testing.Testing() {
-			connected = true
-		} else {
-			connected, err = snapctl.IsConnected(connection).Run()
-		}
+		connected, err := checkSnapConnection(connection)
 		if err != nil {
 			return 0, reasons, fmt.Errorf("error checking snap connection %q: %v", connection, err)
 		}
@@ -131,4 +125,13 @@ func checkType(requiredType string, pciDevice types.PciDevice) bool {
 	}
 
 	return false
+}
+
+func checkSnapConnection(connection string) (bool, error) {
+	if testing.Testing() {
+		// Tests do not necessarily run inside a snap
+		// Stub out and always return true for all connections
+		return true, nil
+	}
+	return snapctl.IsConnected(connection).Run()
 }
