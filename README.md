@@ -1,4 +1,4 @@
-# Famous Models CLI
+# Inference Snaps CLI
 
 This repo contains the CLI implementation for configuration and engine management.
 
