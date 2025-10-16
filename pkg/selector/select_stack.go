@@ -180,7 +180,6 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, []
 	if len(manifest.Devices.Anyof) > 0 {
 		extraScore, reasonsAny, err := checkDevicesAny(hardwareInfo, manifest.Devices.Anyof)
 		reasons = append(reasons, reasonsAny...)
-
 		if err != nil {
 			return 0, reasons, err
 		}
