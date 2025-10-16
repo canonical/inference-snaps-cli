@@ -73,7 +73,7 @@ func use(_ *cobra.Command, args []string) error {
 			return fmt.Errorf("cannot specify both engine name and --auto flag")
 		}
 
-		fmt.Println("Evaluating available engines for optimal hardware compatibility...")
+		fmt.Println("Evaluating available engines for optimal hardware compatibility ...")
 
 		scoredEngines, err := scoreEngines()
 		if err != nil {
