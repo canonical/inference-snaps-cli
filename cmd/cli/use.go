@@ -73,11 +73,14 @@ func use(_ *cobra.Command, args []string) error {
 			return fmt.Errorf("cannot specify both engine name and --auto flag")
 		}
 
+		fmt.Println("Evaluating available engines for optimal hardware compatibility...")
+
 		scoredEngines, err := scoreEngines()
 		if err != nil {
 			return fmt.Errorf("error scoring engines: %v", err)
 		}
 
+		fmt.Println()
 		for _, engine := range scoredEngines {
 			if engine.Score == 0 {
 				fmt.Printf("❌ %s - not compatible: %s\n", engine.Name, strings.Join(engine.Notes, ", "))
@@ -88,14 +91,13 @@ func use(_ *cobra.Command, args []string) error {
 			}
 		}
 
-		fmt.Println("Automatically selecting a compatible engine ...")
-
 		selectedEngine, err := selector.TopEngine(scoredEngines)
 		if err != nil {
 			return fmt.Errorf("error finding top engine: %v", err)
 		}
 
-		fmt.Printf("Selected engine for your hardware configuration: %s\n\n", selectedEngine.Name)
+		fmt.Println()
+		fmt.Printf("Selected engine: %s\n", selectedEngine.Name)
 
 		err = useEngine(selectedEngine.Name, useAssumeYes)
 		if err != nil {
