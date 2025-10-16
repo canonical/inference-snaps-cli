@@ -12,7 +12,7 @@ func addChatCommand() {
 	cmd := &cobra.Command{
 		Use:               "chat",
 		Short:             "Start the chat CLI",
-		Long:              "Start the chat CLI for interacting with the server",
+		Long:              "Start a simple chat CLI for interacting with the server",
 		GroupID:           "basics",
 		Args:              cobra.NoArgs,
 		ValidArgsFunction: cobra.NoFileCompletions,
