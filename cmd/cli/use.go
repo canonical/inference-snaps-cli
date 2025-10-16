@@ -73,21 +73,19 @@ func use(_ *cobra.Command, args []string) error {
 			return fmt.Errorf("cannot specify both engine name and --auto flag")
 		}
 
-		fmt.Println("Evaluating available engines for optimal hardware compatibility ...")
-
 		scoredEngines, err := scoreEngines()
 		if err != nil {
 			return fmt.Errorf("error scoring engines: %v", err)
 		}
 
-		fmt.Println()
+		fmt.Println("Evaluating engines for optimal hardware compatibility:")
 		for _, engine := range scoredEngines {
 			if engine.Score == 0 {
-				fmt.Printf("❌ %s - not compatible: %s\n", engine.Name, strings.Join(engine.Notes, ", "))
+				fmt.Printf("✘ %s: not compatible: %s\n", engine.Name, strings.Join(engine.Notes, ", "))
 			} else if engine.Grade != "stable" {
-				fmt.Printf("🟠 %s - score = %d, grade = %s\n", engine.Name, engine.Score, engine.Grade)
+				fmt.Printf("− %s: experimental, score=%d\n", engine.Name, engine.Score)
 			} else {
-				fmt.Printf("✅ %s - compatible, score = %d\n", engine.Name, engine.Score)
+				fmt.Printf("✔ %s: compatible, score=%d\n", engine.Name, engine.Score)
 			}
 		}
 
@@ -96,7 +94,6 @@ func use(_ *cobra.Command, args []string) error {
 			return fmt.Errorf("error finding top engine: %v", err)
 		}
 
-		fmt.Println()
 		fmt.Printf("Selected engine: %s\n", selectedEngine.Name)
 
 		err = useEngine(selectedEngine.Name, useAssumeYes)
@@ -335,3 +332,18 @@ func confirmationPrompt(prompt string) bool {
 		}
 	}
 }
+
+// Evaluating available engines for optimal hardware compatibility:
+// ✓ ampere - not compatible: devices allof: required cpu device not found
+// ✘ ampere-altra - not compatible: devices allof: required cpu device not found
+// ✘ arm-neon - not compatible: devices anyof: required device not found
+// ✓ cpu-avx1 - compatible, score = 14
+// ✔ cpu-avx2 - compatible, score = 17
+// ✘ cpu-avx512 - not compatible: devices allof: required cpu device not found
+// − cpu-devel - score = 12, grade = devel
+// ✔ cuda-generic - compatible, score = 107
+// ✔ example-memory - compatible, score = 18
+// ✔ intel-cpu - compatible, score = 18
+// ✔ intel-gpu - compatible, score = 72
+// ✘ intel-npu - not compatible: devices anyof: required device not found
+// Selected engine: cuda-generic
