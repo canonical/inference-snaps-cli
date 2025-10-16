@@ -12,7 +12,7 @@ func addChatCommand() {
 	cmd := &cobra.Command{
 		Use:               "chat",
 		Short:             "Start the chat CLI",
-		Long:              "Chat with the server via its OpenAI HTTP server.\nThis CLI supports text-based prompting only.",
+		Long:              "Chat with the server via its OpenAI API.\nThis CLI supports text-based prompting only.",
 		GroupID:           "basics",
 		Args:              cobra.NoArgs,
 		ValidArgsFunction: cobra.NoFileCompletions,
