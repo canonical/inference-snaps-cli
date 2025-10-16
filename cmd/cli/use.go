@@ -83,7 +83,7 @@ func use(_ *cobra.Command, args []string) error {
 			if engine.Score == 0 {
 				fmt.Printf("✘ %s: not compatible: %s\n", engine.Name, strings.Join(engine.Notes, ", "))
 			} else if engine.Grade != "stable" {
-				fmt.Printf("− %s: experimental, score=%d\n", engine.Name, engine.Score)
+				fmt.Printf("− %s: devel, score=%d\n", engine.Name, engine.Score)
 			} else {
 				fmt.Printf("✔ %s: compatible, score=%d\n", engine.Name, engine.Score)
 			}
