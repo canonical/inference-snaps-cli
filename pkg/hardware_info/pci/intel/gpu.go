@@ -1,14 +1,19 @@
 package intel
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os/exec"
 	"strconv"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/canonical/inference-snaps-cli/pkg/types"
 )
+
+const clInfoTimeout = 30 * time.Second
 
 func gpuProperties(pciDevice types.PciDevice) (map[string]string, error) {
 	properties := make(map[string]string)
@@ -29,12 +34,42 @@ func vRam(device types.PciDevice) (*uint64, error) {
 		For GPU vRAM information use clinfo. Grep for "Global memory size" and/or "Max memory allocation".
 		After installing necessary drivers for GPU, NPU, you can also use OpenVino APIs to see available devices and their properties, including VRAM.
 		`clinfo --json` reports a field `CL_DEVICE_GLOBAL_MEM_SIZE` which corresponds to the installed hardware's vRAM.
+
+		We add a timeout to prevent clinfo from blocking the program flow.
+		See https://jarv.org/posts/command-with-timeout/ for a guide on properly timing out a command in Go.
 	*/
 	command := exec.Command("clinfo", "--json")
-	data, err := command.Output()
-	if err != nil {
-		return nil, err
+	command.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
+	type cmdOutputStruct struct {
+		output []byte
+		err    error
 	}
+	cmdOutputChannel := make(chan cmdOutputStruct, 1)
+	go func() {
+		output, err := command.CombinedOutput()
+		cmdOutputChannel <- cmdOutputStruct{output, err}
+	}()
+
+	var data []byte
+	select {
+	case <-time.After(clInfoTimeout):
+		syscall.Kill(-command.Process.Pid, syscall.SIGKILL)
+		return nil, fmt.Errorf("clinfo timed out and killed")
+	case cmdOutput, ok := <-cmdOutputChannel:
+		if !ok {
+			return nil, fmt.Errorf("command channel closed unexpectedly")
+		}
+		if cmdOutput.err != nil {
+			if len(cmdOutput.output) == 0 {
+				return nil, cmdOutput.err
+			} else {
+				return nil, fmt.Errorf("%s: %s", cmdOutput.err, bytes.TrimSpace(cmdOutput.output))
+			}
+		}
+		data = cmdOutput.output
+	}
+
 	clinfo, err := parseClinfoJson(data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse clinfo json: %w", err)

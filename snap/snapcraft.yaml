@@ -107,3 +107,10 @@ apps:
       - opengl
       - network
     command: usr/bin/clinfo
+
+  nvidia-smi:
+    plugs:
+      - hardware-observe
+      - opengl
+      - network
+    command: usr/bin/nvidia-smi
