@@ -97,6 +97,7 @@ apps:
     plugs:
       - hardware-observe
       - home
+      - kernel-module-observe
       - network
       - opengl
     command: bin/cli
@@ -104,13 +105,14 @@ apps:
   clinfo:
     plugs:
       - hardware-observe
-      - opengl
+      - kernel-module-observe
       - network
+      - opengl
     command: usr/bin/clinfo
 
   nvidia-smi:
     plugs:
       - hardware-observe
-      - opengl
       - network
+      - opengl
     command: usr/bin/nvidia-smi
