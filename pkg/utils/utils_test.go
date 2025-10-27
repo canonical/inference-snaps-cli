@@ -1,6 +1,10 @@
 package utils
 
-import "testing"
+import (
+	"strings"
+	"testing"
+	"time"
+)
 
 func TestStringToBytesGigabytes(t *testing.T) {
 	sizeBytes, err := StringToBytes("4G")
@@ -83,4 +87,34 @@ func TestIsRootUser(t *testing.T) {
 	} else {
 		t.Log("User is not root")
 	}
+}
+
+func TestAppRun(t *testing.T) {
+	app := ExternalApp{
+		Command: "echo",
+		Args:    []string{"test"},
+		Env:     nil,
+		Timeout: 30 * time.Second,
+	}
+	data, err := app.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.TrimSpace(string(data)) != "test" {
+		t.Fatalf("command returned incorrect output: %s", string(data))
+	}
+}
+
+func TestAppTimeout(t *testing.T) {
+	app := ExternalApp{
+		Command: "sleep",
+		Args:    []string{"2"},
+		Env:     nil,
+		Timeout: 1 * time.Second,
+	}
+	_, err := app.Run()
+	if err == nil {
+		t.Fatal("command should time out")
+	}
+	t.Log(err.Error())
 }

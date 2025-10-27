@@ -1,16 +1,14 @@
 package intel
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"os/exec"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/canonical/inference-snaps-cli/pkg/types"
+	"github.com/canonical/inference-snaps-cli/pkg/utils"
 )
 
 const clInfoTimeout = 30 * time.Second
@@ -38,36 +36,15 @@ func vRam(device types.PciDevice) (*uint64, error) {
 		We add a timeout to prevent clinfo from blocking the program flow.
 		See https://jarv.org/posts/command-with-timeout/ for a guide on properly timing out a command in Go.
 	*/
-	command := exec.Command("clinfo", "--json")
-	command.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-
-	type cmdOutputStruct struct {
-		output []byte
-		err    error
+	clinfoApp := utils.ExternalApp{
+		Command: "clinfo",
+		Args:    []string{"--json"},
+		Env:     nil,
+		Timeout: 30 * time.Second,
 	}
-	cmdOutputChannel := make(chan cmdOutputStruct, 1)
-	go func() {
-		output, err := command.CombinedOutput()
-		cmdOutputChannel <- cmdOutputStruct{output, err}
-	}()
-
-	var data []byte
-	select {
-	case <-time.After(clInfoTimeout):
-		syscall.Kill(-command.Process.Pid, syscall.SIGKILL)
-		return nil, fmt.Errorf("clinfo timed out and killed")
-	case cmdOutput, ok := <-cmdOutputChannel:
-		if !ok {
-			return nil, fmt.Errorf("command channel closed unexpectedly")
-		}
-		if cmdOutput.err != nil {
-			if len(cmdOutput.output) == 0 {
-				return nil, cmdOutput.err
-			} else {
-				return nil, fmt.Errorf("%s: %s", cmdOutput.err, bytes.TrimSpace(cmdOutput.output))
-			}
-		}
-		data = cmdOutput.output
+	data, err := clinfoApp.Run()
+	if err != nil {
+		return nil, err
 	}
 
 	clinfo, err := parseClinfoJson(data)

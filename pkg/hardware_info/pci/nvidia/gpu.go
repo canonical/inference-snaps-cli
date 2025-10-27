@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"os/exec"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/canonical/inference-snaps-cli/pkg/types"
+	"github.com/canonical/inference-snaps-cli/pkg/utils"
 )
 
 const nvidiaSmiTimeout = 60 * time.Second
@@ -83,38 +82,15 @@ func computeCapability(device types.PciDevice) (*string, error) {
 }
 
 func nvidiaSmi(args ...string) (*string, error) {
-	cmd := exec.Command("nvidia-smi", args...)
-	cmd.Env = os.Environ()
-	cmd.Env = append(cmd.Env, "LANG=C")
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-
-	type cmdOutputStruct struct {
-		output []byte
-		err    error
+	nvidiaSmiApp := utils.ExternalApp{
+		Command: "nvidia-smi",
+		Args:    args,
+		Env:     append(os.Environ(), "LANG=C"),
+		Timeout: 30 * time.Second,
 	}
-	cmdOutputChannel := make(chan cmdOutputStruct, 1)
-	go func() {
-		output, err := cmd.CombinedOutput()
-		cmdOutputChannel <- cmdOutputStruct{output, err}
-	}()
-
-	var data []byte
-	select {
-	case <-time.After(nvidiaSmiTimeout):
-		syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
-		return nil, fmt.Errorf("nvidia-smi timed out and killed")
-	case cmdOutput, ok := <-cmdOutputChannel:
-		if !ok {
-			return nil, fmt.Errorf("channel closed unexpectedly")
-		}
-		if cmdOutput.err != nil {
-			if len(cmdOutput.output) == 0 {
-				return nil, cmdOutput.err
-			} else {
-				return nil, fmt.Errorf("%s: %s", cmdOutput.err, bytes.TrimSpace(cmdOutput.output))
-			}
-		}
-		data = cmdOutput.output
+	data, err := nvidiaSmiApp.Run()
+	if err != nil {
+		return nil, err
 	}
 
 	strOutput := string(bytes.TrimSpace(data))

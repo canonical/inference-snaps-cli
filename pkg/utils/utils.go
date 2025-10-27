@@ -1,13 +1,17 @@
 package utils
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
+	"syscall"
+	"time"
 
 	"golang.org/x/term"
 )
@@ -115,4 +119,55 @@ func IsRootUser() bool {
 
 func IsTerminalOutput() bool {
 	return term.IsTerminal(int(os.Stdout.Fd()))
+}
+
+type ExternalApp struct {
+	Command string
+	Args    []string
+	Env     []string
+	Timeout time.Duration
+}
+
+func (app ExternalApp) Run() ([]byte, error) {
+	// If timeout is unset, default to 30 seconds
+	if app.Timeout == 0 {
+		app.Timeout = 30 * time.Second
+	}
+
+	command := exec.Command(app.Command, app.Args...)
+	command.Env = app.Env
+	command.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
+	type cmdOutputStruct struct {
+		output []byte
+		err    error
+	}
+	cmdOutputChannel := make(chan cmdOutputStruct, 1)
+	go func(cmd *exec.Cmd) {
+		output, err := cmd.CombinedOutput()
+		cmdOutputChannel <- cmdOutputStruct{output, err}
+	}(command)
+
+	var data []byte
+	select {
+	case <-time.After(app.Timeout):
+		if command.Process == nil {
+			return nil, fmt.Errorf("no process stated after %s", app.Timeout)
+		}
+		syscall.Kill(-command.Process.Pid, syscall.SIGKILL)
+		return nil, fmt.Errorf("timed out after %s", app.Timeout)
+	case cmdOutput, ok := <-cmdOutputChannel:
+		if !ok {
+			return nil, fmt.Errorf("command channel closed unexpectedly")
+		}
+		if cmdOutput.err != nil {
+			if len(cmdOutput.output) == 0 {
+				return nil, cmdOutput.err
+			} else {
+				return nil, fmt.Errorf("%s: %s", cmdOutput.err, bytes.TrimSpace(cmdOutput.output))
+			}
+		}
+		data = cmdOutput.output
+	}
+	return data, nil
 }
