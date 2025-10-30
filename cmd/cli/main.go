@@ -2,11 +2,15 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
-	"github.com/canonical/inference-snaps-cli/pkg/storage"
 	"github.com/canonical/go-snapctl/env"
+	"github.com/canonical/inference-snaps-cli/pkg/selector"
+	"github.com/canonical/inference-snaps-cli/pkg/storage"
+	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
 
@@ -65,4 +69,36 @@ func main() {
 	if err != nil {
 		os.Exit(1)
 	}
+}
+
+func loadEngineEnvironment() error {
+	activeEngineName, err := cache.GetActiveEngine()
+	if err != nil {
+		return fmt.Errorf("error looking up active engine: %v", err)
+	}
+
+	if activeEngineName == "" {
+		return nil
+	}
+
+	manifest, err := selector.LoadManifestFromDir(enginesDir, activeEngineName)
+	if err != nil {
+		return fmt.Errorf("error loading active engine manifest: %v", err)
+	}
+
+	componentsDir, found := os.LookupEnv("SNAP_COMPONENTS")
+	if !found {
+		return fmt.Errorf("SNAP_COMPONENTS environment variable not set")
+	}
+
+	const envFile = "component.env"
+	for _, componentName := range manifest.Components {
+		componentEnvFile := filepath.Join(componentsDir, componentName, envFile)
+
+		err := godotenv.Load(componentEnvFile)
+		if err != nil {
+			return fmt.Errorf("error loading env file for component %q: %v", componentName, err)
+		}
+	}
+
 }
