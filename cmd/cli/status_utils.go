@@ -64,6 +64,10 @@ const (
 )
 
 func serverApiUrls() (map[string]string, error) {
+	err := loadEngineEnvironment()
+	if err != nil {
+		return nil, fmt.Errorf("error loading engine environment: %v", err)
+	}
 
 	apiBasePath, found := os.LookupEnv(envOpenAiBasePath)
 	if !found {

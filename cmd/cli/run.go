@@ -5,10 +5,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/canonical/inference-snaps-cli/pkg/selector"
-	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 func addRunCommand() {
@@ -60,16 +61,49 @@ func loadEngineEnvironment() error {
 
 	componentsDir, found := os.LookupEnv("SNAP_COMPONENTS")
 	if !found {
-		return fmt.Errorf("SNAP_COMPONENTS environment variable not set")
+		return fmt.Errorf("SNAP_COMPONENTS env var not set")
 	}
 
-	const envFile = "component.env"
-	for _, componentName := range manifest.Components {
-		componentEnvFile := filepath.Join(componentsDir, componentName, envFile)
+	type comp struct {
+		Environment []string `yaml:"environment"`
+	}
 
-		err := godotenv.Overload(componentEnvFile)
+	for _, componentName := range manifest.Components {
+		componentPath := filepath.Join(componentsDir, componentName)
+		componentYamlFile := filepath.Join(componentPath, "component.yaml")
+
+		data, err := os.ReadFile(componentYamlFile)
 		if err != nil {
-			return fmt.Errorf("error loading env file for component %q: %v", componentName, err)
+			return fmt.Errorf("error reading %s: %v", componentYamlFile, err)
+		}
+
+		var component comp
+		err = yaml.Unmarshal(data, &component)
+		if err != nil {
+			return fmt.Errorf("error unmarshaling %s: %v", componentYamlFile, err)
+		}
+
+		for i := range component.Environment {
+			// Split into key/value
+			kv := component.Environment[i]
+			parts := strings.SplitN(kv, "=", 2)
+			if len(parts) != 2 {
+				return fmt.Errorf("invalid env var %q", kv)
+			}
+			k, v := parts[0], parts[1]
+
+			// Replace COMPONENT in values
+			v = strings.ReplaceAll(v, "$COMPONENT", componentPath)
+			v = strings.ReplaceAll(v, "${COMPONENTS}", componentPath)
+
+			// Expand any other env vars in value
+			v = os.ExpandEnv(v)
+
+			err = os.Setenv(k, v)
+			if err != nil {
+				return fmt.Errorf("error setting env var %s: %v", k, err)
+			}
+			fmt.Printf("[debug] Set %s=%s\n", k, v)
 		}
 	}
 

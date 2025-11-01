@@ -32,32 +32,17 @@ func chat(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("CHAT environment variable is not set")
 	}
 
-	// serverPortMap, err := config.Get("http.port")
-	// if err != nil {
-	// 	return fmt.Errorf("error getting http.port: %v", err)
-	// }
-	// serverPort := serverPortMap["http.port"]
-
-	// apiBasePath, found := os.LookupEnv("OPENAI_BASE_PATH")
-	// if !found {
-	// 	return fmt.Errorf("OPENAI_BASE_PATH environment variable is not set")
-	// }
-
-	// // export OPENAI_BASE_URL="http://localhost:$port/$api_base_path"
-	// baseURL := fmt.Sprintf("http://localhost:%v/%s", serverPort, apiBasePath)
-
 	apiUrls, err := serverApiUrls()
 	if err != nil {
 		return fmt.Errorf("error getting server api urls: %v", err)
 	}
 
+	os.Setenv("OPENAI_BASE_URL", apiUrls["openai"])
+
 	cmd := exec.Command(chatPath)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Env = []string{
-		"OPENAI_BASE_URL=" + apiUrls["openai"],
-	}
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("error running chat command: %v", err)
 	}
