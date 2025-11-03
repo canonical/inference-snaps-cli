@@ -85,6 +85,9 @@ func LoadManifestFromDir(manifestsDir, engineName string) (*engines.Manifest, er
 	fileName := manifestsDir + engineName + "/engine.yaml"
 	data, err := os.ReadFile(fileName)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("engine %q not found", engineName)
+		}
 		return nil, fmt.Errorf("%s: %s", fileName, err)
 	}
 

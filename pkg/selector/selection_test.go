@@ -109,3 +109,22 @@ func TestTopEngine(t *testing.T) {
 		})
 	}
 }
+
+func TestLoadManifestFromDir_InvalidEngine(t *testing.T) {
+	// Test loading an engine that doesn't exist
+	_, err := LoadManifestFromDir("../../test_data/engines", "nonexistent-engine")
+	if err == nil {
+		t.Fatal("Expected error when loading non-existent engine, got nil")
+	}
+	
+	// Verify the error message is user-friendly and doesn't expose file paths
+	expectedMsg := `engine "nonexistent-engine" not found`
+	if err.Error() != expectedMsg {
+		t.Errorf("Expected error message %q, got %q", expectedMsg, err.Error())
+	}
+	
+	// Ensure the error message doesn't contain file path details
+	if strings.Contains(err.Error(), "/engine.yaml") || strings.Contains(err.Error(), "open") {
+		t.Errorf("Error message should not expose file paths, got: %q", err.Error())
+	}
+}
