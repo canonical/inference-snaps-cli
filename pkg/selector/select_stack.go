@@ -85,13 +85,13 @@ func LoadManifestFromDir(manifestsDir, engineName string) (*engines.Manifest, er
 	fileName := manifestsDir + engineName + "/engine.yaml"
 	data, err := os.ReadFile(fileName)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %s", fileName, err)
+		return nil, fmt.Errorf("%s: %w", fileName, err)
 	}
 
 	var manifest engines.Manifest
 	err = yaml.Unmarshal(data, &manifest)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %s", manifestsDir, err)
+		return nil, fmt.Errorf("%s: %w", manifestsDir, err)
 	}
 
 	return &manifest, nil

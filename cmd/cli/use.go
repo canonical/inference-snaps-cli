@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -139,7 +140,7 @@ func useEngine(engineName string, assumeYes bool) error {
 
 	engine, err := selector.LoadManifestFromDir(enginesDir, engineName)
 	if err != nil {
-		if strings.Contains(err.Error(), "no such file or directory") {
+		if errors.Is(err, os.ErrNotExist) {
 			return fmt.Errorf("engine %q not found", engineName)
 		}
 		return fmt.Errorf("error loading engine manifest: %v", err)
