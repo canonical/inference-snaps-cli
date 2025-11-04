@@ -170,7 +170,7 @@ func waitForComponents() error {
 		return err
 	}
 
-	for elapsed := 0; elapsed < maxWait; elapsed += interval {
+	for elapsed := 0; elapsed < maxWait && len(missing) > 0; elapsed += interval {
 		fmt.Printf("Waiting for required snap components: %s (%d/%ds)\n",
 			strings.Join(missing, ", "), elapsed, maxWait)
 
@@ -179,10 +179,6 @@ func waitForComponents() error {
 		missing, err = checkMissingComponents(manifest)
 		if err != nil {
 			return err
-		}
-
-		if len(missing) == 0 {
-			break
 		}
 	}
 
