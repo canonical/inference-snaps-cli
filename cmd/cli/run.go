@@ -6,10 +6,17 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/canonical/go-snapctl"
+	"github.com/canonical/inference-snaps-cli/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/pkg/selector"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
+)
+
+var (
+	runWaitForComponents bool
 )
 
 func addRunCommand() {
@@ -20,6 +27,10 @@ func addRunCommand() {
 		Args:   cobra.MaximumNArgs(1),
 		RunE:   run,
 	}
+
+	// flags
+	cmd.Flags().BoolVar(&runWaitForComponents, "wait-for-components", false, "wait for engine components to be installed before running")
+
 	rootCmd.AddCommand(cmd)
 }
 
@@ -28,8 +39,11 @@ func run(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("unexpected number of arguments, expected 1 got %d", len(args))
 	}
 
-	// TODO
-	// --wait-for-components
+	if runWaitForComponents {
+		if err := waitForComponents(); err != nil {
+			return fmt.Errorf("error waiting for component: %s", err)
+		}
+	}
 
 	err := loadEngineEnvironment()
 	if err != nil {
@@ -51,12 +65,12 @@ func loadEngineEnvironment() error {
 	}
 
 	if activeEngineName == "" {
-		return nil
+		return fmt.Errorf("no active engine")
 	}
 
 	manifest, err := selector.LoadManifestFromDir(enginesDir, activeEngineName)
 	if err != nil {
-		return fmt.Errorf("error loading active engine manifest: %v", err)
+		return fmt.Errorf("error loading engine manifest: %v", err)
 	}
 
 	componentsDir, found := os.LookupEnv("SNAP_COMPONENTS")
@@ -111,6 +125,75 @@ func loadEngineEnvironment() error {
 			}
 		}
 
+	}
+
+	return nil
+}
+
+func checkMissingComponents(manifest *engines.Manifest) ([]string, error) {
+	componentsDir, found := os.LookupEnv("SNAP_COMPONENTS")
+	if !found {
+		return nil, fmt.Errorf("SNAP_COMPONENTS env var not set")
+	}
+
+	var missing []string
+	for _, component := range manifest.Components {
+		componentPath := filepath.Join(componentsDir, component)
+		if _, err := os.Stat(componentPath); os.IsNotExist(err) {
+			missing = append(missing, component)
+		}
+	}
+
+	return missing, nil
+}
+
+func waitForComponents() error {
+	const maxWait = 3600 // seconds
+	const interval = 10  // seconds
+	elapsed := 0
+
+	activeEngineName, err := cache.GetActiveEngine()
+	if err != nil {
+		return fmt.Errorf("error looking up active engine: %v", err)
+	}
+
+	if activeEngineName == "" {
+		return fmt.Errorf("no active engine")
+	}
+
+	manifest, err := selector.LoadManifestFromDir(enginesDir, activeEngineName)
+	if err != nil {
+		return fmt.Errorf("error loading engine manifest: %v", err)
+	}
+
+	missing, err := checkMissingComponents(manifest)
+	if err != nil {
+		return err
+	}
+
+	for len(missing) > 0 && elapsed < maxWait {
+		elapsed += interval
+		fmt.Printf("Waiting for required snap components: [%s] (%d/%ds)\n",
+			strings.Join(missing, " "), elapsed, maxWait)
+
+		time.Sleep(interval * time.Second)
+
+		missing, err = checkMissingComponents(manifest)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(missing) > 0 {
+		fmt.Printf("Error: timed out after %ds while waiting for required components: [%s]\n", elapsed, strings.Join(missing, " "))
+		fmt.Printf("Please use \"snap changes\" to monitor the progress and start the service once all components are installed.")
+
+		// Stop service to avoid indefinite retries by systemd, until the next reboot
+		if err := snapctl.Stop(serviceName).Run(); err != nil {
+			return fmt.Errorf("error stopping %q: %v", serviceName, err)
+		}
+
+		return fmt.Errorf("timed out waiting for components")
 	}
 
 	return nil
