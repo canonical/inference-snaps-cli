@@ -9,7 +9,7 @@ import (
 )
 
 func addChatCommand() {
-	chatPath := os.Getenv("CHAT")
+	chatPath := os.Getenv(envChat)
 	if chatPath == "" {
 		return // Add chat command only if CHAT is set
 	}
@@ -27,9 +27,9 @@ func addChatCommand() {
 
 func chat(_ *cobra.Command, args []string) error {
 	// Run the app at path set in CHAT environment variable
-	chatPath, found := os.LookupEnv("CHAT")
+	chatPath, found := os.LookupEnv(envChat)
 	if !found {
-		return fmt.Errorf("CHAT environment variable is not set")
+		return fmt.Errorf(`"chat" command not supported`)
 	}
 
 	apiUrls, err := serverApiUrls()
@@ -37,7 +37,9 @@ func chat(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("error getting server api urls: %v", err)
 	}
 
-	os.Setenv("OPENAI_BASE_URL", apiUrls["openai"])
+	if err := os.Setenv(envOpenAIBaseUrl, apiUrls[openAi]); err != nil {
+		return fmt.Errorf("error setting %q: %v", envOpenAIBaseUrl, err)
+	}
 
 	cmd := exec.Command(chatPath)
 	cmd.Stdin = os.Stdin

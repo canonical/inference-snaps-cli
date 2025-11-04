@@ -10,6 +10,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	openAi = "openai"
+
+	confHttpPort = "http.port"
+
+	envOpenAiBasePath = "OPENAI_BASE_PATH"
+	envOpenAIBaseUrl  = "OPENAI_BASE_URL"
+	envChat           = "CHAT"
+)
+
 var (
 	enginesDir       = env.Snap() + "/engines"
 	snapInstanceName = env.SnapInstanceName()

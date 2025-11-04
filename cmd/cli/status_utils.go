@@ -8,10 +8,6 @@ import (
 	"github.com/canonical/inference-snaps-cli/pkg/engines"
 )
 
-const (
-	openAi = "openai"
-)
-
 type Status struct {
 	Engine    string            `json:"engine" yaml:"engine"`
 	Endpoints map[string]string `json:"endpoints" yaml:"endpoints"`
@@ -57,11 +53,6 @@ func statusStruct() (*Status, error) {
 
 	return &statusStr, nil
 }
-
-const (
-	envOpenAiBasePath = "OPENAI_BASE_PATH"
-	confHttpPort      = "http.port"
-)
 
 func serverApiUrls() (map[string]string, error) {
 	err := loadEngineEnvironment()
