@@ -18,6 +18,7 @@ const (
 	envOpenAiBasePath = "OPENAI_BASE_PATH"
 	envOpenAIBaseUrl  = "OPENAI_BASE_URL"
 	envChat           = "CHAT"
+	envComponent      = "COMPONENT"
 )
 
 var (

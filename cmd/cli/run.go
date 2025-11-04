@@ -92,19 +92,26 @@ func loadEngineEnvironment() error {
 			}
 			k, v := parts[0], parts[1]
 
-			// Replace COMPONENT in values
-			v = strings.ReplaceAll(v, "$COMPONENT", componentPath)
-			v = strings.ReplaceAll(v, "${COMPONENTS}", componentPath)
+			// Set component path env var for expansion
+			if err := os.Setenv(envComponent, componentPath); err != nil {
+				return fmt.Errorf("error setting %q: %v", envComponent, err)
+			}
 
-			// Expand any other env vars in value
+			// Expand all env vars in value
 			v = os.ExpandEnv(v)
+
+			// Unset the component path
+			if err := os.Unsetenv(envComponent); err != nil {
+				return fmt.Errorf("error unsetting %q: %v", envComponent, err)
+			}
 
 			err = os.Setenv(k, v)
 			if err != nil {
-				return fmt.Errorf("error setting env var %s: %v", k, err)
+				return fmt.Errorf("error setting %q: %v", k, err)
 			}
 			fmt.Printf("[debug] Set %s=%s\n", k, v)
 		}
+
 	}
 
 	return nil
