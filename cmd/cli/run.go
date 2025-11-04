@@ -150,7 +150,6 @@ func checkMissingComponents(manifest *engines.Manifest) ([]string, error) {
 func waitForComponents() error {
 	const maxWait = 3600 // seconds
 	const interval = 10  // seconds
-	elapsed := 0
 
 	activeEngineName, err := cache.GetActiveEngine()
 	if err != nil {
@@ -171,10 +170,9 @@ func waitForComponents() error {
 		return err
 	}
 
-	for len(missing) > 0 && elapsed < maxWait {
-		elapsed += interval
-		fmt.Printf("Waiting for required snap components: [%s] (%d/%ds)\n",
-			strings.Join(missing, " "), elapsed, maxWait)
+	for elapsed := 0; elapsed < maxWait; elapsed += interval {
+		fmt.Printf("Waiting for required snap components: %s (%d/%ds)\n",
+			strings.Join(missing, ", "), elapsed, maxWait)
 
 		time.Sleep(interval * time.Second)
 
@@ -182,11 +180,16 @@ func waitForComponents() error {
 		if err != nil {
 			return err
 		}
+
+		if len(missing) == 0 {
+			break
+		}
 	}
 
 	if len(missing) > 0 {
-		fmt.Printf("Error: timed out after %ds while waiting for required components: [%s]\n", elapsed, strings.Join(missing, " "))
-		fmt.Printf("Please use \"snap changes\" to monitor the progress and start the service once all components are installed.")
+		fmt.Printf("Error: timed out after %ds while waiting for required components: %s\n",
+			maxWait, strings.Join(missing, ", "))
+		fmt.Printf("Please use \"snap changes\" to monitor the progress and start the service once all components are installed.\n")
 
 		// Stop service to avoid indefinite retries by systemd, until the next reboot
 		if err := snapctl.Stop(serviceName).Run(); err != nil {
