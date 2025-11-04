@@ -109,7 +109,6 @@ func loadEngineEnvironment() error {
 			if err != nil {
 				return fmt.Errorf("error setting %q: %v", k, err)
 			}
-			fmt.Printf("[debug] Set %s=%s\n", k, v)
 		}
 
 	}
