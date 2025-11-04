@@ -24,6 +24,10 @@ const (
 var (
 	enginesDir       = env.Snap() + "/engines"
 	snapInstanceName = env.SnapInstanceName()
+
+	// TODO: get this from an env var instead (e.g. ENGINE_SERVICES=server,proxy)
+	serviceName = snapInstanceName + ".server"
+
 	// rootCmd is the base command
 	// It gets populated with subcommands
 	rootCmd = &cobra.Command{
