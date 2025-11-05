@@ -218,6 +218,8 @@ func useEngine(engineName string, assumeYes bool) error {
 	}
 
 	// Restart if any of the services are active
+	// TODO: get this from an env var instead (e.g. ENGINE_SERVICES=server,proxy)
+	serviceName := snapInstanceName + ".server"
 	service, err := snapctl.Services(serviceName).Run()
 	if err != nil {
 		return fmt.Errorf("error checking status of service: %v", err)

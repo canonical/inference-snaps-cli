@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/canonical/go-snapctl"
 	"github.com/canonical/inference-snaps-cli/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/pkg/selector"
 	"github.com/spf13/cobra"
@@ -183,16 +182,8 @@ func waitForComponents() error {
 	}
 
 	if len(missing) > 0 {
-		fmt.Printf("Error: timed out after %ds while waiting for required components: %s\n",
+		return fmt.Errorf("timed out after %ds while waiting for required components: %s",
 			maxWait, strings.Join(missing, ", "))
-		fmt.Printf("Please use \"snap changes\" to monitor the progress and start the service once all components are installed.\n")
-
-		// Stop service to avoid indefinite retries by systemd, until the next reboot
-		if err := snapctl.Stop(serviceName).Run(); err != nil {
-			return fmt.Errorf("error stopping %q: %v", serviceName, err)
-		}
-
-		return fmt.Errorf("timed out waiting for components")
 	}
 
 	return nil
