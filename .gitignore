@@ -1,2 +1,4 @@
 *.snap
 build/
+cli
+engines/
