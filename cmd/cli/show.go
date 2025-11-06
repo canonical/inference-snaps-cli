@@ -93,7 +93,7 @@ func printEngineManifest(engine engines.ScoredManifest) error {
 			return fmt.Errorf("failed to marshal to JSON: %s", err)
 		}
 		fmt.Printf("%s\n", jsonString)
-	case "yaml":
+	case "yaml", "":
 		engineYaml, err := yaml.Marshal(engine)
 		if err != nil {
 			return fmt.Errorf("failed to marshal to YAML: %s", err)
