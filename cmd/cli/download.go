@@ -26,14 +26,14 @@ func installComponents(components []string) error {
 					"\nRerun this command after manually installing %q",
 					component)
 			} else if strings.Contains(err.Error(), snapdTimeoutError) {
-				return fmt.Errorf("timed out while installing %q:"+
-					"\nMonitor the installation progress with \"snap changes\""+
-					"\n\nRerun this command once the installation is complete",
+				return fmt.Errorf("timed out while installing %q.\n\n"+
+					"Monitor the installation progress with \"snap changes\". "+
+					"Rerun this command once the installation is complete.",
 					component)
 			} else if strings.Contains(err.Error(), snapdChangeInProgressError) {
-				return fmt.Errorf("installation of %q is already in progress:"+
-					"\nMonitor the installation progress with \"snap changes\""+
-					"\n\nRerun this command once the installation is complete",
+				return fmt.Errorf("installation of %q is already in progress.\n\n"+
+					"Monitor the installation progress with \"snap changes\". "+
+					"Rerun this command once the installation is complete.",
 					component)
 			} else if strings.Contains(err.Error(), "already installed") {
 				continue
