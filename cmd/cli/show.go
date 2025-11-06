@@ -90,13 +90,13 @@ func printEngineManifest(engine engines.ScoredManifest) error {
 	case "json":
 		jsonString, err := json.MarshalIndent(engine, "", "  ")
 		if err != nil {
-			return fmt.Errorf("error converting engine to json: %v", err)
+			return fmt.Errorf("failed to marshal to JSON: %s", err)
 		}
 		fmt.Printf("%s\n", jsonString)
 	case "yaml":
 		engineYaml, err := yaml.Marshal(engine)
 		if err != nil {
-			return fmt.Errorf("error converting engine to yaml: %v", err)
+			return fmt.Errorf("failed to marshal to YAML: %s", err)
 		}
 		fmt.Print(string(engineYaml))
 	default:
