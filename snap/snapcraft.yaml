@@ -35,7 +35,7 @@ parts:
 
   nvidia-smi:
     plugin: nil
-    source: http://security.ubuntu.com/ubuntu/pool/restricted/n/nvidia-graphics-drivers-580-server/nvidia-utils-580-server_580.95.05-0ubuntu2_amd64.deb
+    source: http://archive.ubuntu.com/ubuntu/pool/restricted/n/nvidia-graphics-drivers-580/nvidia-utils-580_580.95.05-0ubuntu2_amd64.deb
     source-type: file
     override-build: |
       dpkg-deb -R nvidia-utils-*.deb nvidia-utils-extracted
