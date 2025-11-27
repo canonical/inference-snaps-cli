@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/canonical/inference-snaps-cli/pkg/types"
@@ -88,7 +89,7 @@ func nvidiaSmi(args ...string) (*string, error) {
 	defer cancel()
 
 	cmd := exec.CommandContext(cmdContext, "nvidia-smi", args...)
-	cmd.WaitDelay = 1 * time.Second
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true} // set process group to kill entire process tree on cancel
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, "LANG=C")
 

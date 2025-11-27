@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/canonical/inference-snaps-cli/pkg/types"
@@ -39,7 +40,8 @@ func vRam(device types.PciDevice) (*uint64, error) {
 	defer cancel()
 
 	command := exec.CommandContext(cmdContext, "clinfo", "--json")
-	command.WaitDelay = 1 * time.Second
+	// Set process group to kill the entire process tree on timeout
+	command.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
 	data, err := command.Output()
 	if err != nil {
