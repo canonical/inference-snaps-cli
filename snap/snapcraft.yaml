@@ -35,12 +35,11 @@ parts:
 
   nvidia-smi:
     plugin: nil
-    source: http://archive.ubuntu.com/ubuntu/pool/restricted/n/nvidia-graphics-drivers-580/nvidia-utils-580_580.95.05-0ubuntu2_amd64.deb
-    source-type: file
+    build-packages:
+      - nvidia-utils-580
     override-build: |
-      dpkg-deb -R nvidia-utils-580_580.95.05-0ubuntu2_amd64.deb nvidia-utils-extracted
       mkdir -p $CRAFT_PART_INSTALL/usr/bin
-      cp nvidia-utils-extracted/usr/bin/nvidia-smi $CRAFT_PART_INSTALL/usr/bin/
+      cp /usr/bin/nvidia-smi $CRAFT_PART_INSTALL/usr/bin/
 
   opencl:
     # Include OpenCL runtime and clinfo for looking up vRAM on Intel GPUs
