@@ -11,11 +11,11 @@ func TestCheckGpuVendor(t *testing.T) {
 	gpuVendorId := types.HexInt(0xb33f)
 
 	hwInfoGpu := types.PciDevice{
-		DeviceClass: 0x0300,
-		VendorId:    gpuVendorId,
-		DeviceId:    0,
-		SubvendorId: nil,
-		SubdeviceId: nil,
+		DeviceClass:          0x0300,
+		VendorId:             gpuVendorId,
+		DeviceId:             0,
+		SubvendorId:          nil,
+		SubdeviceId:          nil,
 		AdditionalProperties: map[string]string{
 			//VRam:              nil,
 			//ComputeCapability: nil,

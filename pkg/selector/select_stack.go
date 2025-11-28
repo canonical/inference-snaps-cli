@@ -231,10 +231,10 @@ func checkDevicesAll(hardwareInfo *types.HwInfo, devices []engines.Device) (int,
 			extraScore += pciScore
 			devicesFound++
 		}
-	}
 
-	if os.Getenv("VERBOSE") == "true" {
-		fmt.Printf("Device found\n")
+		if os.Getenv("VERBOSE") == "true" {
+			fmt.Printf("Device found\n")
+		}
 	}
 
 	return extraScore, nil

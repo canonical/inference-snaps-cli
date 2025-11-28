@@ -36,7 +36,7 @@ func Match(device engines.Device, pcis []types.PciDevice) (int, error) {
 
 	if maxDeviceScore == 0 {
 		deviceJson, _ := json.Marshal(device)
-		return 0, fmt.Errorf("%v", string(deviceJson))
+		return 0, fmt.Errorf("device not found: %v", string(deviceJson))
 	}
 	return maxDeviceScore, nil
 }
