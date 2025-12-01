@@ -160,7 +160,7 @@ func findModelName() (string, error) {
 	modelService := openai.NewModelService(openaiOption.WithBaseURL(chatBaseUrl))
 	modelPage, err := modelService.List(context.Background())
 	if err != nil {
-		return "", fmt.Errorf("failed to list availabel models: %v", err)
+		return "", fmt.Errorf("%v\n\nFailed to list available models. Make sure the server has started successfully.\n", err)
 	}
 
 	if len(modelPage.Data) == 0 {
