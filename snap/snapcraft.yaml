@@ -40,6 +40,10 @@ parts:
     override-build: |
       mkdir -p $CRAFT_PART_INSTALL/usr/bin
       cp /usr/bin/nvidia-smi $CRAFT_PART_INSTALL/usr/bin/
+      
+      license_dir=$CRAFT_PART_INSTALL/usr/share/doc/nvidia-utils-580/
+      mkdir -p $license_dir
+      cp /usr/share/doc/nvidia-utils-580/copyright $license_dir/
 
   opencl:
     # Include OpenCL runtime and clinfo for looking up vRAM on Intel GPUs
