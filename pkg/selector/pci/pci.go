@@ -23,7 +23,7 @@ func Match(device engines.Device, pcis []types.PciDevice) (int, error) {
 		deviceScore, err := checkPciDevice(device, pciDevice)
 		if err != nil {
 			if os.Getenv("VERBOSE") == "true" {
-				fmt.Printf("%v\n", err)
+				fmt.Printf("    %v\n", err)
 			}
 		}
 
@@ -50,7 +50,7 @@ func checkPciDevice(device engines.Device, pciDevice types.PciDevice) (int, erro
 		if match {
 			currentDeviceScore += weights.PciDeviceType
 		} else {
-			return 0, fmt.Errorf("device type mismatch: 0x%04x", pciDevice.DeviceClass)
+			return 0, fmt.Errorf("device class 0x%04x not of required type %s", pciDevice.DeviceClass, device.Type)
 		}
 	}
 

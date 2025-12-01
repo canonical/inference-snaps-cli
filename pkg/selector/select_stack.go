@@ -118,12 +118,12 @@ func ScoreEngines(hardwareInfo *types.HwInfo, manifests []engines.Manifest) ([]e
 
 		if score == 0 {
 			if os.Getenv("VERBOSE") == "true" {
-				fmt.Printf("Not compatible: %s\n", strings.Join(reasons, ", "))
+				fmt.Printf("Engine not compatible: %s\n", strings.Join(reasons, ", "))
 			}
 			scoredEngine.Compatible = false
 		} else {
 			if os.Getenv("VERBOSE") == "true" {
-				fmt.Printf("Compatible\n")
+				fmt.Printf("Engine compatible\n")
 			}
 		}
 		scoredEngine.Notes = append(scoredEngine.Notes, reasons...)
@@ -207,7 +207,7 @@ func checkDevicesAll(hardwareInfo *types.HwInfo, devices []engines.Device) (int,
 	for _, device := range devices {
 		if os.Getenv("VERBOSE") == "true" {
 			jsonBytes, _ := json.Marshal(device)
-			fmt.Printf("Checking for all-of required device: %s\n", string(jsonBytes))
+			fmt.Printf("  Checking for all-of required device: %s\n", string(jsonBytes))
 		}
 
 		if device.Type == "cpu" {
@@ -233,7 +233,7 @@ func checkDevicesAll(hardwareInfo *types.HwInfo, devices []engines.Device) (int,
 		}
 
 		if os.Getenv("VERBOSE") == "true" {
-			fmt.Printf("Device found\n")
+			fmt.Printf("  Device found\n")
 		}
 	}
 
@@ -248,19 +248,19 @@ func checkDevicesAny(hardwareInfo *types.HwInfo, devices []engines.Device) (int,
 	for _, device := range devices {
 		if os.Getenv("VERBOSE") == "true" {
 			jsonBytes, _ := json.Marshal(device)
-			fmt.Printf("Checking for any-of required device: %s\n", string(jsonBytes))
+			fmt.Printf("  Checking for any-of required device: %s\n", string(jsonBytes))
 		}
 
 		if device.Type == "cpu" {
 			cpuScore, err := cpu.Match(device, hardwareInfo.Cpus)
 			if err != nil {
 				if os.Getenv("VERBOSE") == "true" {
-					fmt.Println(err.Error())
+					fmt.Println("  " + err.Error())
 				}
 				reasons = append(reasons, err.Error())
 			} else {
 				if os.Getenv("VERBOSE") == "true" {
-					fmt.Printf("Device found\n")
+					fmt.Printf("  Device found\n")
 				}
 				devicesFound++
 				extraScore += cpuScore
@@ -274,12 +274,12 @@ func checkDevicesAny(hardwareInfo *types.HwInfo, devices []engines.Device) (int,
 			pciScore, err := pci.Match(device, hardwareInfo.PciDevices)
 			if err != nil {
 				if os.Getenv("VERBOSE") == "true" {
-					fmt.Println(err.Error())
+					fmt.Println("  " + err.Error())
 				}
 				reasons = append(reasons, err.Error())
 			} else {
 				if os.Getenv("VERBOSE") == "true" {
-					fmt.Printf("Device found\n")
+					fmt.Printf("  Device found\n")
 				}
 				devicesFound++
 				extraScore += pciScore
@@ -293,7 +293,7 @@ func checkDevicesAny(hardwareInfo *types.HwInfo, devices []engines.Device) (int,
 
 		if os.Getenv("VERBOSE") == "true" {
 			for _, reason := range reasons {
-				fmt.Println(reason)
+				fmt.Println("  " + reason)
 			}
 		}
 		return 0, fmt.Errorf("no devices under anyof found")
