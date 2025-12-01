@@ -19,9 +19,8 @@ import (
 )
 
 var (
-	verboseLogging bool
-	chatModelName  string
-	chatBaseUrl    string
+	chatModelName string
+	chatBaseUrl   string
 )
 
 func addChatCommand() {
@@ -44,7 +43,6 @@ func addChatCommand() {
 }
 
 func chat(_ *cobra.Command, args []string) error {
-	verboseLogging = true
 
 	if chatBaseUrl == "" {
 		apiUrls, err := serverApiUrls()
@@ -53,39 +51,43 @@ func chat(_ *cobra.Command, args []string) error {
 		}
 		chatBaseUrl = apiUrls[openAi]
 	}
+	if verboseLogging {
+		log.Printf("Base URL %v\n", chatBaseUrl)
+	}
 
 	reasoningModel := os.Getenv("REASONING_MODEL") == "true"
+	if verboseLogging && reasoningModel {
+		log.Printf("Reasoning model\n")
+	}
 
 	if chatModelName == "" {
 		modelService := openai.NewModelService(openaiOption.WithBaseURL(chatBaseUrl))
 		modelPage, err := modelService.List(context.Background())
 		if err != nil {
-			log.Fatalf("Failed to list models: %v", err)
+			return fmt.Errorf("failed to list available models: %v", err)
 		}
 
 		if len(modelPage.Data) == 0 {
-			log.Fatalln("Server returned no models")
+			return fmt.Errorf("server returned no models")
 		} else if len(modelPage.Data) > 1 {
 			names := make([]string, 0, len(modelPage.Data)) // Pre-allocate for efficiency
 			for _, model := range modelPage.Data {
 				names = append(names, model.ID)
 			}
-			return fmt.Errorf("server returned multiple models; please select one using:\n\t--model [%s]", strings.Join(names, "|"))
+			return fmt.Errorf("server returned multiple models; please select one with:\n\t--model [%s]", strings.Join(names, "|"))
 		}
 		chatModelName = modelPage.Data[0].ID
 	}
 
 	if verboseLogging {
-		fmt.Printf("Using model %v\n", chatModelName)
+		log.Printf("Using model %v\n", chatModelName)
 	}
 
 	// OpenAI API Client
 	client := openai.NewClient(openaiOption.WithBaseURL(chatBaseUrl))
 
 	if err := checkServer(chatBaseUrl, client, chatModelName); err != nil {
-		err = fmt.Errorf("%v\n\nUnable to chat. Make sure the server has started successfully.\n", err)
-		fmt.Fprint(os.Stderr, err)
-		os.Exit(1)
+		return fmt.Errorf("%v\n\nUnable to chat. Make sure the server has started successfully.\n", err)
 	}
 
 	fmt.Printf("Connected to %s\n", chatBaseUrl)
@@ -102,7 +104,7 @@ func chat(_ *cobra.Command, args []string) error {
 		FuncFilterInputRune: filterInput,
 	})
 	if err != nil {
-		log.Fatalf("Can't init readline: %v", err)
+		return fmt.Errorf("error initializing readline: %v", err)
 	}
 	defer rl.Close()
 	//rl.CaptureExitSignal() // Should readline capture and handle the exit signal? - Can be used to interrupt the chat response stream.
