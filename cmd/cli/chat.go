@@ -61,24 +61,12 @@ func chat(_ *cobra.Command, args []string) error {
 	}
 
 	if chatModelName == "" {
-		modelService := openai.NewModelService(openaiOption.WithBaseURL(chatBaseUrl))
-		modelPage, err := modelService.List(context.Background())
+		var err error
+		chatModelName, err = findModelName()
 		if err != nil {
-			return fmt.Errorf("failed to list available models: %v", err)
+			return err
 		}
-
-		if len(modelPage.Data) == 0 {
-			return fmt.Errorf("server returned no models")
-		} else if len(modelPage.Data) > 1 {
-			names := make([]string, 0, len(modelPage.Data)) // Pre-allocate for efficiency
-			for _, model := range modelPage.Data {
-				names = append(names, model.ID)
-			}
-			return fmt.Errorf("server returned multiple models; please select one with:\n\t--model [%s]", strings.Join(names, "|"))
-		}
-		chatModelName = modelPage.Data[0].ID
 	}
-
 	if verboseLogging {
 		log.Printf("Using model %v\n", chatModelName)
 	}
@@ -86,6 +74,7 @@ func chat(_ *cobra.Command, args []string) error {
 	// OpenAI API Client
 	client := openai.NewClient(openaiOption.WithBaseURL(chatBaseUrl))
 
+	// TODO: is checkServer needed, as we already communicate with the server when looking up the model name
 	if err := checkServer(chatBaseUrl, client, chatModelName); err != nil {
 		return fmt.Errorf("%v\n\nUnable to chat. Make sure the server has started successfully.\n", err)
 	}
@@ -152,7 +141,7 @@ func checkServer(baseURL string, client openai.Client, modelName string) error {
 		MaxTokens:           openai.Int(1), // for runtimes that don't yet support MaxCompletionTokens
 	}
 
-	stopProgress := startProgressSpinner("Connecting to " + baseURL)
+	stopProgress := startProgressSpinner("Connecting to " + baseURL + " ")
 	defer stopProgress()
 
 	ctx := context.Background()
@@ -164,6 +153,30 @@ func checkServer(baseURL string, client openai.Client, modelName string) error {
 	return nil
 }
 
+func findModelName() (string, error) {
+	stopProgress := startProgressSpinner("Looking up model name ")
+	defer stopProgress()
+
+	modelService := openai.NewModelService(openaiOption.WithBaseURL(chatBaseUrl))
+	modelPage, err := modelService.List(context.Background())
+	if err != nil {
+		return "", fmt.Errorf("failed to list availabel models: %v", err)
+	}
+
+	if len(modelPage.Data) == 0 {
+		return "", fmt.Errorf("server returned no models")
+	} else if len(modelPage.Data) > 1 {
+		names := make([]string, 0, len(modelPage.Data)) // Pre-allocate for efficiency
+		for _, model := range modelPage.Data {
+			names = append(names, model.ID)
+		}
+		return "", fmt.Errorf("server returned multiple models\n\nPlease select one with: --model [%s]", strings.Join(names, "|"))
+	}
+
+	stopProgress()
+	return modelPage.Data[0].ID, nil
+}
+
 func handlePrompt(client openai.Client, params openai.ChatCompletionNewParams, reasoningModel bool, prompt string) openai.ChatCompletionNewParams {
 	params.Messages = append(params.Messages, openai.UserMessage(prompt))
 
@@ -173,7 +186,7 @@ func handlePrompt(client openai.Client, params openai.ChatCompletionNewParams, r
 		fmt.Printf("Sending request: %s\n", paramDebugString)
 	}
 
-	stopProgress := startProgressSpinner("Waiting for a response")
+	stopProgress := startProgressSpinner("Waiting for a response ")
 	stream := client.Chat.Completions.NewStreaming(context.Background(), params)
 	stopProgress()
 
