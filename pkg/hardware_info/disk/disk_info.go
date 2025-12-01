@@ -2,8 +2,6 @@ package disk
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/canonical/inference-snaps-cli/pkg/types"
 )
@@ -46,42 +44,4 @@ func InfoFromRawData(dfData string) (map[string]types.DirStats, error) {
 	}
 
 	return info, nil
-}
-
-func parseDf(dfData string) ([]types.DirStats, error) {
-	var parsedDirStats []types.DirStats
-
-	lines := strings.Split(dfData, "\n")
-
-	// Skip header line
-	for _, line := range lines[1:] {
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
-		}
-
-		fields := strings.Fields(line)
-
-		if len(fields) != 6 {
-			return nil, fmt.Errorf("not 6 columns")
-		}
-
-		totalSize, err := strconv.ParseUint(fields[1], 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing 'total blocks' field: %v", err)
-		}
-		//usedSize, err := strconv.ParseUint(fields[2], 10, 64)
-		availableSize, err := strconv.ParseUint(fields[3], 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing 'available blocks' field: %v", err)
-		}
-
-		var thisDir = types.DirStats{
-			Total: totalSize,
-			Avail: availableSize,
-		}
-		parsedDirStats = append(parsedDirStats, thisDir)
-	}
-
-	return parsedDirStats, nil
 }
