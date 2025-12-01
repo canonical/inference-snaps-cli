@@ -16,7 +16,10 @@ func statusStruct() (*Status, error) {
 
 	activeEngineName, err := cache.GetActiveEngine()
 	if err != nil {
-		return nil, fmt.Errorf("error getting active engine from cache: %v", err)
+		return nil, fmt.Errorf("error getting active engine: %v", err)
+	}
+	if activeEngineName == "" {
+		return nil, fmt.Errorf("error no engine is active")
 	}
 	statusStr.Engine = activeEngineName
 
