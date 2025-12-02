@@ -122,7 +122,10 @@ func chat(_ *cobra.Command, args []string) error {
 		}
 
 		if len(prompt) > 0 {
-			params = handlePrompt(client, params, reasoningModel, prompt)
+			params, err = handlePrompt(client, params, reasoningModel, prompt)
+			if err != nil {
+				return fmt.Errorf("error while processing prompt: %v", err)
+			}
 		}
 	}
 	fmt.Println("Closing chat")
@@ -170,27 +173,30 @@ func findModelName() (string, error) {
 		for _, model := range modelPage.Data {
 			names = append(names, model.ID)
 		}
-		return "", fmt.Errorf("server returned multiple models\n\nPlease select one with: --model [%s]", strings.Join(names, "|"))
+		return "", fmt.Errorf("server returned multiple models: %s", strings.Join(names, ", "))
 	}
 
 	stopProgress()
 	return modelPage.Data[0].ID, nil
 }
 
-func handlePrompt(client openai.Client, params openai.ChatCompletionNewParams, reasoningModel bool, prompt string) openai.ChatCompletionNewParams {
+func handlePrompt(client openai.Client, params openai.ChatCompletionNewParams, reasoningModel bool, prompt string) (openai.ChatCompletionNewParams, error) {
 	params.Messages = append(params.Messages, openai.UserMessage(prompt))
 
 	paramDebugString, _ := json.Marshal(params)
 
 	if verboseLogging {
-		fmt.Printf("Sending request: %s\n", paramDebugString)
+		log.Printf("Sending request: %s\n", paramDebugString)
 	}
 
 	stopProgress := startProgressSpinner("Waiting for a response ")
 	stream := client.Chat.Completions.NewStreaming(context.Background(), params)
 	stopProgress()
 
-	appendParam := processStream(stream, reasoningModel)
+	appendParam, err := processStream(stream, reasoningModel)
+	if err != nil {
+		return params, fmt.Errorf("error processing stream: %v", err)
+	}
 
 	// Store previous prompts for context
 	if appendParam != nil {
@@ -198,10 +204,10 @@ func handlePrompt(client openai.Client, params openai.ChatCompletionNewParams, r
 	}
 	fmt.Println()
 
-	return params
+	return params, nil
 }
 
-func processStream(stream *ssestream.Stream[openai.ChatCompletionChunk], printThinking bool) *openai.ChatCompletionMessageParamUnion {
+func processStream(stream *ssestream.Stream[openai.ChatCompletionChunk], printThinking bool) (*openai.ChatCompletionMessageParamUnion, error) {
 
 	// optionally, an accumulator helper can be used
 	acc := openai.ChatCompletionAccumulator{}
@@ -247,17 +253,15 @@ func processStream(stream *ssestream.Stream[openai.ChatCompletionChunk], printTh
 	}
 
 	if stream.Err() != nil {
-		err := fmt.Errorf("\n\nError reading response stream: %v\n", stream.Err())
-		fmt.Fprint(os.Stderr, err)
-		os.Exit(1)
+		return nil, fmt.Errorf("error reading response stream: %v", stream.Err())
 	}
 
 	// After the stream is finished, acc can be used like a ChatCompletion
 	appendParam := acc.Choices[0].Message.ToParam()
 	if acc.Choices[0].Message.Content == "" {
-		return nil
+		return nil, nil
 	}
-	return &appendParam
+	return &appendParam, nil
 }
 
 func filterInput(r rune) (rune, bool) {
