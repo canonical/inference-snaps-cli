@@ -39,7 +39,7 @@ func vRam(device types.PciDevice) (*uint64, error) {
 	cmdContext, cancel := context.WithTimeout(ctx, clInfoTimeout)
 	defer cancel()
 
-	command := exec.CommandContext(cmdContext, "clinfo", "--json")
+	command := exec.CommandContext(cmdContext, "clinfo", "--json", "--device", device.Slot)
 
 	// Set process group and kill the entire process tree on cancel
 	command.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
