@@ -1,6 +1,7 @@
 package engines
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -45,6 +46,8 @@ func LoadManifests(manifestsDir string) ([]Manifest, error) {
 	return manifests, nil
 }
 
+var ErrManifestNotFound = errors.New("engine manifest not found")
+
 func LoadManifest(manifestsDir, engineName string) (*Manifest, error) {
 	// Sanitize dir path
 	if !strings.HasSuffix(manifestsDir, "/") {
@@ -54,6 +57,9 @@ func LoadManifest(manifestsDir, engineName string) (*Manifest, error) {
 	fileName := manifestsDir + engineName + "/engine.yaml"
 	data, err := os.ReadFile(fileName)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, fmt.Errorf("%w: %s", ErrManifestNotFound, err)
+		}
 		return nil, fmt.Errorf("%s: %s", fileName, err)
 	}
 
