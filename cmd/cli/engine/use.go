@@ -127,7 +127,7 @@ func (cmd *useCommand) autoSelectEngine() error {
 // switchEngine changes the engine that is used by the snap
 func (cmd *useCommand) switchEngine(engineName string) error {
 
-	engine, err := selector.LoadManifestFromDir(cmd.EnginesDir, engineName)
+	engine, err := engines.LoadManifest(cmd.EnginesDir, engineName)
 	if err != nil {
 		return fmt.Errorf("error loading engine manifest: %v", err)
 	}
@@ -253,7 +253,7 @@ func (cmd *useCommand) unsetEngineConfig(engineName string) error {
 		return fmt.Errorf("error un-setting engine configurations: %v", err)
 	}
 
-	engine, err := selector.LoadManifestFromDir(cmd.EnginesDir, engineName)
+	engine, err := engines.LoadManifest(cmd.EnginesDir, engineName)
 	if err != nil {
 		return fmt.Errorf("error loading engine manifest: %v", err)
 	}
