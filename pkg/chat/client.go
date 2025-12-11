@@ -39,7 +39,7 @@ func Client(baseUrl string, modelName string) error {
 	client := openai.NewClient(option.WithBaseURL(baseUrl))
 
 	if err := checkServer(client, modelName); err != nil {
-		return fmt.Errorf("unable to chat: %s", err)
+		return fmt.Errorf("unable to chat: %s\n\nMake sure the server has started successfully.", err)
 	}
 
 	fmt.Println("Type your prompt, then ENTER to submit. CTRL-C to quit.")
@@ -59,7 +59,7 @@ func Client(baseUrl string, modelName string) error {
 	}
 	defer rl.Close()
 	//rl.CaptureExitSignal() // Should readline capture and handle the exit signal? - Can be used to interrupt the chat response stream.
-	log.SetOutput(rl.Stderr())
+	log.SetOutput(rl.Stderr()) // What is this for?
 
 	params := openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{
@@ -113,12 +113,12 @@ func checkServer(client openai.Client, modelName string) error {
 	if err != nil {
 		defer stopProgress()
 
-		var urlErr *url.Error
-		var apiErr *openai.Error
-		if errors.As(err, &urlErr) {
-			return urlErr.Err
-		} else if errors.As(err, &apiErr) {
-			return errors.New(apiErr.Message)
+		var urlError *url.Error
+		var apiError *openai.Error
+		if errors.As(err, &urlError) {
+			return urlError.Err
+		} else if errors.As(err, &apiError) {
+			return errors.New(apiError.Message)
 		}
 		return err
 	}
@@ -135,11 +135,11 @@ func findModelName(baseUrl string, verbose bool) (string, error) {
 	if err != nil {
 		stopProgress()
 
-		var apiErr *url.Error
-		if errors.As(err, &apiErr) {
-			return "", fmt.Errorf("failed to query models: %s", apiErr.Err)
+		var urlError *url.Error
+		if errors.As(err, &urlError) {
+			err = urlError.Err
 		}
-		return "", fmt.Errorf("failed to query models: %s", err)
+		return "", fmt.Errorf("failed to query models: %s\n\nMake sure the server has started successfully.", err)
 	}
 
 	if len(modelPage.Data) == 0 {
@@ -228,12 +228,12 @@ func processStream(stream *ssestream.Stream[openai.ChatCompletionChunk]) (*opena
 	}
 
 	if err := stream.Err(); err != nil {
-		var urlErr *url.Error
-		var apiErr *openai.Error
-		if errors.As(err, &urlErr) {
-			return nil, urlErr.Err
-		} else if errors.As(err, &apiErr) {
-			return nil, errors.New(apiErr.Message)
+		var urlError *url.Error
+		var apiError *openai.Error
+		if errors.As(err, &urlError) {
+			return nil, urlError.Err
+		} else if errors.As(err, &apiError) {
+			return nil, errors.New(apiError.Message)
 		}
 		return nil, fmt.Errorf("error reading response stream: %v", stream.Err())
 	}
