@@ -2,8 +2,6 @@ module github.com/canonical/inference-snaps-cli
 
 go 1.24.0
 
-toolchain go1.24.6
-
 require (
 	github.com/briandowns/spinner v1.23.2
 	github.com/canonical/go-snapctl v1.0.0-beta.3
@@ -11,6 +9,7 @@ require (
 	github.com/fatih/color v1.18.0
 	github.com/go-test/deep v1.1.1
 	github.com/jaypipes/pcidb v1.1.1
+	github.com/jpm-canonical/go-opencl v0.0.0-20251211082753-78aef42f8d95
 	github.com/olekukonko/tablewriter v1.1.2
 	github.com/openai/openai-go/v3 v3.10.0
 	github.com/spf13/cobra v1.10.1

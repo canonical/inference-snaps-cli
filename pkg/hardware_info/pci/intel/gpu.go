@@ -10,7 +10,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/pci/utils"
 	"github.com/canonical/inference-snaps-cli/pkg/types"
+	"github.com/jpm-canonical/go-opencl/cl"
 )
 
 const clInfoTimeout = 10 * time.Second
@@ -18,7 +20,7 @@ const clInfoTimeout = 10 * time.Second
 func gpuProperties(pciDevice types.PciDevice) (map[string]string, error) {
 	properties := make(map[string]string)
 
-	vRamVal, err := vRam(pciDevice)
+	vRamVal, err := VRamOpenCl(pciDevice)
 	if err != nil {
 		return nil, fmt.Errorf("error looking up vRAM: %v", err)
 	}
@@ -39,7 +41,7 @@ func vRam(device types.PciDevice) (*uint64, error) {
 	cmdContext, cancel := context.WithTimeout(ctx, clInfoTimeout)
 	defer cancel()
 
-	command := exec.CommandContext(cmdContext, "clinfo", "--json", "--device", device.Slot)
+	command := exec.CommandContext(cmdContext, "clinfo", "--json")
 
 	// Set process group and kill the entire process tree on cancel
 	command.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
@@ -78,4 +80,44 @@ func parseClinfoJson(clinfoJson []byte) (types.Clinfo, error) {
 	clinfo := types.Clinfo{}
 	err := json.Unmarshal(clinfoJson, &clinfo)
 	return clinfo, err
+}
+
+func VRamOpenCl(device types.PciDevice) (*uint64, error) {
+	for _, platform := range cl.Platforms {
+		for _, clDevice := range platform.Devices {
+			// Print PCI bus info if cl_khr_pci_bus_info is available
+			ext := clDevice.Property(cl.DEVICE_EXTENSIONS)
+
+			extStr, ok := ext.(string)
+			if !ok || strings.TrimSpace(extStr) == "" {
+				return nil, fmt.Errorf("failed to look up device extensions")
+			}
+
+			if !strings.Contains(extStr, "cl_khr_pci_bus_info") {
+				return nil, fmt.Errorf("device does not support pci bus info")
+			}
+
+			busInfo, err := clDevice.BusInfo()
+			if err != nil {
+				fmt.Println("error getting bus info:", err)
+			}
+
+			slotAddress, err := utils.ParsePCISlot(device.Slot)
+			if err != nil {
+				fmt.Println("error parsing pci slot address:", err)
+			}
+
+			if busInfo.Domain == slotAddress.Domain &&
+				busInfo.Bus == slotAddress.Bus &&
+				busInfo.Device == slotAddress.Device &&
+				busInfo.Function == slotAddress.Function {
+				globalMemory, err := clDevice.GlobalMemory()
+				if err != nil {
+					fmt.Println("error getting global memory:", err)
+				}
+				return &globalMemory, nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("device not found in clinfo")
 }

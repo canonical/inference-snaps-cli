@@ -3,6 +3,8 @@ package intel
 import (
 	"os"
 	"testing"
+
+	"github.com/canonical/inference-snaps-cli/pkg/types"
 )
 
 var clinfoFiles = []string{
@@ -30,4 +32,25 @@ func TestParseClinfo(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestVramOpenCl(t *testing.T) {
+	device := types.PciDevice{
+		Slot:                 "00:02.0",
+		BusNumber:            0,
+		DeviceClass:          0,
+		ProgrammingInterface: nil,
+		VendorId:             0,
+		DeviceId:             0,
+		SubvendorId:          nil,
+		SubdeviceId:          nil,
+		PciFriendlyNames:     types.PciFriendlyNames{},
+		AdditionalProperties: nil,
+	}
+
+	vram, err := VRamOpenCl(device)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(*vram)
 }
