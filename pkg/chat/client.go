@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/url"
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
@@ -42,10 +43,7 @@ func Client(baseUrl string, modelName string, reasoningModel bool, verbose bool)
 	client := openai.NewClient(option.WithBaseURL(baseUrl))
 
 	if err := checkServer(client, modelName); err != nil {
-		if verbose {
-			fmt.Printf("%v\n\n", err)
-		}
-		return fmt.Errorf("Unable to chat. Make sure the server has started successfully.")
+		return fmt.Errorf("unable to chat: %s", err)
 	}
 
 	fmt.Println("Type your prompt, then ENTER to submit. CTRL-C to quit.")
@@ -92,7 +90,7 @@ func Client(baseUrl string, modelName string, reasoningModel bool, verbose bool)
 		if len(prompt) > 0 {
 			params, err = handlePrompt(client, params, reasoningModel, prompt, verbose)
 			if err != nil {
-				return fmt.Errorf("error while processing prompt: %v", err)
+				return fmt.Errorf("error processing prompt: %v", err)
 			}
 		}
 	}
@@ -117,6 +115,15 @@ func checkServer(client openai.Client, modelName string) error {
 	ctx := context.Background()
 	_, err := client.Chat.Completions.New(ctx, params)
 	if err != nil {
+		defer stopProgress()
+
+		var urlErr *url.Error
+		var apiErr *openai.Error
+		if errors.As(err, &urlErr) {
+			return urlErr.Err
+		} else if errors.As(err, &apiErr) {
+			return errors.New(apiErr.Message)
+		}
 		return err
 	}
 
@@ -131,10 +138,12 @@ func findModelName(baseUrl string, verbose bool) (string, error) {
 	modelPage, err := modelService.List(context.Background())
 	if err != nil {
 		stopProgress()
-		if verbose {
-			fmt.Printf("%v\n\n", err)
+
+		var apiErr *url.Error
+		if errors.As(err, &apiErr) {
+			return "", fmt.Errorf("failed to query models: %s", apiErr.Err)
 		}
-		return "", fmt.Errorf("Failed to list available models. Make sure the server has started successfully.")
+		return "", fmt.Errorf("failed to query models: %s", err)
 	}
 
 	if len(modelPage.Data) == 0 {
@@ -222,7 +231,14 @@ func processStream(stream *ssestream.Stream[openai.ChatCompletionChunk], printTh
 		}
 	}
 
-	if stream.Err() != nil {
+	if err := stream.Err(); err != nil {
+		var urlErr *url.Error
+		var apiErr *openai.Error
+		if errors.As(err, &urlErr) {
+			return nil, urlErr.Err
+		} else if errors.As(err, &apiErr) {
+			return nil, errors.New(apiErr.Message)
+		}
 		return nil, fmt.Errorf("error reading response stream: %v", stream.Err())
 	}
 
