@@ -130,7 +130,7 @@ func (cmd *useCommand) switchEngine(engineName string) error {
 			if cmd.Verbose {
 				fmt.Println(err)
 			}
-			return fmt.Errorf("%q is not found", engineName)
+			return fmt.Errorf("%q not found", engineName)
 		}
 		return fmt.Errorf("error loading engine manifest: %v", err)
 	}
