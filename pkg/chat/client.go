@@ -113,8 +113,6 @@ func checkServer(client openai.Client, modelName string) error {
 	ctx := context.Background()
 	_, err := client.Chat.Completions.New(ctx, params)
 	if err != nil {
-		defer stopProgress()
-
 		var urlError *url.Error
 		var apiError *openai.Error
 		if errors.As(err, &urlError) { // connection error
@@ -173,7 +171,7 @@ func handlePrompt(client openai.Client, params openai.ChatCompletionNewParams, p
 
 	appendParam, err := processStream(stream)
 	if err != nil {
-		return params, fmt.Errorf("error streaming: %v", err)
+		return params, err
 	}
 
 	// Store previous prompts for context
