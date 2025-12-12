@@ -115,12 +115,12 @@ func checkServer(client openai.Client, modelName string) error {
 
 		var urlError *url.Error
 		var apiError *openai.Error
-		if errors.As(err, &urlError) {
+		if errors.As(err, &urlError) { // connection error
 			return urlError.Err
-		} else if errors.As(err, &apiError) {
+		} else if errors.As(err, &apiError) { // API error
 			return errors.New(apiError.Message)
 		}
-		return err
+		return err // other error
 	}
 
 	return nil
@@ -136,7 +136,7 @@ func findModelName(baseUrl string, verbose bool) (string, error) {
 		stopProgress()
 
 		var urlError *url.Error
-		if errors.As(err, &urlError) {
+		if errors.As(err, &urlError) { // connection error
 			err = urlError.Err
 		}
 		return "", fmt.Errorf("failed to query models: %s\n\nMake sure the server has started successfully.", err)
@@ -230,9 +230,9 @@ func processStream(stream *ssestream.Stream[openai.ChatCompletionChunk]) (*opena
 	if err := stream.Err(); err != nil {
 		var urlError *url.Error
 		var apiError *openai.Error
-		if errors.As(err, &urlError) {
+		if errors.As(err, &urlError) { // connection error before streaming
 			return nil, urlError.Err
-		} else if errors.As(err, &apiError) {
+		} else if errors.As(err, &apiError) { // API error
 			return nil, errors.New(apiError.Message)
 		}
 		return nil, fmt.Errorf("error reading response stream: %v", stream.Err())
