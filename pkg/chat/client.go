@@ -19,6 +19,8 @@ import (
 	"github.com/openai/openai-go/v3/packages/ssestream"
 )
 
+const serverStartupSuggestion = "Make sure the server has started successfully."
+
 func Client(baseUrl string, modelName string) error {
 	verbose := os.Getenv("VERBOSE") == "true"
 
@@ -39,7 +41,7 @@ func Client(baseUrl string, modelName string) error {
 	client := openai.NewClient(option.WithBaseURL(baseUrl))
 
 	if err := checkServer(client, modelName); err != nil {
-		return fmt.Errorf("unable to chat: %s\n\nMake sure the server has started successfully.", err)
+		return fmt.Errorf("unable to chat: %s\n\n%s", err, serverStartupSuggestion)
 	}
 
 	fmt.Println("Type your prompt, then ENTER to submit. CTRL-C to quit.")
@@ -86,7 +88,7 @@ func Client(baseUrl string, modelName string) error {
 		if len(prompt) > 0 {
 			params, err = handlePrompt(client, params, prompt, verbose)
 			if err != nil {
-				return fmt.Errorf("error processing prompt: %v", err)
+				return err
 			}
 		}
 	}
@@ -139,11 +141,11 @@ func findModelName(baseUrl string, verbose bool) (string, error) {
 		if errors.As(err, &urlError) { // connection error
 			err = urlError.Err
 		}
-		return "", fmt.Errorf("failed to query models: %s\n\nMake sure the server has started successfully.", err)
+		return "", fmt.Errorf("failed to query models: %s\n\n%s", err, serverStartupSuggestion)
 	}
 
 	if len(modelPage.Data) == 0 {
-		return "", fmt.Errorf("server returned no models")
+		return "", fmt.Errorf("server returned no models\n\n%s", serverStartupSuggestion)
 	} else if len(modelPage.Data) > 1 {
 		names := make([]string, 0, len(modelPage.Data)) // Pre-allocate for efficiency
 		for _, model := range modelPage.Data {
@@ -171,7 +173,7 @@ func handlePrompt(client openai.Client, params openai.ChatCompletionNewParams, p
 
 	appendParam, err := processStream(stream)
 	if err != nil {
-		return params, fmt.Errorf("error processing stream: %v", err)
+		return params, fmt.Errorf("error streaming: %v", err)
 	}
 
 	// Store previous prompts for context
@@ -235,7 +237,7 @@ func processStream(stream *ssestream.Stream[openai.ChatCompletionChunk]) (*opena
 		} else if errors.As(err, &apiError) { // API error
 			return nil, errors.New(apiError.Message)
 		}
-		return nil, fmt.Errorf("error reading response stream: %v", stream.Err())
+		return nil, stream.Err() // streaming error
 	}
 
 	// After the stream is finished, acc can be used like a ChatCompletion
