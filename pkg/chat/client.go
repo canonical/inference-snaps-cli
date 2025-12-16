@@ -88,7 +88,7 @@ func Client(baseUrl string, modelName string) error {
 		if len(prompt) > 0 {
 			params, err = handlePrompt(client, params, prompt, verbose)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to prompt: %s", err)
 			}
 		}
 	}
