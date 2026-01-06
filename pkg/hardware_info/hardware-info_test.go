@@ -36,11 +36,11 @@ func TestGetFromFiles(t *testing.T) {
 			}
 
 			// Ignore the disk info for / as it's always different inside a snap than what the raw commands on the host reports
-			hwInfo.Disk["/"] = types.DirStats{
+			hwInfo.Disk = types.DirStats{
 				Total: 0,
 				Avail: 0,
 			}
-			hardwareInfo.Disk["/"] = types.DirStats{
+			hardwareInfo.Disk = types.DirStats{
 				Total: 0,
 				Avail: 0,
 			}

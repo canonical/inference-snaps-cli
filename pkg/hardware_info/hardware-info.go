@@ -39,7 +39,7 @@ func Get(friendlyNames bool) (*types.HwInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error getting disk info: %v", err)
 	}
-	hwInfo.Disk = diskInfo
+	hwInfo.Disk = *diskInfo
 
 	pciDevices, err := pci.Devices(friendlyNames)
 	if err != nil {
@@ -76,7 +76,7 @@ func GetFromRawData(t *testing.T, device string, friendlyNames bool, testDir str
 	if err != nil {
 		t.Fatal(err)
 	}
-	hwInfo.Disk = diskInfo
+	hwInfo.Disk = *diskInfo
 
 	// cpu
 	unameMachine, err := os.ReadFile(devicePath + "uname-m.txt")

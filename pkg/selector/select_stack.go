@@ -87,7 +87,7 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, []
 		}
 
 		if hardwareInfo.Memory.TotalRam == 0 {
-			return 0, reasons, fmt.Errorf("system can't have zero ram")
+			return 0, reasons, fmt.Errorf("memory: total memory not reported")
 		}
 
 		// Checking combination of ram and swap
@@ -104,10 +104,12 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, []
 		if err != nil {
 			return 0, reasons, err
 		}
-		if _, ok := hardwareInfo.Disk["/var/lib/snapd/snaps"]; !ok {
-			return 0, reasons, fmt.Errorf("disk space not reported by hardware info")
+
+		if hardwareInfo.Disk.Total == 0 {
+			return 0, reasons, fmt.Errorf("disk: total disk space not reported")
 		}
-		if hardwareInfo.Disk["/var/lib/snapd/snaps"].Avail < requiredDisk {
+
+		if hardwareInfo.Disk.Avail < requiredDisk {
 			reasons = append(reasons, fmt.Sprintf("disk: system disk space too small"))
 			return 0, reasons, nil
 		}

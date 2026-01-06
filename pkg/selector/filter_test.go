@@ -18,11 +18,9 @@ func TestFindTopEngineFromNone(t *testing.T) {
 			TotalRam:  200000000,
 			TotalSwap: 200000000,
 		},
-		Disk: map[string]types.DirStats{
-			"/var/lib/snapd/snaps": {
-				Total: 0,
-				Avail: 400000000,
-			},
+		Disk: types.DirStats{
+			Total: 0,
+			Avail: 400000000,
 		},
 	}
 
@@ -45,13 +43,11 @@ func TestFindTopEngineFromNone(t *testing.T) {
 
 func TestDiskCheck(t *testing.T) {
 	dirStat := types.DirStats{
-		Total: 0,
+		Total: 400000000,
 		Avail: 400000000,
 	}
 	hwInfo := types.HwInfo{}
-	hwInfo.Disk = make(map[string]types.DirStats)
-	hwInfo.Disk["/"] = dirStat
-	hwInfo.Disk["/var/lib/snapd/snaps"] = dirStat
+	hwInfo.Disk = dirStat
 
 	manifestDisk := "300M"
 	engine := engines.Manifest{DiskSpace: &manifestDisk}
@@ -65,10 +61,10 @@ func TestDiskCheck(t *testing.T) {
 	}
 
 	dirStat = types.DirStats{
-		Total: 0,
+		Total: 100000000,
 		Avail: 100000000,
 	}
-	hwInfo.Disk["/var/lib/snapd/snaps"] = dirStat
+	hwInfo.Disk = dirStat
 	result, reasons, err = checkEngine(&hwInfo, engine)
 	if err != nil {
 		t.Fatal(err)
@@ -140,8 +136,7 @@ func TestNoCpuInHwInfo(t *testing.T) {
 		t.Fatal("No Disk space in hardware_info should return err")
 	}
 
-	hwInfo.Disk = make(map[string]types.DirStats)
-	hwInfo.Disk["/"] = types.DirStats{
+	hwInfo.Disk = types.DirStats{
 		Avail: 6000000000,
 	}
 
