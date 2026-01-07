@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
+	"github.com/canonical/inference-snaps-cli/pkg/utils"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -92,6 +93,7 @@ func (cmd *statusCommand) statusJson() (string, error) {
 
 type Status struct {
 	Engine    string            `json:"engine" yaml:"engine"`
+	Services  map[string]string `json:"services" yaml:"services"`
 	Endpoints map[string]string `json:"endpoints" yaml:"endpoints"`
 }
 
@@ -106,6 +108,16 @@ func (cmd *statusCommand) statusStruct() (*Status, error) {
 		return nil, fmt.Errorf("error no engine is active")
 	}
 	statusStr.Engine = activeEngineName
+
+	services, err := utils.GetServices()
+	if err != nil {
+		return nil, fmt.Errorf("error getting services: %v", err)
+	}
+	statusStr.Services = make(map[string]string)
+	for name, service := range services {
+		// Append the service status exactly as snapd reports it. Often this is in the host system language.
+		statusStr.Services[name] = service.Active
+	}
 
 	endpoints, err := serverApiUrls(cmd.Context)
 	if err != nil {
