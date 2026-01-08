@@ -2,6 +2,8 @@ github.com/briandowns/spinner v1.23.2 h1:Zc6ecUnI+YzLmJniCfDNaMbW0Wid1d5+qcTq4L2
 github.com/briandowns/spinner v1.23.2/go.mod h1:LaZeM4wm2Ywy6vO571mvhQNRcWfRUnXOs0RcKV0wYKM=
 github.com/canonical/go-snapctl v1.0.0-beta.3 h1:lVfhh+7aRndPABZIVfDV19tdsxaSNKFWi3tkQ71XjEY=
 github.com/canonical/go-snapctl v1.0.0-beta.3/go.mod h1:c2Kkyh24L/nYD7YSLzoA6n/mI3/86IQekwXvBHL3G+Q=
+github.com/canonical/go-snapctl v1.0.0-beta.3.0.20260108080646-331591051666 h1:hoiDYZVAkFNA7qq7Y3E40qXHCV5b3WMSlhqfk55iyRI=
+github.com/canonical/go-snapctl v1.0.0-beta.3.0.20260108080646-331591051666/go.mod h1:ufaV5pvWELQLf+SyUIRGlVFxE+XLVCOU8tgUbXj2o58=
 github.com/chzyer/logex v1.2.1 h1:XHDu3E6q+gdHgsdTPH6ImJMIp436vR6MPtH8gP05QzM=
 github.com/chzyer/logex v1.2.1/go.mod h1:JLbx6lG2kDbNRFnfkgvh4eRJRPX1QCoOIWomwysCBrQ=
 github.com/chzyer/readline v1.5.1 h1:upd/6fQk4src78LMRzh5vItIt361/o4uq553V8B5sGI=
