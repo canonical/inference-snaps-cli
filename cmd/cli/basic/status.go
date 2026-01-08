@@ -121,7 +121,8 @@ func (cmd *statusCommand) statusStruct() (*Status, error) {
 		if !found {
 			return nil, fmt.Errorf("error unexpected service name format: %q", name)
 		}
-		// Append the service status exactly as snapd reports it. Often this is in the host system language.
+		// Append the service status exactly as snapd reports it. Often this is in the host system language, see bug:
+		// https://bugs.launchpad.net/snapd/+bug/2137543
 		statusStr.Services[serviceApp] = service.Current
 	}
 
