@@ -13,8 +13,7 @@ func SuggestServerStartup() string {
 func SuggestServerLogs() string {
 
 	instanceName := env.SnapInstanceName()
-	if instanceName == "" {
-		// Not a snap
+	if instanceName == "" { // not a snap
 		instanceName = "<snap-instance-name>"
 	}
 

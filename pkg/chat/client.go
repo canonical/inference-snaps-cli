@@ -71,7 +71,7 @@ func Client(baseUrl string, modelName string) error {
 	}
 	defer rl.Close()
 	//rl.CaptureExitSignal() // Should readline capture and handle the exit signal? - Can be used to interrupt the chat response stream.
-	log.SetOutput(rl.Stderr()) // What is this for?
+	log.SetOutput(rl.Stderr())
 
 	params := openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{
@@ -98,7 +98,7 @@ func Client(baseUrl string, modelName string) error {
 		if len(prompt) > 0 {
 			params, err = handlePrompt(client, params, prompt, verbose)
 			if err != nil {
-				return fmt.Errorf("failed to prompt: %s", err)
+				return err
 			}
 		}
 	}
@@ -157,11 +157,8 @@ func checkServer(client openai.Client, modelName string) error {
 	for {
 		_, err := client.Chat.Completions.New(context.Background(), params)
 		if err != nil {
-			var urlError *url.Error
 			var apiError *openai.Error
-			if errors.As(err, &urlError) {
-				return fmt.Errorf("unexpected connection error: %s", urlError.Err)
-			} else if errors.As(err, &apiError) {
+			if errors.As(err, &apiError) {
 				// llama-server starting up
 				// Error: POST "http://localhost:8328/v1/chat/completions": 503 Service Unavailable {"message":"Loading model","type":"unavailable_error","code":503}
 				if apiError.StatusCode == http.StatusServiceUnavailable && apiError.Type == "unavailable_error" {
@@ -173,9 +170,8 @@ func checkServer(client openai.Client, modelName string) error {
 					}
 					time.Sleep(retryInterval)
 					continue
-				} else {
-					return fmt.Errorf("unexpected API error: %s", apiError.Message)
 				}
+				return fmt.Errorf("unexpected API error: %s", apiError.Error())
 			} else {
 				return fmt.Errorf("unexpected error: %s", err)
 			}
@@ -201,11 +197,8 @@ func findModelName(baseUrl string, verbose bool) (string, error) {
 		var err error
 		modelPage, err = modelService.List(context.Background())
 		if err != nil {
-			var urlError *url.Error
 			var apiError *openai.Error
-			if errors.As(err, &urlError) {
-				return "", fmt.Errorf("unexpected connection error: %s", urlError.Err)
-			} else if errors.As(err, &apiError) {
+			if errors.As(err, &apiError) {
 				// OpenVINO Model Server starting up
 				// Error: GET "http://localhost:8328/v1/models": 404 Not Found "Model with requested name is not found")
 				if apiError.StatusCode == http.StatusNotFound && strings.Contains(apiError.Error(), "Model with requested name is not found") {
@@ -217,9 +210,8 @@ func findModelName(baseUrl string, verbose bool) (string, error) {
 					}
 					time.Sleep(retryInterval)
 					continue
-				} else {
-					return "", fmt.Errorf("unexpected API error: %s", apiError.Message)
 				}
+				return "", fmt.Errorf("unexpected API error: %s", apiError.Message)
 			} else {
 				return "", fmt.Errorf("unexpected error: %s", err)
 			}
@@ -313,14 +305,11 @@ func processStream(stream *ssestream.Stream[openai.ChatCompletionChunk]) (*opena
 	}
 
 	if err := stream.Err(); err != nil {
-		var urlError *url.Error
-		var apiError *openai.Error
-		if errors.As(err, &urlError) { // connection error before streaming
-			return nil, urlError.Err
-		} else if errors.As(err, &apiError) { // API error
-			return nil, errors.New(apiError.Message)
+		if errors.Is(err, syscall.ECONNREFUSED) { // connection refused before streaming
+			return nil, fmt.Errorf("connection refused\n\n%s",
+				common.SuggestServerLogs())
 		}
-		return nil, stream.Err() // streaming error
+		return nil, err
 	}
 
 	// After the stream is finished, acc can be used like a ChatCompletion
