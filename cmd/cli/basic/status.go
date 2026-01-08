@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/canonical/go-snapctl"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
-	"github.com/canonical/inference-snaps-cli/pkg/utils"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -109,14 +109,14 @@ func (cmd *statusCommand) statusStruct() (*Status, error) {
 	}
 	statusStr.Engine = activeEngineName
 
-	services, err := utils.GetServices()
+	services, err := snapctl.Services().Run()
 	if err != nil {
 		return nil, fmt.Errorf("error getting services: %v", err)
 	}
 	statusStr.Services = make(map[string]string)
 	for name, service := range services {
 		// Append the service status exactly as snapd reports it. Often this is in the host system language.
-		statusStr.Services[name] = service.Active
+		statusStr.Services[name] = service.Current
 	}
 
 	endpoints, err := serverApiUrls(cmd.Context)
