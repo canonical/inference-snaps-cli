@@ -3,6 +3,7 @@ package basic
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/canonical/go-snapctl"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
@@ -115,8 +116,13 @@ func (cmd *statusCommand) statusStruct() (*Status, error) {
 	}
 	statusStr.Services = make(map[string]string)
 	for name, service := range services {
+		// The service name is in the format <snap-name>.<service-app>, we only want the service-app part.
+		_, serviceApp, found := strings.Cut(name, ".")
+		if !found {
+			return nil, fmt.Errorf("error unexpected service name format: %q", name)
+		}
 		// Append the service status exactly as snapd reports it. Often this is in the host system language.
-		statusStr.Services[name] = service.Current
+		statusStr.Services[serviceApp] = service.Current
 	}
 
 	endpoints, err := serverApiUrls(cmd.Context)
