@@ -7,24 +7,34 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
 	"github.com/chzyer/readline"
 	"github.com/fatih/color"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/pagination"
 	"github.com/openai/openai-go/v3/packages/ssestream"
 )
-
-const serverStartupSuggestion = "Make sure the server has started successfully."
 
 func Client(baseUrl string, modelName string) error {
 	verbose := os.Getenv("VERBOSE") == "true"
 
+	// TODO: error out if server service is "inactive"
+
 	fmt.Printf("Using server at %v\n", baseUrl)
+
+	// Check if server is reachable
+	if err := handshake(baseUrl); err != nil {
+		return err
+	}
 
 	if modelName == "" {
 		var err error
@@ -41,7 +51,7 @@ func Client(baseUrl string, modelName string) error {
 	client := openai.NewClient(option.WithBaseURL(baseUrl))
 
 	if err := checkServer(client, modelName); err != nil {
-		return fmt.Errorf("unable to chat: %s\n\n%s", err, serverStartupSuggestion)
+		return fmt.Errorf("unable to chat: %s\n\n%s", err, common.SuggestServerStartup())
 	}
 
 	fmt.Println("Type your prompt, then ENTER to submit. CTRL-C to quit.")
@@ -97,6 +107,35 @@ func Client(baseUrl string, modelName string) error {
 	return nil
 }
 
+func handshake(baseUrl string) error {
+	stopProgress := common.StartProgressSpinner("Connecting to server (handshake)")
+	defer stopProgress()
+
+	parsedURL, err := url.Parse(baseUrl)
+	if err != nil {
+		return fmt.Errorf("invalid base URL: %w", err)
+	}
+	host := parsedURL.Hostname()
+	port := parsedURL.Port()
+	if port == "" {
+		if parsedURL.Scheme == "https" {
+			port = "443"
+		} else {
+			port = "80"
+		}
+	}
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), 5*time.Second)
+	if errors.Is(err, syscall.ECONNREFUSED) {
+		return fmt.Errorf("connection refused\n\n%s\n%s",
+			common.SuggestServerStartup(),
+			common.SuggestServerLogs())
+	} else if err != nil {
+		return err
+	}
+	conn.Close()
+	return nil
+}
+
 func checkServer(client openai.Client, modelName string) error {
 	params := openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{
@@ -110,20 +149,40 @@ func checkServer(client openai.Client, modelName string) error {
 	stopProgress := common.StartProgressSpinner("Connecting to server")
 	defer stopProgress()
 
-	ctx := context.Background()
-	_, err := client.Chat.Completions.New(ctx, params)
-	if err != nil {
-		var urlError *url.Error
-		var apiError *openai.Error
-		if errors.As(err, &urlError) { // connection error
-			return urlError.Err
-		} else if errors.As(err, &apiError) { // API error
-			return errors.New(apiError.Message)
+	const (
+		retryInterval = 5 * time.Second
+		waitTimeout   = 60 * time.Second
+	)
+	start := time.Now()
+	for {
+		_, err := client.Chat.Completions.New(context.Background(), params)
+		if err != nil {
+			var urlError *url.Error
+			var apiError *openai.Error
+			if errors.As(err, &urlError) {
+				return fmt.Errorf("unexpected connection error: %s", urlError.Err)
+			} else if errors.As(err, &apiError) {
+				// llama-server starting up
+				// Error: POST "http://localhost:8328/v1/chat/completions": 503 Service Unavailable {"message":"Loading model","type":"unavailable_error","code":503}
+				if apiError.StatusCode == http.StatusServiceUnavailable && apiError.Type == "unavailable_error" {
+					if time.Since(start) > waitTimeout {
+						// Stop waiting
+						return fmt.Errorf("server is loading models\n\n%s\n%s",
+							common.SuggestServerStartup(),
+							common.SuggestServerLogs())
+					}
+					time.Sleep(retryInterval)
+					continue
+				} else {
+					return fmt.Errorf("unexpected API error: %s", apiError.Message)
+				}
+			} else {
+				return fmt.Errorf("unexpected error: %s", err)
+			}
 		}
-		return err // other error
-	}
 
-	return nil
+		return nil
+	}
 }
 
 func findModelName(baseUrl string, verbose bool) (string, error) {
@@ -131,19 +190,46 @@ func findModelName(baseUrl string, verbose bool) (string, error) {
 	defer stopProgress()
 
 	modelService := openai.NewModelService(option.WithBaseURL(baseUrl))
-	modelPage, err := modelService.List(context.Background())
-	if err != nil {
-		stopProgress()
 
-		var urlError *url.Error
-		if errors.As(err, &urlError) { // connection error
-			err = urlError.Err
+	const (
+		retryInterval = 5 * time.Second
+		waitTimeout   = 60 * time.Second
+	)
+	start := time.Now()
+	var modelPage *pagination.Page[openai.Model]
+	for {
+		var err error
+		modelPage, err = modelService.List(context.Background())
+		if err != nil {
+			var urlError *url.Error
+			var apiError *openai.Error
+			if errors.As(err, &urlError) {
+				return "", fmt.Errorf("unexpected connection error: %s", urlError.Err)
+			} else if errors.As(err, &apiError) {
+				// OpenVINO Model Server starting up
+				// Error: GET "http://localhost:8328/v1/models": 404 Not Found "Model with requested name is not found")
+				if apiError.StatusCode == http.StatusNotFound && strings.Contains(apiError.Error(), "Model with requested name is not found") {
+					if time.Since(start) > waitTimeout {
+						// Stop waiting
+						return "", fmt.Errorf("no models available on server\n\n%s\n%s",
+							common.SuggestServerStartup(),
+							common.SuggestServerLogs())
+					}
+					time.Sleep(retryInterval)
+					continue
+				} else {
+					return "", fmt.Errorf("unexpected API error: %s", apiError.Message)
+				}
+			} else {
+				return "", fmt.Errorf("unexpected error: %s", err)
+			}
 		}
-		return "", fmt.Errorf("failed to query models: %s\n\n%s", err, serverStartupSuggestion)
+
+		break
 	}
 
 	if len(modelPage.Data) == 0 {
-		return "", fmt.Errorf("server returned no models\n\n%s", serverStartupSuggestion)
+		return "", fmt.Errorf("server returned no models\n\n%s", common.SuggestServerStartup())
 	} else if len(modelPage.Data) > 1 {
 		names := make([]string, 0, len(modelPage.Data)) // Pre-allocate for efficiency
 		for _, model := range modelPage.Data {
@@ -152,7 +238,6 @@ func findModelName(baseUrl string, verbose bool) (string, error) {
 		return "", fmt.Errorf("server returned multiple models: %s", strings.Join(names, ", "))
 	}
 
-	stopProgress()
 	return modelPage.Data[0].ID, nil
 }
 
