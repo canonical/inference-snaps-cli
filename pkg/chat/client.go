@@ -120,7 +120,7 @@ func Client(baseUrl string, modelName string) error {
 }
 
 func handshake(baseUrl string) error {
-	stopProgress := common.StartProgressSpinner("Connecting to server (handshake)")
+	stopProgress := common.StartProgressSpinner("Connecting to server")
 	defer stopProgress()
 
 	parsedURL, err := url.Parse(baseUrl)
@@ -158,7 +158,7 @@ func checkServer(client openai.Client, modelName string) error {
 		MaxTokens:           openai.Int(1), // for runtimes that don't yet support MaxCompletionTokens
 	}
 
-	stopProgress := common.StartProgressSpinner("Connecting to server")
+	stopProgress := common.StartProgressSpinner("Waiting for server to be ready")
 	defer stopProgress()
 
 	const (
