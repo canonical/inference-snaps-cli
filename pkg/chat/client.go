@@ -307,6 +307,10 @@ func processStream(stream *ssestream.Stream[openai.ChatCompletionChunk]) (*opena
 		if errors.Is(err, syscall.ECONNREFUSED) { // connection refused before streaming
 			return nil, fmt.Errorf("connection refused\n\n%s",
 				common.SuggestServerLogs())
+		} else if errors.Is(err, io.ErrUnexpectedEOF) {
+			fmt.Println() // break the line after incomplete stream
+			return nil, fmt.Errorf("connection closed by server\n\n%s",
+				common.SuggestServerLogs())
 		}
 		return nil, err
 	}
