@@ -22,7 +22,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/packages/pagination"
 	"github.com/openai/openai-go/v3/packages/ssestream"
 )
 
@@ -64,7 +63,7 @@ func Client(baseUrl string, modelName string) error {
 	client := openai.NewClient(option.WithBaseURL(baseUrl))
 
 	if err := checkServer(client, modelName); err != nil {
-		return fmt.Errorf("unable to chat: %s\n\n%s", err, common.SuggestServerStartup())
+		return err
 	}
 
 	fmt.Println("Type your prompt, then ENTER to submit. CTRL-C to quit.")
@@ -184,9 +183,9 @@ func checkServer(client openai.Client, modelName string) error {
 					time.Sleep(retryInterval)
 					continue
 				}
-				return fmt.Errorf("unexpected API error: %s", apiError.Error())
+				return fmt.Errorf("api: %s", apiError.Error())
 			} else {
-				return fmt.Errorf("unexpected error: %s", err)
+				return err
 			}
 		}
 
@@ -202,48 +201,35 @@ func findModelName(baseUrl string, verbose bool) (string, error) {
 
 	const (
 		retryInterval = 5 * time.Second
-		waitTimeout   = 60 * time.Second
+		waitTimeout   = 10 * time.Second
 	)
 	start := time.Now()
-	var modelPage *pagination.Page[openai.Model]
 	for {
-		var err error
-		modelPage, err = modelService.List(context.Background())
+		modelPage, err := modelService.List(context.Background())
 		if err != nil {
-			var apiError *openai.Error
-			if errors.As(err, &apiError) {
-				// OpenVINO Model Server starting up
-				// Error: GET "http://localhost:8328/v1/models": 404 Not Found "Model with requested name is not found")
-				if apiError.StatusCode == http.StatusNotFound && strings.Contains(apiError.Error(), "Model with requested name is not found") {
-					if time.Since(start) > waitTimeout {
-						// Stop waiting
-						return "", fmt.Errorf("no models available on server\n\n%s\n%s",
-							common.SuggestServerStartup(),
-							common.SuggestServerLogs())
-					}
-					time.Sleep(retryInterval)
-					continue
-				}
-				return "", fmt.Errorf("unexpected API error: %s", apiError.Message)
-			} else {
-				return "", fmt.Errorf("unexpected error: %s", err)
+			return "", err
+		}
+
+		if len(modelPage.Data) == 0 {
+			// This can happen when OpenVINO Model Server is starting up
+			if time.Since(start) > waitTimeout {
+				// Stop waiting
+				return "", fmt.Errorf("server returned no models\n\n%s\n%s",
+					common.SuggestServerStartup(),
+					common.SuggestServerLogs())
 			}
+			time.Sleep(retryInterval)
+			continue
+		} else if len(modelPage.Data) > 1 {
+			var names []string
+			for _, model := range modelPage.Data {
+				names = append(names, model.ID)
+			}
+			return "", fmt.Errorf("expected one but server returned multiple models: %s", strings.Join(names, ", "))
 		}
 
-		break
-	}
-
-	if len(modelPage.Data) == 0 {
-		return "", fmt.Errorf("server returned no models\n\n%s", common.SuggestServerStartup())
-	} else if len(modelPage.Data) > 1 {
-		names := make([]string, 0, len(modelPage.Data)) // Pre-allocate for efficiency
-		for _, model := range modelPage.Data {
-			names = append(names, model.ID)
-		}
-		return "", fmt.Errorf("server returned multiple models: %s", strings.Join(names, ", "))
-	}
-
-	return modelPage.Data[0].ID, nil
+		return modelPage.Data[0].ID, nil
+	} // end for
 }
 
 func handlePrompt(client openai.Client, params openai.ChatCompletionNewParams, prompt string, verbose bool) (openai.ChatCompletionNewParams, error) {
