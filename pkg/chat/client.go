@@ -185,7 +185,8 @@ func checkServer(client openai.Client, modelName string) error {
 				}
 				return fmt.Errorf("api: %s", apiError.Error())
 			} else {
-				return err
+				return fmt.Errorf("%s\n\n%s", err,
+					common.SuggestServerLogs())
 			}
 		}
 
@@ -312,7 +313,8 @@ func processStream(stream *ssestream.Stream[openai.ChatCompletionChunk]) (*opena
 			return nil, fmt.Errorf("connection closed by server\n\n%s",
 				common.SuggestServerLogs())
 		}
-		return nil, err
+		return nil, fmt.Errorf("%s\n\n%s", err,
+			common.SuggestServerLogs())
 	}
 
 	// After the stream is finished, acc can be used like a ChatCompletion
