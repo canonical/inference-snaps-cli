@@ -212,7 +212,7 @@ func (cmd *useCommand) switchEngine(engineName string) error {
 	// TODO: get this from an env var instead (e.g. ENGINE_SERVICES=server,proxy)
 	serviceName := env.SnapInstanceName() + ".server"
 
-	fmt.Printf("Engine changed to %q\n", engineName)
+	fmt.Printf("Engine changed to %q.\n", engineName)
 
 	// Currently we cannot reliably determine if the service is active to automatically restart it
 	// See https://bugs.launchpad.net/snapd/+bug/2137543
