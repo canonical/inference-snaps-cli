@@ -176,7 +176,7 @@ func checkServer(client openai.Client, modelName string) error {
 				if apiError.StatusCode == http.StatusServiceUnavailable && apiError.Type == "unavailable_error" {
 					if time.Since(start) > waitTimeout {
 						// Stop waiting
-						return fmt.Errorf("server is loading models\n\n%s\n%s",
+						return fmt.Errorf("no models available on server\n\n%s\n%s",
 							common.SuggestServerStartup(),
 							common.SuggestServerLogs())
 					}
