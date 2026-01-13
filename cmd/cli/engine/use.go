@@ -218,7 +218,7 @@ func (cmd *useCommand) switchEngine(engineName string) error {
 	// See https://bugs.launchpad.net/snapd/+bug/2137543
 	//
 	// Ask the user to restart the service manually
-	fmt.Printf("\nUse \"snap restart %s\" to restart the server with the new engine.\n", serviceName)
+	fmt.Printf("\nRun \"snap restart %s\" to use the new engine.\n", serviceName)
 
 	return nil
 }
