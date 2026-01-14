@@ -67,7 +67,7 @@ func ScoreEngines(hardwareInfo *types.HwInfo, manifests []engines.Manifest) ([]e
 				fmt.Printf("Engine compatible\n")
 			}
 		}
-		scoredEngine.Notes = append(scoredEngine.Notes, reasons...)
+		scoredEngine.CompatibilityIssues = append(scoredEngine.CompatibilityIssues, reasons...)
 
 		scoredEngines = append(scoredEngines, scoredEngine)
 	}
