@@ -19,11 +19,6 @@ func Match(device engines.Device, pcis []types.PciDevice) (maxDeviceScore int, d
 	}
 
 	availableDevices := filterPciDevices(device, pcis)
-	if len(availableDevices) == 0 {
-		deviceIssues = append(deviceIssues, "device not found")
-		return
-	}
-
 	scoredDevices, scoreIssues := scorePciDevices(device, availableDevices)
 
 	for _, pci := range scoredDevices {
@@ -45,7 +40,7 @@ func filterPciDevices(device engines.Device, pcis []types.PciDevice) []types.Pci
 		include := true
 
 		if device.VendorId != nil {
-			if *device.VendorId == pciDevice.VendorId {
+			if *device.VendorId != pciDevice.VendorId {
 				include = false
 			} else {
 				// A model ID is only unique per vendor ID namespace. Only check it if the vendor is a match
@@ -66,6 +61,10 @@ func filterPciDevices(device engines.Device, pcis []types.PciDevice) []types.Pci
 
 func scorePciDevices(device engines.Device, pciDevices []types.PciDevice) ([]types.PciDevice, []string) {
 	var issues []string
+
+	if len(pciDevices) == 0 {
+		issues = append(issues, "device not found")
+	}
 
 	for i, pciDevice := range pciDevices {
 		deviceScore, deviceIssues := scorePciDevice(device, pciDevice)

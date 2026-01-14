@@ -124,8 +124,11 @@ func TestNoCpuInHwInfo(t *testing.T) {
 	}
 
 	// No memory in hardware info
-	_, _, err = checkEngine(&hwInfo, currentEngine)
-	if err == nil {
+	_, issues, err := checkEngine(&hwInfo, currentEngine)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(issues) == 0 {
 		t.Fatalf("No Memory in hardware_info should return err")
 	}
 
@@ -135,8 +138,11 @@ func TestNoCpuInHwInfo(t *testing.T) {
 	}
 
 	// No disk space in hardware info
-	_, _, err = checkEngine(&hwInfo, currentEngine)
-	if err == nil {
+	_, issues, err = checkEngine(&hwInfo, currentEngine)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(issues) == 0 {
 		t.Fatal("No Disk space in hardware_info should return err")
 	}
 
@@ -146,8 +152,11 @@ func TestNoCpuInHwInfo(t *testing.T) {
 	}
 
 	// No CPU in hardware info
-	_, _, err = checkEngine(&hwInfo, currentEngine)
-	if err == nil {
+	_, issues, err = checkEngine(&hwInfo, currentEngine)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(issues) == 0 {
 		t.Fatal("No CPU in hardware_info should return err")
 	}
 }

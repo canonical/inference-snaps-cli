@@ -1,6 +1,7 @@
 package cpu
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/pkg/engines"
@@ -20,15 +21,15 @@ func TestCheckCpuVendor(t *testing.T) {
 		ManufacturerId: manufacturerId,
 	}}
 
-	result, err := Match(device, hwInfoCpus)
-	if err != nil {
-		t.Fatalf("CPU vendor should match: %v", err)
+	score, issues := Match(device, hwInfoCpus)
+	if len(issues) != 0 {
+		t.Fatalf("CPU vendor should match: %v", strings.Join(issues, ","))
 	}
 
 	manufacturerId = "AuthenticAMD"
 
-	result, err = Match(device, hwInfoCpus)
-	if err == nil || result > 0 {
+	score, issues = Match(device, hwInfoCpus)
+	if len(issues) == 0 || score > 0 {
 		t.Fatal("CPU vendor should NOT match")
 	}
 

@@ -58,7 +58,7 @@ func CheckCpu(device engines.Device, cpu types.CpuInfo) (cpuScore int, issues []
 	/*
 		amd64
 	*/
-	if cpu.Architecture == constants.Amd64 {
+	if cpu.Architecture == "" || cpu.Architecture == constants.Amd64 {
 		// amd64 manufacturer ID
 		if device.ManufacturerId != nil {
 			if *device.ManufacturerId == cpu.ManufacturerId {
@@ -81,7 +81,7 @@ func CheckCpu(device engines.Device, cpu types.CpuInfo) (cpuScore int, issues []
 	/*
 		arm64
 	*/
-	if cpu.Architecture == constants.Arm64 {
+	if cpu.Architecture == "" || cpu.Architecture == constants.Arm64 {
 		// arm64 implementer ID
 		if device.ImplementerId != nil {
 			if *device.ImplementerId == cpu.ImplementerId {
