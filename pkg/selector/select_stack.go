@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/canonical/inference-snaps-cli/pkg/constants"
 	"github.com/canonical/inference-snaps-cli/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/pkg/selector/cpu"
 	"github.com/canonical/inference-snaps-cli/pkg/selector/pci"
@@ -73,8 +74,7 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, []
 		if err != nil {
 			return 0, nil, fmt.Errorf("failed to parse required memory: %v", err)
 		} else if hardwareInfo.Memory.TotalRam == 0 {
-			compatible = false
-			reasons = append(reasons, "host system no memory reported")
+			return 0, nil, fmt.Errorf("host system no memory reported")
 		} else if hardwareInfo.Memory.TotalRam+hardwareInfo.Memory.TotalSwap < requiredMemory {
 
 			// Checking combination of ram and swap
@@ -90,10 +90,9 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, []
 		requiredDisk, err := utils.StringToBytes(*manifest.DiskSpace)
 		if err != nil {
 			return 0, nil, fmt.Errorf("failed to parse required disk space: %v", err)
-		} else if _, ok := hardwareInfo.Disk["/var/lib/snapd/snaps"]; !ok {
-			compatible = false
-			reasons = append(reasons, "host system no disk space reported")
-		} else if hardwareInfo.Disk["/var/lib/snapd/snaps"].Avail < requiredDisk {
+		} else if _, ok := hardwareInfo.Disk[constants.SnapStoragePath]; !ok {
+			return 0, nil, fmt.Errorf("host system no disk space reported")
+		} else if hardwareInfo.Disk[constants.SnapStoragePath].Avail < requiredDisk {
 			compatible = false
 			reasons = append(reasons, "host system disk space too small")
 		} else {
@@ -104,7 +103,6 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, []
 	// Devices
 	// all
 	if len(manifest.Devices.Allof) > 0 {
-
 		extraScore, issues := checkDevicesAll(hardwareInfo, manifest.Devices.Allof)
 		if len(issues) > 0 {
 			compatible = false
