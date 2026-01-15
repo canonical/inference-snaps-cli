@@ -10,16 +10,16 @@ import (
 	"github.com/canonical/inference-snaps-cli/pkg/types"
 )
 
-func Match(device engines.Device, pcis []types.PciDevice) (maxDeviceScore int, deviceIssues []string) {
+func Match(manifestDevice engines.Device, hostPcis []types.PciDevice) (maxDeviceScore int, deviceIssues []string) {
 	maxDeviceScore = 0
 
-	if len(pcis) == 0 {
+	if len(hostPcis) == 0 {
 		deviceIssues = append(deviceIssues, "no pci devices on host system")
 		return
 	}
 
-	availableDevices := filterPciDevices(device, pcis)
-	scoredDevices, scoreIssues := scorePciDevices(device, availableDevices)
+	availableDevices := filterPciDevices(manifestDevice, hostPcis)
+	scoredDevices, scoreIssues := scorePciDevices(manifestDevice, availableDevices)
 
 	for _, pci := range scoredDevices {
 		if pci.Score > maxDeviceScore {
@@ -34,18 +34,18 @@ func Match(device engines.Device, pcis []types.PciDevice) (maxDeviceScore int, d
 	return
 }
 
-func filterPciDevices(device engines.Device, pcis []types.PciDevice) []types.PciDevice {
+func filterPciDevices(manifestDevice engines.Device, hostPciDevices []types.PciDevice) []types.PciDevice {
 	var foundDevices []types.PciDevice
-	for _, pciDevice := range pcis {
+	for _, pciDevice := range hostPciDevices {
 		include := true
 
-		if device.VendorId != nil {
-			if *device.VendorId != pciDevice.VendorId {
+		if manifestDevice.VendorId != nil {
+			if *manifestDevice.VendorId != pciDevice.VendorId {
 				include = false
 			} else {
 				// A model ID is only unique per vendor ID namespace. Only check it if the vendor is a match
-				if device.DeviceId != nil {
-					if *device.DeviceId != pciDevice.DeviceId {
+				if manifestDevice.DeviceId != nil {
+					if *manifestDevice.DeviceId != pciDevice.DeviceId {
 						include = false
 					}
 				}
@@ -59,48 +59,48 @@ func filterPciDevices(device engines.Device, pcis []types.PciDevice) []types.Pci
 	return foundDevices
 }
 
-func scorePciDevices(device engines.Device, pciDevices []types.PciDevice) ([]types.PciDevice, []string) {
+func scorePciDevices(manifestDevice engines.Device, hostPciDevices []types.PciDevice) ([]types.PciDevice, []string) {
 	var issues []string
 
-	if len(pciDevices) == 0 {
+	if len(hostPciDevices) == 0 {
 		issues = append(issues, "device not found")
 	}
 
-	for i, pciDevice := range pciDevices {
-		deviceScore, deviceIssues := scorePciDevice(device, pciDevice)
+	for i, pciDevice := range hostPciDevices {
+		deviceScore, deviceIssues := scorePciDevice(manifestDevice, pciDevice)
 
-		pciDevices[i].Score = deviceScore
+		hostPciDevices[i].Score = deviceScore
 		for _, issue := range deviceIssues {
 			issues = append(issues, fmt.Sprintf("pci %s: %s", pciDevice.Slot, issue))
 		}
 	}
-	return pciDevices, issues
+	return hostPciDevices, issues
 }
 
-func scorePciDevice(device engines.Device, pciDevice types.PciDevice) (deviceScore int, issues []string) {
+func scorePciDevice(manifestDevice engines.Device, hostPciDevice types.PciDevice) (deviceScore int, issues []string) {
 	deviceScore = 0
 
 	// Device type: tpu, npu, gpu, etc
-	if device.Type != "" {
-		match := checkType(device.Type, pciDevice)
+	if manifestDevice.Type != "" {
+		match := checkType(manifestDevice.Type, hostPciDevice)
 		if match {
 			deviceScore += weights.PciDeviceType
 		} else {
 			deviceScore = 0
-			issues = append(issues, fmt.Sprintf("wrong device class 0x%04x", pciDevice.DeviceClass))
+			issues = append(issues, fmt.Sprintf("wrong device class 0x%04x", hostPciDevice.DeviceClass))
 			return
 		}
 	}
 
 	// Prefer dGPU above iGPU
 	// PCI devices on bus 0 are considered internal, and anything else external/discrete
-	if pciDevice.BusNumber > 0 {
+	if hostPciDevice.BusNumber > 0 {
 		deviceScore += weights.PciDeviceExternal
 	}
 
 	// Check additional properties
-	if hasAdditionalProperties(device) {
-		propsScore, err := checkProperties(device, pciDevice)
+	if hasAdditionalProperties(manifestDevice) {
+		propsScore, err := checkProperties(manifestDevice, hostPciDevice)
 		if err != nil {
 			deviceScore = 0
 			issues = append(issues, err.Error())
@@ -110,7 +110,7 @@ func scorePciDevice(device engines.Device, pciDevice types.PciDevice) (deviceSco
 	}
 
 	// Check drivers
-	for _, connection := range device.SnapConnections {
+	for _, connection := range manifestDevice.SnapConnections {
 		connected, err := checkSnapConnection(connection)
 		if err != nil {
 			deviceScore = 0
