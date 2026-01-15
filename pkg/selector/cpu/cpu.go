@@ -51,7 +51,7 @@ func CheckCpu(manifestDevice engines.Device, hostCpu types.CpuInfo) (cpuScore in
 		if *manifestDevice.Architecture == hostCpu.Architecture {
 			// architecture matches - no additional weight
 		} else {
-			issues = append(issues, fmt.Sprintf("incorrect architecture %s", hostCpu.Architecture))
+			issues = append(issues, fmt.Sprintf("architecture not %s", *manifestDevice.Architecture))
 		}
 	}
 
@@ -73,7 +73,7 @@ func CheckCpu(manifestDevice engines.Device, hostCpu types.CpuInfo) (cpuScore in
 			if slices.Contains(hostCpu.Flags, flag) {
 				cpuScore += weights.CpuFlag
 			} else {
-				issues = append(issues, fmt.Sprintf("flag not available: %s", flag))
+				issues = append(issues, fmt.Sprintf("flag %s missing", flag))
 			}
 		}
 	}

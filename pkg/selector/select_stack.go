@@ -159,7 +159,7 @@ func checkDevicesAll(hardwareInfo *types.HwInfo, devices []engines.Device) (int,
 			if len(pciIssues) > 0 {
 				compatible = false
 				devices[i].CompatibilityIssues = append(devices[i].CompatibilityIssues, pciIssues...)
-				issues = append(issues, "required pci device under all-of not found")
+				issues = append(issues, "required pci device not found")
 			} else {
 				extraScore += pciScore
 			}
@@ -211,7 +211,7 @@ func checkDevicesAny(hardwareInfo *types.HwInfo, devices []engines.Device) (int,
 	// If any-of devices are defined, we need to find at least one
 	if len(devices) > 0 && devicesFound == 0 {
 		compatible = false
-		issues = append(issues, "no devices under anyof found")
+		issues = append(issues, "required device not found")
 	}
 
 	if !compatible {
