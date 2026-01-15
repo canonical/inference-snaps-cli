@@ -111,7 +111,7 @@ func TestTopEngine(t *testing.T) {
 }
 
 func TestMatchReasonsCpu(t *testing.T) {
-	manifestFile := fmt.Sprintf("../../test_data/engines/%s/%s", "ampere-altra", engines.ManifestFilename)
+	manifestFile := fmt.Sprintf("../../test_data/engines/%s/%s", "ampere", engines.ManifestFilename)
 	data, err := os.ReadFile(manifestFile)
 	if err != nil {
 		t.Fatal(err)
@@ -137,6 +137,10 @@ func TestMatchReasonsCpu(t *testing.T) {
 		t.Errorf("Score engines count: %d, expected 1", len(scoredEngines))
 	}
 
+	if scoredEngines[0].Compatible {
+		t.Errorf("Score engines should not be compatible")
+	}
+
 	scoredYaml, _ := yaml.Marshal(scoredEngines[0])
 	t.Log(string(scoredYaml))
 }
@@ -154,7 +158,7 @@ func TestMatchReasonsPci(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	hardwareInfo, err := hardware_info.GetFromRawData(t, "ampere-one-siryn", true, "../../test_data")
+	hardwareInfo, err := hardware_info.GetFromRawData(t, "xps13-9350", true, "../../test_data")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -166,6 +170,10 @@ func TestMatchReasonsPci(t *testing.T) {
 
 	if len(scoredEngines) != 1 {
 		t.Errorf("Score engines count: %d, expected 1", len(scoredEngines))
+	}
+
+	if !scoredEngines[0].Compatible {
+		t.Errorf("Score engines should be compatible")
 	}
 
 	scoredYaml, _ := yaml.Marshal(scoredEngines[0])
