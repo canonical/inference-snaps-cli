@@ -3,9 +3,7 @@ package selector
 import (
 	"errors"
 	"fmt"
-	"os"
 	"sort"
-	"strings"
 
 	"github.com/canonical/inference-snaps-cli/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/pkg/selector/cpu"
@@ -42,9 +40,6 @@ func ScoreEngines(hardwareInfo *types.HwInfo, manifests []engines.Manifest) ([]e
 	var scoredEngines []engines.ScoredManifest
 
 	for _, currentManifest := range manifests {
-		if os.Getenv("VERBOSE") == "true" {
-			fmt.Printf("Checking engine: %s\n", currentManifest.Name)
-		}
 		score, reasons, err := checkEngine(hardwareInfo, currentManifest)
 		if err != nil {
 			return nil, err
@@ -57,14 +52,7 @@ func ScoreEngines(hardwareInfo *types.HwInfo, manifests []engines.Manifest) ([]e
 		}
 
 		if score == 0 {
-			if os.Getenv("VERBOSE") == "true" {
-				fmt.Printf("Engine not compatible: %s\n", strings.Join(reasons, ", "))
-			}
 			scoredEngine.Compatible = false
-		} else {
-			if os.Getenv("VERBOSE") == "true" {
-				fmt.Printf("Engine compatible\n")
-			}
 		}
 		scoredEngine.CompatibilityIssues = append(scoredEngine.CompatibilityIssues, reasons...)
 
