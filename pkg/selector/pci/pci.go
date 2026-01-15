@@ -10,15 +10,15 @@ import (
 	"github.com/canonical/inference-snaps-cli/pkg/types"
 )
 
-func Match(manifestDevice engines.Device, hostPcis []types.PciDevice) (maxDeviceScore int, deviceIssues []string) {
+func Match(manifestDevice engines.Device, hostPciDevices []types.PciDevice) (maxDeviceScore int, deviceIssues []string) {
 	maxDeviceScore = 0
 
-	if len(hostPcis) == 0 {
+	if len(hostPciDevices) == 0 {
 		deviceIssues = append(deviceIssues, "no pci devices on host system")
 		return
 	}
 
-	availableDevices := filterPciDevices(manifestDevice, hostPcis)
+	availableDevices := filterPciDevices(manifestDevice, hostPciDevices)
 	scoredDevices, scoreIssues := scorePciDevices(manifestDevice, availableDevices)
 
 	for _, pci := range scoredDevices {
@@ -34,6 +34,8 @@ func Match(manifestDevice engines.Device, hostPcis []types.PciDevice) (maxDevice
 	return
 }
 
+// filterPciDevices returns all PCI devices from the provided host PCI device list,
+// where the Vendor ID matches the manifest, and optionally where the Device ID matches the manifest
 func filterPciDevices(manifestDevice engines.Device, hostPciDevices []types.PciDevice) []types.PciDevice {
 	var foundDevices []types.PciDevice
 	for _, pciDevice := range hostPciDevices {
@@ -59,6 +61,8 @@ func filterPciDevices(manifestDevice engines.Device, hostPciDevices []types.PciD
 	return foundDevices
 }
 
+// scorePciDevices takes a list of host pci devices, which should already be filtered based on Vendor ID and Device ID,
+// performs scoring on all the devices, and returns a list of scored devices
 func scorePciDevices(manifestDevice engines.Device, hostPciDevices []types.PciDevice) ([]types.PciDevice, []string) {
 	var issues []string
 
@@ -92,7 +96,7 @@ func scorePciDevice(manifestDevice engines.Device, hostPciDevice types.PciDevice
 		}
 	}
 
-	// Prefer dGPU above iGPU
+	// Prefer dGPU over iGPU
 	// PCI devices on bus 0 are considered internal, and anything else external/discrete
 	if hostPciDevice.BusNumber > 0 {
 		deviceScore += weights.PciDeviceExternal
