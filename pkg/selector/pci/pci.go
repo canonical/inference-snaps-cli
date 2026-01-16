@@ -94,6 +94,9 @@ func scorePciDevice(manifestDevice engines.Device, hostPciDevice types.PciDevice
 			deviceScore += weights.PciDeviceType
 		} else {
 			deviceScore = 0
+			// The device type does not map directly to a device class. We use a decision tree to check if the device class
+			// and subclass fall in known ranges per device type. This makes printing a direct reason here difficult.
+			// The message "device class 0x%04x not of required type %s" was chosen as best compromise here.
 			issues = append(issues,
 				fmt.Sprintf("device class 0x%04x not of required type %s",
 					hostPciDevice.DeviceClass, manifestDevice.Type))
