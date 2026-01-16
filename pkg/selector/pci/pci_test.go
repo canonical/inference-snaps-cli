@@ -29,7 +29,7 @@ func TestCheckGpuVendor(t *testing.T) {
 		VendorId: &gpuVendorId,
 	}
 
-	availableDevices := filterPciDevices(device, []types.PciDevice{hwInfoGpu})
+	availableDevices := filterPciDevices([]types.PciDevice{hwInfoGpu}, device.VendorId, device.DeviceId)
 	_, scoreIssues := scorePciDevices(device, availableDevices)
 	if len(scoreIssues) != 0 {
 		t.Fatalf("GPU vendor should match: %s", strings.Join(scoreIssues, ", "))
@@ -37,14 +37,14 @@ func TestCheckGpuVendor(t *testing.T) {
 
 	// Same value, upper case string
 	gpuVendorId = types.HexInt(0xB33F)
-	availableDevices = filterPciDevices(device, []types.PciDevice{hwInfoGpu})
+	availableDevices = filterPciDevices([]types.PciDevice{hwInfoGpu}, device.VendorId, device.DeviceId)
 	_, scoreIssues = scorePciDevices(device, availableDevices)
 	if len(scoreIssues) != 0 {
 		t.Fatalf("GPU vendor should match: %s", strings.Join(scoreIssues, ", "))
 	}
 
 	gpuVendorId = types.HexInt(0x1337)
-	availableDevices = filterPciDevices(device, []types.PciDevice{hwInfoGpu})
+	availableDevices = filterPciDevices([]types.PciDevice{hwInfoGpu}, device.VendorId, device.DeviceId)
 	_, scoreIssues = scorePciDevices(device, availableDevices)
 	if len(scoreIssues) == 0 {
 		t.Fatalf("GPU vendor should NOT match")
@@ -72,14 +72,14 @@ func TestCheckGpuVram(t *testing.T) {
 		VRam:     &requiredVram,
 	}
 
-	availableDevices := filterPciDevices(device, []types.PciDevice{hwInfoGpu})
+	availableDevices := filterPciDevices([]types.PciDevice{hwInfoGpu}, device.VendorId, device.DeviceId)
 	scoredDevices, scoreIssues := scorePciDevices(device, availableDevices)
 	if len(scoreIssues) != 0 {
 		t.Fatalf("GPU vram should be enough: %s", strings.Join(scoreIssues, ", "))
 	}
 
 	requiredVram = "24G"
-	availableDevices = filterPciDevices(device, []types.PciDevice{hwInfoGpu})
+	availableDevices = filterPciDevices([]types.PciDevice{hwInfoGpu}, device.VendorId, device.DeviceId)
 	scoredDevices, scoreIssues = scorePciDevices(device, availableDevices)
 	if len(scoreIssues) == 0 || scoredDevices[0].Score != 0 {
 		t.Fatalf("GPU vram should NOT be enough")
@@ -105,7 +105,7 @@ func TestCheckNpuDriver(t *testing.T) {
 		SnapConnections: []string{"intel-npu", "npu-libs"},
 	}
 
-	availableDevices := filterPciDevices(device, []types.PciDevice{hwInfo})
+	availableDevices := filterPciDevices([]types.PciDevice{hwInfo}, device.VendorId, device.DeviceId)
 	_, scoreIssues := scorePciDevices(device, availableDevices)
 	if len(scoreIssues) != 0 {
 		t.Fatalf("NPU with driver should match: %s", strings.Join(scoreIssues, ", "))
