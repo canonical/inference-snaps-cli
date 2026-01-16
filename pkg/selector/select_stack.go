@@ -73,13 +73,17 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, []
 		requiredMemory, err := utils.StringToBytes(*manifest.Memory)
 		if err != nil {
 			return 0, nil, fmt.Errorf("failed to parse required memory: %v", err)
-		} else if hardwareInfo.Memory.TotalRam == 0 {
-			return 0, nil, fmt.Errorf("host system no memory reported")
-		} else if hardwareInfo.Memory.TotalRam+hardwareInfo.Memory.TotalSwap < requiredMemory {
 
+		} else if hardwareInfo.Memory.TotalRam == 0 {
+			// If the TotalRam field is the Go struct Zero value, it was never set.
+			// We do not check swap for the Zero value, as swap can realistically be of size 0 bytes.
+			return 0, nil, fmt.Errorf("total memory not reported by host system")
+
+		} else if hardwareInfo.Memory.TotalRam+hardwareInfo.Memory.TotalSwap < requiredMemory {
 			// Checking combination of ram and swap
 			compatible = false
-			reasons = append(reasons, fmt.Sprintf("memory: system memory too small"))
+			reasons = append(reasons, fmt.Sprintf("host system memory too small"))
+
 		} else {
 			engineScore++
 		}
@@ -90,11 +94,14 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, []
 		requiredDisk, err := utils.StringToBytes(*manifest.DiskSpace)
 		if err != nil {
 			return 0, nil, fmt.Errorf("failed to parse required disk space: %v", err)
+
 		} else if _, ok := hardwareInfo.Disk[constants.SnapStoragePath]; !ok {
-			return 0, nil, fmt.Errorf("host system no disk space reported")
+			return 0, nil, fmt.Errorf("disk space not reported by host system")
+
 		} else if hardwareInfo.Disk[constants.SnapStoragePath].Avail < requiredDisk {
 			compatible = false
 			reasons = append(reasons, "host system disk space too small")
+
 		} else {
 			engineScore++
 		}

@@ -18,7 +18,7 @@ func Match(manifestDevice engines.Device, hostPciDevices []types.PciDevice) (max
 		return
 	}
 
-	availableDevices := filterPciDevices(manifestDevice, hostPciDevices)
+	availableDevices := filterPciDevices(hostPciDevices, manifestDevice.VendorId, manifestDevice.DeviceId)
 	scoredDevices, scoreIssues := scorePciDevices(manifestDevice, availableDevices)
 
 	for _, pci := range scoredDevices {
@@ -34,20 +34,23 @@ func Match(manifestDevice engines.Device, hostPciDevices []types.PciDevice) (max
 	return
 }
 
-// filterPciDevices returns all PCI devices from the provided host PCI device list,
-// where the Vendor ID matches the manifest, and optionally where the Device ID matches the manifest
-func filterPciDevices(manifestDevice engines.Device, hostPciDevices []types.PciDevice) []types.PciDevice {
+// filterPciDevices returns all PCI devices from the provided list, where the Vendor ID and the Device ID match.
+//
+// Filtering does not return compatibility issues. If we did, an engine with N device on a machine with M pci devices,
+// would print NxM issues. These will all read "vendor id mismatch" or "device id mismatch" for each NxM combination.
+// In the end the reason is just "device not found".
+func filterPciDevices(pciDevices []types.PciDevice, vendorId *types.HexInt, deviceId *types.HexInt) []types.PciDevice {
 	var foundDevices []types.PciDevice
-	for _, pciDevice := range hostPciDevices {
+	for _, pciDevice := range pciDevices {
 		include := true
 
-		if manifestDevice.VendorId != nil {
-			if *manifestDevice.VendorId != pciDevice.VendorId {
+		if vendorId != nil {
+			if *vendorId != pciDevice.VendorId {
 				include = false
 			} else {
 				// A model ID is only unique per vendor ID namespace. Only check it if the vendor is a match
-				if manifestDevice.DeviceId != nil {
-					if *manifestDevice.DeviceId != pciDevice.DeviceId {
+				if deviceId != nil {
+					if *deviceId != pciDevice.DeviceId {
 						include = false
 					}
 				}
@@ -91,7 +94,9 @@ func scorePciDevice(manifestDevice engines.Device, hostPciDevice types.PciDevice
 			deviceScore += weights.PciDeviceType
 		} else {
 			deviceScore = 0
-			issues = append(issues, fmt.Sprintf("wrong device class 0x%04x", hostPciDevice.DeviceClass))
+			issues = append(issues,
+				fmt.Sprintf("device class 0x%04x not of required type %s",
+					hostPciDevice.DeviceClass, manifestDevice.Type))
 			return
 		}
 	}

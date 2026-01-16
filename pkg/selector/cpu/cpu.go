@@ -64,7 +64,7 @@ func CheckCpu(manifestDevice engines.Device, hostCpu types.CpuInfo) (cpuScore in
 			if *manifestDevice.ManufacturerId == hostCpu.ManufacturerId {
 				cpuScore += weights.CpuVendor
 			} else {
-				issues = append(issues, fmt.Sprintf("manufacturer mismatch: %s", hostCpu.ManufacturerId))
+				issues = append(issues, fmt.Sprintf("manufacturer id mismatch: %s", hostCpu.ManufacturerId))
 			}
 		}
 
