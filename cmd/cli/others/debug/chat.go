@@ -3,8 +3,8 @@ package debug
 import (
 	"fmt"
 
+	"github.com/canonical/inference-snaps-cli/cmd/cli/chat"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
-	"github.com/canonical/inference-snaps-cli/pkg/chat"
 	"github.com/spf13/cobra"
 )
 
