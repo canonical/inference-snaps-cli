@@ -51,30 +51,26 @@ parts:
       mkdir -p $license_dir
       cp /usr/share/doc/nvidia-utils-580/copyright $license_dir/
 
-  intel-opencl-drivers-legacy:
-    # Include OpenCL runtime and clinfo for looking up vRAM on Intel GPUs
-    plugin: nil
-    build-packages:
-      - wget
-    override-build: |
-      # Legacy intel opencl drivers are only available for amd64
-      if [ "$CRAFT_ARCH_BUILD_FOR" == "amd64" ]; then
-        # Legacy Intel OpenCL Runtime
-        wget https://github.com/intel/compute-runtime/releases/download/24.35.30872.36/intel-opencl-icd-legacy1_24.35.30872.36_amd64.deb
-        dpkg --root=$CRAFT_PART_INSTALL --force-all -i *.deb
-      fi # End of intel-opencl driver installation
-
-      craftctl default
-
-  # Latest intel opencl drivers are installed from ppa:kobuk-team/intel-graphics
+  # Include OpenCL runtime and clinfo for looking up vRAM on Intel GPUs
   intel-opencl-drivers:
     plugin: nil
     stage-packages:
       - clinfo
       - on amd64:
-        - intel-opencl-icd
-    prime:
-      - -usr/include
+          - intel-opencl-icd # Latest intel opencl drivers are installed from ppa:kobuk-team/intel-graphics
+
+  intel-opencl-drivers-legacy:
+    plugin: nil
+    build-packages:
+      - wget
+    override-build: |
+      # Legacy intel opencl drivers are only published for amd64
+      if [ "$CRAFT_ARCH_BUILD_FOR" == "amd64" ]; then
+        wget https://github.com/intel/compute-runtime/releases/download/24.35.30872.36/intel-opencl-icd-legacy1_24.35.30872.36_amd64.deb
+        dpkg --root=$CRAFT_PART_INSTALL --force-all -i *.deb
+      fi
+
+      craftctl default
 
   # To use `version: git` in this file, we require git as a build dependency.
   # This is fixed but not published yet. See https://github.com/canonical/snapcraft/issues/4944
