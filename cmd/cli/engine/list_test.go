@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"os"
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
@@ -12,10 +11,8 @@ import (
 )
 
 func TestList(t *testing.T) {
-
-	os.Setenv("SNAP_INSTANCE_NAME", "test_unit")
-	cache := storage.NewCache()
-	cache.SetActiveEngine("engine-name") // TODO does not work because it depends on being inside a snap
+	cache := storage.NewMockCache()
+	cache.SetActiveEngine("engine-name")
 
 	allEngines, err := engines.LoadManifests("../../../test_data/engines")
 	if err != nil {
