@@ -12,7 +12,10 @@ import (
 
 func TestList(t *testing.T) {
 	cache := storage.NewMockCache()
-	cache.SetActiveEngine("engine-name")
+	err := cache.SetActiveEngine("engine-name")
+	if err != nil {
+		t.Fatalf("Error setting active engine name: %v", err)
+	}
 
 	allEngines, err := engines.LoadManifests("../../../test_data/engines")
 	if err != nil {
@@ -31,14 +34,13 @@ func TestList(t *testing.T) {
 
 	// cmd.printEnginesTable needs to call `cmd.Cache.GetActiveEngine()` to get the current active engine
 	// We therefore need to pass in the cache as context to `cmd`
-
 	ctx := &common.Context{
-		EnginesDir: "../../../test_data/engines",
+		EnginesDir: "",
 		Cache:      cache,
-		Config:     storage.NewConfig(),
+		Config:     nil,
 	}
-
 	cmd := listCommand{Context: ctx}
+
 	err = cmd.printEnginesTable(scoredEngines)
 	if err != nil {
 		t.Fatal(err)
