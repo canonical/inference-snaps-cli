@@ -62,10 +62,16 @@ func (cmd *listCommand) printEnginesTable(scoredEngines []engines.ScoredManifest
 	})
 
 	var engineNameMaxLen, engineVendorMaxLen int
+	currentEngine, err := cmd.Cache.GetActiveEngine()
+
 	for _, engine := range scoredEngines {
 		// Find max name and vendor lengths
-		engineNameMaxLen = max(engineNameMaxLen, len(engine.Name))
+		// +1 for possible "*" indicating current engine
+		engineNameMaxLen = max(engineNameMaxLen, len(engine.Name)+1)
 		engineVendorMaxLen = max(engineVendorMaxLen, len(engine.Vendor))
+		if engine.Name == currentEngine {
+			engine.Name = engine.Name + "*"
+		}
 
 		row := []string{engine.Name, engine.Vendor, engine.Description}
 
@@ -156,7 +162,7 @@ func (cmd *listCommand) printEnginesTable(scoredEngines []engines.ScoredManifest
 
 	table := tablewriter.NewTable(os.Stdout, options...)
 	table.Header(tableRows[0])
-	err := table.Bulk(tableRows[1:])
+	err = table.Bulk(tableRows[1:])
 	if err != nil {
 		return fmt.Errorf("error adding data to table: %v", err)
 	}
