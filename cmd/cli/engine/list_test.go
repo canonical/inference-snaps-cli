@@ -1,14 +1,22 @@
 package engine
 
 import (
+	"os"
 	"testing"
 
+	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
 	"github.com/canonical/inference-snaps-cli/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info"
 	"github.com/canonical/inference-snaps-cli/pkg/selector"
+	"github.com/canonical/inference-snaps-cli/pkg/storage"
 )
 
 func TestList(t *testing.T) {
+
+	os.Setenv("SNAP_INSTANCE_NAME", "test_unit")
+	cache := storage.NewCache()
+	cache.SetActiveEngine("engine-name") // TODO does not work because it depends on being inside a snap
+
 	allEngines, err := engines.LoadManifests("../../../test_data/engines")
 	if err != nil {
 		t.Fatalf("error loading engines: %v", err)
@@ -24,7 +32,16 @@ func TestList(t *testing.T) {
 		t.Fatalf("error scoring engines: %v", err)
 	}
 
-	cmd := listCommand{}
+	// cmd.printEnginesTable needs to call `cmd.Cache.GetActiveEngine()` to get the current active engine
+	// We therefore need to pass in the cache as context to `cmd`
+
+	ctx := &common.Context{
+		EnginesDir: "../../../test_data/engines",
+		Cache:      cache,
+		Config:     storage.NewConfig(),
+	}
+
+	cmd := listCommand{Context: ctx}
 	err = cmd.printEnginesTable(scoredEngines)
 	if err != nil {
 		t.Fatal(err)
