@@ -9,7 +9,7 @@ import (
 
 type mockCache struct {
 	activeEngine string
-	machineInfo  types.HwInfo
+	machineInfo  *types.HwInfo
 }
 
 func NewMockCache() Cache {
@@ -27,12 +27,19 @@ func (c *mockCache) GetActiveEngine() (string, error) {
 }
 
 func (c *mockCache) setMachineInfo(machine types.HwInfo) error {
-	c.machineInfo = machine
+	c.machineInfo = &machine
 	return nil
 }
 
 func (c *mockCache) GetMachineInfo() (*types.HwInfo, error) {
-	return &c.machineInfo, nil
+	if c.machineInfo == nil {
+		machineInfo, err := c.loadMachineInfo()
+		if err != nil {
+			return nil, err
+		}
+		c.machineInfo = machineInfo
+	}
+	return c.machineInfo, nil
 }
 
 func (c *mockCache) loadMachineInfo() (*types.HwInfo, error) {
