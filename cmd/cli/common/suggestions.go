@@ -37,6 +37,7 @@ func SuggestStartServer() string {
 }
 
 func SuggestUsage() string {
+
 	instanceName := env.SnapInstanceName()
 	if instanceName == "" { // not a snap
 		instanceName = "<snap-instance-name>"
