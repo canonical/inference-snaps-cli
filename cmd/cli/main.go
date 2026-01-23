@@ -22,23 +22,26 @@ func main() {
 		Config:     storage.NewConfig(),
 	}
 
-	// rootCmd is the base command
-	// It gets populated with subcommands
+	// Get snap name for dynamic commands
+	instanceName := env.SnapInstanceName()
+	if instanceName == "" {
+		instanceName = "cli"
+	}
+
 	rootCmd := &cobra.Command{
 		SilenceUsage:      true,
-		Long:              "", // Base command description TBA
+		Long:              instanceName + ` runs an engine that is optimized for your host machine, providing a local service endpoint. Use this command to configure the active engine, or switch to an alternative engine`,
 		PersistentPreRunE: persistentPreRunE,
 	}
+
+	// Add custom text after the help message
+	rootCmd.SetUsageTemplate(rootCmd.UsageTemplate() + "\n[only if the snap has services]\nUse \"snap logs|start|stop|restart " + instanceName + "\" for service management.\n")
 
 	// Global flags
 	rootCmd.PersistentFlags().BoolVarP(&ctx.Verbose, "verbose", "v", false, "Enable verbose logging")
 
 	// Use snap instance name in a snap
-	if instanceName := env.SnapInstanceName(); instanceName != "" {
-		rootCmd.Use = instanceName
-	} else {
-		rootCmd.Use = "cli"
-	}
+	rootCmd.Use = instanceName
 
 	// Disable command sorting to keep commands sorted as added below
 	cobra.EnableCommandSorting = false
