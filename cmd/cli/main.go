@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/canonical/go-snapctl"
 	"github.com/canonical/go-snapctl/env"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/basic"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
@@ -36,8 +37,11 @@ func main() {
 		PersistentPreRunE: persistentPreRunE,
 	}
 
-	// Add custom text after the help message
-	rootCmd.SetUsageTemplate(rootCmd.UsageTemplate() + "\n[only if the snap has services]\nUse \"snap logs|start|stop|restart " + instanceName + "\" for service management.\n")
+	// Add custom text after the help message - only show service management if snap has services
+	services, err := snapctl.Services().Run()
+	if err == nil && len(services) > 0 {
+		rootCmd.SetUsageTemplate(rootCmd.UsageTemplate() + common.SuggestUsage())
+	}
 
 	// Global flags
 	rootCmd.PersistentFlags().BoolVarP(&ctx.Verbose, "verbose", "v", false, "Enable verbose logging")
@@ -80,7 +84,7 @@ func main() {
 	// Hide the 'completion' command from help text
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 
-	err := rootCmd.Execute()
+	err = rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
 	}
