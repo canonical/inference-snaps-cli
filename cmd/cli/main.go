@@ -44,11 +44,13 @@ func main() {
 	// Add custom text after the help message - only show service management if snap has services
 	if env.Snap() != "" {
 		services, err := snapctl.Services().Run()
-		if err == nil && len(services) > 0 {
-			rootCmd.SetUsageTemplate(rootCmd.UsageTemplate() + common.SuggestServiceManagement())
-		} else if err != nil {
+		if err != nil {
 			fmt.Printf("error retrieving snap services: %v\n", err)
 			return
+		}
+		
+		if len(services) > 0 {
+			rootCmd.SetUsageTemplate(rootCmd.UsageTemplate() + common.SuggestServiceManagement())
 		}
 	}
 
