@@ -36,7 +36,7 @@ func main() {
 		SilenceUsage: true,
 		Long: instanceName + " runs an engine that is optimized for your host machine,\n" +
 			"providing a local service endpoint.\n\n" +
-			"Use this command to configure the active engine, or switch to an alternative engine",
+			"Use this command to configure the active engine, or switch to an alternative engine.",
 		PersistentPreRunE: persistentPreRunE,
 		Use:               instanceName,
 	}
