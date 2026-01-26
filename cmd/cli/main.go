@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -32,22 +33,27 @@ func main() {
 	// rootCmd is the base command
 	// It gets populated with subcommands
 	rootCmd := &cobra.Command{
-		SilenceUsage:      true,
-		Long:              instanceName + ` runs an engine that is optimized for your host machine, providing a local service endpoint. Use this command to configure the active engine, or switch to an alternative engine`,
+		SilenceUsage: true,
+		Long: instanceName + " runs an engine that is optimized for your host machine,\n" +
+			"providing a local service endpoint.\n\n" +
+			"Use this command to configure the active engine, or switch to an alternative engine",
 		PersistentPreRunE: persistentPreRunE,
+		Use:               instanceName,
 	}
 
 	// Add custom text after the help message - only show service management if snap has services
-	services, err := snapctl.Services().Run()
-	if err == nil && len(services) > 0 {
-		rootCmd.SetUsageTemplate(rootCmd.UsageTemplate() + common.SuggestUsage())
+	if env.Snap() != "" {
+		services, err := snapctl.Services().Run()
+		if err == nil && len(services) > 0 {
+			rootCmd.SetUsageTemplate(rootCmd.UsageTemplate() + common.SuggestServiceManagement())
+		} else if err != nil {
+			fmt.Printf("error retrieving snap services: %v\n", err)
+			return
+		}
 	}
 
 	// Global flags
 	rootCmd.PersistentFlags().BoolVarP(&ctx.Verbose, "verbose", "v", false, "Enable verbose logging")
-
-	// Use snap instance name in a snap
-	rootCmd.Use = instanceName
 
 	// Disable command sorting to keep commands sorted as added below
 	cobra.EnableCommandSorting = false
@@ -84,7 +90,7 @@ func main() {
 	// Hide the 'completion' command from help text
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 
-	err = rootCmd.Execute()
+	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
 	}

@@ -36,7 +36,7 @@ func SuggestStartServer() string {
 	return fmt.Sprintf("Run \"sudo snap start %s\" to start the server.", serviceName)
 }
 
-func SuggestUsage() string {
+func SuggestServiceManagement() string {
 
 	instanceName := env.SnapInstanceName()
 	if instanceName == "" { // not a snap
