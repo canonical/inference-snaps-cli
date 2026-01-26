@@ -21,11 +21,6 @@ func FmtPretty(v interface{}) string {
 	return string(jsonData)
 }
 
-// FmtGigabytes converts bytes to a printable string of gigabytes, rounded to the closest integer.
-func FmtGigabytes(bytes uint64) string {
-	return fmt.Sprintf("%.0fGB", float64(bytes)/1000/1000/1000)
-}
-
 // FmtBytes converts bytes to a printable string with unit
 func FmtBytes(bytes uint64) string {
 	if bytes > 1024*1024*1024*1024 {
