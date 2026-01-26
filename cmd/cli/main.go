@@ -45,10 +45,9 @@ func main() {
 	if env.Snap() != "" {
 		services, err := snapctl.Services().Run()
 		if err != nil {
-			fmt.Printf("error retrieving snap services: %v\n", err)
+			fmt.Printf("Error: could not retrieve snap services: %v\n", err)
 			return
 		}
-		
 		if len(services) > 0 {
 			rootCmd.SetUsageTemplate(rootCmd.UsageTemplate() + common.SuggestServiceManagement())
 		}
