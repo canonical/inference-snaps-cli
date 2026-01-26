@@ -36,5 +36,5 @@ func (cmd *chatCommand) run(_ *cobra.Command, _ []string) error {
 	}
 	chatBaseUrl := apiUrls[openAi]
 
-	return chat.Client(chatBaseUrl, "")
+	return chat.Client(chatBaseUrl, "", cmd.Verbose)
 }
