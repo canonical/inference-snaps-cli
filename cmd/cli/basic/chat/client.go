@@ -199,7 +199,7 @@ func findModelName(baseUrl string, verbose bool) (string, error) {
 
 	const (
 		retryInterval = 5 * time.Second
-		waitTimeout   = 10 * time.Second
+		waitTimeout   = 60 * time.Second
 	)
 	start := time.Now()
 	for {
