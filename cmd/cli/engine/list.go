@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
@@ -16,6 +17,9 @@ import (
 
 type listCommand struct {
 	*common.Context
+
+	// flags
+	format string
 }
 
 func ListCommand(ctx *common.Context) *cobra.Command {
@@ -31,6 +35,9 @@ func ListCommand(ctx *common.Context) *cobra.Command {
 		RunE:              cmd.run,
 	}
 
+	// flags
+	cobraCmd.Flags().StringVar(&cmd.format, "format", "table", "output format")
+
 	return cobraCmd
 }
 
@@ -40,15 +47,60 @@ func (cmd *listCommand) run(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("error scoring engines: %v", err)
 	}
 
-	err = cmd.printEnginesTable(scoredEngines)
+	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("error printing list: %v", err)
+		return fmt.Errorf("could not determine active engine: %v", err)
+	}
+
+	switch cmd.format {
+	case "table":
+		err = cmd.printEnginesTable(scoredEngines, activeEngine)
+		if err != nil {
+			return fmt.Errorf("error printing list: %v", err)
+		}
+	case "json":
+		err = cmd.printEnginesJson(scoredEngines, activeEngine)
+		if err != nil {
+			return fmt.Errorf("error printing list: %v", err)
+		}
+	default:
+		return fmt.Errorf("unknown format %q", cmd.format)
 	}
 
 	return nil
 }
 
-func (cmd *listCommand) printEnginesTable(scoredEngines []engines.ScoredManifest) error {
+func (cmd *listCommand) printEnginesJson(scoredEngines []engines.ScoredManifest, activeEngine string) error {
+	type engineJSON struct {
+		Name          string `json:"name"`
+		Description   string `json:"description"`
+		Vendor        string `json:"vendor"`
+		Compatibility string `json:"compatibility"`
+		Active        bool   `json:"active"`
+	}
+
+	body := make([]engineJSON, 0, len(scoredEngines))
+	for _, e := range scoredEngines {
+		compat := compatibilityString(e)
+
+		body = append(body, engineJSON{
+			Name:          e.Name,
+			Description:   e.Description,
+			Vendor:        e.Vendor,
+			Compatibility: compat,
+			Active:        e.Name == activeEngine,
+		})
+	}
+
+	jsonString, err := json.MarshalIndent(body, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal to JSON: %s", err)
+	}
+	fmt.Printf("%s\n", jsonString)
+	return nil
+}
+
+func (cmd *listCommand) printEnginesTable(scoredEngines []engines.ScoredManifest, activeEngine string) error {
 	var headerRow = []string{"engine", "vendor", "description", "compat"}
 	tableRows := [][]string{headerRow}
 
@@ -63,31 +115,16 @@ func (cmd *listCommand) printEnginesTable(scoredEngines []engines.ScoredManifest
 
 	var engineNameMaxLen, engineVendorMaxLen int
 
-	activeEngine, err := cmd.Cache.GetActiveEngine()
-	if err != nil {
-		return fmt.Errorf("could not determine active engine: %v", err)
-	}
+	markActiveEngine(scoredEngines, activeEngine)
 
 	for _, engine := range scoredEngines {
-		// Mark active engine with "*"
-		if engine.Name == activeEngine {
-			engine.Name = engine.Name + "*"
-		}
-
 		// Find max name and vendor lengths
 		engineNameMaxLen = max(engineNameMaxLen, len(engine.Name))
 		engineVendorMaxLen = max(engineVendorMaxLen, len(engine.Vendor))
 
 		row := []string{engine.Name, engine.Vendor, engine.Description}
 
-		compatibleStr := ""
-		if engine.Compatible && engine.Grade == "stable" {
-			compatibleStr = "yes"
-		} else if engine.Compatible {
-			compatibleStr = "devel"
-		} else {
-			compatibleStr = "no"
-		}
+		compatibleStr := compatibilityString(engine)
 		row = append(row, compatibleStr)
 
 		tableRows = append(tableRows, row)
@@ -165,7 +202,7 @@ func (cmd *listCommand) printEnginesTable(scoredEngines []engines.ScoredManifest
 
 	table := tablewriter.NewTable(os.Stdout, options...)
 	table.Header(tableRows[0])
-	err = table.Bulk(tableRows[1:])
+	err := table.Bulk(tableRows[1:])
 	if err != nil {
 		return fmt.Errorf("error adding data to table: %v", err)
 	}
@@ -174,4 +211,22 @@ func (cmd *listCommand) printEnginesTable(scoredEngines []engines.ScoredManifest
 		return fmt.Errorf("error rendering table: %v", err)
 	}
 	return nil
+}
+
+func markActiveEngine(scoredEngines []engines.ScoredManifest, activeEngine string) {
+	for i := range scoredEngines {
+		if scoredEngines[i].Name == activeEngine {
+			// Mark active engine with "*"
+			scoredEngines[i].Name = scoredEngines[i].Name + "*"
+		}
+	}
+}
+
+func compatibilityString(e engines.ScoredManifest) string {
+	if e.Compatible && e.Grade == "stable" {
+		return "yes"
+	} else if e.Compatible {
+		return "devel"
+	}
+	return "no"
 }

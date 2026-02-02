@@ -41,7 +41,15 @@ func TestList(t *testing.T) {
 	}
 	cmd := listCommand{Context: ctx}
 
-	err = cmd.printEnginesTable(scoredEngines)
+	activeEngine, err := cmd.Cache.GetActiveEngine()
+
+	// Call printEenginesJson before printEnginesTable to avoid getting the (*) marked active engine in the json output
+	err = cmd.printEnginesJson(scoredEngines, activeEngine)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = cmd.printEnginesTable(scoredEngines, activeEngine)
 	if err != nil {
 		t.Fatal(err)
 	}
