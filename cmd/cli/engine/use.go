@@ -23,6 +23,7 @@ type useCommand struct {
 
 	// flags
 	auto      bool
+	fix       bool
 	assumeYes bool
 }
 
@@ -44,6 +45,7 @@ func UseCommand(ctx *common.Context) *cobra.Command {
 
 	// flags
 	cobraCmd.Flags().BoolVar(&cmd.auto, "auto", false, "automatically select a compatible engine")
+	cobraCmd.Flags().BoolVar(&cmd.fix, "fix", false, "fix issues with the currently active engine")
 	cobraCmd.Flags().BoolVar(&cmd.assumeYes, "assume-yes", false, "assume yes for downloading new components")
 
 	return cobraCmd
@@ -80,6 +82,11 @@ func (cmd *useCommand) run(_ *cobra.Command, args []string) error {
 			return fmt.Errorf("cannot specify both engine name and --auto flag")
 		}
 		return cmd.autoSelectEngine()
+	} else if cmd.fix {
+		if len(args) != 0 {
+			return fmt.Errorf("cannot specify both engine name and --fix flag")
+		}
+		return cmd.fixActiveEngine()
 	} else {
 		if len(args) == 1 {
 			return cmd.switchEngine(args[0])
@@ -331,4 +338,25 @@ func (*useCommand) installComponents(components []string) error {
 	}
 
 	return nil
+}
+
+func (cmd *useCommand) fixActiveEngine() error {
+	activeEngineName, err := cmd.Cache.GetActiveEngine()
+	if err != nil {
+		return fmt.Errorf("error getting active engine: %v", err)
+	}
+	if activeEngineName == "" {
+		return fmt.Errorf("no active engine to fix")
+	}
+
+	// If active engine no longer exist, auto select another one
+	_, err = engines.LoadManifest(cmd.EnginesDir, activeEngineName)
+	if errors.Is(err, engines.ErrManifestNotFound) {
+		fmt.Printf("Active engine %q not found, performing auto selection instead.\n", activeEngineName)
+		return cmd.autoSelectEngine()
+	} else if err != nil {
+		return fmt.Errorf("error loading active engine manifest: %v", err)
+	}
+
+	return cmd.switchEngine(activeEngineName)
 }
