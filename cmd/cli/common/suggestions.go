@@ -51,5 +51,6 @@ func SuggestEngineInfo() string {
 	if instanceName == "" { // not a snap
 		instanceName = "<snap-instance-name>"
 	}
+
 	return fmt.Sprintf("\nUse \"%v show-engine <engine>\" for more information about an engine.\n", instanceName)
 }
