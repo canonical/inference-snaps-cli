@@ -43,7 +43,7 @@ func SuggestServiceManagement() string {
 		instanceName = "<snap-instance-name>"
 	}
 
-	return fmt.Sprintf("\nUse \"snap logs|start|stop|restart %v\" for service management.\n", instanceName)
+	return fmt.Sprintf("Use \"snap logs|start|stop|restart %v\" for service management.", instanceName)
 }
 
 func SuggestEngineInfo() string {
@@ -52,5 +52,5 @@ func SuggestEngineInfo() string {
 		instanceName = "<snap-instance-name>"
 	}
 
-	return fmt.Sprintf("\nUse \"%v show-engine <engine>\" for more information about an engine.\n", instanceName)
+	return fmt.Sprintf("Use \"%v show-engine <engine>\" for more information about an engine.", instanceName)
 }
