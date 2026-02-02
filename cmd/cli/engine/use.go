@@ -258,6 +258,11 @@ func (cmd *useCommand) unsetEngineConfig(engineName string) error {
 
 	engine, err := engines.LoadManifest(cmd.EnginesDir, engineName)
 	if err != nil {
+		if errors.Is(err, engines.ErrManifestNotFound) {
+			// TODO: remove this when implementing per-engine configurations
+			fmt.Printf("Error: previous active engine %q not found, skip un-setting configurations.\n", engineName)
+			return nil
+		}
 		return fmt.Errorf("error loading engine manifest: %v", err)
 	}
 
