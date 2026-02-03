@@ -43,12 +43,12 @@ func TestList(t *testing.T) {
 
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 
-	err = cmd.printEnginesTable(scoredEngines, activeEngine)
+	err = cmd.printEnginesJson(scoredEngines, activeEngine)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = cmd.printEnginesJson(scoredEngines, activeEngine)
+	err = cmd.printEnginesTable(scoredEngines, activeEngine)
 	if err != nil {
 		t.Fatal(err)
 	}
