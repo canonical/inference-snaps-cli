@@ -151,7 +151,7 @@ func (cmd *useCommand) switchEngine(engineName string) error {
 		componentSizes, err := snap_store.ComponentSizes()
 		if err != nil {
 			// If component size lookup failed, continue but log the error
-			fmt.Fprintf(os.Stderr, "Error getting component sizes: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Warning: unable to get component sizes: %v\n", err)
 		}
 
 		// Format list of components, adding size if it is known
@@ -261,7 +261,7 @@ func (cmd *useCommand) unsetEngineConfig(engineName string) error {
 		if errors.Is(err, engines.ErrManifestNotFound) {
 			// TODO: remove this when implementing per-engine configuration
 			// We can't know what user overrides were set if the manifest is missing
-			fmt.Printf("Warning: previously active engine %q not found; skipping user configuration cleanup.\n", engineName)
+			fmt.Fprintf(os.Stderr, "Warning: previously active engine %q not found; skipping user configuration cleanup.\n", engineName)
 			return nil
 		}
 		return fmt.Errorf("error loading engine manifest: %v", err)
