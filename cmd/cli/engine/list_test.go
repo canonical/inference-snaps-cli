@@ -12,7 +12,7 @@ import (
 
 func TestList(t *testing.T) {
 	cache := storage.NewMockCache()
-	err := cache.SetActiveEngine("engine-name")
+	err := cache.SetActiveEngine("example-memory")
 	if err != nil {
 		t.Fatalf("Error setting active engine name: %v", err)
 	}
@@ -43,13 +43,12 @@ func TestList(t *testing.T) {
 
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 
-	// Call printEenginesJson before printEnginesTable to avoid getting the (*) marked active engine in the json output
-	err = cmd.printEnginesJson(scoredEngines, activeEngine)
+	err = cmd.printEnginesTable(scoredEngines, activeEngine)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = cmd.printEnginesTable(scoredEngines, activeEngine)
+	err = cmd.printEnginesJson(scoredEngines, activeEngine)
 	if err != nil {
 		t.Fatal(err)
 	}

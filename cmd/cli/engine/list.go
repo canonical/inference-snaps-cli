@@ -115,9 +115,12 @@ func (cmd *listCommand) printEnginesTable(scoredEngines []engines.ScoredManifest
 
 	var engineNameMaxLen, engineVendorMaxLen int
 
-	markActiveEngine(scoredEngines, activeEngine)
-
 	for _, engine := range scoredEngines {
+		// Mark active engine with "*"
+		if engine.Name == activeEngine {
+			engine.Name = engine.Name + "*"
+		}
+
 		// Find max name and vendor lengths
 		engineNameMaxLen = max(engineNameMaxLen, len(engine.Name))
 		engineVendorMaxLen = max(engineVendorMaxLen, len(engine.Vendor))
@@ -211,15 +214,6 @@ func (cmd *listCommand) printEnginesTable(scoredEngines []engines.ScoredManifest
 		return fmt.Errorf("error rendering table: %v", err)
 	}
 	return nil
-}
-
-func markActiveEngine(scoredEngines []engines.ScoredManifest, activeEngine string) {
-	for i := range scoredEngines {
-		if scoredEngines[i].Name == activeEngine {
-			// Mark active engine with "*"
-			scoredEngines[i].Name = scoredEngines[i].Name + "*"
-		}
-	}
 }
 
 func compatibilityString(e engines.ScoredManifest) string {
