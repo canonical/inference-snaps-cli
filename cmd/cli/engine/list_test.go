@@ -12,7 +12,7 @@ import (
 
 func TestList(t *testing.T) {
 	cache := storage.NewMockCache()
-	err := cache.SetActiveEngine("example-memory")
+	err := cache.SetActiveEngine("engine-name")
 	if err != nil {
 		t.Fatalf("Error setting active engine name: %v", err)
 	}
