@@ -72,11 +72,11 @@ func (cmd *listCommand) run(_ *cobra.Command, _ []string) error {
 
 func (cmd *listCommand) printEnginesJson(scoredEngines []engines.ScoredManifest, activeEngine string) error {
 	type engineJSON struct {
-		Name          string `json:"name"`
-		Description   string `json:"description"`
-		Vendor        string `json:"vendor"`
-		Compatibility string `json:"compatibility"`
-		Active        bool   `json:"active"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Vendor      string `json:"vendor"`
+		Compatibile string `json:"compatibile"`
+		Active      bool   `json:"active"`
 	}
 
 	body := make([]engineJSON, 0, len(scoredEngines))
@@ -84,11 +84,11 @@ func (cmd *listCommand) printEnginesJson(scoredEngines []engines.ScoredManifest,
 		compat := compatibilityString(e)
 
 		body = append(body, engineJSON{
-			Name:          e.Name,
-			Description:   e.Description,
-			Vendor:        e.Vendor,
-			Compatibility: compat,
-			Active:        e.Name == activeEngine,
+			Name:        e.Name,
+			Description: e.Description,
+			Vendor:      e.Vendor,
+			Compatibile: compat,
+			Active:      e.Name == activeEngine,
 		})
 	}
 
