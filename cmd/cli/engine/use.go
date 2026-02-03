@@ -259,18 +259,19 @@ func (cmd *useCommand) unsetEngineConfig(engineName string) error {
 	engine, err := engines.LoadManifest(cmd.EnginesDir, engineName)
 	if err != nil {
 		if errors.Is(err, engines.ErrManifestNotFound) {
-			// TODO: remove this when implementing per-engine configurations
-			fmt.Printf("Error: previous active engine %q not found, skip un-setting configurations.\n", engineName)
+			// TODO: remove this when implementing per-engine configuration
+			// We can't know what user overrides were set if the manifest is missing
+			fmt.Printf("Warning: previously active engine %q not found; skipping user configuration cleanup.\n", engineName)
 			return nil
 		}
 		return fmt.Errorf("error loading engine manifest: %v", err)
-	}
-
-	// Unset any user overrides
-	for k := range engine.Configurations {
-		err = cmd.Config.Unset(k, storage.UserConfig)
-		if err != nil {
-			return fmt.Errorf("error un-setting configuration %q: %v", k, err)
+	} else {
+		// Unset any user overrides
+		for k := range engine.Configurations {
+			err = cmd.Config.Unset(k, storage.UserConfig)
+			if err != nil {
+				return fmt.Errorf("error un-setting configuration %q: %v", k, err)
+			}
 		}
 	}
 
