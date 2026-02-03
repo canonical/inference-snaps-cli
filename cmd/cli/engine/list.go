@@ -75,7 +75,7 @@ func (cmd *listCommand) printEnginesJson(scoredEngines []engines.ScoredManifest,
 		Name        string `json:"name"`
 		Description string `json:"description"`
 		Vendor      string `json:"vendor"`
-		Compatibile string `json:"compatibile"`
+		Compatible  string `json:"compatible"`
 		Active      bool   `json:"active"`
 	}
 
@@ -87,7 +87,7 @@ func (cmd *listCommand) printEnginesJson(scoredEngines []engines.ScoredManifest,
 			Name:        e.Name,
 			Description: e.Description,
 			Vendor:      e.Vendor,
-			Compatibile: compat,
+			Compatible:  compat,
 			Active:      e.Name == activeEngine,
 		})
 	}
