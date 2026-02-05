@@ -56,10 +56,6 @@ func (cmd *pruneCommand) run(_ *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("The following components will be removed:\n")
-		for component := range componentsWithEnginesToRemove {
-			fmt.Printf("%s\n", component)
-		}
 		if !cmd.printComponentsAndConfirm(componentsWithEnginesToRemove) {
 			return nil
 		}
@@ -108,10 +104,8 @@ func (cmd *pruneCommand) calculateRemovableComponents(enginesToCheck []engines.M
 
 		for _, component := range eng.Components {
 			if !utils.Contains(activeEngineManifest.Components, component) {
-				fmt.Printf("Component %s not in active engine %s\n", component, activeEngineManifest.Name)
 				_, exists := componentsEnginesMap[component]
 				if cmd.isComponentInstalled(component) {
-					fmt.Printf("%s is installed\n", component)
 					if !exists {
 						componentsEnginesMap[component] = []string{}
 					}
@@ -148,13 +142,16 @@ func (cmd *pruneCommand) pruneEngine(componentsToRemove []string, engine engines
 		return err
 	}
 	for _, component := range componentsToRemove {
-		fmt.Printf("Removing component %s for engine %s\n", component, engine.Name)
+		if !cmd.isComponentInstalled(component) {
+			componentsToRemove = utils.Remove(componentsToRemove, component)
+		}
 	}
-	err = snapctl.RemoveComponents(componentsToRemove...).Run()
-	if err != nil {
-		return fmt.Errorf("failed to remove components: %w", err)
+	if len(componentsToRemove) != 0 {
+		err = snapctl.RemoveComponents(componentsToRemove...).Run()
+		if err != nil {
+			return fmt.Errorf("failed to remove components: %w", err)
+		}
 	}
-
 	return nil
 }
 
