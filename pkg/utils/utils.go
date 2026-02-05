@@ -120,3 +120,13 @@ func Contains(slice []string, item string) bool {
 	}
 	return false
 }
+
+func Remove(slice []string, item string) []string {
+	var newSlice []string
+	for _, s := range slice {
+		if s != item {
+			newSlice = append(newSlice, s)
+		}
+	}
+	return newSlice
+}
