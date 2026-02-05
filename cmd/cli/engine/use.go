@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/canonical/go-snapctl"
 	"github.com/canonical/go-snapctl/env"
@@ -330,12 +331,19 @@ func (*useCommand) installComponents(components []string) error {
 					"\nRerun this command after manually installing %q",
 					component)
 			} else if strings.Contains(err.Error(), snapdTimeoutError) {
-				return fmt.Errorf("timed out while installing %q:"+
-					"\nMonitor the installation progress with \"snap changes\""+
-					"\n\nRerun this command once the installation is complete",
-					component)
+				// Snapd is busy installing this component
+				err = retryInstallComponent(component)
+				if err != nil {
+					return err
+				}
 			} else if strings.Contains(err.Error(), "already installed") {
 				continue
+			} else if strings.Contains(err.Error(), "change in progress") {
+				// Snapd is busy with an unrelated change
+				err = retryInstallComponent(component)
+				if err != nil {
+					return err
+				}
 			} else {
 				return fmt.Errorf("error installing %q: %s", component, err)
 			}
@@ -344,6 +352,33 @@ func (*useCommand) installComponents(components []string) error {
 	}
 
 	return nil
+}
+
+func retryInstallComponent(component string) error {
+	const timeout = 60 * time.Minute
+	startTime := time.Now()
+
+	stopProgress := common.StartProgressSpinner("Installing " + component)
+
+	time.Sleep(10 * time.Second)
+	err := snapctl.InstallComponents(component).Run()
+
+	for err != nil && strings.Contains(err.Error(), "change in progress") {
+		if time.Since(startTime) > timeout {
+			return fmt.Errorf("timed out while installing %q:"+
+				"\nMonitor the installation progress with \"snap changes\""+
+				"\n\nRerun this command once the installation is complete",
+				component)
+		}
+
+		err = snapctl.InstallComponents(component).Run()
+		if err != nil {
+			time.Sleep(10 * time.Second)
+		}
+	}
+
+	stopProgress()
+	return err
 }
 
 func (cmd *useCommand) fixActiveEngine() error {
