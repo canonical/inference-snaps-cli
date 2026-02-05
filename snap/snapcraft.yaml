@@ -82,6 +82,56 @@ parts:
       fi # End of intel-opencl driver installation
       
       craftctl default
+  component-local-files:
+    plugin: dump
+    source: components
+    organize:
+      "cpu-devel-component/*": (component/cpu-devel-component)
+      "cuda-component/*": (component/cuda-component)
+      "example-memory-component/*": (component/example-memory-component)
+      "llamaaio/*": (component/llamaaio)
+      "llamacpp/*": (component/llamacpp)
+      "model-distill-qwen-1-5b-q8-0-gguf/*": (component/model-distill-qwen-1-5b-q8-0-gguf)
+      "model-q4-k-m-gguf/*": (component/model-q4-k-m-gguf)
+      # Add other components here
+    prime:
+      # Exclude everything not explicitly organized
+      - -*
+  cpu-devel-component:
+    plugin: dump
+    source: components/cpu-devel-component
+    organize:
+      "*": components/cpu-devel-component/
+  cuda-component:
+    plugin: dump
+    source: components/cuda-component
+    organize:
+      "*": components/cuda-component/
+  example-memory-component:
+    plugin: dump
+    source: components/example-memory-component
+    organize: 
+      "*": components/example-memory-component/
+  llamaaio:
+    plugin: dump
+    source: components/llamaaio
+    organize:
+      "*": components/llamaaio/
+  llamacpp:
+    plugin: dump
+    source: components/llamacpp
+    organize:
+      "*": components/llamacpp/
+  model-distill-qwen-1-5b-q8-0-gguf:
+    plugin: dump
+    source: components/model-distill-qwen-1-5b-q8-0-gguf
+    organize:
+      "*": components/model-distill-qwen-1-5b-q8-0-gguf/
+  model-q4-k-m-gguf:
+    plugin: dump
+    source: components/model-q4-k-m-gguf
+    organize:
+      "*": components/model-q4-k-m-gguf/
 
   # To use `version: git` in this file, we require git as a build dependency.
   # This is fixed but not published yet. See https://github.com/canonical/snapcraft/issues/4944
@@ -102,7 +152,24 @@ parts:
     source: test_data/engines
     organize:
       "*": engines/
-
+components:
+  cpu-devel-component: &test-component
+    type: standard
+    summary: Just a test component
+    description: Component for testing purposes
+  cuda-component:
+    <<: *test-component
+  example-memory-component:
+    <<: *test-component
+  llamaaio:
+    <<: *test-component
+  llamacpp:
+    <<: *test-component
+  model-distill-qwen-1-5b-q8-0-gguf:
+    <<: *test-component
+  model-q4-k-m-gguf:
+    <<: *test-component
+      
 apps:
   stack-utils:
     plugs:
