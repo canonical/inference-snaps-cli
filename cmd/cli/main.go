@@ -76,6 +76,7 @@ func main() {
 		engine.ListCommand(ctx),
 		engine.ShowCommand(ctx),
 		engine.UseCommand(ctx),
+		engine.PruneCommand(ctx),
 	)
 
 	// other commands (help is added by default)

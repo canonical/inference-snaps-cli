@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"flag"
 	"fmt"
 	"os"
 
@@ -45,10 +44,21 @@ func (cmd *pruneCommand) run(_ *cobra.Command, args []string) error {
 	var componentsWithEnginesToRemove map[string][]string
 	var componentsToRemove []string
 	activeEngine, err := cmd.Cache.GetActiveEngine()
+	if err != nil {
+		return err
+	}
 	if cmd.engine == "" {
-		componentsWithEnginesToRemove, err = cmd.getAllComponentsToRemove(&engines.Manifest{Name: activeEngine})
+		activeEngineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngine)
 		if err != nil {
 			return err
+		}
+		componentsWithEnginesToRemove, err = cmd.getAllComponentsToRemove(*activeEngineManifest)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("The following components will be removed:\n")
+		for component := range componentsWithEnginesToRemove {
+			fmt.Printf("%s\n", component)
 		}
 		if !cmd.printComponentsAndConfirm(componentsWithEnginesToRemove) {
 			return nil
@@ -58,17 +68,24 @@ func (cmd *pruneCommand) run(_ *cobra.Command, args []string) error {
 			componentsToRemove = append(componentsToRemove, component)
 		}
 		return cmd.pruneAllInactiveEngines(componentsToRemove)
+	} else if cmd.engine == activeEngine {
+		return fmt.Errorf("cannot prune the active engine '%s'", activeEngine)
 	} else {
 		engineManifest, err := engines.LoadManifest(cmd.EnginesDir, cmd.engine)
-
 		if err != nil {
 			return err
 		}
+
 		activeEngineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngine)
 		if err != nil {
 			return err
 		}
-		componentsWithEnginesToRemove = cmd.getComponentsToRemoveFromEngine(engineManifest, activeEngineManifest)
+
+		componentsWithEnginesToRemove = cmd.getComponentsToRemoveFromEngine(*engineManifest, *activeEngineManifest)
+		fmt.Printf("The following components will be removed:\n")
+		for component := range componentsWithEnginesToRemove {
+			fmt.Printf("%s\n", component)
+		}
 		if !cmd.printComponentsAndConfirm(componentsWithEnginesToRemove) {
 			return nil
 		}
@@ -80,7 +97,7 @@ func (cmd *pruneCommand) run(_ *cobra.Command, args []string) error {
 	}
 }
 
-func (cmd *pruneCommand) calculateRemovableComponents(enginesToCheck []engines.Manifest, activeEngineManifest *engines.Manifest) map[string][]string {
+func (cmd *pruneCommand) calculateRemovableComponents(enginesToCheck []engines.Manifest, activeEngineManifest engines.Manifest) map[string][]string {
 	var componentsEnginesMap = make(map[string][]string)
 
 	for _, eng := range enginesToCheck {
@@ -91,29 +108,30 @@ func (cmd *pruneCommand) calculateRemovableComponents(enginesToCheck []engines.M
 
 		for _, component := range eng.Components {
 			if !utils.Contains(activeEngineManifest.Components, component) {
-				if _, exists := componentsEnginesMap[component]; !exists {
-					componentsEnginesMap[component] = []string{}
+				fmt.Printf("Component %s not in active engine %s\n", component, activeEngineManifest.Name)
+				_, exists := componentsEnginesMap[component]
+				if cmd.isComponentInstalled(component) {
+					fmt.Printf("%s is installed\n", component)
+					if !exists {
+						componentsEnginesMap[component] = []string{}
+					}
+					componentsEnginesMap[component] = append(componentsEnginesMap[component], eng.Name)
 				}
-				componentsEnginesMap[component] = append(componentsEnginesMap[component], eng.Name)
 			}
 		}
 	}
 	return componentsEnginesMap
 }
 
-func (cmd *pruneCommand) getComponentsToRemoveFromEngine(targetEngine *engines.Manifest, activeEngineManifest *engines.Manifest) map[string][]string {
-	return cmd.calculateRemovableComponents([]engines.Manifest{*targetEngine}, activeEngineManifest)
+func (cmd *pruneCommand) getComponentsToRemoveFromEngine(targetEngine engines.Manifest, activeEngineManifest engines.Manifest) map[string][]string {
+	return cmd.calculateRemovableComponents([]engines.Manifest{targetEngine}, activeEngineManifest)
 }
 
-func (cmd *pruneCommand) getAllComponentsToRemove(activeEngineManifest *engines.Manifest) (map[string][]string, error) {
+func (cmd *pruneCommand) getAllComponentsToRemove(activeEngineManifest engines.Manifest) (map[string][]string, error) {
 	var enginesToCheck []engines.Manifest
 	var err error
 
-	if flag.Lookup("test.v") != nil {
-		enginesToCheck, err = engines.LoadManifests("../../../test_data/engines")
-	} else {
-		enginesToCheck, err = engines.LoadManifests(cmd.EnginesDir)
-	}
+	enginesToCheck, err = engines.LoadManifests(cmd.EnginesDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load manifests: %w", err)
 	}
@@ -123,27 +141,19 @@ func (cmd *pruneCommand) getAllComponentsToRemove(activeEngineManifest *engines.
 
 func (cmd *pruneCommand) pruneEngine(componentsToRemove []string, engine engines.Manifest) error {
 	var err error
-	activeEngine, err := cmd.Cache.GetActiveEngine()
+
+	uc := &useCommand{Context: cmd.Context}
+	err = uc.unsetEngineConfig(engine.Name)
 	if err != nil {
 		return err
 	}
-	if engine.Name == activeEngine {
-		return fmt.Errorf("cannot prune the active engine '%s'", activeEngine)
+	for _, component := range componentsToRemove {
+		fmt.Printf("Removing component %s for engine %s\n", component, engine.Name)
 	}
-	// Skip configuration changes during tests
-	if flag.Lookup("test.v") == nil {
-		uc := &useCommand{Context: cmd.Context}
-		err = uc.unsetEngineConfig(engine.Name)
-		if err != nil {
-			return err
-		}
+	err = snapctl.RemoveComponents(componentsToRemove...).Run()
+	if err != nil {
+		return fmt.Errorf("failed to remove components: %w", err)
 	}
-	fmt.Printf("Removing cached components for engine '%s': %s\n", engine.Name, componentsToRemove)
-
-	if flag.Lookup("test.v") == nil {
-		_ = snapctl.RemoveComponents(componentsToRemove...).Run()
-	}
-	fmt.Printf("Pruned cache for engine: %s-\n", engine.Name)
 
 	return nil
 }
@@ -154,11 +164,7 @@ func (cmd *pruneCommand) pruneAllInactiveEngines(componentsToRemove []string) er
 		return err
 	}
 	var allEngines []engines.Manifest
-	if flag.Lookup("test.v") != nil {
-		allEngines, err = engines.LoadManifests("../../../test_data/engines")
-	} else {
-		allEngines, err = engines.LoadManifests(cmd.EnginesDir)
-	}
+	allEngines, err = engines.LoadManifests(cmd.EnginesDir)
 	if err != nil {
 		return fmt.Errorf("error scoring engines: %v", err)
 	}
@@ -183,17 +189,16 @@ func (cmd *pruneCommand) printComponentsAndConfirm(componentsWithEngines map[str
 	if err != nil {
 		// If component size lookup failed, continue but log the error
 		fmt.Fprintf(os.Stderr, "Warning: unable to get component sizes: %v\n", err)
-		return false
 	}
 
 	var componentList []string
 	var enginesList []string
 	for componentName := range componentsWithEngines {
-		componentLine := fmt.Sprintf("- %s", componentName)
+		componentLine := fmt.Sprintf("%s", componentName)
 		if size, ok := componentSizes[componentName]; ok {
 			componentLine += fmt.Sprintf(" (%s)", utils.FmtBytes(uint64(size)))
 		}
-		enginesLine := fmt.Sprintf("[")
+		enginesLine := "["
 		for _, engineName := range componentsWithEngines[componentName] {
 			enginesLine += fmt.Sprintf("%s, ", engineName)
 		}
@@ -217,4 +222,13 @@ func (cmd *pruneCommand) printComponentsAndConfirm(componentsWithEngines map[str
 	}
 
 	return true
+}
+
+func (cmd *pruneCommand) isComponentInstalled(component string) bool {
+	uc := &useCommand{Context: cmd.Context}
+	installed, err := uc.componentInstalled(component)
+	if err != nil {
+		return false
+	}
+	return installed
 }
