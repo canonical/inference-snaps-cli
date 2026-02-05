@@ -56,7 +56,7 @@ func (cmd *pruneCommand) run(_ *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		if !cmd.printComponentsAndConfirm(componentsWithEnginesToRemove) {
+		if !cmd.printComponentsAndConfirm(componentsWithEnginesToRemove, false) {
 			return nil
 		}
 		componentsToRemove = make([]string, 0, len(componentsWithEnginesToRemove))
@@ -78,11 +78,7 @@ func (cmd *pruneCommand) run(_ *cobra.Command, args []string) error {
 		}
 
 		componentsWithEnginesToRemove = cmd.getComponentsToRemoveFromEngine(*engineManifest, *activeEngineManifest)
-		fmt.Printf("The following components will be removed:\n")
-		for component := range componentsWithEnginesToRemove {
-			fmt.Printf("%s\n", component)
-		}
-		if !cmd.printComponentsAndConfirm(componentsWithEnginesToRemove) {
+		if !cmd.printComponentsAndConfirm(componentsWithEnginesToRemove, true) {
 			return nil
 		}
 		componentsToRemove = make([]string, 0, len(componentsWithEnginesToRemove))
@@ -178,7 +174,12 @@ func (cmd *pruneCommand) pruneAllInactiveEngines(componentsToRemove []string) er
 	return nil
 }
 
-func (cmd *pruneCommand) printComponentsAndConfirm(componentsWithEngines map[string][]string) bool {
+func (cmd *pruneCommand) printComponentsAndConfirm(componentsWithEngines map[string][]string, isSingleEngine bool) bool {
+	if len(componentsWithEngines) == 0 {
+		fmt.Println("No components to remove.")
+		return false
+	}
+
 	fmt.Printf("Removing components:\n")
 
 	// Look up component sizes from the snap store
@@ -188,20 +189,22 @@ func (cmd *pruneCommand) printComponentsAndConfirm(componentsWithEngines map[str
 		fmt.Fprintf(os.Stderr, "Warning: unable to get component sizes: %v\n", err)
 	}
 
-	var componentList []string
 	var enginesList []string
 	for componentName := range componentsWithEngines {
 		componentLine := fmt.Sprintf("%s", componentName)
 		if size, ok := componentSizes[componentName]; ok {
 			componentLine += fmt.Sprintf(" (%s)", utils.FmtBytes(uint64(size)))
 		}
+		if isSingleEngine {
+			fmt.Printf("- %s\n", componentLine)
+			continue
+		}
 		enginesLine := "["
 		for _, engineName := range componentsWithEngines[componentName] {
 			enginesLine += fmt.Sprintf("%s, ", engineName)
 		}
 		enginesLine = enginesLine[:len(enginesLine)-2] + "]"
-		fmt.Printf("- %s %s\n\n", componentLine, enginesLine)
-		componentList = append(componentList, componentLine)
+		fmt.Printf("- %s %s\n", componentLine, enginesLine)
 		// append to engineList only if engine is not already present
 		for _, engineName := range componentsWithEngines[componentName] {
 			if !utils.Contains(enginesList, engineName) {
@@ -209,10 +212,15 @@ func (cmd *pruneCommand) printComponentsAndConfirm(componentsWithEngines map[str
 			}
 		}
 	}
-
+	var confirmationPromptSentence string = ""
+	if isSingleEngine {
+		confirmationPromptSentence = fmt.Sprintf("\nContinue pruning %v engine?", cmd.engine)
+	} else {
+		confirmationPromptSentence = fmt.Sprintf("\nContinue pruning %v engines?", enginesList)
+	}
 	if term.IsTerminal(int(os.Stdin.Fd())) {
 		fmt.Println()
-		if !common.ConfirmationPrompt(fmt.Sprintf("Continue pruning %v engines?", enginesList)) {
+		if !common.ConfirmationPrompt(confirmationPromptSentence) {
 			fmt.Println("Exiting. No changes applied.")
 			return false
 		}
