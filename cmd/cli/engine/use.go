@@ -319,32 +319,55 @@ func (*useCommand) installComponents(components []string) error {
 	const (
 		snapdUnknownSnapError = "cannot install components for a snap that is unknown to the store"
 		snapdTimeoutError     = "timeout exceeded while waiting for response"
+		timeout               = 60 * time.Minute
 	)
+	startTime := time.Now()
 
+iterateComponents:
 	for _, component := range components {
 		stopProgress := common.StartProgressSpinner("Installing " + component)
 		err := snapctl.InstallComponents(component).Run()
 		stopProgress()
-		if err != nil {
-			if strings.Contains(err.Error(), snapdUnknownSnapError) {
+
+		for err != nil {
+			// Only retry up to the set timeout
+			if time.Since(startTime) > timeout {
+				return fmt.Errorf("timed out while installing %q:"+
+					"\nMonitor the installation progress with \"snap changes\""+
+					"\n\nRerun this command once the installation is complete",
+					component)
+			}
+
+			if strings.Contains(err.Error(), "already installed") {
+				// All good. Continue installing next component.
+				continue iterateComponents
+
+			} else if strings.Contains(err.Error(), snapdUnknownSnapError) {
+				// Install component manually
 				return fmt.Errorf("snap not known to the store:"+
 					"\nRerun this command after manually installing %q",
 					component)
+
 			} else if strings.Contains(err.Error(), snapdTimeoutError) {
 				// Snapd is busy installing this component
-				err = retryInstallComponent(component)
-				if err != nil {
-					return err
-				}
-			} else if strings.Contains(err.Error(), "already installed") {
-				continue
+				// Retry installation after 30 seconds
+				time.Sleep(30 * time.Second)
+
+				stopProgress = common.StartProgressSpinner("Installing " + component)
+				err = snapctl.InstallComponents(component).Run()
+				stopProgress()
+
 			} else if strings.Contains(err.Error(), "change in progress") {
 				// Snapd is busy with an unrelated change
-				err = retryInstallComponent(component)
-				if err != nil {
-					return err
-				}
+				// Retry installation after 30 seconds
+				time.Sleep(30 * time.Second)
+
+				stopProgress = common.StartProgressSpinner("Installing " + component)
+				err = snapctl.InstallComponents(component).Run()
+				stopProgress()
+
 			} else {
+				// Any other error we do not specifically handle will stop installing components
 				return fmt.Errorf("error installing %q: %s", component, err)
 			}
 		}
@@ -352,33 +375,6 @@ func (*useCommand) installComponents(components []string) error {
 	}
 
 	return nil
-}
-
-func retryInstallComponent(component string) error {
-	const timeout = 60 * time.Minute
-	startTime := time.Now()
-
-	stopProgress := common.StartProgressSpinner("Installing " + component)
-
-	time.Sleep(10 * time.Second)
-	err := snapctl.InstallComponents(component).Run()
-
-	for err != nil && strings.Contains(err.Error(), "change in progress") {
-		if time.Since(startTime) > timeout {
-			return fmt.Errorf("timed out while installing %q:"+
-				"\nMonitor the installation progress with \"snap changes\""+
-				"\n\nRerun this command once the installation is complete",
-				component)
-		}
-
-		err = snapctl.InstallComponents(component).Run()
-		if err != nil {
-			time.Sleep(10 * time.Second)
-		}
-	}
-
-	stopProgress()
-	return err
 }
 
 func (cmd *useCommand) fixActiveEngine() error {
