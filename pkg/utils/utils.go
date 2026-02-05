@@ -111,3 +111,12 @@ func IsRootUser() bool {
 func IsTerminalOutput() bool {
 	return term.IsTerminal(int(os.Stdout.Fd()))
 }
+
+func Contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}

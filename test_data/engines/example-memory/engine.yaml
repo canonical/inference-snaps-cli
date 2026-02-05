@@ -12,4 +12,7 @@ devices:
       manufacturer-id: GenuineIntel
 memory: 35G
 disk-space: 29G
+components:
+  - example-memory-component
+  - model-q4-k-m-gguf
 
