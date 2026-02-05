@@ -23,8 +23,8 @@ type listCommand struct {
 }
 
 type outputEngines struct {
-	Active       string                   `json:"active-engine"`
-	ScoredEngine []engines.ScoredManifest `json:"engines"`
+	ActiveEngine string                   `json:"active-engine"`
+	Engines      []engines.ScoredManifest `json:"engines"`
 }
 
 func ListCommand(ctx *common.Context) *cobra.Command {
@@ -57,22 +57,19 @@ func (cmd *listCommand) run(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("could not determine active engine: %v", err)
 	}
 
-	listEngines := outputEngines{}
-	for _, e := range scoredEngines {
-		if e.Name == activeEngine {
-			listEngines.Active = activeEngine
-		}
-		listEngines.ScoredEngine = append(listEngines.ScoredEngine, e)
+	enginesList := outputEngines{
+		ActiveEngine: activeEngine,
+		Engines:      scoredEngines,
 	}
 
 	switch cmd.format {
 	case "table":
-		err = cmd.printEnginesTable(listEngines)
+		err = cmd.printEnginesTable(enginesList)
 		if err != nil {
 			return fmt.Errorf("error printing list: %v", err)
 		}
 	case "json":
-		err = cmd.printEnginesJson(listEngines)
+		err = cmd.printEnginesJson(enginesList)
 		if err != nil {
 			return fmt.Errorf("error printing list: %v", err)
 		}
@@ -83,42 +80,33 @@ func (cmd *listCommand) run(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func (cmd *listCommand) printEnginesJson(listEngines outputEngines) error {
-
-	body := outputEngines{}
-	for _, e := range listEngines.ScoredEngine {
-		if e.Name == listEngines.Active {
-			body.Active = e.Name
-		}
-		body.ScoredEngine = append(body.ScoredEngine, e)
-	}
-
-	jsonString, err := json.MarshalIndent(body, "", "  ")
+func (cmd *listCommand) printEnginesJson(enginesList outputEngines) error {
+	jsonString, err := json.MarshalIndent(enginesList, "", "  ")
 	if err != nil {
-		return fmt.Errorf("failed to marshal to JSON: %s", err)
+		return fmt.Errorf("error marshalling engines to json: %v", err)
 	}
 	fmt.Printf("%s\n", jsonString)
 	return nil
 }
 
-func (cmd *listCommand) printEnginesTable(listEngines outputEngines) error {
+func (cmd *listCommand) printEnginesTable(enginesList outputEngines) error {
 	var headerRow = []string{"engine", "vendor", "description", "compat"}
 	tableRows := [][]string{headerRow}
 
 	// Sort by Score in descending order
-	sort.Slice(listEngines.ScoredEngine, func(i, j int) bool {
+	sort.Slice(enginesList.Engines, func(i, j int) bool {
 		// Stable engines with equal score should be listed first
-		if listEngines.ScoredEngine[i].Score == listEngines.ScoredEngine[j].Score {
-			return listEngines.ScoredEngine[i].Grade == "stable"
+		if enginesList.Engines[i].Score == enginesList.Engines[j].Score {
+			return enginesList.Engines[i].Grade == "stable"
 		}
-		return listEngines.ScoredEngine[i].Score > listEngines.ScoredEngine[j].Score
+		return enginesList.Engines[i].Score > enginesList.Engines[j].Score
 	})
 
 	var engineNameMaxLen, engineVendorMaxLen int
 
-	for _, engine := range listEngines.ScoredEngine {
+	for _, engine := range enginesList.Engines {
 		// Mark active engine with "*"
-		if engine.Name == listEngines.Active {
+		if engine.Name == enginesList.ActiveEngine {
 			engine.Name = engine.Name + "*"
 		}
 
