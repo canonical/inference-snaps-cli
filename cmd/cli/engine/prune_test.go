@@ -1,90 +1,87 @@
 package engine
 
 import (
+	"os"
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
 	"github.com/canonical/inference-snaps-cli/pkg/engines"
-	"github.com/canonical/inference-snaps-cli/pkg/hardware_info"
-	"github.com/canonical/inference-snaps-cli/pkg/selector"
 	"github.com/canonical/inference-snaps-cli/pkg/storage"
+	"github.com/creack/pty"
 )
 
 func TestPrune(t *testing.T) {
-	var err error
+	// Make stdin look like a TTY for this test.
+	ptyMaster, ptySlave, err := pty.Open()
+	if err != nil {
+		t.Fatalf("failed to open pty: %v", err)
+	}
+	defer ptyMaster.Close()
+	defer ptySlave.Close()
+
+	origStdin := os.Stdin
+	os.Stdin = ptySlave
+	t.Cleanup(func() { os.Stdin = origStdin })
+
 	cache := storage.NewMockCache()
 	err = cache.SetActiveEngine("example-memory")
 	if err != nil {
 		t.Fatalf("Error setting active engine name: %v", err)
 	}
 
-	allEngines, err := engines.LoadManifests("../../../test_data/engines")
+	ctx := &common.Context{
+		EnginesDir: "../../../test_data/engines",
+		Cache:      cache,
+		Config:     nil,
+	}
+
+	allEngines, err := engines.LoadManifests(ctx.EnginesDir)
 	if err != nil {
 		t.Fatalf("error loading engines: %v", err)
 	}
 
-	hardwareInfo, err := hardware_info.GetFromRawData(t, "xps13-7390", true, "../../../test_data")
-	if err != nil {
-		t.Fatalf("error getting hardware info: %v", err)
-	}
-
-	scoredEngines, err := selector.ScoreEngines(hardwareInfo, allEngines)
-	if err != nil {
-		t.Fatalf("error scoring engines: %v", err)
-	}
-
-	// cmd.printEnginesTable needs to call `cmd.Cache.GetActiveEngine()` to get the current active engine
-	// We therefore need to pass in the cache as context to `cmd`
-	ctx := &common.Context{
-		EnginesDir: "",
-		Cache:      cache,
-		Config:     nil,
-	}
 	cmd := pruneCommand{Context: ctx}
-	var activeEngineManifest engines.Manifest
-	activeEngineName, err := cache.GetActiveEngine()
-	for _, scoredEngine := range scoredEngines {
-		if scoredEngine.Name == activeEngineName {
-			activeEngineManifest = scoredEngine.Manifest
-			break
-		}
+	activeEngine, err := cmd.Cache.GetActiveEngine()
+	if err != nil {
+		t.Fatalf("error getting active engine: %v", err)
 	}
 
-	var componentsToRemoveWithEngines map[string][]string
-	var componentsToRemove []string
-	// test pruning active engine
-	componentsToRemoveWithEngines = cmd.getComponentsToRemoveFromEngine(&activeEngineManifest, &activeEngineManifest)
-	componentsToRemove = make([]string, 0, len(componentsToRemoveWithEngines))
-	for component := range componentsToRemoveWithEngines {
-		componentsToRemove = append(componentsToRemove, component)
-	}
-	err = cmd.pruneEngine(componentsToRemove, activeEngineManifest)
-	if err == nil {
-		t.Fatalf("error pruning ACTIVE engine: %v", err)
+	activeEngineManifest, err := engines.LoadManifest(ctx.EnginesDir, activeEngine)
+	if err != nil {
+		t.Fatalf("error loading active engine manifest: %v", err)
 	}
 
-	// test pruning inactive engine
-	componentsToRemoveWithEngines = cmd.getComponentsToRemoveFromEngine(&scoredEngines[0].Manifest, &activeEngineManifest)
-	componentsToRemove = make([]string, 0, len(componentsToRemoveWithEngines))
-	for component := range componentsToRemoveWithEngines {
-		componentsToRemove = append(componentsToRemove, component)
-	}
-	err = cmd.pruneEngine(componentsToRemove, scoredEngines[0].Manifest)
-	if err != nil {
-		t.Fatalf("error pruning engine: %v", err)
+	removableComponents := cmd.calculateRemovableComponents(allEngines, *activeEngineManifest)
+	for component, engines := range removableComponents {
+		t.Logf("Component '%s' has removable engines: %v", component, engines)
 	}
 
-	// test pruning all inactive engines
-	componentsToRemoveWithEngines, err = cmd.getAllComponentsToRemove(&activeEngineManifest)
-	if err != nil {
-		t.Fatalf("error getting all components to remove: %v", err)
-	}
-	componentsToRemove = make([]string, 0, len(componentsToRemoveWithEngines))
-	for component := range componentsToRemoveWithEngines {
-		componentsToRemove = append(componentsToRemove, component)
-	}
-	err = cmd.pruneAllInactiveEngines(componentsToRemove)
-	if err != nil {
-		t.Fatalf("error pruning all inactive engines: %v", err)
-	}
+	// prints "No components to remove."
+	t.Logf("\n---------------------------------------------------------------------\n")
+	cmd.printComponentsAndConfirm(removableComponents, false)
+	t.Logf("\n---------------------------------------------------------------------\n")
+
+	// Test with some removable engines. The user will be prompted to confirm pruning.
+	removableComponents["componentA"] = []string{"TestEngine", "AnotherTestEngine"}
+	removableComponents["componentB"] = []string{"YetAnotherTestEngine", "TestEngine"}
+	go func() {
+		_, _ = ptyMaster.Write([]byte("y\n"))
+	}()
+	cmd.printComponentsAndConfirm(removableComponents, false)
+	t.Logf("\n---------------------------------------------------------------------\n")
+
+	// Test with only one engine to prune. The user will be prompted to confirm pruning.
+	removableComponents["componentA"] = []string{"TestEngine"}
+	removableComponents["componentB"] = []string{"TestEngine"}
+	go func() {
+		_, _ = ptyMaster.Write([]byte("y\n"))
+	}()
+	cmd.printComponentsAndConfirm(removableComponents, true)
+	t.Logf("\n---------------------------------------------------------------------\n")
+
+	// Test when the user will decline pruning.
+	go func() {
+		_, _ = ptyMaster.Write([]byte("n\n"))
+	}()
+	cmd.printComponentsAndConfirm(removableComponents, true)
 }
