@@ -196,9 +196,9 @@ func (cmd *pruneCommand) printComponentsAndConfirm(componentsWithEngines map[str
 
 	var confirmationPromptSentence string
 	if isSingleEngine {
-		confirmationPromptSentence = fmt.Sprintf("\nContinue pruning %v engine?", cmd.engine)
+		confirmationPromptSentence = fmt.Sprintf("Continue pruning %v engine?", cmd.engine)
 	} else {
-		confirmationPromptSentence = fmt.Sprintf("\nContinue pruning %v engines?", mapKeysFromSet(enginesSet))
+		confirmationPromptSentence = fmt.Sprintf("Continue pruning %v engines?", mapKeysFromSet(enginesSet))
 	}
 
 	if term.IsTerminal(int(os.Stdin.Fd())) {
