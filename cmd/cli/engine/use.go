@@ -317,17 +317,19 @@ func (*useCommand) componentInstalled(component string) (bool, error) {
 
 func (*useCommand) installComponents(components []string) error {
 	const (
-		snapdUnknownSnapError = "cannot install components for a snap that is unknown to the store"
-		snapdTimeoutError     = "timeout exceeded while waiting for response"
-		timeout               = 60 * time.Minute
+		snapdAlreadyInstalledError = "already installed"
+		snapdUnknownSnapError      = "cannot install components for a snap that is unknown to the store"
+		snapdTimeoutError          = "timeout exceeded while waiting for response"
+		snapdChangeInProgressError = "change in progress"
+		timeout                    = 60 * time.Minute
+		retryDelay                 = 10 * time.Second
 	)
 	startTime := time.Now()
 
-iterateComponents:
 	for _, component := range components {
 		stopProgress := common.StartProgressSpinner("Installing " + component)
 		err := snapctl.InstallComponents(component).Run()
-		stopProgress()
+		defer stopProgress()
 
 		for err != nil {
 			// Only retry up to the set timeout
@@ -338,9 +340,9 @@ iterateComponents:
 					component)
 			}
 
-			if strings.Contains(err.Error(), "already installed") {
+			if strings.Contains(err.Error(), snapdAlreadyInstalledError) {
 				// All good. Continue installing next component.
-				continue iterateComponents
+				break
 
 			} else if strings.Contains(err.Error(), snapdUnknownSnapError) {
 				// Install component manually
@@ -349,28 +351,22 @@ iterateComponents:
 					component)
 
 			} else if strings.Contains(err.Error(), snapdTimeoutError) {
-				// Snapd is busy installing this component
-				// Retry installation after 30 seconds
-				time.Sleep(30 * time.Second)
-
-				stopProgress = common.StartProgressSpinner("Installing " + component)
+				// Snapd timed out while installing this component
+				time.Sleep(retryDelay)
 				err = snapctl.InstallComponents(component).Run()
-				stopProgress()
 
-			} else if strings.Contains(err.Error(), "change in progress") {
-				// Snapd is busy with an unrelated change
-				// Retry installation after 30 seconds
-				time.Sleep(30 * time.Second)
-
-				stopProgress = common.StartProgressSpinner("Installing " + component)
+			} else if strings.Contains(err.Error(), snapdChangeInProgressError) {
+				// Snapd is busy with installing this component or busy with an unrelated change
+				time.Sleep(retryDelay)
 				err = snapctl.InstallComponents(component).Run()
-				stopProgress()
 
 			} else {
 				// Any other error we do not specifically handle will stop installing components
 				return fmt.Errorf("error installing %q: %s", component, err)
 			}
 		}
+
+		stopProgress()
 		fmt.Println("Installed " + component)
 	}
 
