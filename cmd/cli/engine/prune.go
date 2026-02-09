@@ -56,7 +56,7 @@ func (cmd *pruneCommand) run(_ *cobra.Command, _ []string) error {
 			if cmd.Verbose {
 				fmt.Println(err)
 			}
-			return fmt.Errorf("%q not found", cmd.engine)
+			return fmt.Errorf("No active engine found")
 		}
 		return fmt.Errorf("error loading engine manifest: %v", err)
 	}
