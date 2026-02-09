@@ -61,6 +61,9 @@ func TestPrune(t *testing.T) {
 
 	// prints "No components to remove."
 	t.Logf("\n---------------------------------------------------------------------\n")
+	go func() {
+		_, _ = ptyMaster.Write([]byte("y\n"))
+	}()
 	cmd.printComponentsAndConfirm(removableComponents, false)
 	t.Logf("\n---------------------------------------------------------------------\n")
 

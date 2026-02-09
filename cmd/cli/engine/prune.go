@@ -159,7 +159,7 @@ func (cmd *pruneCommand) pruneAllInactiveEngines(componentsToRemove []string) er
 	var allEngines []engines.Manifest
 	allEngines, err = engines.LoadManifests(cmd.EnginesDir)
 	if err != nil {
-		return fmt.Errorf("error scoring engines: %v", err)
+		return fmt.Errorf("failed to load manifests: %w", err)
 	}
 
 	for _, engine := range allEngines {
@@ -183,10 +183,26 @@ func (cmd *pruneCommand) printComponentsAndConfirm(componentsWithEngines map[str
 
 	componentSizes, err := snap_store.ComponentSizes()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: unable to get component sizes: %v\n", err)
+		fmt.Printf("Warning: unable to get component sizes: %v\n", err)
 	}
 
-	enginesSet := make(map[string]struct{})
+	enginesManifests, err := engines.LoadManifests(cmd.EnginesDir)
+	if err != nil {
+		fmt.Printf("failed to load manifests: %v\n", err)
+		return false
+	}
+	var engineList []string
+	activeEngine, err := cmd.Cache.GetActiveEngine()
+	if err != nil {
+		return false
+	}
+	for _, manifest := range enginesManifests {
+		if manifest.Name == activeEngine {
+			continue
+		}
+		engineList = append(engineList, manifest.Name)
+	}
+
 	for componentName, engineNames := range componentsWithEngines {
 		componentLine := componentName
 		if size, ok := componentSizes[componentName]; ok {
@@ -199,16 +215,13 @@ func (cmd *pruneCommand) printComponentsAndConfirm(componentsWithEngines map[str
 		}
 
 		fmt.Printf("- %s [%s]\n", componentLine, strings.Join(engineNames, ", "))
-		for _, engineName := range engineNames {
-			enginesSet[engineName] = struct{}{}
-		}
 	}
 
 	var confirmationPromptSentence string
 	if isSingleEngine {
 		confirmationPromptSentence = fmt.Sprintf("Continue pruning %q engine?", cmd.engine)
 	} else {
-		confirmationPromptSentence = fmt.Sprintf("Continue pruning %q engines?", strings.Join(slices.Collect(maps.Keys(enginesSet)), ", "))
+		confirmationPromptSentence = fmt.Sprintf("Continue pruning [%v] engines?", strings.Join(engineList, ", "))
 	}
 
 	if term.IsTerminal(int(os.Stdin.Fd())) {
