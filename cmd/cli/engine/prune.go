@@ -52,7 +52,13 @@ func (cmd *pruneCommand) run(_ *cobra.Command, _ []string) error {
 	}
 	activeEngineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngine)
 	if err != nil {
-		return err
+		if errors.Is(err, engines.ErrManifestNotFound) {
+			if cmd.Verbose {
+				fmt.Println(err)
+			}
+			return fmt.Errorf("%q not found", cmd.engine)
+		}
+		return fmt.Errorf("error loading engine manifest: %v", err)
 	}
 
 	var componentsWithEnginesToRemove map[string][]string
