@@ -11,6 +11,6 @@ devices:
 memory: 1G
 disk-space: 2G
 components:
-  - example-memory-component
-  - cpu-devel-component
-  - cuda-component
+  - example-memory
+  - cpu-devel
+  - cuda

@@ -1,8 +1,11 @@
 package engine
 
 import (
+	"errors"
 	"fmt"
+	"maps"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/canonical/go-snapctl"
@@ -64,7 +67,7 @@ func (cmd *pruneCommand) run(_ *cobra.Command, _ []string) error {
 		if !cmd.printComponentsAndConfirm(componentsWithEnginesToRemove, false) {
 			return nil
 		}
-		return cmd.pruneAllInactiveEngines(mapKeys(componentsWithEnginesToRemove))
+		return cmd.pruneAllInactiveEngines(slices.Collect(maps.Keys(componentsWithEnginesToRemove)))
 
 	case cmd.engine == activeEngine:
 		return fmt.Errorf("cannot prune the active engine '%s'", activeEngine)
@@ -72,43 +75,52 @@ func (cmd *pruneCommand) run(_ *cobra.Command, _ []string) error {
 	default:
 		engineManifest, err := engines.LoadManifest(cmd.EnginesDir, cmd.engine)
 		if err != nil {
-			return err
+			if errors.Is(err, engines.ErrManifestNotFound) {
+				if cmd.Verbose {
+					fmt.Println(err)
+				}
+				return fmt.Errorf("%q not found", cmd.engine)
+			}
+			return fmt.Errorf("error loading engine manifest: %v", err)
 		}
 
-		componentsWithEnginesToRemove = cmd.calculateRemovableComponents([]engines.Manifest{*engineManifest}, *activeEngineManifest)
+		componentsWithEnginesToRemove, err = cmd.calculateRemovableComponents([]engines.Manifest{*engineManifest}, *activeEngineManifest)
+		if err != nil {
+			return err
+		}
 		if !cmd.printComponentsAndConfirm(componentsWithEnginesToRemove, true) {
 			return nil
 		}
-		componentsToRemove = mapKeys(componentsWithEnginesToRemove)
+		componentsToRemove = slices.Collect(maps.Keys(componentsWithEnginesToRemove))
 		return cmd.pruneEngine(componentsToRemove, *engineManifest)
 	}
 }
 
-func (cmd *pruneCommand) calculateRemovableComponents(enginesToCheck []engines.Manifest, activeEngineManifest engines.Manifest) map[string][]string {
+func (cmd *pruneCommand) calculateRemovableComponents(enginesToCheck []engines.Manifest, activeEngineManifest engines.Manifest) (map[string][]string, error) {
 	componentsEnginesMap := make(map[string][]string)
 
-	activeSet := make(map[string]struct{}, len(activeEngineManifest.Components))
+	activeSet := make(map[string]bool, len(activeEngineManifest.Components))
 	for _, c := range activeEngineManifest.Components {
-		activeSet[c] = struct{}{}
+		activeSet[c] = true
 	}
-
-	uc := &useCommand{Context: cmd.Context}
-
 	for _, eng := range enginesToCheck {
 		if eng.Name == activeEngineManifest.Name {
 			continue
 		}
-
 		for _, component := range eng.Components {
-			if _, usedByActive := activeSet[component]; usedByActive {
+			if activeSet[component] {
 				continue
 			}
-			if installed, err := uc.componentInstalled(component); err == nil && installed {
+			installed, err := componentInstalled(component)
+			if err != nil {
+				return nil, err
+			}
+			if installed {
 				componentsEnginesMap[component] = append(componentsEnginesMap[component], eng.Name)
 			}
 		}
 	}
-	return componentsEnginesMap
+	return componentsEnginesMap, nil
 }
 
 func (cmd *pruneCommand) getAllComponentsToRemove(activeEngineManifest engines.Manifest) (map[string][]string, error) {
@@ -116,18 +128,17 @@ func (cmd *pruneCommand) getAllComponentsToRemove(activeEngineManifest engines.M
 	if err != nil {
 		return nil, fmt.Errorf("failed to load manifests: %w", err)
 	}
-	return cmd.calculateRemovableComponents(enginesToCheck, activeEngineManifest), nil
+	return cmd.calculateRemovableComponents(enginesToCheck, activeEngineManifest)
 }
 
 func (cmd *pruneCommand) pruneEngine(componentsToRemove []string, engine engines.Manifest) error {
-	uc := &useCommand{Context: cmd.Context}
-	if err := uc.unsetEngineConfig(engine.Name); err != nil {
+	if err := unsetEngineConfig(engine.Name, cmd.Context); err != nil {
 		return err
 	}
 
 	installed := make([]string, 0, len(componentsToRemove))
 	for _, component := range componentsToRemove {
-		if ok, err := uc.componentInstalled(component); err == nil && ok {
+		if ok, err := componentInstalled(component); err == nil && ok {
 			installed = append(installed, component)
 		}
 	}
@@ -198,7 +209,7 @@ func (cmd *pruneCommand) printComponentsAndConfirm(componentsWithEngines map[str
 	if isSingleEngine {
 		confirmationPromptSentence = fmt.Sprintf("Continue pruning %v engine?", cmd.engine)
 	} else {
-		confirmationPromptSentence = fmt.Sprintf("Continue pruning %v engines?", mapKeysFromSet(enginesSet))
+		confirmationPromptSentence = fmt.Sprintf("Continue pruning %v engines?", slices.Collect(maps.Keys(enginesSet)))
 	}
 
 	if term.IsTerminal(int(os.Stdin.Fd())) {
@@ -210,20 +221,4 @@ func (cmd *pruneCommand) printComponentsAndConfirm(componentsWithEngines map[str
 	}
 
 	return true
-}
-
-func mapKeys(m map[string][]string) []string {
-	out := make([]string, 0, len(m))
-	for k := range m {
-		out = append(out, k)
-	}
-	return out
-}
-
-func mapKeysFromSet(m map[string]struct{}) []string {
-	out := make([]string, 0, len(m))
-	for k := range m {
-		out = append(out, k)
-	}
-	return out
 }
