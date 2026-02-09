@@ -51,7 +51,10 @@ func TestPrune(t *testing.T) {
 		t.Fatalf("error loading active engine manifest: %v", err)
 	}
 
-	removableComponents := cmd.calculateRemovableComponents(allEngines, *activeEngineManifest)
+	removableComponents, err := cmd.calculateRemovableComponents(allEngines, *activeEngineManifest)
+	if err != nil {
+		t.Fatalf("error calculating removable components: %v", err)
+	}
 	for component, engines := range removableComponents {
 		t.Logf("Component '%s' has removable engines: %v", component, engines)
 	}
