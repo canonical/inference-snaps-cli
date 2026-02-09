@@ -70,7 +70,7 @@ func (cmd *pruneCommand) run(_ *cobra.Command, _ []string) error {
 		return cmd.pruneAllInactiveEngines(slices.Collect(maps.Keys(componentsWithEnginesToRemove)))
 
 	case cmd.engine == activeEngine:
-		return fmt.Errorf("cannot prune the active engine '%s'", activeEngine)
+		return fmt.Errorf("cannot prune the active engine %q", activeEngine)
 
 	default:
 		engineManifest, err := engines.LoadManifest(cmd.EnginesDir, cmd.engine)
@@ -177,10 +177,9 @@ func (cmd *pruneCommand) pruneAllInactiveEngines(componentsToRemove []string) er
 func (cmd *pruneCommand) printComponentsAndConfirm(componentsWithEngines map[string][]string, isSingleEngine bool) bool {
 	if len(componentsWithEngines) == 0 {
 		fmt.Println("No components to remove.")
-		return false
+	} else {
+		fmt.Println("Removing components:")
 	}
-
-	fmt.Println("Removing components:")
 
 	componentSizes, err := snap_store.ComponentSizes()
 	if err != nil {
@@ -207,15 +206,14 @@ func (cmd *pruneCommand) printComponentsAndConfirm(componentsWithEngines map[str
 
 	var confirmationPromptSentence string
 	if isSingleEngine {
-		confirmationPromptSentence = fmt.Sprintf("Continue pruning %v engine?", cmd.engine)
+		confirmationPromptSentence = fmt.Sprintf("Continue pruning %q engine?", cmd.engine)
 	} else {
-		confirmationPromptSentence = fmt.Sprintf("Continue pruning %v engines?", slices.Collect(maps.Keys(enginesSet)))
+		confirmationPromptSentence = fmt.Sprintf("Continue pruning %q engines?", strings.Join(slices.Collect(maps.Keys(enginesSet)), ", "))
 	}
 
 	if term.IsTerminal(int(os.Stdin.Fd())) {
 		fmt.Println()
 		if !common.ConfirmationPrompt(confirmationPromptSentence) {
-			fmt.Println("Exiting. No changes applied.")
 			return false
 		}
 	}
