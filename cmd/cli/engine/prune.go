@@ -70,7 +70,9 @@ func (cmd *pruneCommand) run(_ *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		if !cmd.printComponentsAndConfirm(componentsWithEnginesToRemove, false) {
+		if confirmed, err := cmd.printComponentsAndConfirm(componentsWithEnginesToRemove, false); err != nil {
+			return err
+		} else if !confirmed {
 			return nil
 		}
 		return cmd.pruneAllInactiveEngines(slices.Collect(maps.Keys(componentsWithEnginesToRemove)))
@@ -94,7 +96,9 @@ func (cmd *pruneCommand) run(_ *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		if !cmd.printComponentsAndConfirm(componentsWithEnginesToRemove, true) {
+		if confirmed, err := cmd.printComponentsAndConfirm(componentsWithEnginesToRemove, true); err != nil {
+			return err
+		} else if !confirmed {
 			return nil
 		}
 		componentsToRemove = slices.Collect(maps.Keys(componentsWithEnginesToRemove))
@@ -180,47 +184,36 @@ func (cmd *pruneCommand) pruneAllInactiveEngines(componentsToRemove []string) er
 	return nil
 }
 
-func (cmd *pruneCommand) printComponentsAndConfirm(componentsWithEngines map[string][]string, isSingleEngine bool) bool {
+func (cmd *pruneCommand) printComponentsAndConfirm(componentsWithEngines map[string][]string, isSingleEngine bool) (bool, error) {
 	if len(componentsWithEngines) == 0 {
 		fmt.Println("No components to remove.")
 	} else {
 		fmt.Println("Removing components:")
-	}
 
-	componentSizes, err := snap_store.ComponentSizes()
-	if err != nil {
-		fmt.Printf("Warning: unable to get component sizes: %v\n", err)
-	}
-
-	enginesManifests, err := engines.LoadManifests(cmd.EnginesDir)
-	if err != nil {
-		fmt.Printf("failed to load manifests: %v\n", err)
-		return false
-	}
-	var engineList []string
-	activeEngine, err := cmd.Cache.GetActiveEngine()
-	if err != nil {
-		return false
-	}
-	for _, manifest := range enginesManifests {
-		if manifest.Name == activeEngine {
-			continue
-		}
-		engineList = append(engineList, manifest.Name)
-	}
-
-	for componentName, engineNames := range componentsWithEngines {
-		componentLine := componentName
-		if size, ok := componentSizes[componentName]; ok {
-			componentLine += fmt.Sprintf(" (%s)", utils.FmtBytes(uint64(size)))
+		componentSizes, err := snap_store.ComponentSizes()
+		if err != nil {
+			fmt.Printf("Warning: unable to get component sizes: %v\n", err)
 		}
 
-		if isSingleEngine {
-			fmt.Printf("- %s\n", componentLine)
-			continue
+		for componentName, engineNames := range componentsWithEngines {
+			componentLine := componentName
+			if size, ok := componentSizes[componentName]; ok {
+				componentLine += fmt.Sprintf(" (%s)", utils.FmtBytes(uint64(size)))
+			}
+
+			if isSingleEngine {
+				fmt.Printf("- %s\n", componentLine)
+				continue
+			}
+
+			fmt.Printf("- %s [%s]\n", componentLine, strings.Join(engineNames, ", "))
 		}
 
-		fmt.Printf("- %s [%s]\n", componentLine, strings.Join(engineNames, ", "))
+	}
+
+	engineList, err := cmd.inactiveEngines()
+	if err != nil {
+		return false, fmt.Errorf("unable to get list of inactive engines: %v", err)
 	}
 
 	var confirmationPromptSentence string
@@ -233,9 +226,31 @@ func (cmd *pruneCommand) printComponentsAndConfirm(componentsWithEngines map[str
 	if term.IsTerminal(int(os.Stdin.Fd())) {
 		fmt.Println()
 		if !common.ConfirmationPrompt(confirmationPromptSentence) {
-			return false
+			return false, nil
 		}
 	}
 
-	return true
+	return true, nil
+}
+
+func (cmd *pruneCommand) inactiveEngines() ([]string, error) {
+	enginesManifests, err := engines.LoadManifests(cmd.EnginesDir)
+	if err != nil {
+		return nil, err
+	}
+
+	var engineList []string
+	activeEngine, err := cmd.Cache.GetActiveEngine()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, manifest := range enginesManifests {
+		if manifest.Name == activeEngine {
+			continue
+		}
+		engineList = append(engineList, manifest.Name)
+	}
+
+	return engineList, nil
 }
