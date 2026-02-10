@@ -13,6 +13,5 @@ devices:
 memory: 35G
 disk-space: 29G
 components:
-  - example-memory
-  - model-q4-k-m-gguf
+  - dummy-component-3
 
