@@ -9,10 +9,11 @@ import (
 	"github.com/canonical/go-snapctl/env"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/basic"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
-	"github.com/canonical/inference-snaps-cli/cmd/cli/config"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/engine"
+	"github.com/canonical/inference-snaps-cli/cmd/cli/get"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/others"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/others/debug"
+	"github.com/canonical/inference-snaps-cli/cmd/cli/set"
 	"github.com/canonical/inference-snaps-cli/pkg/storage"
 	"github.com/spf13/cobra"
 )
@@ -65,10 +66,11 @@ func main() {
 		basic.ChatCommand(ctx),
 	)
 
-	rootCmd.AddGroup(config.Group("Configuration Commands:"))
-	rootCmd.AddCommand(
-		config.GetCommand(ctx),
-		config.SetCommand(ctx),
+	addCommands(rootCmd,
+		"config",
+		"Configuration Commands:",
+		get.Command(ctx),
+		set.Command(ctx),
 	)
 
 	rootCmd.AddGroup(engine.Group("Management Commands:"))
@@ -105,4 +107,16 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 		return os.Setenv("VERBOSE", "true")
 	}
 	return nil
+}
+
+func addCommands(rootCmd *cobra.Command, groupID, groupTitle string, commands ...*cobra.Command) {
+	group := &cobra.Group{
+		ID:    groupID,
+		Title: groupTitle,
+	}
+	rootCmd.AddGroup(group)
+	for _, cmd := range commands {
+		cmd.GroupID = groupID
+		rootCmd.AddCommand(cmd)
+	}
 }

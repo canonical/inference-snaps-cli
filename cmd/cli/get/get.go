@@ -1,4 +1,4 @@
-package config
+package get
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 )
 
 // Deprecated configurations from the user
-var deprecatedConfig = []string{
+var DeprecatedConfig = []string{
 	"model",
 	"model-name",
 	"multimodel-projector",
@@ -21,19 +21,18 @@ var deprecatedConfig = []string{
 	"http.base-path",
 }
 
-type getCommand struct {
+type command struct {
 	*common.Context
 }
 
-func GetCommand(ctx *common.Context) *cobra.Command {
-	var cmd getCommand
+func Command(ctx *common.Context) *cobra.Command {
+	var cmd command
 	cmd.Context = ctx
 
 	cobraCmd := &cobra.Command{
 		Use:               "get [<key>]",
 		Short:             "Print configurations",
 		Long:              "Print one or more configurations",
-		GroupID:           groupID,
 		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: cobra.NoFileCompletions,
 		RunE:              cmd.run,
@@ -42,7 +41,7 @@ func GetCommand(ctx *common.Context) *cobra.Command {
 	return cobraCmd
 }
 
-func (cmd *getCommand) run(_ *cobra.Command, args []string) error {
+func (cmd *command) run(_ *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return cmd.getValues()
 	} else {
@@ -50,7 +49,7 @@ func (cmd *getCommand) run(_ *cobra.Command, args []string) error {
 	}
 }
 
-func (cmd *getCommand) getValue(key string) error {
+func (cmd *command) getValue(key string) error {
 	value, err := cmd.Config.Get(key)
 	if err != nil {
 		return fmt.Errorf("error getting value of %q: %v", key, err)
@@ -72,14 +71,14 @@ func (cmd *getCommand) getValue(key string) error {
 	}
 
 	// Warn the user about deprecated fields. These are still consumed by the engines.
-	if slices.Contains(deprecatedConfig, key) && utils.IsTerminalOutput() {
+	if slices.Contains(DeprecatedConfig, key) && utils.IsTerminalOutput() {
 		fmt.Fprintf(os.Stderr, "Note: %q configuration field is deprecated!\n", key)
 	}
 
 	return nil
 }
 
-func (cmd *getCommand) getValues() error {
+func (cmd *command) getValues() error {
 	values, err := cmd.Config.GetAll()
 	if err != nil {
 		return fmt.Errorf("error getting values: %v", err)
@@ -87,7 +86,7 @@ func (cmd *getCommand) getValues() error {
 
 	// Drop deprecated configurations. The user doesn't need to see them.
 	for k := range values {
-		if slices.Contains(deprecatedConfig, k) {
+		if slices.Contains(DeprecatedConfig, k) {
 			delete(values, k)
 		}
 	}
