@@ -82,6 +82,69 @@ parts:
       fi # End of intel-opencl driver installation
       
       craftctl default
+  cpu-devel:
+    plugin: nil
+    override-prime: |
+      set -eux # reduce noise
+
+      target="CRAFT_COMPONENT_CPU_DEVEL_PRIME"
+
+      echo "# No config" > "${!target}/component.yaml"
+      dd if=/dev/zero of=empty_test.file bs=1M count=10
+  cuda:
+    plugin: nil
+    override-prime: |
+      set +x # reduce noise
+
+      target="CRAFT_COMPONENT_CUDA_PRIME"
+
+      echo "# No config" > "${!target}/component.yaml"
+      dd if=/dev/zero of=empty_test.file bs=1M count=11
+  example-memory:
+    plugin: nil
+    override-prime: |
+      set +x # reduce noise
+
+      target="CRAFT_COMPONENT_EXAMPLE_MEMORY_PRIME"
+
+      echo "# No config" > "${!target}/component.yaml"
+      dd if=/dev/zero of=empty_test.file bs=1M count=12
+  llamaaio:
+    plugin: nil
+    override-prime: |
+      set +x # reduce noise
+
+      target="CRAFT_COMPONENT_LLAMAAIO_PRIME"
+
+      echo "# No config" > "${!target}/component.yaml"
+      dd if=/dev/zero of=empty_test.file bs=1M count=13
+  llamacpp:
+    plugin: nil
+    override-prime: |
+      set +x # reduce noise
+
+      target="CRAFT_COMPONENT_LLAMACPP_PRIME"
+
+      echo "# No config" > "${!target}/component.yaml"
+      dd if=/dev/zero of=empty_test.file bs=1M count=14
+  model-distill-qwen-1-5b-q8-0-gguf:
+    plugin: nil
+    override-prime: |
+      set +x # reduce noise
+
+      target="CRAFT_COMPONENT_MODEL_DISTILL_QWEN_1_5B_Q8_0_GGUF_PRIME"
+
+      echo "# No config" > "${!target}/component.yaml"
+      dd if=/dev/zero of=empty_test.file bs=1M count=15
+  model-q4-k-m-gguf:
+    plugin: nil
+    override-prime: |
+      set +x # reduce noise
+
+      target="CRAFT_COMPONENT_MODEL_Q4_K_M_GGUF_PRIME"
+
+      echo "# No config" > "${!target}/component.yaml"
+      dd if=/dev/zero of=empty_test.file bs=1M count=160
 
   # To use `version: git` in this file, we require git as a build dependency.
   # This is fixed but not published yet. See https://github.com/canonical/snapcraft/issues/4944
@@ -102,7 +165,24 @@ parts:
     source: test_data/engines
     organize:
       "*": engines/
-
+components:
+  cpu-devel: &test-component
+    type: standard
+    summary: Just a test component
+    description: Component for testing purposes
+  cuda:
+    <<: *test-component
+  example-memory:
+    <<: *test-component
+  llamaaio:
+    <<: *test-component
+  llamacpp:
+    <<: *test-component
+  model-distill-qwen-1-5b-q8-0-gguf:
+    <<: *test-component
+  model-q4-k-m-gguf:
+    <<: *test-component
+      
 apps:
   stack-utils:
     plugs:
