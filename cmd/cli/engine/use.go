@@ -202,7 +202,7 @@ func (cmd *useCommand) switchEngine(engineName string) error {
 
 	// Unset active engine's configurations
 	if activeEngineName != "" {
-		err = unsetEngineConfig(activeEngineName, cmd.Context)
+		err = common.UnsetEngineConfig(activeEngineName, cmd.Context)
 		if err != nil {
 			return fmt.Errorf("error un-setting engine configurations: %v", err)
 		}
@@ -254,7 +254,7 @@ func (cmd *useCommand) setEngineConfig(engine *engines.Manifest) error {
 func (cmd *useCommand) missingComponents(components []string) ([]string, error) {
 	var missing []string
 	for _, component := range components {
-		isInstalled, err := componentInstalled(component)
+		isInstalled, err := common.ComponentInstalled(component)
 		if err != nil {
 			return missing, err
 		}

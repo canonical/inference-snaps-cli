@@ -1,4 +1,4 @@
-package engine
+package others
 
 import (
 	"errors"
@@ -29,14 +29,13 @@ func PruneCommand(ctx *common.Context) *cobra.Command {
 	cmd.Context = ctx
 
 	cobraCmd := &cobra.Command{
-		Use:     "prune-cache",
-		Short:   "Remove cached data for engines that are no longer in use",
-		GroupID: groupID,
-		RunE:    cmd.run,
+		Use:   "prune-cache",
+		Short: "Remove cached data",
+		RunE:  cmd.run,
 	}
 
 	// flags
-	cobraCmd.Flags().StringVar(&cmd.engine, "engine", "", "Remove cache for the specified engine")
+	cobraCmd.Flags().StringVar(&cmd.engine, "engine", "", "Remove caches of an engine")
 
 	return cobraCmd
 }
@@ -121,7 +120,7 @@ func (cmd *pruneCommand) calculateRemovableComponents(enginesToCheck []engines.M
 			if activeSet[component] {
 				continue
 			}
-			installed, err := componentInstalled(component)
+			installed, err := common.ComponentInstalled(component)
 			if err != nil {
 				return nil, err
 			}
@@ -142,13 +141,13 @@ func (cmd *pruneCommand) getAllComponentsToRemove(activeEngineManifest engines.M
 }
 
 func (cmd *pruneCommand) pruneEngine(componentsToRemove []string, engine engines.Manifest) error {
-	if err := unsetEngineConfig(engine.Name, cmd.Context); err != nil {
+	if err := common.UnsetEngineConfig(engine.Name, cmd.Context); err != nil {
 		return err
 	}
 
 	installed := make([]string, 0, len(componentsToRemove))
 	for _, component := range componentsToRemove {
-		if ok, err := componentInstalled(component); err == nil && ok {
+		if ok, err := common.ComponentInstalled(component); err == nil && ok {
 			installed = append(installed, component)
 		}
 	}
