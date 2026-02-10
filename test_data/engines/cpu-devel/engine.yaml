@@ -10,3 +10,7 @@ devices:
       architecture: arm64
 memory: 1G
 disk-space: 2G
+components:
+  - example-memory
+  - cpu-devel
+  - cuda
