@@ -16,6 +16,6 @@ devices:
 memory: 2G
 disk-space: 5G
 components:
-  - example-memory
-  - cuda
+  - dummy-component-1
+  - dummy-component-2
 
