@@ -53,9 +53,7 @@ func main() {
 			rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 				helpFunc(cmd, args)
 				if cmd == rootCmd {
-					fmt.Fprintln(cmd.OutOrStdout(), "")
-					fmt.Fprintln(cmd.OutOrStdout(), common.SuggestServiceManagement())
-					fmt.Fprintln(cmd.OutOrStdout(), "")
+					fmt.Printf("\n%s\n", common.SuggestServiceManagement())
 				}
 			})
 		}
