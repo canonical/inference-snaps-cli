@@ -42,7 +42,7 @@ func main() {
 		Use:               instanceName,
 	}
 
-	// Add custom text after the help message - only show service management if snap has services
+	// Add custom text after the help message - only show service management for top-level help
 	if env.Snap() != "" {
 		services, err := snapctl.Services().Run()
 		if err != nil {
@@ -50,7 +50,13 @@ func main() {
 			return
 		}
 		if len(services) > 0 {
-			rootCmd.SetUsageTemplate(rootCmd.UsageTemplate() + "\n" + common.SuggestServiceManagement() + "\n")
+			helpFunc := rootCmd.HelpFunc()
+			rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+				helpFunc(cmd, args)
+				if cmd == rootCmd {
+					fmt.Printf("\n%s\n", common.SuggestServiceManagement())
+				}
+			})
 		}
 	}
 
@@ -83,6 +89,7 @@ func main() {
 	// other commands (help is added by default)
 	rootCmd.AddCommand(
 		others.ShowMachineCommand(ctx),
+		others.PruneCommand(ctx),
 		others.RunCommand(ctx),
 		debug.DebugCommand(ctx),
 	)
