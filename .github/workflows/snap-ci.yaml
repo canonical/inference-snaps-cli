@@ -27,7 +27,6 @@ jobs:
         run: go test -v ./...
 
   build:
-    name: Build
     needs: [ test ]
     strategy:
       matrix:
@@ -45,9 +44,9 @@ jobs:
         id: snapcraft
 
       # Upload snap with components
-      # Replicated from https://github.com/canonical/inference-snaps-dev/blob/f744b98984a29c377b61d3f7141df79cbad1f67d/.github/workflows/build-publish-snap.yaml#L54-L86
+      # Adapted from https://github.com/canonical/inference-snaps-dev/blob/f744b98984a29c377b61d3f7141df79cbad1f67d/.github/workflows/build-publish-snap.yaml#L54-L86
       - name: Publish snap
-        # if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.STORE_LOGIN }}  
           CHANNEL: latest/edge
