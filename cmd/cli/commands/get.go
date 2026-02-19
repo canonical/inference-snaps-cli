@@ -12,7 +12,7 @@ import (
 )
 
 // Deprecated configurations from the user
-var DeprecatedConfig = []string{
+var deprecatedConfig = []string{
 	"model",
 	"model-name",
 	"multimodel-projector",
@@ -71,7 +71,7 @@ func (cmd *getCommand) getValue(key string) error {
 	}
 
 	// Warn the user about deprecated fields. These are still consumed by the engines.
-	if slices.Contains(DeprecatedConfig, key) && utils.IsTerminalOutput() {
+	if slices.Contains(deprecatedConfig, key) && utils.IsTerminalOutput() {
 		fmt.Fprintf(os.Stderr, "Note: %q configuration field is deprecated!\n", key)
 	}
 
@@ -86,7 +86,7 @@ func (cmd *getCommand) getValues() error {
 
 	// Drop deprecated configurations. The user doesn't need to see them.
 	for k := range values {
-		if slices.Contains(DeprecatedConfig, k) {
+		if slices.Contains(deprecatedConfig, k) {
 			delete(values, k)
 		}
 	}
