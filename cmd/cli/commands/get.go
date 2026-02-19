@@ -1,4 +1,4 @@
-package get
+package commands
 
 import (
 	"fmt"
@@ -21,12 +21,12 @@ var DeprecatedConfig = []string{
 	"http.base-path",
 }
 
-type command struct {
+type getCommand struct {
 	*common.Context
 }
 
-func Command(ctx *common.Context) *cobra.Command {
-	var cmd command
+func Get(ctx *common.Context) *cobra.Command {
+	var cmd getCommand
 	cmd.Context = ctx
 
 	cobraCmd := &cobra.Command{
@@ -41,7 +41,7 @@ func Command(ctx *common.Context) *cobra.Command {
 	return cobraCmd
 }
 
-func (cmd *command) run(_ *cobra.Command, args []string) error {
+func (cmd *getCommand) run(_ *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return cmd.getValues()
 	} else {
@@ -49,7 +49,7 @@ func (cmd *command) run(_ *cobra.Command, args []string) error {
 	}
 }
 
-func (cmd *command) getValue(key string) error {
+func (cmd *getCommand) getValue(key string) error {
 	value, err := cmd.Config.Get(key)
 	if err != nil {
 		return fmt.Errorf("error getting value of %q: %v", key, err)
@@ -78,7 +78,7 @@ func (cmd *command) getValue(key string) error {
 	return nil
 }
 
-func (cmd *command) getValues() error {
+func (cmd *getCommand) getValues() error {
 	values, err := cmd.Config.GetAll()
 	if err != nil {
 		return fmt.Errorf("error getting values: %v", err)

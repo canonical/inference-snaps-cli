@@ -1,4 +1,4 @@
-package set
+package commands
 
 import (
 	"fmt"
@@ -6,13 +6,12 @@ import (
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
-	"github.com/canonical/inference-snaps-cli/cmd/cli/get"
 	"github.com/canonical/inference-snaps-cli/pkg/storage"
 	"github.com/canonical/inference-snaps-cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
-type command struct {
+type setCommand struct {
 	*common.Context
 
 	// flags
@@ -20,8 +19,8 @@ type command struct {
 	engineConfig  bool
 }
 
-func Command(ctx *common.Context) *cobra.Command {
-	var cmd command
+func Set(ctx *common.Context) *cobra.Command {
+	var cmd setCommand
 	cmd.Context = ctx
 
 	cobraCmd := &cobra.Command{
@@ -48,14 +47,14 @@ func Command(ctx *common.Context) *cobra.Command {
 	return cobraCmd
 }
 
-func (cmd *command) run(_ *cobra.Command, args []string) error {
+func (cmd *setCommand) run(_ *cobra.Command, args []string) error {
 	if !utils.IsRootUser() {
 		return common.ErrPermissionDenied
 	}
 	return cmd.setValue(args[0])
 }
 
-func (cmd *command) setValue(keyValue string) error {
+func (cmd *setCommand) setValue(keyValue string) error {
 	if keyValue[0] == '=' {
 		return fmt.Errorf("key must not start with an equal sign")
 	}
@@ -74,7 +73,7 @@ func (cmd *command) setValue(keyValue string) error {
 		err = cmd.Config.Set(key, value, storage.EngineConfig)
 	} else {
 		// Reject use of internal keys by the user
-		if slices.Contains(get.DeprecatedConfig, key) {
+		if slices.Contains(DeprecatedConfig, key) {
 			return fmt.Errorf("%q is read-only", key)
 		}
 		err = cmd.Config.Set(key, value, storage.UserConfig)
