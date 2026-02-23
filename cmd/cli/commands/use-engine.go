@@ -155,18 +155,13 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 		}
 
 		// Format list of components, adding size if it is known
-		var componentList []string
+		fmt.Println("Need to install the following components:")
 		for _, componentName := range missingComponents {
 			line := fmt.Sprintf("- %s", componentName)
 			if size, ok := componentSizes[componentName]; ok {
 				line += fmt.Sprintf(" (%s)", utils.FmtBytes(uint64(size)))
 			}
-			componentList = append(componentList, line)
-		}
-
-		fmt.Println("Need to install the following components:")
-		for _, component := range componentList {
-			fmt.Println(component)
+			fmt.Println(line)
 		}
 
 		// Only ask for confirmation of download if it is an interactive terminal
@@ -207,7 +202,7 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 		}
 	}
 
-	if len(components) > 0 {
+	if len(missingComponents) > 0 {
 		// Leave a blank line if components were installed, before continuing
 		fmt.Println()
 	}
