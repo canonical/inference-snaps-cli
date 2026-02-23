@@ -142,11 +142,11 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 		return fmt.Errorf("error loading engine manifest: %v", err)
 	}
 
-	components, err := cmd.missingComponents(engine.Components)
+	missingComponents, err := cmd.missingComponents(engine.Components)
 	if err != nil {
 		return fmt.Errorf("error checking installed components: %v", err)
 	}
-	if len(components) > 0 {
+	if len(missingComponents) > 0 {
 		// Look up component sizes from the snap store
 		componentSizes, err := snap_store.ComponentSizes()
 		if err != nil {
@@ -156,7 +156,7 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 
 		// Format list of components, adding size if it is known
 		var componentList []string
-		for _, componentName := range components {
+		for _, componentName := range missingComponents {
 			line := fmt.Sprintf("- %s", componentName)
 			if size, ok := componentSizes[componentName]; ok {
 				line += fmt.Sprintf(" (%s)", utils.FmtBytes(uint64(size)))
@@ -183,7 +183,7 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 
 		// This is blocking, but there is a timeout bug:
 		// https://github.com/canonical/inference-snaps-cli/issues/122
-		err = cmd.installComponents(engine.Components)
+		err = cmd.installComponents(missingComponents)
 		if err != nil {
 			return fmt.Errorf("error installing components: %v", err)
 		}
