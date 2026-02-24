@@ -73,7 +73,7 @@ func (c *chatClient) Start() error {
 		HistorySearchFold: true,
 		FuncFilterInputRune: func(r rune) (rune, bool) {
 			switch r {
-			// Block Ctrl+Z (undo)
+			// Block Ctrl+Z (suspend process)
 			case readline.CharCtrlZ:
 				return r, false
 			}
