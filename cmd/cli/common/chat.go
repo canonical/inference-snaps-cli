@@ -60,8 +60,8 @@ func (c *chatClient) Start() error {
 		fmt.Printf("Using model %v\n", c.modelName)
 	}
 
-	// Check if server is ready to accept chat completions requests
-	if err := c.checkServer(); err != nil {
+	// Check if server is ready to accept chat completion requests
+	if err := c.checkServerReady(); err != nil {
 		return err
 	}
 
@@ -147,7 +147,7 @@ func (c *chatClient) handshake() error {
 	return nil
 }
 
-func (c *chatClient) checkServer() error {
+func (c *chatClient) checkServerReady() error {
 	params := openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.SystemMessage("Are you up?"),
