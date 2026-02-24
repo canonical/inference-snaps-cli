@@ -68,14 +68,13 @@ func (c *chatClient) Start() error {
 	fmt.Println("Type your prompt, then ENTER to submit. CTRL-C to quit.")
 
 	rl, err := readline.NewEx(&readline.Config{
-		Prompt: color.RedString("» "),
-		//HistoryFile:     "/tmp/readline.tmp",
-		//AutoComplete:    completer,
-		InterruptPrompt: "^C",
-		//EOFPrompt:       "exit", // Does not work as expected
-
-		HistorySearchFold:   true,
-		FuncFilterInputRune: c.filterInput,
+		Prompt:            color.RedString("» "),
+		InterruptPrompt:   "^C",
+		HistorySearchFold: true,
+		// Block Ctrl+Z (undo)
+		FuncFilterInputRune: func(r rune) (rune, bool) {
+			return r, (r != readline.CharCtrlZ)
+		},
 	})
 	if err != nil {
 		return fmt.Errorf("error initializing readline: %v", err)
@@ -341,13 +340,4 @@ func (c *chatClient) processStream(stream *ssestream.Stream[openai.ChatCompletio
 		return nil, nil
 	}
 	return &appendParam, nil
-}
-
-func (c *chatClient) filterInput(r rune) (rune, bool) {
-	switch r {
-	// block CtrlZ feature
-	case readline.CharCtrlZ:
-		return r, false
-	}
-	return r, true
 }
