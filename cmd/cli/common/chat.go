@@ -71,9 +71,13 @@ func (c *chatClient) Start() error {
 		Prompt:            color.RedString("» "),
 		InterruptPrompt:   "^C",
 		HistorySearchFold: true,
-		// Block Ctrl+Z (undo)
 		FuncFilterInputRune: func(r rune) (rune, bool) {
-			return r, (r != readline.CharCtrlZ)
+			switch r {
+			// Block Ctrl+Z (undo)
+			case readline.CharCtrlZ:
+				return r, false
+			}
+			return r, true
 		},
 	})
 	if err != nil {
