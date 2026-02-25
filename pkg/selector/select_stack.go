@@ -85,8 +85,8 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, []
 		availableMemory := hardwareInfo.Memory.TotalRam + hardwareInfo.Memory.TotalSwap
 		if availableMemory < requiredMemory {
 			compatible = false
-			reasons = append(reasons, "host system memory too small")
-
+			errorMessage := fmt.Sprintf("host system memory too small (required %s, available %s)", utils.FmtBytes(requiredMemory), utils.FmtBytes(availableMemory))
+			reasons = append(reasons, errorMessage)
 		} else {
 			engineScore++
 		}
@@ -107,8 +107,8 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, []
 		availableDiskSpace := hardwareInfo.Disk[constants.SnapStoragePath].Avail
 		if availableDiskSpace < requiredDisk {
 			compatible = false
-			reasons = append(reasons, "host system disk space too small")
-
+			errorMessage := fmt.Sprintf("host system disk space too small (required %s, available %s)", utils.FmtBytes(requiredDisk), utils.FmtBytes(availableDiskSpace))
+			reasons = append(reasons, errorMessage)
 		} else {
 			engineScore++
 		}
