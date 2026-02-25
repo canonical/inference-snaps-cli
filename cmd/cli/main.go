@@ -63,6 +63,7 @@ func main() {
 	cobra.EnableCommandSorting = false
 
 	addCommandGroup(rootCmd, "basic", "Basic Commands:",
+		commands.Version(ctx),
 		commands.Status(ctx),
 		commands.Chat(ctx),
 	)
