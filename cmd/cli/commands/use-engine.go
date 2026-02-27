@@ -105,7 +105,14 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 	fmt.Println("Evaluating engines for optimal hardware compatibility:")
 	for _, engine := range scoredEngines {
 		if engine.Score == 0 {
-			fmt.Printf("✘ %s: not compatible: %s\n", engine.Name, strings.Join(engine.CompatibilityIssues, ", "))
+			fmt.Printf("✘ %s: not compatible\n", engine.Name)
+
+			// Only print compatibility issues if verbose flag is set
+			if cmd.Context.Verbose {
+				for _, issue := range engine.CompatibilityIssues.GetVerboseReasons() {
+					fmt.Printf("\t- %s\n", issue)
+				}
+			}
 		} else if engine.Grade != "stable" {
 			fmt.Printf("− %s: devel, score=%d\n", engine.Name, engine.Score)
 		} else {

@@ -47,15 +47,15 @@ func ScoreEngines(hardwareInfo *types.HwInfo, manifests []engines.Manifest) ([]e
 		}
 
 		scoredEngine := engines.ScoredManifest{
-			Manifest:   currentManifest,
-			Score:      score,
-			Compatible: true,
+			Manifest:            currentManifest,
+			Score:               score,
+			Compatible:          true,
+			CompatibilityIssues: reasons,
 		}
 
 		if score == 0 {
 			scoredEngine.Compatible = false
 		}
-		scoredEngine.CompatibilityIssues = append(scoredEngine.CompatibilityIssues, reasons...)
 
 		scoredEngines = append(scoredEngines, scoredEngine)
 	}
@@ -63,30 +63,47 @@ func ScoreEngines(hardwareInfo *types.HwInfo, manifests []engines.Manifest) ([]e
 	return scoredEngines, nil
 }
 
-func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, []string, error) {
+func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, engines.CompatibilityIssues, error) {
 	engineScore := 0
-	var reasons []string
+	var compatibilityIssues engines.CompatibilityIssues = engines.CompatibilityIssues{
+		Memory: engines.SpaceCompatibilityStatus{
+			Compatible:     true,
+			RequiredSpace:  0,
+			AvailableSpace: 0,
+		},
+		Disk: engines.SpaceCompatibilityStatus{
+			Compatible:     true,
+			RequiredSpace:  0,
+			AvailableSpace: 0,
+		},
+		Device: engines.DeviceCompatibilityStatus{
+			Compatible: true,
+		},
+	}
 	compatible := true
 
 	// Enough memory
 	if manifest.Memory != nil {
 		requiredMemory, err := utils.StringToBytes(*manifest.Memory)
 		if err != nil {
-			return 0, nil, fmt.Errorf("failed to parse required memory: %v", err)
+			return 0, compatibilityIssues, fmt.Errorf("failed to parse required memory: %v", err)
 		}
 
 		if hardwareInfo.Memory.TotalRam == 0 {
 			// If the TotalRam field is the Go struct Zero value, it was never set.
 			// We do not check swap for the Zero value, as swap can realistically be of size 0 bytes.
-			return 0, nil, fmt.Errorf("total memory not reported by host system")
+			return 0, compatibilityIssues, fmt.Errorf("total memory not reported by host system")
 		}
 
 		// Checking combination of ram and swap
 		availableMemory := hardwareInfo.Memory.TotalRam + hardwareInfo.Memory.TotalSwap
 		if availableMemory < requiredMemory {
 			compatible = false
-			errorMessage := fmt.Sprintf("host system memory too small (required %s, available %s)", utils.FmtBytes(requiredMemory), utils.FmtBytes(availableMemory))
-			reasons = append(reasons, errorMessage)
+			compatibilityIssues.Memory = engines.SpaceCompatibilityStatus{
+				Compatible:     false,
+				RequiredSpace:  requiredMemory,
+				AvailableSpace: availableMemory,
+			}
 		} else {
 			engineScore++
 		}
@@ -97,18 +114,21 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, []
 		requiredDisk, err := utils.StringToBytes(*manifest.DiskSpace)
 
 		if err != nil {
-			return 0, nil, fmt.Errorf("failed to parse required disk space: %v", err)
+			return 0, compatibilityIssues, fmt.Errorf("failed to parse required disk space: %v", err)
 		}
 
 		if _, ok := hardwareInfo.Disk[constants.SnapStoragePath]; !ok {
-			return 0, nil, fmt.Errorf("disk space not reported by host system")
+			return 0, compatibilityIssues, fmt.Errorf("disk space not reported by host system")
 		}
 
 		availableDiskSpace := hardwareInfo.Disk[constants.SnapStoragePath].Avail
 		if availableDiskSpace < requiredDisk {
 			compatible = false
-			errorMessage := fmt.Sprintf("host system disk space too small (required %s, available %s)", utils.FmtBytes(requiredDisk), utils.FmtBytes(availableDiskSpace))
-			reasons = append(reasons, errorMessage)
+			compatibilityIssues.Disk = engines.SpaceCompatibilityStatus{
+				Compatible:     false,
+				RequiredSpace:  requiredDisk,
+				AvailableSpace: availableDiskSpace,
+			}
 		} else {
 			engineScore++
 		}
@@ -120,7 +140,7 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, []
 		extraScore, issues := checkDevicesAll(hardwareInfo, manifest.Devices.Allof)
 		if len(issues) > 0 {
 			compatible = false
-			reasons = append(reasons, issues...)
+			compatibilityIssues.Device.Compatible = false
 		} else {
 			engineScore += extraScore
 		}
@@ -131,7 +151,7 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, []
 		extraScore, issues := checkDevicesAny(hardwareInfo, manifest.Devices.Anyof)
 		if len(issues) > 0 {
 			compatible = false
-			reasons = append(reasons, issues...)
+			compatibilityIssues.Device.Compatible = false
 		} else {
 			engineScore += extraScore
 		}
@@ -141,7 +161,7 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, []
 		engineScore = 0
 	}
 
-	return engineScore, reasons, nil
+	return engineScore, compatibilityIssues, nil
 }
 
 func checkDevicesAll(hardwareInfo *types.HwInfo, devices []engines.Device) (int, []string) {
