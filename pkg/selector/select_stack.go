@@ -53,7 +53,7 @@ func ScoreEngines(hardwareInfo *types.HwInfo, manifests []engines.Manifest) ([]e
 			CompatibilityIssues: reasons,
 		}
 
-		if score == 0 {
+		if score == 0 || len(reasons) > 0 {
 			scoredEngine.Compatible = false
 		}
 
@@ -63,24 +63,10 @@ func ScoreEngines(hardwareInfo *types.HwInfo, manifests []engines.Manifest) ([]e
 	return scoredEngines, nil
 }
 
-func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, engines.CompatibilityIssues, error) {
+func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, []engines.CompatibilityIssue, error) {
 	engineScore := 0
-	var compatibilityIssues engines.CompatibilityIssues = engines.CompatibilityIssues{
-		Memory: engines.SpaceCompatibilityStatus{
-			Compatible:     true,
-			RequiredSpace:  0,
-			AvailableSpace: 0,
-		},
-		Disk: engines.SpaceCompatibilityStatus{
-			Compatible:     true,
-			RequiredSpace:  0,
-			AvailableSpace: 0,
-		},
-		Device: engines.DeviceCompatibilityStatus{
-			Compatible: true,
-		},
-	}
 	compatible := true
+	var compatibilityIssues []engines.CompatibilityIssue
 
 	// Enough memory
 	if manifest.Memory != nil {
@@ -99,11 +85,10 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, en
 		availableMemory := hardwareInfo.Memory.TotalRam + hardwareInfo.Memory.TotalSwap
 		if availableMemory < requiredMemory {
 			compatible = false
-			compatibilityIssues.Memory = engines.SpaceCompatibilityStatus{
-				Compatible:     false,
-				RequiredSpace:  requiredMemory,
-				AvailableSpace: availableMemory,
-			}
+			compatibilityIssues = append(compatibilityIssues, engines.MemoryCompatibilityIssue{
+				RequiredMemory:  requiredMemory,
+				AvailableMemory: availableMemory,
+			})
 		} else {
 			engineScore++
 		}
@@ -124,11 +109,10 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, en
 		availableDiskSpace := hardwareInfo.Disk[constants.SnapStoragePath].Avail
 		if availableDiskSpace < requiredDisk {
 			compatible = false
-			compatibilityIssues.Disk = engines.SpaceCompatibilityStatus{
-				Compatible:     false,
+			compatibilityIssues = append(compatibilityIssues, engines.DiskCompatibilityIssue{
 				RequiredSpace:  requiredDisk,
 				AvailableSpace: availableDiskSpace,
-			}
+			})
 		} else {
 			engineScore++
 		}
@@ -140,7 +124,8 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, en
 		extraScore, issues := checkDevicesAll(hardwareInfo, manifest.Devices.Allof)
 		if len(issues) > 0 {
 			compatible = false
-			compatibilityIssues.Device.Compatible = false
+			compatibilityIssues = append(compatibilityIssues, engines.DeviceCompatibilityIssue{})
+			//TODO: include reasons?
 		} else {
 			engineScore += extraScore
 		}
@@ -151,7 +136,8 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, en
 		extraScore, issues := checkDevicesAny(hardwareInfo, manifest.Devices.Anyof)
 		if len(issues) > 0 {
 			compatible = false
-			compatibilityIssues.Device.Compatible = false
+			compatibilityIssues = append(compatibilityIssues, engines.DeviceCompatibilityIssue{})
+			//TODO: include reasons?
 		} else {
 			engineScore += extraScore
 		}

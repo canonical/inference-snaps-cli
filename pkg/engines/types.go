@@ -1,35 +1,14 @@
 package engines
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/canonical/inference-snaps-cli/pkg/types"
-	"github.com/canonical/inference-snaps-cli/pkg/utils"
-	"gopkg.in/yaml.v3"
 )
-
-type SpaceCompatibilityStatus struct {
-	Compatible     bool
-	RequiredSpace  uint64
-	AvailableSpace uint64
-}
-
-type DeviceCompatibilityStatus struct {
-	Compatible bool
-}
-
-type CompatibilityIssues struct {
-	Memory SpaceCompatibilityStatus
-	Disk   SpaceCompatibilityStatus
-	Device DeviceCompatibilityStatus
-}
 
 type ScoredManifest struct {
 	Manifest            `yaml:",inline"`
-	Score               int                 `yaml:"score" json:"score"`
-	Compatible          bool                `yaml:"compatible" json:"compatible"`
-	CompatibilityIssues CompatibilityIssues `yaml:"compatibility-issues,omitempty" json:"compatibility-issues,omitempty"`
+	Score               int                  `yaml:"score" json:"score"`
+	Compatible          bool                 `yaml:"compatible" json:"compatible"`
+	CompatibilityIssues []CompatibilityIssue `yaml:"compatibility-issues,omitempty" json:"compatibility-issues,omitempty"`
 }
 
 type Manifest struct {
@@ -88,52 +67,18 @@ type Device struct {
 
 type Configurations map[string]interface{}
 
-func (c CompatibilityIssues) GetReasons() []string {
-	// Returns an array of strings with all the compatibility issues
-
+func (manifest *ScoredManifest) GetCompatibilityIssues() []string {
 	var reasons []string
-
-	if !c.Memory.Compatible {
-		reasons = append(reasons, "insufficient memory")
+	for _, issue := range manifest.CompatibilityIssues {
+		reasons = append(reasons, issue.GetReason())
 	}
-
-	if !c.Disk.Compatible {
-		reasons = append(reasons, "insufficient disk space")
-	}
-
-	if !c.Device.Compatible {
-		reasons = append(reasons, "required device not found")
-	}
-
 	return reasons
 }
 
-func (c CompatibilityIssues) GetVerboseReasons() []string {
-	// Returns an array of strings with detailed compatibility issues
-
+func (manifest *ScoredManifest) GetVerboseCompatibilityIssues() []string {
 	var reasons []string
-
-	if !c.Memory.Compatible {
-		reason := fmt.Sprintf("requires %s memory, has %s", utils.FmtBytes(c.Memory.RequiredSpace), utils.FmtBytes(c.Memory.AvailableSpace))
-		reasons = append(reasons, reason)
+	for _, issue := range manifest.CompatibilityIssues {
+		reasons = append(reasons, issue.GetVerboseReason())
 	}
-
-	if !c.Disk.Compatible {
-		reason := fmt.Sprintf("requires %s disk space, has %s", utils.FmtBytes(c.Disk.RequiredSpace), utils.FmtBytes(c.Disk.AvailableSpace))
-		reasons = append(reasons, reason)
-	}
-
-	if !c.Device.Compatible {
-		reasons = append(reasons, "required device not found")
-	}
-
 	return reasons
-}
-
-func (c CompatibilityIssues) MarshalYAML() ([]byte, error) {
-	return yaml.Marshal(c.GetReasons())
-}
-
-func (c CompatibilityIssues) MarshalJSON() ([]byte, error) {
-	return json.Marshal(c.GetReasons())
 }
