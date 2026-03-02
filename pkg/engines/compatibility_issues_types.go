@@ -3,6 +3,7 @@ package engines
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/canonical/inference-snaps-cli/pkg/utils"
 )
@@ -24,7 +25,9 @@ type DiskCompatibilityIssue struct {
 	AvailableSpace uint64
 }
 
-type DeviceCompatibilityIssue struct{}
+type DeviceCompatibilityIssue struct {
+	Motivations []string
+}
 
 func (issue MemoryCompatibilityIssue) GetReason() string {
 	return "insufficient memory"
@@ -47,7 +50,10 @@ func (issue DeviceCompatibilityIssue) GetReason() string {
 }
 
 func (issue DeviceCompatibilityIssue) GetVerboseReason() string {
-	return "required device not found"
+	if len(issue.Motivations) == 0 {
+		return "required device not found"
+	}
+	return fmt.Sprintf("required device not found: %s", strings.Join(issue.Motivations, ", "))
 }
 
 func (issue MemoryCompatibilityIssue) MarshalYAML() (any, error) {

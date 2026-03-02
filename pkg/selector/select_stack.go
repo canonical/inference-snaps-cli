@@ -119,13 +119,14 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, []
 	}
 
 	// Devices
+	var deviceCompatibilityIssues []string
+
 	// all
 	if len(manifest.Devices.Allof) > 0 {
 		extraScore, issues := checkDevicesAll(hardwareInfo, manifest.Devices.Allof)
 		if len(issues) > 0 {
+			deviceCompatibilityIssues = append(deviceCompatibilityIssues, issues...)
 			compatible = false
-			compatibilityIssues = append(compatibilityIssues, engines.DeviceCompatibilityIssue{})
-			//TODO: include reasons?
 		} else {
 			engineScore += extraScore
 		}
@@ -136,11 +137,16 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, []
 		extraScore, issues := checkDevicesAny(hardwareInfo, manifest.Devices.Anyof)
 		if len(issues) > 0 {
 			compatible = false
-			compatibilityIssues = append(compatibilityIssues, engines.DeviceCompatibilityIssue{})
-			//TODO: include reasons?
+			deviceCompatibilityIssues = append(deviceCompatibilityIssues, issues...)
 		} else {
 			engineScore += extraScore
 		}
+	}
+
+	if len(deviceCompatibilityIssues) > 0 {
+		compatibilityIssues = append(compatibilityIssues, engines.DeviceCompatibilityIssue{
+			Motivations: deviceCompatibilityIssues,
+		})
 	}
 
 	if !compatible {

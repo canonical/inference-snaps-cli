@@ -7,7 +7,9 @@ import (
 func TestMarshalYAML(t *testing.T) {
 
 	t.Run("DeviceCompatibilityIssue yaml", func(t *testing.T) {
-		DeviceCompatibilityIssue := DeviceCompatibilityIssue{}
+		DeviceCompatibilityIssue := DeviceCompatibilityIssue{
+			Motivations: []string{"GPU not found"},
+		}
 
 		yamlBytes, err := DeviceCompatibilityIssue.MarshalYAML()
 		if err != nil {
@@ -70,7 +72,9 @@ func TestMarshalYAML(t *testing.T) {
 func TestMarshalJson(t *testing.T) {
 
 	t.Run("DeviceCompatibilityIssue json", func(t *testing.T) {
-		DeviceCompatibilityIssue := DeviceCompatibilityIssue{}
+		DeviceCompatibilityIssue := DeviceCompatibilityIssue{
+			Motivations: []string{"GPU not found"},
+		}
 
 		jsonBytes, err := DeviceCompatibilityIssue.MarshalJSON()
 		if err != nil {

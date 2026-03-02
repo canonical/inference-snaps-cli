@@ -102,7 +102,7 @@ func TestTopEngine(t *testing.T) {
 
 			if topEngine.Name != testSet.topEngine {
 				for _, engine := range scoredEngines {
-					t.Logf("%s=%d %s", engine.Name, engine.Score, strings.Join(engine.CompatibilityIssues, ", "))
+					t.Logf("%s=%d %s", engine.Name, engine.Score, strings.Join(engine.GetCompatibilityIssues(), ", "))
 				}
 				t.Errorf("Top engine name: %s, expected: %s", topEngine.Name, testSet.topEngine)
 			}
