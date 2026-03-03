@@ -23,9 +23,15 @@ type listEnginesCommand struct {
 	format string
 }
 
+type outputScoredManifest struct {
+	engines.ScoredManifest
+	Compatible          bool     `yaml:"compatible" json:"compatible"`
+	CompatibilityIssues []string `yaml:"compatibility-issues,omitempty" json:"compatibility-issues,omitempty"`
+}
+
 type outputEngines struct {
-	ActiveEngine string                   `json:"active-engine"`
-	Engines      []engines.ScoredManifest `json:"engines"`
+	ActiveEngine string                 `json:"active-engine"`
+	Engines      []outputScoredManifest `json:"engines"`
 }
 
 func ListEngines(ctx *common.Context) *cobra.Command {
@@ -65,7 +71,13 @@ func (cmd *listEnginesCommand) run(_ *cobra.Command, _ []string) error {
 
 	enginesList := outputEngines{
 		ActiveEngine: activeEngine,
-		Engines:      scoredEngines,
+	}
+	for _, sm := range scoredEngines {
+		enginesList.Engines = append(enginesList.Engines, outputScoredManifest{
+			ScoredManifest:      sm,
+			Compatible:          sm.CompatibilityReport.IsCompatible(),
+			CompatibilityIssues: common.GetIncompatibilityReasons(sm.CompatibilityReport),
+		})
 	}
 
 	switch cmd.format {

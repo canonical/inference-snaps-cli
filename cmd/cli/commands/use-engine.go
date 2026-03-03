@@ -60,7 +60,7 @@ func (cmd *useEngineCommand) validateArgs(_ *cobra.Command, args []string, toCom
 
 	var engineNames []cobra.Completion
 	for i := range scoredEngines {
-		if scoredEngines[i].Compatible {
+		if scoredEngines[i].CompatibilityReport.IsCompatible() {
 			engineNames = append(engineNames, scoredEngines[i].Name)
 		}
 	}
@@ -108,8 +108,8 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 			fmt.Printf("✘ %s: not compatible\n", engine.Name)
 
 			// Only print compatibility issues if verbose flag is set
-			if cmd.Context.Verbose {
-				for _, issue := range engine.GetVerboseCompatibilityIssues() {
+			if cmd.Context != nil && cmd.Context.Verbose {
+				for _, issue := range common.GetVerboseIncompatibilityReasons(engine.CompatibilityReport) {
 					fmt.Printf("  - %s\n", issue)
 				}
 			}
@@ -141,7 +141,7 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 	engine, err := engines.LoadManifest(cmd.EnginesDir, engineName)
 	if err != nil {
 		if errors.Is(err, engines.ErrManifestNotFound) {
-			if cmd.Verbose {
+			if cmd.Context != nil && cmd.Context.Verbose {
 				fmt.Println(err)
 			}
 			return fmt.Errorf("%q not found", engineName)

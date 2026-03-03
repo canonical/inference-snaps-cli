@@ -151,7 +151,7 @@ func TestNoCpuInHwInfo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(issues) == 0 {
+	if issues.HasIssues() {
 		t.Fatal("No CPU in hardware_info should result in a compatibility issue")
 	}
 }

@@ -3,7 +3,6 @@ package selector
 import (
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/pkg/engines"
@@ -102,7 +101,7 @@ func TestTopEngine(t *testing.T) {
 
 			if topEngine.Name != testSet.topEngine {
 				for _, engine := range scoredEngines {
-					t.Logf("%s=%d %s", engine.Name, engine.Score, strings.Join(engine.GetCompatibilityIssues(), ", "))
+					t.Logf("%s=%d %s", engine.Name, engine.Score, engine.CompatibilityReport)
 				}
 				t.Errorf("Top engine name: %s, expected: %s", topEngine.Name, testSet.topEngine)
 			}
@@ -137,7 +136,7 @@ func TestMatchReasonsCpu(t *testing.T) {
 		t.Errorf("Score engines count: %d, expected 1", len(scoredEngines))
 	}
 
-	if scoredEngines[0].Compatible {
+	if scoredEngines[0].CompatibilityReport.IsCompatible() {
 		t.Errorf("Score engines should not be compatible")
 	}
 
@@ -172,7 +171,7 @@ func TestMatchReasonsPci(t *testing.T) {
 		t.Errorf("Score engines count: %d, expected 1", len(scoredEngines))
 	}
 
-	if !scoredEngines[0].Compatible {
+	if !scoredEngines[0].CompatibilityReport.IsCompatible() {
 		t.Errorf("Score engines should be compatible")
 	}
 

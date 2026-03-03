@@ -4,11 +4,23 @@ import (
 	"github.com/canonical/inference-snaps-cli/pkg/types"
 )
 
+type CompatibilityReport struct {
+	HasMemoryIssue  bool
+	RequiredMemory  uint64
+	AvailableMemory uint64
+
+	HasDiskIssue       bool
+	RequiredDiskSpace  uint64
+	AvailableDiskSpace uint64
+
+	HasDeviceIssue bool
+	MissingDevices []string
+}
+
 type ScoredManifest struct {
 	Manifest            `yaml:",inline"`
-	Score               int                  `yaml:"score" json:"score"`
-	Compatible          bool                 `yaml:"compatible" json:"compatible"`
-	CompatibilityIssues []CompatibilityIssue `yaml:"compatibility-issues,omitempty" json:"compatibility-issues,omitempty"`
+	Score               int                 `yaml:"score" json:"score"`
+	CompatibilityReport CompatibilityReport `yaml:"-" json:"-"`
 }
 
 type Manifest struct {
@@ -67,18 +79,10 @@ type Device struct {
 
 type Configurations map[string]interface{}
 
-func (manifest *ScoredManifest) GetCompatibilityIssues() []string {
-	var reasons []string
-	for _, issue := range manifest.CompatibilityIssues {
-		reasons = append(reasons, issue.GetReason())
-	}
-	return reasons
+func (c CompatibilityReport) HasIssues() bool {
+	return c.HasMemoryIssue || c.HasDiskIssue || c.HasDeviceIssue
 }
 
-func (manifest *ScoredManifest) GetVerboseCompatibilityIssues() []string {
-	var reasons []string
-	for _, issue := range manifest.CompatibilityIssues {
-		reasons = append(reasons, issue.GetVerboseReason())
-	}
-	return reasons
+func (c CompatibilityReport) IsCompatible() bool {
+	return !c.HasIssues()
 }

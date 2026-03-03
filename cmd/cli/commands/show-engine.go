@@ -11,6 +11,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type showEngineManifestOutput struct {
+	engines.ScoredManifest
+	Compatible          bool     `yaml:"compatible" json:"compatible"`
+	CompatibilityIssues []string `yaml:"compatibility-issues,omitempty" json:"compatibility-issues,omitempty"`
+}
+
 type showEngineCommand struct {
 	*common.Context
 
@@ -107,15 +113,25 @@ func (cmd *showEngineCommand) showEngine(engineName string) error {
 }
 
 func (cmd *showEngineCommand) printEngineManifest(engine engines.ScoredManifest) error {
+	output := showEngineManifestOutput{
+		ScoredManifest: engine,
+		Compatible:     engine.CompatibilityReport.IsCompatible(),
+	}
+	if cmd.Context != nil && cmd.Context.Verbose {
+		output.CompatibilityIssues = common.GetVerboseIncompatibilityReasons(engine.CompatibilityReport)
+	} else {
+		output.CompatibilityIssues = common.GetIncompatibilityReasons(engine.CompatibilityReport)
+	}
+
 	switch cmd.format {
 	case "json":
-		jsonString, err := json.MarshalIndent(engine, "", "  ")
+		jsonString, err := json.MarshalIndent(output, "", "  ")
 		if err != nil {
 			return fmt.Errorf("failed to marshal to JSON: %s", err)
 		}
 		fmt.Printf("%s\n", jsonString)
 	case "yaml", "":
-		engineYaml, err := yaml.Marshal(engine)
+		engineYaml, err := yaml.Marshal(output)
 		if err != nil {
 			return fmt.Errorf("failed to marshal to YAML: %s", err)
 		}
