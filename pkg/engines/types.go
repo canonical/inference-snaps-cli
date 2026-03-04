@@ -5,16 +5,16 @@ import (
 )
 
 type CompatibilityReport struct {
-	HasMemoryIssue  bool
-	RequiredMemory  uint64
-	AvailableMemory uint64
+	IsMemoryCompatible bool
+	RequiredMemory     uint64
+	AvailableMemory    uint64
 
-	HasDiskIssue       bool
+	IsDiskCompatible   bool
 	RequiredDiskSpace  uint64
 	AvailableDiskSpace uint64
 
-	HasDeviceIssue bool
-	MissingDevices []string
+	IsDeviceCompatible bool
+	MissingDevices     []string
 }
 
 type ScoredManifest struct {
@@ -79,10 +79,6 @@ type Device struct {
 
 type Configurations map[string]interface{}
 
-func (c CompatibilityReport) HasIssues() bool {
-	return c.HasMemoryIssue || c.HasDiskIssue || c.HasDeviceIssue
-}
-
 func (c CompatibilityReport) IsCompatible() bool {
-	return !c.HasIssues()
+	return c.IsMemoryCompatible && c.IsDiskCompatible && c.IsDeviceCompatible
 }

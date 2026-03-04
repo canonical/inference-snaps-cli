@@ -8,13 +8,13 @@ import (
 
 func TestGetIncompatibilityReasons(t *testing.T) {
 	var compatibilityReport engines.CompatibilityReport = engines.CompatibilityReport{
-		HasMemoryIssue:     true,
+		IsMemoryCompatible: false,
 		RequiredMemory:     8 * 1024 * 1024 * 1024, // 8 GiB
 		AvailableMemory:    4 * 1024 * 1024 * 1024, // 4 GiB
-		HasDiskIssue:       true,
+		IsDiskCompatible:   false,
 		RequiredDiskSpace:  100 * 1024 * 1024 * 1024, // 100 GiB
 		AvailableDiskSpace: 50 * 1024 * 1024 * 1024,  // 50 GiB
-		HasDeviceIssue:     true,
+		IsDeviceCompatible: false,
 		MissingDevices:     []string{"cpu"},
 	}
 
@@ -39,13 +39,13 @@ func TestGetIncompatibilityReasons(t *testing.T) {
 
 func TestGetVerboseIncompatibilityReasons(t *testing.T) {
 	var compatibilityReport engines.CompatibilityReport = engines.CompatibilityReport{
-		HasMemoryIssue:     true,
+		IsMemoryCompatible: false,
 		RequiredMemory:     8 * 1024 * 1024 * 1024, // 8 GiB
 		AvailableMemory:    4 * 1024 * 1024 * 1024, // 4 GiB
-		HasDiskIssue:       true,
+		IsDiskCompatible:   false,
 		RequiredDiskSpace:  100 * 1024 * 1024 * 1024, // 100 GiB
 		AvailableDiskSpace: 50 * 1024 * 1024 * 1024,  // 50 GiB
-		HasDeviceIssue:     true,
+		IsDeviceCompatible: false,
 		MissingDevices:     []string{"cpu"},
 	}
 

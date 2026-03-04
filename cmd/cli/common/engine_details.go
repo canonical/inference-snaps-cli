@@ -32,13 +32,13 @@ func NewVerboseEngineDetails(scoredManifest engines.ScoredManifest) EngineDetail
 
 func getIncompatibilityReasons(report engines.CompatibilityReport) []string {
 	var reasons []string
-	if report.HasMemoryIssue {
+	if !report.IsMemoryCompatible {
 		reasons = append(reasons, "insufficient memory")
 	}
-	if report.HasDiskIssue {
+	if !report.IsDiskCompatible {
 		reasons = append(reasons, "insufficient disk space")
 	}
-	if report.HasDeviceIssue {
+	if !report.IsDeviceCompatible {
 		reasons = append(reasons, "required device not found")
 	}
 	return reasons
@@ -46,13 +46,13 @@ func getIncompatibilityReasons(report engines.CompatibilityReport) []string {
 
 func getVerboseIncompatibilityReasons(report engines.CompatibilityReport) []string {
 	var reasons []string
-	if report.HasMemoryIssue {
+	if !report.IsMemoryCompatible {
 		reasons = append(reasons, fmt.Sprintf("requires %s memory, has %s", utils.FmtBytes(report.RequiredMemory), utils.FmtBytes(report.AvailableMemory)))
 	}
-	if report.HasDiskIssue {
+	if !report.IsDiskCompatible {
 		reasons = append(reasons, fmt.Sprintf("requires %s disk space, has %s", utils.FmtBytes(report.RequiredDiskSpace), utils.FmtBytes(report.AvailableDiskSpace)))
 	}
-	if report.HasDeviceIssue {
+	if !report.IsDeviceCompatible {
 		if len(report.MissingDevices) > 0 {
 			reasons = append(reasons, fmt.Sprintf("required device not found: %s", strings.Join(report.MissingDevices, ", ")))
 		} else {
