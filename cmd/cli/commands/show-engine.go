@@ -117,11 +117,7 @@ func (cmd *showEngineCommand) printEngineManifest(engine engines.ScoredManifest)
 		ScoredManifest: engine,
 		Compatible:     engine.CompatibilityReport.IsCompatible(),
 	}
-	if cmd.Context != nil && cmd.Context.Verbose {
-		output.CompatibilityIssues = common.GetVerboseIncompatibilityReasons(engine.CompatibilityReport)
-	} else {
-		output.CompatibilityIssues = common.GetIncompatibilityReasons(engine.CompatibilityReport)
-	}
+	output.CompatibilityIssues = common.GetIncompatibilityReasons(engine.CompatibilityReport)
 
 	switch cmd.format {
 	case "json":
