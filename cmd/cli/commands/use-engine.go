@@ -114,7 +114,7 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 				}
 			}
 		} else if engine.Grade != "stable" {
-			fmt.Printf("− %s: devel, score=%d\n", engine.Name, engine.Score)
+			fmt.Printf("• %s: devel, score=%d\n", engine.Name, engine.Score)
 		} else {
 			fmt.Printf("✔ %s: compatible, score=%d\n", engine.Name, engine.Score)
 		}
