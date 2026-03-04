@@ -106,11 +106,11 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 		if engine.Score == 0 {
 			fmt.Printf("✘ %s: not compatible\n", engine.Name)
 
-			// Only print compatibility issues if verbose flag is set
-			if cmd.Context != nil && cmd.Context.Verbose {
-				var issues []string = common.NewVerboseEngineDetails(engine).CompatibilityIssues
-				for _, issue := range issues {
-					fmt.Printf("  - %s\n", issue)
+			// Only print incompatibility reasons if verbose flag is set
+			if cmd.Verbose {
+				reasons := cmd.verboseIncompatibilityReasons(engine.CompatibilityReport)
+				for _, reason := range reasons {
+					fmt.Printf("  - %s\n", reason)
 				}
 			}
 		} else if engine.Grade != "stable" {
@@ -350,4 +350,22 @@ func (cmd *useEngineCommand) installMissingComponents(engine *engines.Manifest) 
 	}
 
 	return true, nil
+}
+
+func (cmd *useEngineCommand) verboseIncompatibilityReasons(report engines.CompatibilityReport) []string {
+	var reasons []string
+	if !report.IsMemoryCompatible {
+		reasons = append(reasons, fmt.Sprintf("requires %s memory, has %s", utils.FmtBytes(report.RequiredMemory), utils.FmtBytes(report.AvailableMemory)))
+	}
+	if !report.IsDiskCompatible {
+		reasons = append(reasons, fmt.Sprintf("requires %s disk space, has %s", utils.FmtBytes(report.RequiredDiskSpace), utils.FmtBytes(report.AvailableDiskSpace)))
+	}
+	if !report.IsDeviceCompatible {
+		if len(report.MissingDevices) > 0 {
+			reasons = append(reasons, fmt.Sprintf("required device not found: %s", strings.Join(report.MissingDevices, ", ")))
+		} else {
+			reasons = append(reasons, "required device not found")
+		}
+	}
+	return reasons
 }

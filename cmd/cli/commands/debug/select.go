@@ -74,7 +74,7 @@ func (cmd *selectCommand) run(_ *cobra.Command, args []string) error {
 		engineSelection.Engines = append(engineSelection.Engines, outputEngine)
 
 		if engine.Score == 0 {
-			fmt.Fprintf(os.Stderr, "❌ %s - not compatible: %s\n", engine.Name, strings.Join(outputEngine.CompatibilityIssues, "; "))
+			fmt.Fprintf(os.Stderr, "❌ %s - not compatible: %s\n", engine.Name, strings.Join(outputEngine.CompatibilityIssues, ", "))
 		} else if engine.Grade != "stable" {
 			fmt.Fprintf(os.Stderr, "🟠 %s - score = %d, grade = %s\n", engine.Name, engine.Score, engine.Grade)
 		} else {
