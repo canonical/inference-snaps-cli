@@ -108,7 +108,8 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 
 			// Only print compatibility issues if verbose flag is set
 			if cmd.Context != nil && cmd.Context.Verbose {
-				for _, issue := range common.GetVerboseIncompatibilityReasons(engine.CompatibilityReport) {
+				var issues []string = common.NewVerboseEngineDetails(engine).CompatibilityIssues
+				for _, issue := range issues {
 					fmt.Printf("  - %s\n", issue)
 				}
 			}

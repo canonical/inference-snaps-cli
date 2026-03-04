@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
-	"github.com/canonical/inference-snaps-cli/pkg/engines"
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
 	"github.com/olekukonko/tablewriter/renderer"
@@ -23,15 +22,9 @@ type listEnginesCommand struct {
 	format string
 }
 
-type outputScoredManifest struct {
-	engines.ScoredManifest
-	Compatible          bool     `yaml:"compatible" json:"compatible"`
-	CompatibilityIssues []string `yaml:"compatibility-issues,omitempty" json:"compatibility-issues,omitempty"`
-}
-
 type outputEngines struct {
 	ActiveEngine string                 `json:"active-engine"`
-	Engines      []outputScoredManifest `json:"engines"`
+	Engines      []common.EngineDetails `json:"engines"`
 }
 
 func ListEngines(ctx *common.Context) *cobra.Command {
@@ -72,12 +65,9 @@ func (cmd *listEnginesCommand) run(_ *cobra.Command, _ []string) error {
 	enginesList := outputEngines{
 		ActiveEngine: activeEngine,
 	}
+
 	for _, sm := range scoredEngines {
-		enginesList.Engines = append(enginesList.Engines, outputScoredManifest{
-			ScoredManifest:      sm,
-			Compatible:          sm.CompatibilityReport.IsCompatible(),
-			CompatibilityIssues: common.GetIncompatibilityReasons(sm.CompatibilityReport),
-		})
+		enginesList.Engines = append(enginesList.Engines, common.NewEngineDetails(sm))
 	}
 
 	switch cmd.format {

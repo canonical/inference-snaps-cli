@@ -11,12 +11,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type showEngineManifestOutput struct {
-	engines.ScoredManifest
-	Compatible          bool     `yaml:"compatible" json:"compatible"`
-	CompatibilityIssues []string `yaml:"compatibility-issues,omitempty" json:"compatibility-issues,omitempty"`
-}
-
 type showEngineCommand struct {
 	*common.Context
 
@@ -113,11 +107,7 @@ func (cmd *showEngineCommand) showEngine(engineName string) error {
 }
 
 func (cmd *showEngineCommand) printEngineManifest(engine engines.ScoredManifest) error {
-	output := showEngineManifestOutput{
-		ScoredManifest: engine,
-		Compatible:     engine.CompatibilityReport.IsCompatible(),
-	}
-	output.CompatibilityIssues = common.GetIncompatibilityReasons(engine.CompatibilityReport)
+	var output common.EngineDetails = common.NewEngineDetails(engine)
 
 	switch cmd.format {
 	case "json":

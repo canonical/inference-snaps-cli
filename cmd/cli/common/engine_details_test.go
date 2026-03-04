@@ -24,7 +24,7 @@ func TestGetIncompatibilityReasons(t *testing.T) {
 		"required device not found",
 	}
 
-	var actualReasons []string = GetIncompatibilityReasons(compatibilityReport)
+	var actualReasons []string = getIncompatibilityReasons(compatibilityReport)
 
 	if len(actualReasons) != len(expectedReasons) {
 		t.Fatalf("Expected to have %d compatibility issues, got: %d", len(expectedReasons), len(actualReasons))
@@ -55,7 +55,7 @@ func TestGetVerboseIncompatibilityReasons(t *testing.T) {
 		"required device not found: cpu",
 	}
 
-	var actualReasons []string = GetVerboseIncompatibilityReasons(compatibilityReport)
+	var actualReasons []string = getVerboseIncompatibilityReasons(compatibilityReport)
 
 	if len(actualReasons) != len(expectedReasons) {
 		t.Fatalf("Expected to have %d compatibility issues, got: %d", len(expectedReasons), len(actualReasons))

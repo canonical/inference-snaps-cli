@@ -47,12 +47,8 @@ func TestList(t *testing.T) {
 		ActiveEngine: activeEngine,
 	}
 
-	for _, sm := range scoredEngines {
-		enginesList.Engines = append(enginesList.Engines, outputScoredManifest{
-			ScoredManifest:      sm,
-			Compatible:          sm.CompatibilityReport.IsCompatible(),
-			CompatibilityIssues: common.GetIncompatibilityReasons(sm.CompatibilityReport),
-		})
+	for _, se := range scoredEngines {
+		enginesList.Engines = append(enginesList.Engines, common.NewEngineDetails(se))
 	}
 
 	err = cmd.printEnginesJson(enginesList)

@@ -23,15 +23,9 @@ type selectCommand struct {
 	enginesDir string
 }
 
-type selectEngineManifestOutput struct {
-	engines.ScoredManifest
-	Compatible          bool     `yaml:"compatible" json:"compatible"`
-	CompatibilityIssues []string `yaml:"compatibility-issues,omitempty" json:"compatibility-issues,omitempty"`
-}
-
 type EngineSelection struct {
-	Engines   []selectEngineManifestOutput `json:"engines"`
-	TopEngine string                       `json:"top-engine"`
+	Engines   []common.EngineDetails `json:"engines"`
+	TopEngine string                 `json:"top-engine"`
 }
 
 func SelectCommand(ctx *common.Context) *cobra.Command {
@@ -76,15 +70,11 @@ func (cmd *selectCommand) run(_ *cobra.Command, args []string) error {
 
 	// Print summary on STDERR
 	for _, engine := range scoredEngines {
-		outputEngine := selectEngineManifestOutput{
-			ScoredManifest:      engine,
-			Compatible:          engine.CompatibilityReport.IsCompatible(),
-			CompatibilityIssues: common.GetIncompatibilityReasons(engine.CompatibilityReport),
-		}
+		outputEngine := common.NewEngineDetails(engine)
 		engineSelection.Engines = append(engineSelection.Engines, outputEngine)
 
 		if engine.Score == 0 {
-			fmt.Fprintf(os.Stderr, "❌ %s - not compatible: %s\n", engine.Name, strings.Join(common.GetVerboseIncompatibilityReasons(engine.CompatibilityReport), ", "))
+			fmt.Fprintf(os.Stderr, "❌ %s - not compatible: %s\n", engine.Name, strings.Join(outputEngine.CompatibilityIssues, "; "))
 		} else if engine.Grade != "stable" {
 			fmt.Fprintf(os.Stderr, "🟠 %s - score = %d, grade = %s\n", engine.Name, engine.Score, engine.Grade)
 		} else {

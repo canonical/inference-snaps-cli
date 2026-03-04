@@ -8,7 +8,29 @@ import (
 	"github.com/canonical/inference-snaps-cli/pkg/utils"
 )
 
-func GetIncompatibilityReasons(report engines.CompatibilityReport) []string {
+type EngineDetails struct {
+	engines.ScoredManifest
+	Compatible          bool     `yaml:"compatible" json:"compatible"`
+	CompatibilityIssues []string `yaml:"compatibility-issues,omitempty" json:"compatibility-issues,omitempty"`
+}
+
+func NewEngineDetails(scoredManifest engines.ScoredManifest) EngineDetails {
+	return EngineDetails{
+		ScoredManifest:      scoredManifest,
+		Compatible:          scoredManifest.CompatibilityReport.IsCompatible(),
+		CompatibilityIssues: getIncompatibilityReasons(scoredManifest.CompatibilityReport),
+	}
+}
+
+func NewVerboseEngineDetails(scoredManifest engines.ScoredManifest) EngineDetails {
+	return EngineDetails{
+		ScoredManifest:      scoredManifest,
+		Compatible:          scoredManifest.CompatibilityReport.IsCompatible(),
+		CompatibilityIssues: getVerboseIncompatibilityReasons(scoredManifest.CompatibilityReport),
+	}
+}
+
+func getIncompatibilityReasons(report engines.CompatibilityReport) []string {
 	var reasons []string
 	if report.HasMemoryIssue {
 		reasons = append(reasons, "insufficient memory")
@@ -22,7 +44,7 @@ func GetIncompatibilityReasons(report engines.CompatibilityReport) []string {
 	return reasons
 }
 
-func GetVerboseIncompatibilityReasons(report engines.CompatibilityReport) []string {
+func getVerboseIncompatibilityReasons(report engines.CompatibilityReport) []string {
 	var reasons []string
 	if report.HasMemoryIssue {
 		reasons = append(reasons, fmt.Sprintf("requires %s memory, has %s", utils.FmtBytes(report.RequiredMemory), utils.FmtBytes(report.AvailableMemory)))
