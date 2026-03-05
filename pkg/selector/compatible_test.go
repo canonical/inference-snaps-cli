@@ -309,7 +309,10 @@ func testValidHw(t *testing.T, engineName string, hwName string) {
 	}
 	if !report.EngineCompatible() {
 		t.Fatalf("Engine should match: %+v", report)
+	} else if score == 0 {
+		t.Fatalf("A compatible engine should have a non-zero score")
 	}
+
 	t.Logf("Matching score: %d", score)
 }
 
@@ -338,6 +341,8 @@ func testInvalidHw(t *testing.T, engineName string, hwName string) {
 	}
 	if report.EngineCompatible() {
 		t.Fatalf("Engine should not match: %s", hwName)
+	} else if score != 0 {
+		t.Fatalf("An incompatible engine should have a score of 0")
 	}
 
 	t.Logf("Matching score: %d", score)
