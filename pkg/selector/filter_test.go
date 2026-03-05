@@ -75,7 +75,7 @@ func TestDiskCheck(t *testing.T) {
 		t.Fatal(err)
 	}
 	if report.CompatibleDisk {
-		t.Fatalf("disk should NOT be enough")
+		t.Fatalf("disk should NOT be enough: %+v", report)
 	}
 }
 
@@ -95,7 +95,7 @@ func TestMemoryCheck(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !report.CompatibleMemory {
-		t.Fatal("memory should be enough")
+		t.Fatalf("memory should be enough: %+v", report)
 	}
 
 	hwInfo.Memory.TotalRam = 100000000
@@ -104,7 +104,7 @@ func TestMemoryCheck(t *testing.T) {
 		t.Fatal(err)
 	}
 	if report.CompatibleMemory {
-		t.Fatal("memory should NOT be enough")
+		t.Fatalf("memory should NOT be enough: %+v", report)
 	}
 }
 
@@ -127,7 +127,7 @@ func TestNoCpuInHwInfo(t *testing.T) {
 	// No memory in hardware info
 	_, _, err = checkEngine(&hwInfo, currentEngine)
 	if err == nil {
-		t.Fatalf("No Memory in hardware_info should return an error")
+		t.Fatal("Missing Memory info in hardware_info should return an error")
 	}
 
 	hwInfo.Memory = types.MemoryInfo{
@@ -138,7 +138,7 @@ func TestNoCpuInHwInfo(t *testing.T) {
 	// No disk space in hardware info
 	_, _, err = checkEngine(&hwInfo, currentEngine)
 	if err == nil {
-		t.Fatal("No Disk space in hardware_info should return an error")
+		t.Fatal("Missing Disk space info in hardware_info should return an error")
 	}
 
 	hwInfo.Disk = make(map[string]types.DirStats)
