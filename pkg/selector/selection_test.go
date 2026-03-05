@@ -136,11 +136,12 @@ func TestMatchReasonsCpu(t *testing.T) {
 		t.Fatalf("Scored engines count: %d, expected 1", len(scoredEngines))
 	}
 
-	if scoredEngines[0].CompatibilityReport.EngineCompatible() {
-		t.Errorf("Score engines should not be compatible")
+	var engine engines.ScoredManifest = scoredEngines[0]
+	if engine.CompatibilityReport.EngineCompatible() {
+		t.Errorf("Engine should NOT be compatible, but it was marked as compatible: %+v", engine.CompatibilityReport)
 	}
 
-	scoredYaml, _ := yaml.Marshal(scoredEngines[0])
+	scoredYaml, _ := yaml.Marshal(engine)
 	t.Log(string(scoredYaml))
 }
 
@@ -171,10 +172,11 @@ func TestMatchReasonsPci(t *testing.T) {
 		t.Fatalf("Scored engines count: %d, expected 1", len(scoredEngines))
 	}
 
-	if !scoredEngines[0].CompatibilityReport.EngineCompatible() {
-		t.Errorf("Score engines should be compatible")
+	var engine engines.ScoredManifest = scoredEngines[0]
+	if !engine.CompatibilityReport.EngineCompatible() {
+		t.Errorf("Engine should be compatible, but it was marked as incompatible: %+v", engine.CompatibilityReport)
 	}
 
-	scoredYaml, _ := yaml.Marshal(scoredEngines[0])
+	scoredYaml, _ := yaml.Marshal(engine)
 	t.Log(string(scoredYaml))
 }
