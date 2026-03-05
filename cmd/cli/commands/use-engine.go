@@ -59,7 +59,7 @@ func (cmd *useEngineCommand) validateArgs(_ *cobra.Command, args []string, toCom
 
 	var engineNames []cobra.Completion
 	for i := range scoredEngines {
-		if scoredEngines[i].CompatibilityReport.IsCompatible() {
+		if scoredEngines[i].CompatibilityReport.EngineCompatible() {
 			engineNames = append(engineNames, scoredEngines[i].Name)
 		}
 	}

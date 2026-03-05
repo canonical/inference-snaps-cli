@@ -140,7 +140,7 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, en
 		}
 	}
 
-	if !compatibilityReport.IsCompatible() {
+	if !compatibilityReport.EngineCompatible() {
 		engineScore = 0
 	}
 

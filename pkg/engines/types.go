@@ -79,6 +79,6 @@ type Device struct {
 
 type Configurations map[string]interface{}
 
-func (c CompatibilityReport) IsCompatible() bool {
+func (c CompatibilityReport) EngineCompatible() bool {
 	return c.CompatibleMemory && c.CompatibleDisk && c.CompatibleDevices
 }

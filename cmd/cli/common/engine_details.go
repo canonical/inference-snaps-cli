@@ -13,7 +13,7 @@ type EngineDetails struct {
 func NewEngineDetails(scoredManifest engines.ScoredManifest) EngineDetails {
 	e := EngineDetails{
 		ScoredManifest: scoredManifest,
-		Compatible:     scoredManifest.CompatibilityReport.IsCompatible(),
+		Compatible:     scoredManifest.CompatibilityReport.EngineCompatible(),
 	}
 	e.fillIncompatibilityIssues(scoredManifest.CompatibilityReport)
 	return e
