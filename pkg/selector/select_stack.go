@@ -60,11 +60,10 @@ func ScoreEngines(hardwareInfo *types.HwInfo, manifests []engines.Manifest) ([]e
 
 func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, engines.CompatibilityReport, error) {
 	engineScore := 0
-	var compatibilityReport engines.CompatibilityReport = engines.CompatibilityReport{
-		IsMemoryCompatible: true,
-		IsDiskCompatible:   true,
-		IsDeviceCompatible: true,
-		MissingDevices:     []string{},
+	compatibilityReport := engines.CompatibilityReport{
+		CompatibleMemory:  true,
+		CompatibleDisk:    true,
+		CompatibleDevices: true,
 	}
 
 	// Enough memory
@@ -87,7 +86,7 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, en
 		compatibilityReport.AvailableMemory = availableMemory
 
 		if availableMemory < requiredMemory {
-			compatibilityReport.IsMemoryCompatible = false
+			compatibilityReport.CompatibleMemory = false
 		} else {
 			engineScore++
 		}
@@ -111,7 +110,7 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, en
 		compatibilityReport.AvailableDiskSpace = availableDiskSpace
 
 		if availableDiskSpace < requiredDisk {
-			compatibilityReport.IsDiskCompatible = false
+			compatibilityReport.CompatibleDisk = false
 		} else {
 			engineScore++
 		}
@@ -123,7 +122,7 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, en
 	if len(manifest.Devices.Allof) > 0 {
 		extraScore, issues := checkDevicesAll(hardwareInfo, manifest.Devices.Allof)
 		if len(issues) > 0 {
-			compatibilityReport.IsDeviceCompatible = false
+			compatibilityReport.CompatibleDevices = false
 			compatibilityReport.MissingDevices = append(compatibilityReport.MissingDevices, issues...)
 		} else {
 			engineScore += extraScore
@@ -134,7 +133,7 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, en
 	if len(manifest.Devices.Anyof) > 0 {
 		extraScore, issues := checkDevicesAny(hardwareInfo, manifest.Devices.Anyof)
 		if len(issues) > 0 {
-			compatibilityReport.IsDeviceCompatible = false
+			compatibilityReport.CompatibleDevices = false
 			compatibilityReport.MissingDevices = append(compatibilityReport.MissingDevices, issues...)
 		} else {
 			engineScore += extraScore

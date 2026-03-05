@@ -21,13 +21,13 @@ func NewEngineDetails(scoredManifest engines.ScoredManifest) EngineDetails {
 
 func (e *EngineDetails) fillIncompatibilityIssues(report engines.CompatibilityReport) {
 	var issues []string
-	if !report.IsMemoryCompatible {
+	if !report.CompatibleMemory {
 		issues = append(issues, "insufficient memory")
 	}
-	if !report.IsDiskCompatible {
+	if !report.CompatibleDisk {
 		issues = append(issues, "insufficient disk space")
 	}
-	if !report.IsDeviceCompatible {
+	if !report.CompatibleDevices {
 		issues = append(issues, "required device not found")
 	}
 	e.CompatibilityIssues = issues

@@ -354,13 +354,13 @@ func (cmd *useEngineCommand) installMissingComponents(engine *engines.Manifest) 
 
 func (cmd *useEngineCommand) verboseIncompatibilityReasons(report engines.CompatibilityReport) []string {
 	var reasons []string
-	if !report.IsMemoryCompatible {
+	if !report.CompatibleMemory {
 		reasons = append(reasons, fmt.Sprintf("requires %s memory, has %s", utils.FmtBytes(report.RequiredMemory), utils.FmtBytes(report.AvailableMemory)))
 	}
-	if !report.IsDiskCompatible {
+	if !report.CompatibleDisk {
 		reasons = append(reasons, fmt.Sprintf("requires %s disk space, has %s", utils.FmtBytes(report.RequiredDiskSpace), utils.FmtBytes(report.AvailableDiskSpace)))
 	}
-	if !report.IsDeviceCompatible {
+	if !report.CompatibleDevices {
 		if len(report.MissingDevices) > 0 {
 			reasons = append(reasons, fmt.Sprintf("required device not found: %s", strings.Join(report.MissingDevices, ", ")))
 		} else {

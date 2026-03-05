@@ -8,13 +8,13 @@ import (
 
 func TestFillIncompatibilityIssues(t *testing.T) {
 	var compatibilityReport engines.CompatibilityReport = engines.CompatibilityReport{
-		IsMemoryCompatible: false,
+		CompatibleMemory:   false,
 		RequiredMemory:     8 * 1024 * 1024 * 1024, // 8 GiB
 		AvailableMemory:    4 * 1024 * 1024 * 1024, // 4 GiB
-		IsDiskCompatible:   false,
+		CompatibleDisk:     false,
 		RequiredDiskSpace:  100 * 1024 * 1024 * 1024, // 100 GiB
 		AvailableDiskSpace: 50 * 1024 * 1024 * 1024,  // 50 GiB
-		IsDeviceCompatible: false,
+		CompatibleDevices:  false,
 		MissingDevices:     []string{"cpu"},
 	}
 
