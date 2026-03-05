@@ -57,12 +57,12 @@ func TestDiskCheck(t *testing.T) {
 	manifestDisk := "300M"
 	engine := engines.Manifest{DiskSpace: &manifestDisk}
 
-	result, reasons, err := checkEngine(&hwInfo, engine)
+	_, report, err := checkEngine(&hwInfo, engine)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result == 0 {
-		t.Fatalf("disk should be enough: %v", reasons)
+	if !report.CompatibleDisk {
+		t.Fatalf("disk should be enough: %+v", report)
 	}
 
 	dirStat = types.DirStats{
@@ -70,12 +70,12 @@ func TestDiskCheck(t *testing.T) {
 		Avail: 100000000,
 	}
 	hwInfo.Disk["/var/lib/snapd/snaps"] = dirStat
-	result, reasons, err = checkEngine(&hwInfo, engine)
+	_, report, err = checkEngine(&hwInfo, engine)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result > 0 {
-		t.Fatalf("disk should NOT be enough: %v", reasons)
+	if report.CompatibleDisk {
+		t.Fatalf("disk should NOT be enough")
 	}
 }
 
@@ -90,20 +90,20 @@ func TestMemoryCheck(t *testing.T) {
 	engineMemory := "300M"
 	engine := engines.Manifest{Memory: &engineMemory}
 
-	result, reasons, err := checkEngine(&hwInfo, engine)
+	_, report, err := checkEngine(&hwInfo, engine)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result == 0 {
-		t.Fatalf("memory should be enough: %v", reasons)
+	if !report.CompatibleMemory {
+		t.Fatal("memory should be enough")
 	}
 
 	hwInfo.Memory.TotalRam = 100000000
-	result, reasons, err = checkEngine(&hwInfo, engine)
+	_, report, err = checkEngine(&hwInfo, engine)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result > 0 {
+	if report.CompatibleMemory {
 		t.Fatal("memory should NOT be enough")
 	}
 }
@@ -147,11 +147,11 @@ func TestNoCpuInHwInfo(t *testing.T) {
 	}
 
 	// No CPU in hardware info
-	_, issues, err := checkEngine(&hwInfo, currentEngine)
+	_, report, err := checkEngine(&hwInfo, currentEngine)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if issues.EngineCompatible() {
+	if report.EngineCompatible() {
 		t.Fatal("No CPU in hardware_info should result in a compatibility issue")
 	}
 }

@@ -303,15 +303,14 @@ func testValidHw(t *testing.T, engineName string, hwName string) {
 	}
 
 	// Valid hardware for engine
-	score, reasons, err := checkEngine(hardwareInfo, manifest)
+	score, report, err := checkEngine(hardwareInfo, manifest)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if score == 0 {
-		t.Fatalf("Engine should match: %v", reasons)
+	if !report.EngineCompatible() {
+		t.Fatalf("Engine should match: %+v", report)
 	}
 	t.Logf("Matching score: %d", score)
-
 }
 
 func testInvalidHw(t *testing.T, engineName string, hwName string) {
@@ -333,12 +332,13 @@ func testInvalidHw(t *testing.T, engineName string, hwName string) {
 		t.Fatal(err)
 	}
 
-	score, _, err := checkEngine(hardwareInfo, manifest)
+	score, report, err := checkEngine(hardwareInfo, manifest)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if score != 0 {
+	if report.EngineCompatible() {
 		t.Fatalf("Engine should not match: %s", hwName)
 	}
+
 	t.Logf("Matching score: %d", score)
 }
