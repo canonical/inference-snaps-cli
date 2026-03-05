@@ -70,11 +70,11 @@ func (cmd *selectCommand) run(_ *cobra.Command, args []string) error {
 
 	// Print summary on STDERR
 	for _, engine := range scoredEngines {
-		outputEngine := common.NewEngineDetails(engine)
-		engineSelection.Engines = append(engineSelection.Engines, outputEngine)
+		engineDetails := common.NewEngineDetails(engine)
+		engineSelection.Engines = append(engineSelection.Engines, engineDetails)
 
 		if engine.Score == 0 {
-			fmt.Fprintf(os.Stderr, "❌ %s - not compatible: %s\n", engine.Name, strings.Join(outputEngine.CompatibilityIssues, ", "))
+			fmt.Fprintf(os.Stderr, "❌ %s - not compatible: %s\n", engine.Name, strings.Join(engineDetails.CompatibilityIssues, ", "))
 		} else if engine.Grade != "stable" {
 			fmt.Fprintf(os.Stderr, "🟠 %s - score = %d, grade = %s\n", engine.Name, engine.Score, engine.Grade)
 		} else {
