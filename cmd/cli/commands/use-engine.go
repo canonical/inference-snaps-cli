@@ -141,7 +141,7 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 	engine, err := engines.LoadManifest(cmd.EnginesDir, engineName)
 	if err != nil {
 		if errors.Is(err, engines.ErrManifestNotFound) {
-			if cmd.Context != nil && cmd.Context.Verbose {
+			if cmd.Verbose {
 				fmt.Println(err)
 			}
 			return fmt.Errorf("%q not found", engineName)
