@@ -152,6 +152,6 @@ func TestNoCpuInHwInfo(t *testing.T) {
 		t.Fatal(err)
 	}
 	if report.EngineCompatible() {
-		t.Fatal("No CPU in hardware_info should result in a compatibility issue")
+		t.Fatal("Missing CPU info in hardware_info should result in an incompatible engine")
 	}
 }
