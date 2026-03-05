@@ -133,7 +133,7 @@ func TestMatchReasonsCpu(t *testing.T) {
 	}
 
 	if len(scoredEngines) != 1 {
-		t.Errorf("Score engines count: %d, expected 1", len(scoredEngines))
+		t.Fatalf("Scored engines count: %d, expected 1", len(scoredEngines))
 	}
 
 	if scoredEngines[0].CompatibilityReport.EngineCompatible() {
@@ -168,7 +168,7 @@ func TestMatchReasonsPci(t *testing.T) {
 	}
 
 	if len(scoredEngines) != 1 {
-		t.Errorf("Score engines count: %d, expected 1", len(scoredEngines))
+		t.Fatalf("Scored engines count: %d, expected 1", len(scoredEngines))
 	}
 
 	if !scoredEngines[0].CompatibilityReport.EngineCompatible() {
