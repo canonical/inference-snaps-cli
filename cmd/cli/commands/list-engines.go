@@ -66,8 +66,8 @@ func (cmd *listEnginesCommand) run(_ *cobra.Command, _ []string) error {
 		ActiveEngine: activeEngine,
 	}
 
-	for _, sm := range scoredEngines {
-		enginesList.Engines = append(enginesList.Engines, common.NewEngineDetails(sm))
+	for _, se := range scoredEngines {
+		enginesList.Engines = append(enginesList.Engines, common.NewEngineDetails(se))
 	}
 
 	switch cmd.format {
