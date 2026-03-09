@@ -7,7 +7,8 @@ import (
 type CompatibilityReport struct {
 	CompatibleMemory bool
 	RequiredMemory   uint64
-	AvailableMemory  uint64
+	TotalRAM         uint64
+	TotalSwap        uint64
 
 	CompatibleDisk     bool
 	RequiredDiskSpace  uint64
@@ -74,7 +75,7 @@ type Device struct {
 	SnapConnections []string `yaml:"snap-connections,omitempty" json:"snap-connections,omitempty"`
 
 	// General
-	CompatibilityIssues []string `yaml:"compatibility-issues,omitempty" json:"compatibility-issues,omitempty"`
+	CompatibilityIssues []string `yaml:"compatibility-issues,omitempty" json:"compatibility-ss,omitempty"`
 }
 
 type Configurations map[string]interface{}

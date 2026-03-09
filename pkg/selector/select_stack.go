@@ -79,12 +79,12 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, en
 			return 0, compatibilityReport, fmt.Errorf("total memory not reported by host system")
 		}
 
+		compatibilityReport.RequiredMemory = requiredMemory
+		compatibilityReport.TotalRAM = hardwareInfo.Memory.TotalRam
+		compatibilityReport.TotalSwap = hardwareInfo.Memory.TotalSwap
+
 		// Checking combination of ram and swap
 		availableMemory := hardwareInfo.Memory.TotalRam + hardwareInfo.Memory.TotalSwap
-
-		compatibilityReport.RequiredMemory = requiredMemory
-		compatibilityReport.AvailableMemory = availableMemory
-
 		if availableMemory < requiredMemory {
 			compatibilityReport.CompatibleMemory = false
 		} else {
