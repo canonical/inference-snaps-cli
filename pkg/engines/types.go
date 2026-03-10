@@ -75,7 +75,7 @@ type Device struct {
 	SnapConnections []string `yaml:"snap-connections,omitempty" json:"snap-connections,omitempty"`
 
 	// General
-	CompatibilityIssues []string `yaml:"compatibility-issues,omitempty" json:"compatibility-ss,omitempty"`
+	CompatibilityIssues []string `yaml:"compatibility-issues,omitempty" json:"compatibility-issues,omitempty"`
 }
 
 type Configurations map[string]interface{}
