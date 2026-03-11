@@ -61,8 +61,8 @@ func TestDiskCheck(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !report.CompatibleDisk {
-		t.Fatalf("disk should be enough: %+v", report)
+	if !report.EngineCompatible() {
+		t.Fatalf("engine should be compatible: %+v", report)
 	}
 
 	dirStat = types.DirStats{
@@ -74,8 +74,8 @@ func TestDiskCheck(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if report.CompatibleDisk {
-		t.Fatalf("disk should NOT be enough: %+v", report)
+	if report.EngineCompatible() {
+		t.Fatalf("engine should NOT be compatible: %+v", report)
 	}
 }
 
@@ -94,8 +94,8 @@ func TestMemoryCheck(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !report.CompatibleMemory {
-		t.Fatalf("memory should be enough: %+v", report)
+	if !report.EngineCompatible() {
+		t.Fatalf("engine should be compatible: %+v", report)
 	}
 
 	hwInfo.Memory.TotalRam = 100000000
@@ -103,8 +103,8 @@ func TestMemoryCheck(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if report.CompatibleMemory {
-		t.Fatalf("memory should NOT be enough: %+v", report)
+	if report.EngineCompatible() {
+		t.Fatalf("engine should NOT be compatible: %+v", report)
 	}
 }
 
