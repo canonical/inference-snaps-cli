@@ -123,7 +123,6 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, en
 		extraScore, issues := checkDevicesAll(hardwareInfo, manifest.Devices.Allof)
 		if len(issues) > 0 {
 			compatibilityReport.CompatibleDevices = false
-			compatibilityReport.MissingDevices = append(compatibilityReport.MissingDevices, issues...)
 		} else {
 			engineScore += extraScore
 		}
@@ -134,7 +133,6 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, en
 		extraScore, issues := checkDevicesAny(hardwareInfo, manifest.Devices.Anyof)
 		if len(issues) > 0 {
 			compatibilityReport.CompatibleDevices = false
-			compatibilityReport.MissingDevices = append(compatibilityReport.MissingDevices, issues...)
 		} else {
 			engineScore += extraScore
 		}
