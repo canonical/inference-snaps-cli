@@ -159,6 +159,12 @@ func scorePciDevice(manifestDevice engines.Device, hostPciDevice types.PciDevice
 		}
 	}
 
+	if deviceScore == 0 && len(issues) == 0 {
+		// The device was found, but did not match on any criteria that we score on
+		issues = append(issues, "no criteria met")
+		return
+	}
+
 	return deviceScore, nil
 }
 
