@@ -26,7 +26,7 @@ func gpuProperties(pciDevice types.PciDevice) (map[string]string, error) {
 		return nil, fmt.Errorf("error looking up gfx architecture: %v", err)
 	}
 	if len(gfxArchitecture) > 0 {
-		properties["micro-architecture"] = gfxArchitecture
+		properties["microarchitecture"] = gfxArchitecture
 	}
 
 	return properties, nil

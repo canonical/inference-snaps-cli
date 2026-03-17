@@ -26,7 +26,7 @@ func checkProperties(device engines.Device, pciDevice types.PciDevice) (int, err
 		extraScore += weights.GpuVRam
 	}
 
-	// micro-architecture
+	// microarchitecture
 	if device.MicroArchitecture != nil {
 		err := checkMicroArchitecture(*device.MicroArchitecture, pciDevice)
 		if err != nil {
@@ -61,14 +61,14 @@ func checkVram(device engines.Device, pciDevice types.PciDevice) error {
 }
 
 func checkMicroArchitecture(microArchRequired string, pciDevice types.PciDevice) error {
-	if microArch, ok := pciDevice.AdditionalProperties["micro-architecture"]; ok {
+	if microArch, ok := pciDevice.AdditionalProperties["microarchitecture"]; ok {
 		if microArch == microArchRequired {
 			return nil
 		} else {
-			return fmt.Errorf("micro-architecture does not match: %s", microArch)
+			return fmt.Errorf("microarchitecture does not match: %s", microArch)
 		}
 	} else {
-		// Hardware Info does not list available micro-architecture
-		return fmt.Errorf("unable to detect micro-architecture")
+		// Hardware Info does not list available microarchitecture
+		return fmt.Errorf("unable to detect microarchitecture")
 	}
 }

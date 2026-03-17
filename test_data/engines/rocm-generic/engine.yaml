@@ -9,10 +9,10 @@ devices:
   anyof:
     - type: gpu
       vendor-id: 0x1002 # AMD Corporation
-      micro-architecture: gfx1152
+      microarchitecture: gfx1152
     - type: gpu
       vendor-id: 0x1002 # AMD Corporation
-      micro-architecture: gfx1030
+      microarchitecture: gfx1030
 memory: 2G
 disk-space: 5G
 components:
