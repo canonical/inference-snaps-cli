@@ -13,6 +13,9 @@ func hasAdditionalProperties(device engines.Device) bool {
 	if device.VRam != nil {
 		return true
 	}
+	if device.MicroArchitecture != nil {
+		return true
+	}
 	if device.ComputeCapability != nil {
 		return true
 	}
