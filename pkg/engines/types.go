@@ -65,6 +65,7 @@ type Device struct {
 
 	// GPU additional properties
 	VRam              *string `yaml:"vram,omitempty" json:"vram,omitempty"`
+	MicroArchitecture *string `yaml:"micro-architecture,omitempty" json:"micro-architecture,omitempty"`
 	ComputeCapability *string `yaml:"compute-capability,omitempty" json:"compute-capability,omitempty"`
 
 	// NPU

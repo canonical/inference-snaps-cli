@@ -3,6 +3,7 @@ package amd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -18,6 +19,14 @@ func gpuProperties(pciDevice types.PciDevice) (map[string]string, error) {
 	}
 	if vRamVal != nil {
 		properties["vram"] = strconv.FormatUint(*vRamVal, 10)
+	}
+
+	gfxArchitecture, err := gfxArchitecture(pciDevice)
+	if err != nil {
+		return nil, fmt.Errorf("error looking up gfx architecture: %v", err)
+	}
+	if len(gfxArchitecture) > 0 {
+		properties["micro-architecture"] = gfxArchitecture
 	}
 
 	return properties, nil
@@ -46,4 +55,97 @@ func vRam(device types.PciDevice) (*uint64, error) {
 		return nil, err
 	}
 	return &vram, nil
+}
+
+func gfxArchitecture(device types.PciDevice) (string, error) {
+	nodesDir := "/sys/class/kfd/kfd/topology/nodes"
+	files, err := os.ReadDir(nodesDir)
+	if err != nil {
+		return "", err
+	}
+
+	var gfxTargetVersion string
+	for _, file := range files {
+		if file.IsDir() {
+			propertiesPath := fmt.Sprintf("%s/%s/properties", nodesDir, file.Name())
+			data, err := os.ReadFile(propertiesPath)
+			if err != nil {
+				continue // skip this node if we can't read its properties
+			}
+			for _, line := range strings.Split(string(data), "\n") {
+				if strings.HasPrefix(line, "drm_render_minor") {
+					pciSlot, err := getAmdGpuPciSlot(line)
+					if err != nil {
+						break
+					}
+					if pciSlot != device.Slot {
+						break
+					}
+				} else if strings.HasPrefix(line, "gfx_target_version") {
+					gfxTargetVersion, err = getGfxTargetVersion(line)
+					if err != nil {
+						break
+					}
+				}
+			}
+
+		}
+	}
+	if len(gfxTargetVersion) == 0 {
+		return "", fmt.Errorf("gfx_target_version not found for device with pci slot %s", device.Slot)
+	}
+	return gfxTargetVersion, nil
+}
+
+func getAmdGpuPciSlot(drmRenderMinor string) (string, error) {
+	parts := strings.Split(drmRenderMinor, " ")
+	if len(parts) == 2 {
+		renderMinor := parts[1]
+		pciSlotFull, err := filepath.EvalSymlinks(fmt.Sprintf("/sys/class/drm/renderD%s/device", renderMinor))
+		if err != nil {
+			return "", err
+		}
+		pciSlot := strings.Split(string(pciSlotFull), "/")
+		if len(pciSlot) == 0 {
+			return "", fmt.Errorf("unexpected format for pci slot path: %s", pciSlotFull)
+		}
+		pciSlotStr := pciSlot[len(pciSlot)-1]
+		return pciSlotStr, nil
+	} else {
+		return "", fmt.Errorf("unexpected format for drm_render_minor: %s", drmRenderMinor)
+	}
+}
+
+func getGfxTargetVersion(gfxTargetVersion string) (string, error) {
+	parts := strings.Split(gfxTargetVersion, " ")
+	if len(parts) == 2 {
+		if parts[1] == "0" {
+			return "", fmt.Errorf("gfx_target_version is invalid for this device")
+		}
+		gfxTargetVersion := parts[1]
+		if _, err := strconv.ParseUint(gfxTargetVersion, 10, 64); err == nil {
+			deviceLower := strings.ToLower(gfxTargetVersion)
+			if len(deviceLower) < 6 {
+				return "", fmt.Errorf("gfx_target_version has an unexpected format: %s", gfxTargetVersion)
+			}
+
+			major := deviceLower[0:2]
+
+			minorInt, err := strconv.Atoi(deviceLower[2:4])
+			if err != nil {
+				return "", fmt.Errorf("error parsing minor version from gfx_target_version: %v", err)
+			}
+			minor := strconv.Itoa(minorInt)
+
+			revisionInt, err := strconv.Atoi(deviceLower[4:6])
+			if err != nil {
+				return "", fmt.Errorf("error parsing revision from gfx_target_version: %v", err)
+			}
+			revision := strconv.Itoa(revisionInt)
+
+			arch := "gfx" + major + minor + revision
+			return arch, nil
+		}
+	}
+	return "", fmt.Errorf("unexpected format for gfx_target_version: %s", gfxTargetVersion)
 }

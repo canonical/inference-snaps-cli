@@ -32,6 +32,14 @@ func checkProperties(device engines.Device, pciDevice types.PciDevice) (int, err
 		extraScore += weights.GpuVRam
 	}
 
+	// micro-architecture
+	if device.MicroArchitecture != nil {
+		err := checkMicroArchitecture(*device.MicroArchitecture, pciDevice)
+		if err != nil {
+			return 0, err
+		}
+		extraScore += weights.GpuMicroArchitecture
+	}
 	// TODO compute-capability
 
 	return extraScore, nil
@@ -55,5 +63,18 @@ func checkVram(device engines.Device, pciDevice types.PciDevice) error {
 	} else {
 		// Hardware Info does not list available vram
 		return fmt.Errorf("unable to detect vRAM")
+	}
+}
+
+func checkMicroArchitecture(microArchRequired string, pciDevice types.PciDevice) error {
+	if microArch, ok := pciDevice.AdditionalProperties["micro-architecture"]; ok {
+		if microArch == microArchRequired {
+			return nil
+		} else {
+			return fmt.Errorf("micro-architecture does not match: %s", microArch)
+		}
+	} else {
+		// Hardware Info does not list available micro-architecture
+		return fmt.Errorf("unable to detect micro-architecture")
 	}
 }
