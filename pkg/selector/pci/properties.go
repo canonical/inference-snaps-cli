@@ -9,22 +9,13 @@ import (
 	"github.com/canonical/inference-snaps-cli/pkg/utils"
 )
 
-func hasAdditionalProperties(device engines.Device) bool {
-	if device.VRam != nil {
-		return true
-	}
-	if device.MicroArchitecture != nil {
-		return true
-	}
-	if device.ComputeCapability != nil {
-		return true
-	}
-
-	return false
-}
-
 func checkProperties(device engines.Device, pciDevice types.PciDevice) (int, error) {
 	extraScore := 0
+
+	// Check if there are any additional properties to check
+	if device.VRam == nil && device.MicroArchitecture == nil && device.ComputeCapability == nil {
+		return 0, nil
+	}
 
 	// vram
 	if device.VRam != nil {
