@@ -10,7 +10,7 @@ const (
 	PciVendorId          = 20
 	PciDeviceType        = 10
 	GpuVRam              = 10
-	GpuMicroArchitecture = 10
+	GpuMicroarchitecture = 10
 	GpuComputeCapability = 10
 
 	CpuDevice = 10

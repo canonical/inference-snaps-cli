@@ -13,7 +13,7 @@ func checkProperties(device engines.Device, pciDevice types.PciDevice) (int, err
 	extraScore := 0
 
 	// Check if there are any additional properties to check
-	if device.VRam == nil && device.MicroArchitecture == nil && device.ComputeCapability == nil {
+	if device.VRam == nil && device.Microarchitecture == nil && device.ComputeCapability == nil {
 		return 0, nil
 	}
 
@@ -27,12 +27,12 @@ func checkProperties(device engines.Device, pciDevice types.PciDevice) (int, err
 	}
 
 	// microarchitecture
-	if device.MicroArchitecture != nil {
-		err := checkMicroArchitecture(*device.MicroArchitecture, pciDevice)
+	if device.Microarchitecture != nil {
+		err := checkMicroarchitecture(*device.Microarchitecture, pciDevice)
 		if err != nil {
 			return 0, err
 		}
-		extraScore += weights.GpuMicroArchitecture
+		extraScore += weights.GpuMicroarchitecture
 	}
 	// TODO compute-capability
 
@@ -60,7 +60,7 @@ func checkVram(device engines.Device, pciDevice types.PciDevice) error {
 	}
 }
 
-func checkMicroArchitecture(microArchRequired string, pciDevice types.PciDevice) error {
+func checkMicroarchitecture(microArchRequired string, pciDevice types.PciDevice) error {
 	if microArch, ok := pciDevice.AdditionalProperties["microarchitecture"]; ok {
 		if microArch == microArchRequired {
 			return nil

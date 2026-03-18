@@ -53,7 +53,7 @@ func (device Device) validate() error {
 func (device Device) validateGpu() error {
 	extraFields := []string{
 		"VRam",
-		"MicroArchitecture",
+		"Microarchitecture",
 		"ComputeCapability",
 	}
 

@@ -114,7 +114,7 @@ func TestCheckNpuDriver(t *testing.T) {
 	// TODO test the negative case
 }
 
-func TestCheckMicroArchitecture(t *testing.T) {
+func TestCheckMicroarchitecture(t *testing.T) {
 
 	hwInfoGpu := types.PciDevice{
 		DeviceClass: 0x0300,
@@ -123,12 +123,12 @@ func TestCheckMicroArchitecture(t *testing.T) {
 		},
 	}
 
-	requiredMicroArchitecture := "gfx1152"
+	requiredMicroarchitecture := "gfx1152"
 	device := engines.Device{
 		Type:              "gpu",
 		Bus:               "pci",
 		VendorId:          nil,
-		MicroArchitecture: &requiredMicroArchitecture,
+		Microarchitecture: &requiredMicroarchitecture,
 	}
 
 	availableDevices := filterPciDevices([]types.PciDevice{hwInfoGpu}, device.VendorId, device.DeviceId)
@@ -137,7 +137,7 @@ func TestCheckMicroArchitecture(t *testing.T) {
 		t.Fatalf("GPU microarchitecture should match: %s", strings.Join(scoreIssues, ", "))
 	}
 
-	requiredMicroArchitecture = "gfx2200"
+	requiredMicroarchitecture = "gfx2200"
 	availableDevices = filterPciDevices([]types.PciDevice{hwInfoGpu}, device.VendorId, device.DeviceId)
 	scoredDevices, scoreIssues = scorePciDevices(device, availableDevices)
 	if len(scoreIssues) == 0 || scoredDevices[0].Score != 0 {
