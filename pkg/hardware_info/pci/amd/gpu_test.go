@@ -11,6 +11,7 @@ var hwInfoGpu = types.PciDevice{
 }
 
 func TestGfxArchitecture(t *testing.T) {
+	t.Skip("Runner does not have an AMD GPU")
 	t.Run("gfxArchitecture", func(t *testing.T) {
 		gfxVersion, err := gfxArchitecture(hwInfoGpu)
 		if err != nil {
@@ -21,6 +22,7 @@ func TestGfxArchitecture(t *testing.T) {
 }
 
 func TestVRam(t *testing.T) {
+	t.Skip("Runner does not have an AMD GPU")
 	t.Run("vRam", func(t *testing.T) {
 		vram, err := vRam(hwInfoGpu)
 		if err != nil {
@@ -34,6 +36,7 @@ func TestVRam(t *testing.T) {
 }
 
 func TestGpuProperties(t *testing.T) {
+	t.Skip("Runner does not have an AMD GPU")
 	t.Run("gpuProperties", func(t *testing.T) {
 		properties, err := gpuProperties(hwInfoGpu)
 		if err != nil {
