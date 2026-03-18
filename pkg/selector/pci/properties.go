@@ -12,11 +12,6 @@ import (
 func checkProperties(device engines.Device, pciDevice types.PciDevice) (int, error) {
 	extraScore := 0
 
-	// Check if there are any additional properties to check
-	if device.VRam == nil && device.Microarchitecture == nil && device.ComputeCapability == nil {
-		return 0, nil
-	}
-
 	// vram
 	if device.VRam != nil {
 		err := checkVram(device, pciDevice)
