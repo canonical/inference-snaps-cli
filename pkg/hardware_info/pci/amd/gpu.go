@@ -18,7 +18,7 @@ func gpuProperties(pciDevice types.PciDevice, globalRootDir ...string) (map[stri
 		root = globalRootDir[0]
 	}
 
-	vRamVal, err := vRam(pciDevice)
+	vRamVal, err := vRam(pciDevice, root)
 	if err != nil {
 		return nil, fmt.Errorf("error looking up vRAM: %v", err)
 	}
@@ -36,7 +36,7 @@ func gpuProperties(pciDevice types.PciDevice, globalRootDir ...string) (map[stri
 	return properties, nil
 }
 
-func vRam(device types.PciDevice) (*uint64, error) {
+func vRam(device types.PciDevice, globalRootDir string) (*uint64, error) {
 	/*
 		AMD vram is listed under /sys/bus/pci/devices/${pci_slot}/mem_info_vram_total
 
@@ -48,7 +48,7 @@ func vRam(device types.PciDevice) (*uint64, error) {
 		ubuntu@u-HP-EliteBook-845-G8-Notebook-PC:~$ cat /sys/bus/pci/devices/0000\:04\:00.0/mem_info_vram_total
 		536870912
 	*/
-	data, err := os.ReadFile("/sys/bus/pci/devices/" + device.Slot + "/mem_info_vram_total")
+	data, err := os.ReadFile(globalRootDir + "sys/bus/pci/devices/" + device.Slot + "/mem_info_vram_total")
 	if err != nil {
 		return nil, err
 	}
