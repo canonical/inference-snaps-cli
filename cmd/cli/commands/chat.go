@@ -29,12 +29,22 @@ func Chat(ctx *common.Context) *cobra.Command {
 	return cobraCmd
 }
 
-func (cmd *chatCommand) run(_ *cobra.Command, _ []string) error {
-	apiUrls, err := common.ServerApiUrls(cmd.Context)
+func ChatSupported(ctx *common.Context) (bool, error) {
+	found, _, err := chatBaseURL(ctx)
 	if err != nil {
-		return fmt.Errorf("error getting server api urls: %v", err)
+		return false, err
 	}
-	chatBaseUrl := apiUrls[common.OpenAiEndpointKey]
+	return found, nil
+}
+
+func (cmd *chatCommand) run(_ *cobra.Command, _ []string) error {
+	found, chatBaseUrl, err := chatBaseURL(cmd.Context)
+	if err != nil {
+		return fmt.Errorf("error getting chat base url: %v", err)
+	}
+	if !found {
+		return fmt.Errorf("chat not supported: no server endpoint found")
+	}
 
 	if env.SnapInstanceName() != "" {
 		// TODO: get app name dynamically
@@ -52,4 +62,16 @@ func (cmd *chatCommand) run(_ *cobra.Command, _ []string) error {
 	chatClient := common.ChatClient(chatBaseUrl, "", cmd.Verbose)
 
 	return chatClient.Start()
+}
+
+func chatBaseURL(ctx *common.Context) (bool, string, error) {
+	serverEndpoints, err := common.ServerEndpoints(ctx)
+	if err != nil {
+		return false, "", fmt.Errorf("error getting server endpoints: %v", err)
+	}
+	chatBaseUrl, found := serverEndpoints[common.OpenAiEndpointKey]
+	if !found {
+		return false, "", nil
+	}
+	return true, chatBaseUrl, nil
 }
