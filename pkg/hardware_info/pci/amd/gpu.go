@@ -8,11 +8,15 @@ import (
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/pkg/types"
-	"github.com/canonical/inference-snaps-cli/pkg/utils"
 )
 
-func gpuProperties(pciDevice types.PciDevice) (map[string]string, error) {
+func gpuProperties(pciDevice types.PciDevice, globalRootDir ...string) (map[string]string, error) {
 	properties := make(map[string]string)
+
+	root := "/"
+	if len(globalRootDir) > 0 {
+		root = globalRootDir[0]
+	}
 
 	vRamVal, err := vRam(pciDevice)
 	if err != nil {
@@ -21,7 +25,7 @@ func gpuProperties(pciDevice types.PciDevice) (map[string]string, error) {
 	if vRamVal != nil {
 		properties["vram"] = strconv.FormatUint(*vRamVal, 10)
 	}
-	gfxArchitecture, err := gfxArchitecture(pciDevice, utils.GetGlobalRootDir())
+	gfxArchitecture, err := gfxArchitecture(pciDevice, root)
 	if err != nil {
 		return nil, fmt.Errorf("error looking up gfx architecture: %v", err)
 	}

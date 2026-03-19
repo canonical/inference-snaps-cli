@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/pkg/types"
-	"github.com/canonical/inference-snaps-cli/pkg/utils"
 )
 
 var hwInfoGpu = types.PciDevice{
@@ -87,23 +86,11 @@ func TestGetGfxTargetVersion(t *testing.T) {
 }
 
 func TestGpuProperties(t *testing.T) {
-	originalFunc := utils.GetGlobalRootDir
-	defer func() { utils.GetGlobalRootDir = originalFunc }() // Restore the original function after test
-
-	mockCalled := false
-	utils.GetGlobalRootDir = func() string {
-		mockCalled = true
-		return "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/"
-	}
-
 	t.Run("gpuProperties", func(t *testing.T) {
-		properties, err := gpuProperties(hwInfoGpu)
+		properties, err := gpuProperties(hwInfoGpu, "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/")
 		if err != nil {
 			t.Fatal(err)
 		}
 		t.Logf("GPU properties: %v", properties)
 	})
-	if !mockCalled {
-		t.Error("mock function was not called")
-	}
 }
