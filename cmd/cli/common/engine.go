@@ -131,19 +131,23 @@ func UnsetEngineConfig(engineName string, unsetUserOverrides bool, ctx *Context)
 	return nil
 }
 
+/*
+ScoreEngines loads all engine manifests, looks up the host machine information,
+and score the engines according to their compatibility with the host.
+
+Warning: calls to this function can block for a number of seconds while the host machine information is being looked up.
+*/
 func ScoreEngines(ctx *Context) ([]engines.ScoredManifest, error) {
 	allEngines, err := engines.LoadManifests(ctx.EnginesDir)
 	if err != nil {
 		return nil, fmt.Errorf("error loading engines: %v", err)
 	}
 
-	// TODO: Getting hwardware info can be slow. Add a spinner.
 	machineInfo, err := hardware_info.Get(false)
 	if err != nil {
 		return nil, fmt.Errorf("error getting machine info: %v", err)
 	}
 
-	// score engines
 	scoredEngines, err := selector.ScoreEngines(machineInfo, allEngines)
 	if err != nil {
 		return nil, fmt.Errorf("error scoring engines: %v", err)

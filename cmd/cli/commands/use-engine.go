@@ -51,7 +51,7 @@ func UseEngine(ctx *common.Context) *cobra.Command {
 }
 
 func (cmd *useEngineCommand) validateArgs(_ *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
-	// TODO Scoring engines might be slow
+	// Warning: Scoring engines can block for a number of seconds, delaying bash completions
 	scoredEngines, err := common.ScoreEngines(cmd.Context)
 	if err != nil {
 		fmt.Printf("Error scoring engines: %v\n", err)
