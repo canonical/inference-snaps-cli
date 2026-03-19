@@ -47,3 +47,19 @@ If any additional properties need to be added to PCI devices, add it to this fil
   }
 }
 ```
+
+## machine-root
+
+### AMD GPU testing
+```
+mkdir -p machine-root/sys/class/kfd/kfd/topology/nodes
+cp -ra /sys/class/kfd/kfd/topology/nodes/* machine-root/sys/class/kfd/kfd/topology/nodes/
+cp -ra /sys/class/drm machine-root/sys/class
+# remove any non-renderD* symlinks that may have been copied which are not needed for AMD GPU testing
+find machine-root/sys/class/drm -maxdepth 1 -type l ! -name "renderD*" -delete
+```
+Now find the file pointed by the symlink `machine-root/sys/class/drm/renderD128`:
+`ls -lah machine-root/sys/class/drm/`
+And create the same symlink in the test environment:
+`mkdir -p {PATH_RETRIEVED_FROM_ABOVE_COMMAND}`
+e.g. `mkdir -p machine-root/sys/class/drm/../../devices/pci0000:00/0000:00:08.1/0000:c4:00.0/drm/renderD128`

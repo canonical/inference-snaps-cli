@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/pkg/types"
+	"github.com/canonical/inference-snaps-cli/pkg/utils"
 )
 
 var hwInfoGpu = types.PciDevice{
@@ -12,38 +13,12 @@ var hwInfoGpu = types.PciDevice{
 }
 
 func TestGfxArchitecture(t *testing.T) {
-	t.Skip("Runner does not have an AMD GPU")
 	t.Run("gfxArchitecture", func(t *testing.T) {
-		gfxVersion, err := gfxArchitecture(hwInfoGpu)
+		gfxVersion, err := gfxArchitecture(hwInfoGpu, "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/")
 		if err != nil {
 			t.Fatal(err)
 		}
 		t.Logf("gfx architecture: %v", gfxVersion)
-	})
-}
-
-func TestVRam(t *testing.T) {
-	t.Skip("Runner does not have an AMD GPU")
-	t.Run("vRam", func(t *testing.T) {
-		vram, err := vRam(hwInfoGpu)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if vram == nil {
-			t.Fatal("vRAM is nil")
-		}
-		t.Logf("vRAM: %d", *vram)
-	})
-}
-
-func TestGpuProperties(t *testing.T) {
-	t.Skip("Runner does not have an AMD GPU")
-	t.Run("gpuProperties", func(t *testing.T) {
-		properties, err := gpuProperties(hwInfoGpu)
-		if err != nil {
-			t.Fatal(err)
-		}
-		t.Logf("GPU properties: %v", properties)
 	})
 }
 
@@ -108,5 +83,27 @@ func TestGetGfxTargetVersion(t *testing.T) {
 				t.Fatalf("expected %q, got %q", tt.expected, got)
 			}
 		})
+	}
+}
+
+func TestGpuProperties(t *testing.T) {
+	originalFunc := utils.GetGlobalRootDir
+	defer func() { utils.GetGlobalRootDir = originalFunc }() // Restore the original function after test
+
+	mockCalled := false
+	utils.GetGlobalRootDir = func() string {
+		mockCalled = true
+		return "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/"
+	}
+
+	t.Run("gpuProperties", func(t *testing.T) {
+		properties, err := gpuProperties(hwInfoGpu)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Logf("GPU properties: %v", properties)
+	})
+	if !mockCalled {
+		t.Error("mock function was not called")
 	}
 }

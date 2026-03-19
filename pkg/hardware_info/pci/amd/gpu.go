@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/pkg/types"
+	"github.com/canonical/inference-snaps-cli/pkg/utils"
 )
 
 func gpuProperties(pciDevice types.PciDevice) (map[string]string, error) {
@@ -20,8 +21,7 @@ func gpuProperties(pciDevice types.PciDevice) (map[string]string, error) {
 	if vRamVal != nil {
 		properties["vram"] = strconv.FormatUint(*vRamVal, 10)
 	}
-
-	gfxArchitecture, err := gfxArchitecture(pciDevice)
+	gfxArchitecture, err := gfxArchitecture(pciDevice, utils.GetGlobalRootDir())
 	if err != nil {
 		return nil, fmt.Errorf("error looking up gfx architecture: %v", err)
 	}
@@ -57,8 +57,8 @@ func vRam(device types.PciDevice) (*uint64, error) {
 	return &vram, nil
 }
 
-func gfxArchitecture(device types.PciDevice) (string, error) {
-	nodesDir := "/sys/class/kfd/kfd/topology/nodes"
+func gfxArchitecture(device types.PciDevice, globalRootDir string) (string, error) {
+	nodesDir := globalRootDir + "sys/class/kfd/kfd/topology/nodes"
 	files, err := os.ReadDir(nodesDir)
 	if err != nil {
 		return "", err
@@ -74,7 +74,7 @@ func gfxArchitecture(device types.PciDevice) (string, error) {
 			}
 			for _, line := range strings.Split(string(data), "\n") {
 				if strings.HasPrefix(line, "drm_render_minor") {
-					pciSlot, err := getAmdGpuPciSlot(line)
+					pciSlot, err := getAmdGpuPciSlot(line, globalRootDir)
 					if err != nil {
 						break
 					}
@@ -97,11 +97,11 @@ func gfxArchitecture(device types.PciDevice) (string, error) {
 	return gfxTargetVersion, nil
 }
 
-func getAmdGpuPciSlot(drmRenderMinor string) (string, error) {
+func getAmdGpuPciSlot(drmRenderMinor string, globalRootDir string) (string, error) {
 	parts := strings.Split(drmRenderMinor, " ")
 	if len(parts) == 2 {
 		renderMinor := parts[1]
-		pciSlotFull, err := filepath.EvalSymlinks(fmt.Sprintf("/sys/class/drm/renderD%s/device", renderMinor))
+		pciSlotFull, err := filepath.EvalSymlinks(fmt.Sprintf("%ssys/class/drm/renderD%s/device", globalRootDir, renderMinor))
 		if err != nil {
 			return "", err
 		}
