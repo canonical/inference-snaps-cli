@@ -11,16 +11,6 @@ var hwInfoGpu = types.PciDevice{
 	Slot: "0000:c4:00.0",
 }
 
-func TestGfxArchitecture(t *testing.T) {
-	t.Run("gfxArchitecture", func(t *testing.T) {
-		gfxVersion, err := gfxArchitecture(hwInfoGpu, "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/")
-		if err != nil {
-			t.Fatal(err)
-		}
-		t.Logf("gfx architecture: %v", gfxVersion)
-	})
-}
-
 func TestGetGfxTargetVersion(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -47,9 +37,21 @@ func TestGetGfxTargetVersion(t *testing.T) {
 			expectFailure: true,
 		},
 		{
-			name:          "unexpected format non numeric",
-			input:         "gfx_target_version abcdef",
-			errContains:   "unexpected format for gfx_target_version",
+			name:          "unexpected major format non numeric",
+			input:         "gfx_target_version ab1234",
+			errContains:   "error parsing major version from gfx_target_version",
+			expectFailure: true,
+		},
+		{
+			name:          "unexpected minor format non numeric",
+			input:         "gfx_target_version 12ab34",
+			errContains:   "error parsing minor version from gfx_target_version",
+			expectFailure: true,
+		},
+		{
+			name:          "unexpected revision format non numeric",
+			input:         "gfx_target_version 1234ab",
+			errContains:   "error parsing revision from gfx_target_version",
 			expectFailure: true,
 		},
 		{
@@ -93,4 +95,51 @@ func TestGpuProperties(t *testing.T) {
 		}
 		t.Logf("GPU properties: %v", properties)
 	})
+}
+
+func TestGfxArchitecture(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		input struct {
+			device        types.PciDevice
+			globalRootDir string
+		}
+		expected      string
+		errContains   string
+		expectFailure bool
+	}{
+		{
+			name: "valid case with matching pci slot and valid gfx_target_version",
+			input: struct {
+				device        types.PciDevice
+				globalRootDir string
+			}{
+				device:        hwInfoGpu,
+				globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
+			},
+			expected: "gfx1152",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := gfxArchitecture(tt.input.device, tt.input.globalRootDir)
+			if tt.expectFailure {
+				if err == nil {
+					t.Fatalf("expected error, got nil (result: %q)", got)
+				}
+				if tt.errContains != "" && !strings.Contains(err.Error(), tt.errContains) {
+					t.Fatalf("expected error to contain %q, got %q", tt.errContains, err.Error())
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != tt.expected {
+				t.Fatalf("expected %q, got %q", tt.expected, got)
+			}
+		})
+	}
 }
