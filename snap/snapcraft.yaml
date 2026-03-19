@@ -27,7 +27,23 @@ layout:
   # NVIDIA icd specifies only the shared object name: libnvidia-opencl.so.1
   # libnvidia-opencl.so.1 is inside /snap/stack-utils/x3/usr/lib/x86_64-linux-gnu/, which is already in LD_LIBRARY_PATH
 
+environment:
+  # Path to access current revision of components
+  SNAP_COMPONENTS: /snap/$SNAP_INSTANCE_NAME/components/$SNAP_REVISION
+  # This is to find the intel.icd file, containing the path to libigdrcl.so
+  # Required for Intel GPU detection and communication
+  OCL_ICD_VENDORS: $SNAP/etc/OpenCL/vendors
+  # To find shared libraries that are staged and moved to components
+  ARCH_TRIPLET: $CRAFT_ARCH_TRIPLET_BUILD_FOR
+
 parts:
+  scripts:
+    source: snap/local
+    plugin: dump
+    organize:
+      "server.sh": bin/
+      "completion.bash": bin/
+
   system-utilities:
     plugin: nil
     stage-packages:
@@ -86,7 +102,10 @@ parts:
   dummy-components:
     plugin: nil
     override-prime: |
-      touch "$CRAFT_COMPONENT_DUMMY_COMPONENT_1_PRIME/component.yaml"
+      cat <<EOF > "$CRAFT_COMPONENT_DUMMY_COMPONENT_1_PRIME/component.yaml"
+      environment:
+        - OPENAI_BASE_PATH=/v1
+      EOF
       touch "$CRAFT_COMPONENT_DUMMY_COMPONENT_2_PRIME/component.yaml"
       touch "$CRAFT_COMPONENT_DUMMY_COMPONENT_3_PRIME/component.yaml"
 
@@ -103,6 +122,12 @@ parts:
       - go/1.26/stable
     source: .
     source-type: local
+    override-build: |
+      craftctl default
+      # For tab completion
+      ln --symbolic ./modelctl $CRAFT_PART_INSTALL/bin/stack-utils
+    organize:
+      bin/cli: bin/modelctl
 
   engines:
     plugin: dump
@@ -123,12 +148,13 @@ components:
       
 apps:
   stack-utils:
+    command: bin/modelctl
+    completer: bin/completion.bash
     plugs:
       - hardware-observe
       - home
       - network
       - opengl
-    command: bin/cli
 
   clinfo:
     plugs:
@@ -142,3 +168,7 @@ apps:
       - hardware-observe
       - opengl
     command: usr/bin/nvidia-smi
+
+  server:
+    command: bin/server.sh
+    daemon: simple
