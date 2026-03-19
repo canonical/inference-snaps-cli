@@ -3,8 +3,6 @@ package storage
 import (
 	"errors"
 	"fmt"
-
-	"github.com/canonical/go-snapctl/env"
 )
 
 type Cache interface {
@@ -19,8 +17,7 @@ type cache struct {
 
 func NewCache() Cache {
 	return &cache{
-		storage:             NewSnapctlStorage(), // hardcoded since that's the only supported backend
-		machineInfoTempFile: "/tmp/machine-info-" + env.SnapRevision() + ".json",
+		storage: NewSnapctlStorage(), // hardcoded since that's the only supported backend
 	}
 }
 
