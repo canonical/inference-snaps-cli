@@ -277,7 +277,9 @@ var validInvalidSets = map[string]testValidInvalid{
 	},
 
 	"amd-gpu": {
-		ValidMachines: []string{},
+		ValidMachines: []string{
+			"hp-zbook-i712850HX+RadeonPROW6600M",
+		},
 		InvalidMachines: []string{
 			"ampere-one-m-banshee-12",
 			"ampere-one-siryn",
@@ -323,6 +325,7 @@ var validInvalidSets = map[string]testValidInvalid{
 			"system76-addw4",
 			"xps13-7390",
 			"xps13-9350",
+			"hp-zbook-i712850HX+RadeonPROW6600M",
 		},
 	},
 }
