@@ -11,6 +11,104 @@ var hwInfoGpu = types.PciDevice{
 	Slot: "0000:c4:00.0",
 }
 
+func TestVRam(t *testing.T) {
+	tests := []struct {
+		name          string
+		device        types.PciDevice
+		globalRootDir string
+		expected      uint64
+		shouldErr     bool
+	}{
+		{
+			name:          "valid vram read",
+			device:        hwInfoGpu,
+			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
+			expected:      8589934592, // 8GB from mem_info_vram_total file
+			shouldErr:     false,
+		},
+		{
+			name:          "invalid path",
+			device:        types.PciDevice{Slot: "9999:99:99.9"},
+			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
+			shouldErr:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := vRam(tt.device, tt.globalRootDir)
+			if tt.shouldErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got == nil {
+				t.Fatalf("expected non-nil vram value")
+			}
+			if *got != tt.expected {
+				t.Fatalf("expected %d, got %d", tt.expected, *got)
+			}
+		})
+	}
+}
+
+func TestGetAmdGpuPciSlot(t *testing.T) {
+	tests := []struct {
+		name          string
+		input         string
+		globalRootDir string
+		expected      string
+		shouldErr     bool
+		errContains   string
+	}{
+		{
+			name:          "invalid format - missing value",
+			input:         "drm_render_minor",
+			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
+			shouldErr:     true,
+			errContains:   "unexpected format for drm_render_minor",
+		},
+		{
+			name:          "invalid format - too many parts",
+			input:         "drm_render_minor 128 extra",
+			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
+			shouldErr:     true,
+			errContains:   "unexpected format for drm_render_minor",
+		},
+		{
+			name:          "invalid symlink path",
+			input:         "drm_render_minor 999",
+			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
+			shouldErr:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getAmdGpuPciSlot(tt.input, tt.globalRootDir)
+			if tt.shouldErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil (result: %q)", got)
+				}
+				if tt.errContains != "" && !strings.Contains(err.Error(), tt.errContains) {
+					t.Fatalf("expected error to contain %q, got %q", tt.errContains, err.Error())
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != tt.expected {
+				t.Fatalf("expected %q, got %q", tt.expected, got)
+			}
+		})
+	}
+}
+
 func TestGetGfxTargetVersion(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -88,43 +186,95 @@ func TestGetGfxTargetVersion(t *testing.T) {
 }
 
 func TestGpuProperties(t *testing.T) {
-	t.Run("gpuProperties", func(t *testing.T) {
-		properties, err := gpuProperties(hwInfoGpu, "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/")
-		if err != nil {
-			t.Fatal(err)
-		}
-		t.Logf("GPU properties: %v", properties)
-	})
+	tests := []struct {
+		name           string
+		device         types.PciDevice
+		globalRootDir  []string // variadic arg
+		shouldErr      bool
+		checkVram      bool
+		checkMicroArch bool
+	}{
+		{
+			name:           "with specified root directory",
+			device:         hwInfoGpu,
+			globalRootDir:  []string{"../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/"},
+			shouldErr:      false,
+			checkVram:      true,
+			checkMicroArch: true,
+		},
+		{
+			name:          "invalid device with specified root",
+			device:        types.PciDevice{Slot: "9999:99:99.9"},
+			globalRootDir: []string{"../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/"},
+			shouldErr:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var properties map[string]string
+			var err error
+
+			if len(tt.globalRootDir) > 0 {
+				properties, err = gpuProperties(tt.device, tt.globalRootDir[0])
+			} else {
+				properties, err = gpuProperties(tt.device)
+			}
+
+			if tt.shouldErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if tt.checkVram {
+				if vram, ok := properties["vram"]; !ok || vram == "" {
+					t.Fatalf("expected vram property to be set")
+				}
+			}
+
+			if tt.checkMicroArch {
+				if microarch, ok := properties["microarchitecture"]; !ok || microarch == "" {
+					t.Fatalf("expected microarchitecture property to be set")
+				}
+			}
+		})
+	}
 }
 
 func TestGfxArchitecture(t *testing.T) {
 	tests := []struct {
-		name string // description of this test case
-		// Named input parameters for target function.
-		input struct {
-			device        types.PciDevice
-			globalRootDir string
-		}
+		name          string
+		device        types.PciDevice
+		globalRootDir string
 		expected      string
+		shouldErr     bool
 		errContains   string
-		expectFailure bool
 	}{
 		{
-			name: "valid case with matching pci slot and valid gfx_target_version",
-			input: struct {
-				device        types.PciDevice
-				globalRootDir string
-			}{
-				device:        hwInfoGpu,
-				globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
-			},
-			expected: "gfx1152",
+			name:          "valid case with matching pci slot and valid gfx_target_version",
+			device:        hwInfoGpu,
+			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
+			expected:      "gfx1152",
+			shouldErr:     false,
+		},
+		{
+			name:          "invalid nodes directory",
+			device:        hwInfoGpu,
+			globalRootDir: "/nonexistent/path/",
+			shouldErr:     true,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := gfxArchitecture(tt.input.device, tt.input.globalRootDir)
-			if tt.expectFailure {
+			got, err := gfxArchitecture(tt.device, tt.globalRootDir)
+			if tt.shouldErr {
 				if err == nil {
 					t.Fatalf("expected error, got nil (result: %q)", got)
 				}
