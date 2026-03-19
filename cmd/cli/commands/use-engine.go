@@ -51,6 +51,7 @@ func UseEngine(ctx *common.Context) *cobra.Command {
 }
 
 func (cmd *useEngineCommand) validateArgs(_ *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
+	// TODO Scoring engines might be slow
 	scoredEngines, err := common.ScoreEngines(cmd.Context)
 	if err != nil {
 		fmt.Printf("Error scoring engines: %v\n", err)
@@ -96,10 +97,14 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 }
 
 func (cmd *useEngineCommand) autoSelectEngine() error {
+	stopProgress := common.StartProgressSpinner("Scoring engines")
+	defer stopProgress()
+
 	scoredEngines, err := common.ScoreEngines(cmd.Context)
 	if err != nil {
 		return fmt.Errorf("error scoring engines: %v", err)
 	}
+	stopProgress()
 
 	fmt.Println("Evaluating engines for optimal hardware compatibility:")
 	for _, engine := range scoredEngines {

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/pkg/engines"
+	"github.com/canonical/inference-snaps-cli/pkg/hardware_info"
 	"github.com/canonical/inference-snaps-cli/pkg/selector"
 	"github.com/canonical/inference-snaps-cli/pkg/storage"
 	"gopkg.in/yaml.v3"
@@ -136,7 +137,8 @@ func ScoreEngines(ctx *Context) ([]engines.ScoredManifest, error) {
 		return nil, fmt.Errorf("error loading engines: %v", err)
 	}
 
-	machineInfo, err := ctx.Cache.GetMachineInfo()
+	// TODO: Getting hwardware info can be slow. Add a spinner.
+	machineInfo, err := hardware_info.Get(false)
 	if err != nil {
 		return nil, fmt.Errorf("error getting machine info: %v", err)
 	}
