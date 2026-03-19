@@ -30,7 +30,7 @@ func Chat(ctx *common.Context) *cobra.Command {
 }
 
 func ChatSupported(ctx *common.Context) (bool, error) {
-	found, _, err := chatBaseURL(ctx)
+	_, found, err := chatBaseURL(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -38,12 +38,9 @@ func ChatSupported(ctx *common.Context) (bool, error) {
 }
 
 func (cmd *chatCommand) run(_ *cobra.Command, _ []string) error {
-	found, chatBaseUrl, err := chatBaseURL(cmd.Context)
+	chatBaseUrl, _, err := chatBaseURL(cmd.Context)
 	if err != nil {
-		return fmt.Errorf("error getting chat base url: %v", err)
-	}
-	if !found {
-		return fmt.Errorf("chat not supported: no server endpoint found")
+		return fmt.Errorf("error getting OpenAI base URL: %v", err)
 	}
 
 	if env.SnapInstanceName() != "" {
@@ -64,14 +61,14 @@ func (cmd *chatCommand) run(_ *cobra.Command, _ []string) error {
 	return chatClient.Start()
 }
 
-func chatBaseURL(ctx *common.Context) (bool, string, error) {
+func chatBaseURL(ctx *common.Context) (string, bool, error) {
 	serverEndpoints, err := common.ServerEndpoints(ctx)
 	if err != nil {
-		return false, "", fmt.Errorf("error getting server endpoints: %v", err)
+		return "", false, fmt.Errorf("error getting server endpoints: %v", err)
 	}
 	chatBaseUrl, found := serverEndpoints[common.OpenAiEndpointKey]
 	if !found {
-		return false, "", nil
+		return "", false, nil
 	}
-	return true, chatBaseUrl, nil
+	return chatBaseUrl, true, nil
 }

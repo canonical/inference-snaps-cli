@@ -3,35 +3,47 @@ package common
 import (
 	"fmt"
 	"net/url"
+	"strings"
 )
 
 const (
 	OpenAiEndpointKey = "openai"
-	protocolKey       = "http"
+	protocolKey       = "protocol"
 	basePathKey       = "base-path"
 )
 
 func ServerEndpoints(ctx *Context) (map[string]string, error) {
-	componentConfigs, err := LoadEngineEnvironment(ctx)
+	settings, err := EngineComponentSettings(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error loading engine environment: %v", err)
 	}
-	return serverEndpoints(ctx, componentConfigs)
+	return serverEndpoints(ctx, settings)
 }
 
-func serverEndpoints(ctx *Context, componentConfigs []ComponentConfig) (map[string]string, error) {
+func serverEndpoints(ctx *Context, settingsCollection []ComponentSettings) (map[string]string, error) {
 	endpoints := make(map[string]string)
-	for _, componentConfig := range componentConfigs {
-		for serverName, serverConfig := range componentConfig.Servers {
-			switch serverConfig[protocolKey] {
+	for _, settings := range settingsCollection {
+
+		for _, env := range settings.Environment {
+			parts := strings.Split(env, "=")
+			if len(parts) == 2 {
+				if parts[0] == "OPENAI_BASE_PATH" {
+					fmt.Println("Warning: OPENAI_BASE_PATH env var is deprecated and ignored. Set server settings in \"servers\".")
+				}
+			}
+		}
+
+		for serverName, serverSettings := range settings.Servers {
+			switch serverSettings[protocolKey] {
 			case "http", "https":
-				httpUrl, err := serverHttpUrl(ctx, serverConfig)
+				httpUrl, err := serverHttpUrl(ctx, serverSettings)
 				if err != nil {
-					return nil, fmt.Errorf("error getting server http endpoints: %v", err)
+					return nil, fmt.Errorf("error getting server HTTP URL: %v", err)
 				}
 				endpoints[serverName] = httpUrl
 			default:
-				return nil, fmt.Errorf("unsupported protocol %q for server %q", serverConfig["protocol"], serverName)
+				return nil, fmt.Errorf("unsupported protocol %q for server %q in component %q",
+					serverSettings["protocol"], serverName, settings.componentName)
 			}
 		}
 	}

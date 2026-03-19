@@ -64,15 +64,15 @@ func main() {
 
 	addCommandGroup(rootCmd, "basic", "Basic Commands:",
 		commands.Status(ctx),
-		// commands.Chat(ctx), added conditionally below based on chat support
+		// Chat is added conditionally
 	)
-	if y, err := commands.ChatSupported(ctx); err != nil {
+	if yes, err := commands.ChatSupported(ctx); err != nil {
 		fmt.Printf("Error: checking if chat is supported: %v\n", err)
 		return
-	} else if y {
+	} else if yes {
 		err := appendCommandToGroup(rootCmd, "basic", commands.Chat(ctx))
 		if err != nil {
-			fmt.Printf("Error: : %v\n", err)
+			fmt.Printf("Error: %v\n", err)
 			return
 		}
 	}

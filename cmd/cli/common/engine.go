@@ -15,13 +15,13 @@ import (
 
 const componentEnv = "COMPONENT"
 
-// TODO: find a better name
-type ComponentConfig struct {
-	Servers     map[string]map[string]string
-	Environment []string `yaml:"environment"`
+type ComponentSettings struct {
+	componentName string
+	Servers       map[string]map[string]string `yaml:"servers"`
+	Environment   []string                     `yaml:"environment"`
 }
 
-func LoadEngineEnvironment(ctx *Context) ([]ComponentConfig, error) {
+func EngineComponentSettings(ctx *Context) ([]ComponentSettings, error) {
 	activeEngineName, err := ctx.Cache.GetActiveEngine()
 	if err != nil {
 		return nil, fmt.Errorf("error looking up active engine: %v", err)
@@ -41,7 +41,7 @@ func LoadEngineEnvironment(ctx *Context) ([]ComponentConfig, error) {
 		return nil, fmt.Errorf("SNAP_COMPONENTS env var not set")
 	}
 
-	var componentsConfigs []ComponentConfig
+	var settingsCollection []ComponentSettings
 	for _, componentName := range manifest.Components {
 		componentPath := filepath.Join(componentsDir, componentName)
 		componentYamlFile := filepath.Join(componentPath, "component.yaml")
@@ -51,26 +51,46 @@ func LoadEngineEnvironment(ctx *Context) ([]ComponentConfig, error) {
 			return nil, fmt.Errorf("error reading %s: %v", componentYamlFile, err)
 		}
 
-		var component ComponentConfig
-		err = yaml.Unmarshal(data, &component)
+		var settings ComponentSettings
+		err = yaml.Unmarshal(data, &settings)
 		if err != nil {
 			return nil, fmt.Errorf("error unmarshaling %s: %v", componentYamlFile, err)
 		}
 
-		componentsConfigs = append(componentsConfigs, component)
+		settings.componentName = componentName
 
-		for i := range component.Environment {
+		settingsCollection = append(settingsCollection, settings)
+	}
+
+	return settingsCollection, nil
+}
+
+// LoadEngineEnvironment sets env vars of the active engine's components for the current process
+func LoadEngineEnvironment(ctx *Context) error {
+	settingsCollection, err := EngineComponentSettings(ctx)
+	if err != nil {
+		return fmt.Errorf("error loading engine component settings: %v", err)
+	}
+
+	componentsDir, found := os.LookupEnv("SNAP_COMPONENTS")
+	if !found {
+		return fmt.Errorf("SNAP_COMPONENTS env var not set")
+	}
+
+	for _, settings := range settingsCollection {
+		for i := range settings.Environment {
 			// Split into key/value
-			kv := component.Environment[i]
+			kv := settings.Environment[i]
 			parts := strings.SplitN(kv, "=", 2)
 			if len(parts) != 2 {
-				return nil, fmt.Errorf("invalid env var %q", kv)
+				return fmt.Errorf("invalid env var %q", kv)
 			}
 			k, v := parts[0], parts[1]
 
 			// Set component path env var for expansion
+			componentPath := filepath.Join(componentsDir, settings.componentName)
 			if err := os.Setenv(componentEnv, componentPath); err != nil {
-				return nil, fmt.Errorf("error setting %q: %v", componentEnv, err)
+				return fmt.Errorf("error setting %q: %v", componentEnv, err)
 			}
 
 			// Expand all env vars in value
@@ -78,18 +98,18 @@ func LoadEngineEnvironment(ctx *Context) ([]ComponentConfig, error) {
 
 			// Unset the component path
 			if err := os.Unsetenv(componentEnv); err != nil {
-				return nil, fmt.Errorf("error unsetting %q: %v", componentEnv, err)
+				return fmt.Errorf("error unsetting %q: %v", componentEnv, err)
 			}
 
 			err = os.Setenv(k, v)
 			if err != nil {
-				return nil, fmt.Errorf("error setting %q: %v", k, err)
+				return fmt.Errorf("error setting %q: %v", k, err)
 			}
 		}
 
 	}
 
-	return componentsConfigs, nil
+	return nil
 }
 
 // SetEngineConfig sets configurations of the given engine.

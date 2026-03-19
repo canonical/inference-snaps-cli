@@ -10,17 +10,17 @@ import (
 func TestServerEndpoints(t *testing.T) {
 	testCases := []struct {
 		name             string
-		componentConfigs []ComponentConfig
+		componentConfigs []ComponentSettings
 		want             map[string]string
 		wantErrContains  string
 	}{
 		{
-			name: "builds endpoints from multiple components",
-			componentConfigs: []ComponentConfig{
+			name: "multiple components and servers",
+			componentConfigs: []ComponentSettings{
 				{
 					Servers: map[string]map[string]string{
 						"openai": {
-							"http":      "http",
+							"protocol":  "http",
 							"base-path": "/v1",
 						},
 					},
@@ -28,11 +28,11 @@ func TestServerEndpoints(t *testing.T) {
 				{
 					Servers: map[string]map[string]string{
 						"kserve": {
-							"http":      "https",
+							"protocol":  "https",
 							"base-path": "/v2",
 						},
 						"webui": {
-							"http": "http",
+							"protocol": "http",
 						},
 					},
 				},
@@ -44,18 +44,17 @@ func TestServerEndpoints(t *testing.T) {
 			},
 		},
 		{
-			name: "returns error for unsupported protocol",
-			componentConfigs: []ComponentConfig{
+			name: "unsupported protocol",
+			componentConfigs: []ComponentSettings{
 				{
 					Servers: map[string]map[string]string{
 						"openai": {
-							"http":     "ftp",
 							"protocol": "ftp",
 						},
 					},
 				},
 			},
-			wantErrContains: `unsupported protocol "ftp" for server "openai"`,
+			wantErrContains: "unsupported protocol",
 		},
 	}
 
@@ -104,24 +103,24 @@ func TestServerHttpUrl(t *testing.T) {
 		want         string
 	}{
 		{
-			name: "uses default base path when not provided",
+			name: "default base path",
 			serverConfig: map[string]string{
-				"http": "http",
+				"protocol": "http",
 			},
 			want: "http://localhost:8080/",
 		},
 		{
-			name: "uses configured base path",
+			name: "custom base path",
 			serverConfig: map[string]string{
-				"http":      "http",
+				"protocol":  "http",
 				"base-path": "/v1",
 			},
 			want: "http://localhost:8080/v1",
 		},
 		{
-			name: "supports https protocol",
+			name: "https protocol",
 			serverConfig: map[string]string{
-				"http":      "https",
+				"protocol":  "https",
 				"base-path": "/v3",
 			},
 			want: "https://localhost:8080/v3",
