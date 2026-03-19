@@ -127,29 +127,31 @@ func getGfxTargetVersion(gfxTargetVersion string) (string, error) {
 			return "", fmt.Errorf("gfx_target_version is invalid for this device")
 		}
 		gfxTargetVersion := parts[1]
-		if _, err := strconv.ParseUint(gfxTargetVersion, 10, 64); err == nil {
-			deviceLower := strings.ToLower(gfxTargetVersion)
-			if len(deviceLower) < 6 {
-				return "", fmt.Errorf("gfx_target_version has an unexpected format: %s", gfxTargetVersion)
-			}
-
-			major := deviceLower[0:2]
-
-			minorInt, err := strconv.Atoi(deviceLower[2:4])
-			if err != nil {
-				return "", fmt.Errorf("error parsing minor version from gfx_target_version: %v", err)
-			}
-			minor := strconv.Itoa(minorInt)
-
-			revisionInt, err := strconv.Atoi(deviceLower[4:6])
-			if err != nil {
-				return "", fmt.Errorf("error parsing revision from gfx_target_version: %v", err)
-			}
-			revision := strconv.Itoa(revisionInt)
-
-			arch := "gfx" + major + minor + revision
-			return arch, nil
+		deviceLower := strings.ToLower(gfxTargetVersion)
+		if len(deviceLower) < 6 {
+			return "", fmt.Errorf("gfx_target_version has an unexpected format: %s", gfxTargetVersion)
 		}
+
+		majorInt, err := strconv.Atoi(deviceLower[0:2])
+		if err != nil {
+			return "", fmt.Errorf("error parsing major version from gfx_target_version: %v", err)
+		}
+		major := strconv.Itoa(majorInt)
+
+		minorInt, err := strconv.Atoi(deviceLower[2:4])
+		if err != nil {
+			return "", fmt.Errorf("error parsing minor version from gfx_target_version: %v", err)
+		}
+		minor := strconv.Itoa(minorInt)
+
+		revisionInt, err := strconv.Atoi(deviceLower[4:6])
+		if err != nil {
+			return "", fmt.Errorf("error parsing revision from gfx_target_version: %v", err)
+		}
+		revision := strconv.Itoa(revisionInt)
+
+		arch := "gfx" + major + minor + revision
+		return arch, nil
 	}
 	return "", fmt.Errorf("unexpected format for gfx_target_version: %s", gfxTargetVersion)
 }
