@@ -84,7 +84,7 @@ func (cmd *showEngineCommand) showCurrentEngine() error {
 }
 
 func (cmd *showEngineCommand) showEngine(engineName string) error {
-	stopProgress := common.StartProgressSpinner("Checking engines")
+	stopProgress := common.StartProgressSpinner(common.ProgressScoring)
 	defer stopProgress()
 
 	scoredEngines, err := common.ScoreEngines(cmd.Context)

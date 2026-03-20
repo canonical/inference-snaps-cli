@@ -14,7 +14,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const componentEnv = "COMPONENT"
+const (
+	componentEnv    = "COMPONENT"
+	ProgressScoring = "Checking engines"
+)
 
 func LoadEngineEnvironment(ctx *Context) error {
 	activeEngineName, err := ctx.Cache.GetActiveEngine()

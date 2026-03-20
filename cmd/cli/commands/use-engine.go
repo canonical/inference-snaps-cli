@@ -90,7 +90,7 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 }
 
 func (cmd *useEngineCommand) autoSelectEngine() error {
-	stopProgress := common.StartProgressSpinner("Checking engines")
+	stopProgress := common.StartProgressSpinner(common.ProgressScoring)
 	defer stopProgress()
 
 	scoredEngines, err := common.ScoreEngines(cmd.Context)
