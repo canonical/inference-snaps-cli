@@ -206,7 +206,7 @@ func TestGpuPropertiesFromDir(t *testing.T) {
 			checkMicroArch: true,
 		},
 		{
-			name:          "invalid device with specified root",
+			name:          "invalid pciSlot with specified machine",
 			device:        types.PciDevice{Slot: "9999:99:99.9"},
 			globalRootDir: []string{"../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/"},
 			shouldErr:     true,
