@@ -111,7 +111,3 @@ func IsRootUser() bool {
 func IsTerminalOutput() bool {
 	return term.IsTerminal(int(os.Stdout.Fd()))
 }
-
-var GetGlobalRootDir = func() string {
-	return "/"
-}
