@@ -134,9 +134,12 @@ func addCommandGroup(rootCmd *cobra.Command, groupID, groupTitle string, command
 
 // appendCommandToGroup adds a command to an existing group in the root command
 func appendCommandToGroup(rootCmd *cobra.Command, groupID string, cmd *cobra.Command) error {
+	// Make sure the group exists
 	for _, existingCmd := range rootCmd.Commands() {
 		if existingCmd.GroupID == groupID {
-			existingCmd.AddCommand(cmd)
+			// Add command to the root command with the specified group ID
+			cmd.GroupID = groupID
+			rootCmd.AddCommand(cmd)
 			return nil
 		}
 	}
