@@ -10,22 +10,21 @@ import (
 	"github.com/canonical/inference-snaps-cli/pkg/types"
 )
 
-func gpuProperties(pciDevice types.PciDevice, globalRootDir ...string) (map[string]string, error) {
+func gpuProperties(pciDevice types.PciDevice) (map[string]string, error) {
+	return gpuPropertiesFromDir(pciDevice, "/")
+}
+
+func gpuPropertiesFromDir(pciDevice types.PciDevice, rootDir string) (map[string]string, error) {
 	properties := make(map[string]string)
 
-	root := "/"
-	if len(globalRootDir) > 0 {
-		root = globalRootDir[0]
-	}
-
-	vRamVal, err := vRam(pciDevice, root)
+	vRamVal, err := vRam(pciDevice, rootDir)
 	if err != nil {
 		return nil, fmt.Errorf("error looking up vRAM: %v", err)
 	}
 	if vRamVal != nil {
 		properties["vram"] = strconv.FormatUint(*vRamVal, 10)
 	}
-	gfxArchitecture, err := gfxArchitecture(pciDevice, root)
+	gfxArchitecture, err := gfxArchitecture(pciDevice, rootDir)
 	if err != nil {
 		return nil, fmt.Errorf("error looking up gfx architecture: %v", err)
 	}
@@ -36,7 +35,7 @@ func gpuProperties(pciDevice types.PciDevice, globalRootDir ...string) (map[stri
 	return properties, nil
 }
 
-func vRam(device types.PciDevice, globalRootDir string) (*uint64, error) {
+func vRam(device types.PciDevice, rootDir string) (*uint64, error) {
 	/*
 		AMD vram is listed under /sys/bus/pci/devices/${pci_slot}/mem_info_vram_total
 
@@ -48,7 +47,7 @@ func vRam(device types.PciDevice, globalRootDir string) (*uint64, error) {
 		ubuntu@u-HP-EliteBook-845-G8-Notebook-PC:~$ cat /sys/bus/pci/devices/0000\:04\:00.0/mem_info_vram_total
 		536870912
 	*/
-	data, err := os.ReadFile(globalRootDir + "sys/bus/pci/devices/" + device.Slot + "/mem_info_vram_total")
+	data, err := os.ReadFile(rootDir + "sys/bus/pci/devices/" + device.Slot + "/mem_info_vram_total")
 	if err != nil {
 		return nil, err
 	}
@@ -61,14 +60,13 @@ func vRam(device types.PciDevice, globalRootDir string) (*uint64, error) {
 	return &vram, nil
 }
 
-func gfxArchitecture(device types.PciDevice, globalRootDir string) (string, error) {
-	nodesDir := globalRootDir + "sys/class/kfd/kfd/topology/nodes"
+func gfxArchitecture(device types.PciDevice, rootDir string) (string, error) {
+	nodesDir := rootDir + "sys/class/kfd/kfd/topology/nodes"
 	files, err := os.ReadDir(nodesDir)
 	if err != nil {
 		return "", err
 	}
 
-	var gfxTargetVersion string
 	for _, file := range files {
 		if file.IsDir() {
 			propertiesPath := fmt.Sprintf("%s/%s/properties", nodesDir, file.Name())
@@ -76,36 +74,43 @@ func gfxArchitecture(device types.PciDevice, globalRootDir string) (string, erro
 			if err != nil {
 				continue // skip this node if we can't read its properties
 			}
+
+			nodeMatchesDevice := false
+			var nodeGfxTargetVersion string
 			for _, line := range strings.Split(string(data), "\n") {
 				if strings.HasPrefix(line, "drm_render_minor") {
-					pciSlot, err := getAmdGpuPciSlot(line, globalRootDir)
+					pciSlot, err := getAmdGpuPciSlot(line, rootDir)
 					if err != nil {
 						break
 					}
 					if pciSlot != device.Slot {
 						break
 					}
+					nodeMatchesDevice = true
 				} else if strings.HasPrefix(line, "gfx_target_version") {
-					gfxTargetVersion, err = getGfxTargetVersion(line)
+					nodeGfxTargetVersion, err = parseGfxTargetVersion(line)
 					if err != nil {
 						break
 					}
 				}
 			}
 
+			if nodeMatchesDevice && len(nodeGfxTargetVersion) > 0 {
+				return nodeGfxTargetVersion, nil
+			}
+
 		}
 	}
-	if len(gfxTargetVersion) == 0 {
-		return "", fmt.Errorf("gfx_target_version not found for device with pci slot %s", device.Slot)
-	}
-	return gfxTargetVersion, nil
+	return "", fmt.Errorf("gfx_target_version not found for device with pci slot %s", device.Slot)
 }
 
-func getAmdGpuPciSlot(drmRenderMinor string, globalRootDir string) (string, error) {
+func getAmdGpuPciSlot(drmRenderMinor string, rootDir string) (string, error) {
 	parts := strings.Split(drmRenderMinor, " ")
 	if len(parts) == 2 {
 		renderMinor := parts[1]
-		pciSlotFull, err := filepath.EvalSymlinks(fmt.Sprintf("%ssys/class/drm/renderD%s/device", globalRootDir, renderMinor))
+		pciSlotFull, err := filepath.EvalSymlinks(fmt.Sprintf("%ssys/class/drm/renderD%s/device", rootDir, renderMinor))
+		wd, _ := os.Getwd()
+		fmt.Printf("-------------------\n%v for %v in dir %s\n------------------------\n", pciSlotFull, fmt.Sprintf("%ssys/class/drm/renderD%s/device", rootDir, renderMinor), wd)
 		if err != nil {
 			return "", err
 		}
@@ -120,8 +125,8 @@ func getAmdGpuPciSlot(drmRenderMinor string, globalRootDir string) (string, erro
 	}
 }
 
-func getGfxTargetVersion(gfxTargetVersion string) (string, error) {
-	parts := strings.Split(gfxTargetVersion, " ")
+func parseGfxTargetVersion(gfxTargetVersionLine string) (string, error) {
+	parts := strings.Split(gfxTargetVersionLine, " ")
 	if len(parts) == 2 {
 		if parts[1] == "0" {
 			return "", fmt.Errorf("gfx_target_version is invalid for this device")
@@ -153,5 +158,5 @@ func getGfxTargetVersion(gfxTargetVersion string) (string, error) {
 		arch := "gfx" + major + minor + revision
 		return arch, nil
 	}
-	return "", fmt.Errorf("unexpected format for gfx_target_version: %s", gfxTargetVersion)
+	return "", fmt.Errorf("unexpected format for gfx_target_version: %s", gfxTargetVersionLine)
 }

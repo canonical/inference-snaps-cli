@@ -7,10 +7,6 @@ import (
 	"github.com/canonical/inference-snaps-cli/pkg/types"
 )
 
-var hwInfoGpu = types.PciDevice{
-	Slot: "0000:c4:00.0",
-}
-
 func TestVRam(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -21,7 +17,7 @@ func TestVRam(t *testing.T) {
 	}{
 		{
 			name:          "valid vram read",
-			device:        hwInfoGpu,
+			device:        types.PciDevice{Slot: "0000:c4:00.0"},
 			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
 			expected:      8589934592, // 8GB from mem_info_vram_total file
 			shouldErr:     false,
@@ -65,6 +61,13 @@ func TestGetAmdGpuPciSlot(t *testing.T) {
 		shouldErr     bool
 		errContains   string
 	}{
+		{
+			name:          "valid input with existing render minor",
+			input:         "drm_render_minor 128",
+			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
+			expected:      "0000:c4:00.0",
+			shouldErr:     false,
+		},
 		{
 			name:          "invalid format - missing value",
 			input:         "drm_render_minor",
@@ -119,8 +122,8 @@ func TestGetGfxTargetVersion(t *testing.T) {
 	}{
 		{
 			name:     "valid gfx target version",
-			input:    "gfx_target_version 110002",
-			expected: "gfx1102",
+			input:    "gfx_target_version 110502",
+			expected: "gfx1152",
 		},
 		{
 			name:          "invalid zero value",
@@ -162,7 +165,7 @@ func TestGetGfxTargetVersion(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getGfxTargetVersion(tt.input)
+			got, err := parseGfxTargetVersion(tt.input)
 			t.Logf("input=%q got=%q err=%v", tt.input, got, err)
 
 			if tt.expectFailure {
@@ -185,7 +188,7 @@ func TestGetGfxTargetVersion(t *testing.T) {
 	}
 }
 
-func TestGpuProperties(t *testing.T) {
+func TestGpuPropertiesFromDir(t *testing.T) {
 	tests := []struct {
 		name           string
 		device         types.PciDevice
@@ -196,7 +199,7 @@ func TestGpuProperties(t *testing.T) {
 	}{
 		{
 			name:           "with specified root directory",
-			device:         hwInfoGpu,
+			device:         types.PciDevice{Slot: "0000:c4:00.0"},
 			globalRootDir:  []string{"../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/"},
 			shouldErr:      false,
 			checkVram:      true,
@@ -216,7 +219,7 @@ func TestGpuProperties(t *testing.T) {
 			var err error
 
 			if len(tt.globalRootDir) > 0 {
-				properties, err = gpuProperties(tt.device, tt.globalRootDir[0])
+				properties, err = gpuPropertiesFromDir(tt.device, tt.globalRootDir[0])
 			} else {
 				properties, err = gpuProperties(tt.device)
 			}
@@ -258,15 +261,21 @@ func TestGfxArchitecture(t *testing.T) {
 	}{
 		{
 			name:          "valid case with matching pci slot and valid gfx_target_version",
-			device:        hwInfoGpu,
+			device:        types.PciDevice{Slot: "0000:c4:00.0"},
 			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
 			expected:      "gfx1152",
 			shouldErr:     false,
 		},
 		{
 			name:          "invalid nodes directory",
-			device:        hwInfoGpu,
+			device:        types.PciDevice{Slot: "0000:c4:00.0"},
 			globalRootDir: "/nonexistent/path/",
+			shouldErr:     true,
+		},
+		{
+			name:          "no matching node for pci slot",
+			device:        types.PciDevice{Slot: "9999:99:99.9"},
+			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
 			shouldErr:     true,
 		},
 	}
