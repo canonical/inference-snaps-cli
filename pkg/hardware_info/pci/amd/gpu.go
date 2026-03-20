@@ -109,8 +109,6 @@ func getAmdGpuPciSlot(drmRenderMinor string, rootDir string) (string, error) {
 	if len(parts) == 2 {
 		renderMinor := parts[1]
 		pciSlotFull, err := filepath.EvalSymlinks(fmt.Sprintf("%ssys/class/drm/renderD%s/device", rootDir, renderMinor))
-		wd, _ := os.Getwd()
-		fmt.Printf("-------------------\n%v for %v in dir %s\n------------------------\n", pciSlotFull, fmt.Sprintf("%ssys/class/drm/renderD%s/device", rootDir, renderMinor), wd)
 		if err != nil {
 			return "", err
 		}
