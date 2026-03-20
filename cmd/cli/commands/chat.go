@@ -2,15 +2,12 @@ package commands
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/canonical/go-snapctl"
 	"github.com/canonical/go-snapctl/env"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
 	"github.com/spf13/cobra"
 )
-
-const chatEnv = "CHAT"
 
 type chatCommand struct {
 	*common.Context
@@ -32,8 +29,9 @@ func Chat(ctx *common.Context) *cobra.Command {
 	return cobraCmd
 }
 
-func ChatEnabled(ctx *common.Context) bool {
-	return os.Getenv(chatEnv) == "enabled"
+func ChatEnabled() bool {
+	features := common.AdditionalFeatures()
+	return features.Chat
 }
 
 func (cmd *chatCommand) run(_ *cobra.Command, _ []string) error {
