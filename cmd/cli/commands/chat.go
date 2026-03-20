@@ -2,12 +2,15 @@ package commands
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/canonical/go-snapctl"
 	"github.com/canonical/go-snapctl/env"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
 	"github.com/spf13/cobra"
 )
+
+const chatEnv = "CHAT"
 
 type chatCommand struct {
 	*common.Context
@@ -29,16 +32,12 @@ func Chat(ctx *common.Context) *cobra.Command {
 	return cobraCmd
 }
 
-func ChatSupported(ctx *common.Context) (bool, error) {
-	_, found, err := chatBaseURL(ctx)
-	if err != nil {
-		return false, err
-	}
-	return found, nil
+func ChatEnabled(ctx *common.Context) bool {
+	return os.Getenv(chatEnv) == "enabled"
 }
 
 func (cmd *chatCommand) run(_ *cobra.Command, _ []string) error {
-	chatBaseUrl, _, err := chatBaseURL(cmd.Context)
+	chatBaseUrl, err := chatBaseURL(cmd.Context)
 	if err != nil {
 		return fmt.Errorf("error getting OpenAI base URL: %v", err)
 	}
@@ -61,14 +60,14 @@ func (cmd *chatCommand) run(_ *cobra.Command, _ []string) error {
 	return chatClient.Start()
 }
 
-func chatBaseURL(ctx *common.Context) (string, bool, error) {
+func chatBaseURL(ctx *common.Context) (string, error) {
 	serverEndpoints, err := common.ServerEndpoints(ctx)
 	if err != nil {
-		return "", false, fmt.Errorf("error getting server endpoints: %v", err)
+		return "", fmt.Errorf("error getting server endpoints: %v", err)
 	}
 	chatBaseUrl, found := serverEndpoints[common.OpenAiEndpointKey]
 	if !found {
-		return "", false, nil
+		return "", fmt.Errorf("%q not found in server endpoints", common.OpenAiEndpointKey)
 	}
-	return chatBaseUrl, true, nil
+	return chatBaseUrl, nil
 }
