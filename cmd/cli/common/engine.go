@@ -133,7 +133,7 @@ func UnsetEngineConfig(engineName string, unsetUserOverrides bool, ctx *Context)
 
 /*
 ScoreEngines loads all engine manifests, looks up the host machine information,
-and score the engines according to their compatibility with the host.
+and scores the engines according to their compatibility with the host.
 
 Warning: calls to this function can block for a number of seconds while the host machine information is being looked up.
 */
