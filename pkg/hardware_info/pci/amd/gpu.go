@@ -47,7 +47,7 @@ func vRam(device types.PciDevice, rootDir string) (*uint64, error) {
 		ubuntu@u-HP-EliteBook-845-G8-Notebook-PC:~$ cat /sys/bus/pci/devices/0000\:04\:00.0/mem_info_vram_total
 		536870912
 	*/
-	data, err := os.ReadFile(rootDir + "sys/bus/pci/devices/" + device.Slot + "/mem_info_vram_total")
+	data, err := os.ReadFile(filepath.Join(rootDir, "sys/bus/pci/devices", device.Slot, "mem_info_vram_total"))
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func vRam(device types.PciDevice, rootDir string) (*uint64, error) {
 }
 
 func gfxArchitecture(device types.PciDevice, rootDir string) (string, error) {
-	nodesDir := rootDir + "sys/class/kfd/kfd/topology/nodes"
+	nodesDir := filepath.Join(rootDir, "sys/class/kfd/kfd/topology/nodes")
 	files, err := os.ReadDir(nodesDir)
 	if err != nil {
 		return "", err
@@ -69,7 +69,7 @@ func gfxArchitecture(device types.PciDevice, rootDir string) (string, error) {
 
 	for _, file := range files {
 		if file.IsDir() {
-			propertiesPath := fmt.Sprintf("%s/%s/properties", nodesDir, file.Name())
+			propertiesPath := filepath.Join(nodesDir, file.Name(), "properties")
 			data, err := os.ReadFile(propertiesPath)
 			if err != nil {
 				continue // skip this node if we can't read its properties
@@ -108,7 +108,7 @@ func getAmdGpuPciSlot(drmRenderMinor string, rootDir string) (string, error) {
 	parts := strings.Split(drmRenderMinor, " ")
 	if len(parts) == 2 {
 		renderMinor := parts[1]
-		pciSlotFull, err := filepath.EvalSymlinks(fmt.Sprintf("%ssys/class/drm/renderD%s/device", rootDir, renderMinor))
+		pciSlotFull, err := filepath.EvalSymlinks(filepath.Join(rootDir, "sys/class/drm/renderD"+renderMinor, "device"))
 		if err != nil {
 			return "", err
 		}
