@@ -24,12 +24,11 @@ func serverEndpoints(ctx *Context, settingsCollection []ComponentSettings) (map[
 	endpoints := make(map[string]string)
 	for _, settings := range settingsCollection {
 
+		// TODO: Remove this check in a future release
 		for _, env := range settings.Environment {
-			parts := strings.Split(env, "=")
-			if len(parts) == 2 {
-				if parts[0] == "OPENAI_BASE_PATH" {
-					fmt.Println("Warning: OPENAI_BASE_PATH env var is deprecated and ignored. Set server settings in \"servers\".")
-				}
+			if strings.HasPrefix(env, "OPENAI_BASE_PATH") {
+				return nil, fmt.Errorf("OPENAI_BASE_PATH env in component %q is deprecated; set server settings in \"servers\".",
+					settings.componentName)
 			}
 		}
 

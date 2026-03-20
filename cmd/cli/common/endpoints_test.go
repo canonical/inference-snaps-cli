@@ -56,6 +56,15 @@ func TestServerEndpoints(t *testing.T) {
 			},
 			wantErrContains: "unsupported protocol",
 		},
+		{
+			name: "OPENAI_BASE_PATH deprecated",
+			componentConfigs: []ComponentSettings{
+				{
+					Environment: []string{"OPENAI_BASE_PATH=/v1"},
+				},
+			},
+			wantErrContains: "deprecated",
+		},
 	}
 
 	for _, testCase := range testCases {
