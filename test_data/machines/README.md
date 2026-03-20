@@ -66,3 +66,8 @@ e.g. `mkdir -p machine-root/sys/class/drm/../../devices/pci0000:00/0000:00:08.1/
 To complete the setup, copy the file `mem_info_vram_total`:
 `cp -a --parent /sys/bus/pci/devices/0000\:c4\:00.0/mem_info_vram_total machine-root/`
 Substitute the pciSlot in the above command with the one corresponding to the GPU being tested, which can be found in the `lspci.txt` file.
+In case the directory `machine-root/sys/class/drm/renderD128` should be empty:
+```
+cd machine-root/sys/class/drm/renderD128
+ln -s ../.. device
+```
