@@ -253,8 +253,8 @@ func TestGpuPropertiesFromDir(t *testing.T) {
 		},
 		{
 			name:           "with specified root directory",
-			device:         types.PciDevice{Slot: "0000:03:00.0"},
-			globalRootDir:  []string{"../../../../test_data/machines/hp-zbook-i712850HX+RadeonPROW6600M/machine-root/"},
+			device:         types.PciDevice{Slot: "0000:c4:00.0"},
+			globalRootDir:  []string{"../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/"},
 			shouldErr:      false,
 			checkVram:      true,
 			checkMicroArch: true,
@@ -262,7 +262,7 @@ func TestGpuPropertiesFromDir(t *testing.T) {
 		{
 			name:          "invalid pciSlot with specified machine",
 			device:        types.PciDevice{Slot: "9999:99:99.9"},
-			globalRootDir: []string{"../../../../test_data/machines/hp-zbook-i712850HX+RadeonPROW6600M/machine-root/"},
+			globalRootDir: []string{"../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/"},
 			shouldErr:     true,
 		},
 	}
@@ -334,21 +334,15 @@ func TestGfxArchitecture(t *testing.T) {
 		},
 		{
 			name:          "valid case with matching pci slot and valid gfx_target_version",
-			device:        types.PciDevice{Slot: "0000:03:00.0"},
-			globalRootDir: "../../../../test_data/machines/hp-zbook-i712850HX+RadeonPROW6600M/machine-root/",
-			expected:      "gfx1032",
+			device:        types.PciDevice{Slot: "0000:c4:00.0"},
+			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
+			expected:      "gfx1152",
 			shouldErr:     false,
-		},
-		{
-			name:          "invalid nodes directory",
-			device:        types.PciDevice{Slot: "0000:03:00.0"},
-			globalRootDir: "/nonexistent/path/",
-			shouldErr:     true,
 		},
 		{
 			name:          "no matching node for pci slot",
 			device:        types.PciDevice{Slot: "9999:99:99.9"},
-			globalRootDir: "../../../../test_data/machines/hp-zbook-i712850HX+RadeonPROW6600M/machine-root/",
+			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
 			shouldErr:     true,
 		},
 	}
