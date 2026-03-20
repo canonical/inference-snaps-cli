@@ -17,15 +17,15 @@ func TestVRam(t *testing.T) {
 	}{
 		{
 			name:          "valid vram read",
-			device:        types.PciDevice{Slot: "0000:c4:00.0"},
-			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
-			expected:      8589934592, // 8GB from mem_info_vram_total file
+			device:        types.PciDevice{Slot: "0000:03:00.0"},
+			globalRootDir: "../../../../test_data/machines/hp-zbook-i712850HX+RadeonPROW6600M/machine-root/",
+			expected:      8573157376,
 			shouldErr:     false,
 		},
 		{
 			name:          "invalid path",
 			device:        types.PciDevice{Slot: "9999:99:99.9"},
-			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
+			globalRootDir: "../../../../test_data/machines/hp-zbook-i712850HX+RadeonPROW6600M/machine-root/",
 			shouldErr:     true,
 		},
 	}
@@ -63,29 +63,29 @@ func TestGetAmdGpuPciSlot(t *testing.T) {
 	}{
 		{
 			name:          "valid input with existing render minor",
-			input:         "drm_render_minor 128",
-			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
-			expected:      "0000:c4:00.0",
+			input:         "drm_render_minor 129",
+			globalRootDir: "../../../../test_data/machines/hp-zbook-i712850HX+RadeonPROW6600M/machine-root/",
+			expected:      "0000:03:00.0",
 			shouldErr:     false,
 		},
 		{
 			name:          "invalid format - missing value",
 			input:         "drm_render_minor",
-			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
+			globalRootDir: "../../../../test_data/machines/hp-zbook-i712850HX+RadeonPROW6600M/machine-root/",
 			shouldErr:     true,
 			errContains:   "unexpected format for drm_render_minor",
 		},
 		{
 			name:          "invalid format - too many parts",
 			input:         "drm_render_minor 128 extra",
-			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
+			globalRootDir: "../../../../test_data/machines/hp-zbook-i712850HX+RadeonPROW6600M/machine-root/",
 			shouldErr:     true,
 			errContains:   "unexpected format for drm_render_minor",
 		},
 		{
 			name:          "invalid symlink path",
 			input:         "drm_render_minor 999",
-			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
+			globalRootDir: "../../../../test_data/machines/hp-zbook-i712850HX+RadeonPROW6600M/machine-root/",
 			shouldErr:     true,
 		},
 	}
@@ -199,8 +199,8 @@ func TestGpuPropertiesFromDir(t *testing.T) {
 	}{
 		{
 			name:           "with specified root directory",
-			device:         types.PciDevice{Slot: "0000:c4:00.0"},
-			globalRootDir:  []string{"../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/"},
+			device:         types.PciDevice{Slot: "0000:03:00.0"},
+			globalRootDir:  []string{"../../../../test_data/machines/hp-zbook-i712850HX+RadeonPROW6600M/machine-root/"},
 			shouldErr:      false,
 			checkVram:      true,
 			checkMicroArch: true,
@@ -208,7 +208,7 @@ func TestGpuPropertiesFromDir(t *testing.T) {
 		{
 			name:          "invalid pciSlot with specified machine",
 			device:        types.PciDevice{Slot: "9999:99:99.9"},
-			globalRootDir: []string{"../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/"},
+			globalRootDir: []string{"../../../../test_data/machines/hp-zbook-i712850HX+RadeonPROW6600M/machine-root/"},
 			shouldErr:     true,
 		},
 	}
@@ -261,21 +261,21 @@ func TestGfxArchitecture(t *testing.T) {
 	}{
 		{
 			name:          "valid case with matching pci slot and valid gfx_target_version",
-			device:        types.PciDevice{Slot: "0000:c4:00.0"},
-			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
-			expected:      "gfx1152",
+			device:        types.PciDevice{Slot: "0000:03:00.0"},
+			globalRootDir: "../../../../test_data/machines/hp-zbook-i712850HX+RadeonPROW6600M/machine-root/",
+			expected:      "gfx1032",
 			shouldErr:     false,
 		},
 		{
 			name:          "invalid nodes directory",
-			device:        types.PciDevice{Slot: "0000:c4:00.0"},
+			device:        types.PciDevice{Slot: "0000:03:00.0"},
 			globalRootDir: "/nonexistent/path/",
 			shouldErr:     true,
 		},
 		{
 			name:          "no matching node for pci slot",
 			device:        types.PciDevice{Slot: "9999:99:99.9"},
-			globalRootDir: "../../../../test_data/machines/lenovo-thinkpad-p16s/machine-root/",
+			globalRootDir: "../../../../test_data/machines/hp-zbook-i712850HX+RadeonPROW6600M/machine-root/",
 			shouldErr:     true,
 		},
 	}
