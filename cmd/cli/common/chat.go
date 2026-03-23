@@ -345,3 +345,15 @@ func (c *chatClient) processStream(stream *ssestream.Stream[openai.ChatCompletio
 	}
 	return &appendParam, nil
 }
+
+func ChatBaseURL(ctx *Context) (string, error) {
+	serverEndpoints, err := ServerEndpoints(ctx)
+	if err != nil {
+		return "", fmt.Errorf("error getting server endpoints: %v", err)
+	}
+	chatBaseUrl, found := serverEndpoints[openAiEndpointKey]
+	if !found {
+		return "", fmt.Errorf("%q not found in server endpoints", openAiEndpointKey)
+	}
+	return chatBaseUrl, nil
+}
