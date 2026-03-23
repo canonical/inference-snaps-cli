@@ -12,9 +12,10 @@ type serveUICommand struct {
 	*common.Context
 
 	// flags
-	port    int
-	host    string // bind address
-	htmlDir string
+	port       int
+	host       string // bind address
+	htmlDir    string
+	inputImage bool
 }
 
 // usage
@@ -37,6 +38,7 @@ func ServeUI(ctx *common.Context) *cobra.Command {
 	cobraCmd.Flags().IntVar(&cmd.port, "port", 8080, "HTTP bind port")
 	cobraCmd.Flags().StringVar(&cmd.host, "host", "localhost", "HTTP bind address")
 	cobraCmd.Flags().StringVar(&cmd.htmlDir, "dir", "./webui", "Directory to serve HTML files from")
+	cobraCmd.Flags().BoolVar(&cmd.inputImage, "input-image", false, "Enable image input in the Web UI")
 
 	return cobraCmd
 }
@@ -65,16 +67,17 @@ func (cmd *serveUICommand) serveUI(_ *cobra.Command, args []string) error {
 
 	config := common.WebUIConfig{
 		OpenAIBaseURL:  baseURL,
-		SupportsImages: true, // TODO: take this from an engine config?
+		SupportsImages: cmd.inputImage, // TODO: take this from an engine config?
 		UITitle:        title,
 		EngineName:     activeEngineName,
 	}
 
-	fmt.Println("UI Configurations:")
-	fmt.Println("  Title:", config.UITitle)
-	fmt.Println("  OpenAI Base URL:", config.OpenAIBaseURL)
-	fmt.Println("  Supports Images:", config.SupportsImages)
-	fmt.Println("  Engine Name:", config.EngineName)
+	if cmd.Verbose {
+		fmt.Println("Title:", config.UITitle)
+		fmt.Println("OpenAI Base URL:", config.OpenAIBaseURL)
+		fmt.Println("Supports Images:", config.SupportsImages)
+		fmt.Println("Engine Name:", config.EngineName)
+	}
 
 	err = common.ServeUI(config, cmd.htmlDir, cmd.port, cmd.host)
 	if err != nil {
