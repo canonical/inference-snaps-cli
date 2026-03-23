@@ -73,8 +73,10 @@ The Go server should serve the configurations at /config over HTTP.
 Use hardcoded values in Go for now.
 
 
-## Further considerations (not in scope for this task)
+## Further considerations (not in scope for this implementation)
 - Hot reloading of configurations without refreshing the page.
 - Conversation history
 - Starting a new conversation
 - Control the thinking for models that support it
+- Make image attachment resize configurable
+- Support documents in input
