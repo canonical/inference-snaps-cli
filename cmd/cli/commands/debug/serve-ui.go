@@ -3,7 +3,6 @@ package debug
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
@@ -61,7 +60,7 @@ func (cmd *serveUiCommand) serveUI(_ *cobra.Command, args []string) error {
 
 	mux := http.NewServeMux()
 
-	// Serve configuration as JSON from the Go config values above.
+	// Serve configuration
 	mux.HandleFunc("/config", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "no-store")
@@ -70,11 +69,11 @@ func (cmd *serveUiCommand) serveUI(_ *cobra.Command, args []string) error {
 		}
 	})
 
-	// Serve the frontend static files from the webui/ directory.
-	mux.Handle("/", http.FileServer(http.Dir("webui")))
+	// Serve the frontend static files
+	mux.Handle("/", http.FileServer(http.Dir(cmd.htmlDir)))
 
 	addr := fmt.Sprintf(":%d", cmd.port)
-	log.Printf("Serving %q on http://localhost%s", cmd.htmlDir, addr)
+	fmt.Printf("Serving %q on http://localhost%s\n", cmd.htmlDir, addr)
 
 	return http.ListenAndServe(addr, mux)
 }
