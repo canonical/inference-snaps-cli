@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	OpenAiEndpointKey = "openai"
+	openAiEndpointKey = "openai"
 	protocolKey       = "protocol"
 	basePathKey       = "base-path"
 )
