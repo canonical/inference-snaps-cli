@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type serveUiCommand struct {
+type serveUICommand struct {
 	*common.Context
 
 	// flags
@@ -19,7 +19,7 @@ type serveUiCommand struct {
 }
 
 func ServeUICommand(ctx *common.Context) *cobra.Command {
-	var cmd serveUiCommand
+	var cmd serveUICommand
 	cmd.Context = ctx
 
 	cobraCmd := &cobra.Command{
@@ -39,16 +39,16 @@ func ServeUICommand(ctx *common.Context) *cobra.Command {
 	return cobraCmd
 }
 
-type webUiConfig struct {
+type webUIConfig struct {
 	OpenAIBaseURL  string `json:"openAIBaseURL"`
 	SupportsImages bool   `json:"supportsImages"`
 	UITitle        string `json:"uiTitle"`
 	EngineName     string `json:"engineName"`
 }
 
-func (cmd *serveUiCommand) serveUI(_ *cobra.Command, args []string) error {
+func (cmd *serveUICommand) serveUI(_ *cobra.Command, args []string) error {
 
-	config := webUiConfig{
+	config := webUIConfig{
 		OpenAIBaseURL:  cmd.baseUrl,
 		SupportsImages: true,
 		UITitle:        "Debug Inference Snaps Web UI",

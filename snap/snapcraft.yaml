@@ -123,6 +123,12 @@ parts:
     organize:
       bin/cli: bin/modelctl
 
+  webui:
+    plugin: dump
+    source: webui
+    organize:
+      "*": etc/webui/
+
   engines:
     plugin: dump
     source: test_data/engines
@@ -148,6 +154,7 @@ apps:
       - hardware-observe
       - home
       - network
+      - network-bind # for testing 
       - opengl
     environment:
       ADDITIONAL_FEATURES: chat

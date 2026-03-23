@@ -111,7 +111,7 @@ func (cmd *statusCommand) statusStruct() (*status, error) {
 		return nil, fmt.Errorf("error getting active engine: %v", err)
 	}
 	if activeEngineName == "" {
-		return nil, fmt.Errorf("error no engine is active")
+		return nil, fmt.Errorf("error no engine is active") // TODO correct error message
 	}
 	statusStr.Engine = activeEngineName
 
