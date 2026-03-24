@@ -21,7 +21,7 @@ fetch('/config')
   },
 
   mounted() {
-    document.title = this.config.uiTitle;
+    document.title = this.uiTitle;
     window.addEventListener('keydown', this.handleGlobalKeydown);
     this.fetchModel();
   },
@@ -29,6 +29,16 @@ fetch('/config')
   beforeUnmount() {
     window.removeEventListener('keydown', this.handleGlobalKeydown);
     if (this.abortController) this.abortController.abort();
+  },
+
+  computed: {
+    uiTitle() {
+      const name = this.config.instanceName ?? '';
+      return name.charAt(0).toUpperCase() + name.slice(1) + ' Inference Snap';
+    },
+    supportsVision() {
+      return this.config.capabilities?.includes('vision') ?? false;
+    },
   },
 
   methods: {
@@ -210,7 +220,7 @@ fetch('/config')
 
       // Build content for the API.
       let apiContent;
-      if (this.attachedImage && this.config.supportsImages) {
+      if (this.attachedImage && this.supportsVision) {
         apiContent = [
           { type: 'text', text: text || '(image attached)' },
           { type: 'image_url', image_url: { url: this.attachedImage } },

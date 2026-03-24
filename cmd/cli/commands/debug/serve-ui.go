@@ -41,10 +41,12 @@ func ServeUICommand(ctx *common.Context) *cobra.Command {
 func (cmd *serveUICommand) serveUI(_ *cobra.Command, args []string) error {
 
 	config := common.WebUIConfig{
-		OpenAIBaseURL:  cmd.baseUrl,
-		SupportsImages: true,
-		UITitle:        "Debug Inference Snaps Web UI",
-		EngineName:     "unset",
+		OpenAIBaseURL: cmd.baseUrl,
+		Capabilities: []string{
+			common.UICapabilityText,
+			common.UICapabilityVision},
+		InstanceName: "debug",
+		EngineName:   "unset",
 	}
 
 	j, _ := json.MarshalIndent(config, "", "  ")

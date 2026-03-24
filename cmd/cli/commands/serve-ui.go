@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/canonical/go-snapctl/env"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
@@ -12,10 +13,10 @@ type serveUICommand struct {
 	*common.Context
 
 	// flags
-	port       int
-	host       string // bind address
-	htmlDir    string
-	inputImage bool
+	port         int
+	host         string // bind address
+	htmlDir      string
+	capabilities string
 }
 
 func ServeUI(ctx *common.Context) *cobra.Command {
@@ -32,10 +33,12 @@ func ServeUI(ctx *common.Context) *cobra.Command {
 	}
 
 	// flags
-	cobraCmd.Flags().IntVar(&cmd.port, "port", 8080, "HTTP bind port")
+	cobraCmd.Flags().IntVar(&cmd.port, "port", 8081, "HTTP bind port")
 	cobraCmd.Flags().StringVar(&cmd.host, "host", "localhost", "HTTP bind address")
 	cobraCmd.Flags().StringVar(&cmd.htmlDir, "dir", "./webui", "Directory to serve HTML files from")
-	cobraCmd.Flags().BoolVar(&cmd.inputImage, "input-image", false, "Enable image input in the Web UI")
+	cobraCmd.Flags().StringVar(&cmd.capabilities, "capabilities", "text",
+		fmt.Sprintf("Comma-separated list of capabilities (%s)",
+			strings.Join(common.SupportedUICapabilities(), ", ")))
 
 	return cobraCmd
 }
@@ -55,24 +58,28 @@ func (cmd *serveUICommand) serveUI(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("no engine is active")
 	}
 
-	instanceName := env.SnapInstanceName()
-	// Capitalize first letter, e.g. gemma3 -> Gemma3
-	if instanceName != "" {
-		instanceName = string(instanceName[0]-32) + instanceName[1:]
+	var capabilities []string
+	for _, c := range strings.Split(cmd.capabilities, ",") {
+		c = strings.TrimSpace(c)
+		switch c {
+		case common.UICapabilityText, common.UICapabilityVision:
+			capabilities = append(capabilities, c)
+		default:
+			return fmt.Errorf("unsupported capability: %s", c)
+		}
 	}
-	title := fmt.Sprintf("%s Inference Snap", instanceName)
 
 	config := common.WebUIConfig{
-		OpenAIBaseURL:  baseURL,
-		SupportsImages: cmd.inputImage, // TODO: take this from an engine config?
-		UITitle:        title,
-		EngineName:     activeEngineName,
+		OpenAIBaseURL: baseURL,
+		Capabilities:  capabilities,
+		InstanceName:  env.SnapInstanceName(),
+		EngineName:    activeEngineName,
 	}
 
 	if cmd.Verbose {
-		fmt.Println("Title:", config.UITitle)
 		fmt.Println("OpenAI Base URL:", config.OpenAIBaseURL)
-		fmt.Println("Supports Images:", config.SupportsImages)
+		fmt.Println("Capabilities:", config.Capabilities)
+		fmt.Println("Instance name:", config.InstanceName)
 		fmt.Println("Engine Name:", config.EngineName)
 	}
 

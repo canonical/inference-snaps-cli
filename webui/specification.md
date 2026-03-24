@@ -45,11 +45,10 @@ If the model name cannot be retrieved from the /models endpoint of the OpenAI AP
 
 ## Configuration
 The web application should consume static configurations of the following parameters:
-- OpenAI Base URL
-- Model capabilities
-    - Whether the model supports images in input
-- UI title, e.g. "Gemma3 Inference Snap"
-- Engine name (only for display in the UI)
+- openAIBaseURL(string): OpenAI base URL
+- capabilities(string array): Model capabilities (text, vision, audio, etc) - only text and vision should be supported for now.
+- instanceName(string): used to construct the UI title, e.g. "gemma3" -> "Gemma3 Inference Snap"
+- engineName(string): for display in the UI
 
 These configurations are served by the web server at /config.
 

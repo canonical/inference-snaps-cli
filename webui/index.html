@@ -19,7 +19,7 @@
               <div class="p-navigation__logo-tag">
                 <img src="https://assets.ubuntu.com/v1/82818827-CoF_white.svg" alt="Canonical" width="32" height="32">
               </div>
-              <span class="p-navigation__logo-title">{{ config.uiTitle }}</span>
+              <span class="p-navigation__logo-title">{{ uiTitle }}</span>
             </a>
           </div>
         </div>
@@ -65,11 +65,12 @@
                   </td>
                 </tr>
                 <tr>
-                  <td data-heading="Setting"><strong>Image Support</strong></td>
+                  <td data-heading="Setting"><strong>Capabilities</strong></td>
                   <td data-heading="Value">
-                    <span :class="config.supportsImages ? 'p-status-label--positive' : 'p-status-label'" class="p-status-label">
-                      {{ config.supportsImages ? 'Enabled' : 'Disabled' }}
-                    </span>
+                    <div v-if="config.capabilities?.length" class="capabilities-list">
+                      <span v-for="cap in config.capabilities" :key="cap" class="p-status-label p-status-label--positive">{{ cap }}</span>
+                    </div>
+                    <span v-else class="p-status-label">none</span>
                   </td>
                 </tr>
               </tbody>
@@ -209,7 +210,7 @@
           </div>
           <div class="chat-input-actions">
             <label
-              v-if="config.supportsImages && !isLoading"
+              v-if="supportsVision && !isLoading"
               class="p-button--neutral u-no-margin--bottom"
               title="Attach an image"
               role="button"
