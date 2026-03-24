@@ -18,9 +18,6 @@ type serveUICommand struct {
 	inputImage bool
 }
 
-// usage
-// inference-snaps-cli serve-ui --base-url http://localhost:8080/v1 --port 8080 --dir $SNAP/etc/webui
-
 func ServeUI(ctx *common.Context) *cobra.Command {
 	var cmd serveUICommand
 	cmd.Context = ctx
