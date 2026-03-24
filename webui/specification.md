@@ -34,12 +34,12 @@ The model responses should be streamed and displayed incrementally as they are r
 
 For thinking output of reasoning models, the UI should display a distinct visual indicator to differentiate the thinking process and reasoning output from the final response.
 
-The UI should have a a button to stop the generation of the model's response and return to the input state. Any partial response should stay in the UI. The user request that led to the stopped response and the partial response should be excluded from the context of future interactions with the model.
+The UI should have a button to cancel a request. Any partial response should stay in the UI. The user request that led to the cancelled response and the partial response should be excluded from the context of future interactions with the model, and marked as "Cancelled" in the UI.
 
 ### Error handling
 Capture any error returned by the API but do not display the raw error message to the user. Instead, show a user-friendly error message in the chat history, prefixed with an error icon (Vanilla Framework's p-icon--error). Provide a link to view the raw error details in a modal dialog for users who want to see more information.
 
-When an error occurs, the user should be able to modify their last message and resend it without having to retype the entire message.
+When an error occurs, the user should be able to retry sending the prompt. 
 
 If the model name cannot be retrieved from the /models endpoint of the OpenAI API, display a warning message in the settings section indicating that the model name could not be retrieved.
 

@@ -38,12 +38,12 @@
       <div class="row">
         <div class="col-12">
           <div class="settings-content">
-            <h4 class="u-no-margin--bottom">Configuration</h4>
+            <h4 class="u-no-margin--bottom">Settings</h4>
 
-            <table class="p-table--mobile-card settings-table" aria-label="Configuration settings">
+            <table class="p-table--mobile-card settings-table" aria-label="Settings">
               <thead>
                 <tr>
-                  <th>Setting</th>
+                  <th>Key</th>
                   <th>Value</th>
                 </tr>
               </thead>
@@ -121,7 +121,7 @@
                   title="Click to view full size"
                 />
               </div>
-              <div v-if="message.stopped" class="message-stopped-notice">Not included in context</div>
+              <div v-if="message.cancelled" class="message-cancelled-notice">Cancelled</div>
             </div>
           </div>
 
@@ -150,21 +150,23 @@
               <div v-if="message.friendlyError" class="chat-error">
                 <i class="p-icon--error chat-error__icon"></i>
                 <span class="chat-error__text">{{ message.friendlyError }}</span>
-                <button class="p-button--link chat-error__details-link" @click="openErrorModal(message.errorDetail)">View details</button>
               </div>
 
               <!-- Response text -->
               <div v-else class="chat-message__text" v-html="formatText(message.content)"></div>
 
-              <!-- Edit last message button (shown on error) -->
+              <!-- Retry / details buttons (shown on error) -->
               <div v-if="message.friendlyError" class="chat-error__actions">
-                <button class="p-button--neutral is-small u-no-margin--bottom" @click="editLastMessage(index)">
-                  Edit message
+                <button class="p-button--neutral is-small u-no-margin--bottom" @click="retryMessage(index)">
+                  Retry
+                </button>
+                <button class="p-button--neutral is-small u-no-margin--bottom" @click="openErrorModal(message.errorDetail)">
+                  View details
                 </button>
               </div>
 
-              <!-- Stopped indicator -->
-              <div v-if="message.stopped" class="message-stopped-notice">Generation stopped — not included in context</div>
+              <!-- Cancelled request indicator -->
+              <div v-if="message.cancelled" class="message-cancelled-notice">Cancelled</div>
 
               <!-- Streaming cursor -->
               <span v-if="message.isStreaming && message.content" class="stream-cursor"></span>
@@ -172,7 +174,7 @@
               <!-- Spinner shown while waiting for first token -->
               <div v-if="message.isStreaming && !message.content && !message.reasoning" class="chat-spinner">
                 <div class="p-icon--spinner u-animation--spin"></div>
-                <span class="u-text--muted">Thinking…</span>
+                <span class="u-text--muted">Working…</span>
               </div>
 
             </div>
@@ -235,8 +237,8 @@
               v-else
               @click="stopGeneration"
               class="p-button--negative u-no-margin--bottom"
-              aria-label="Stop generation"
-            >&#9632; Stop</button>
+              aria-label="Cancel generation"
+            >Cancel</button>
           </div>
         </div>
 

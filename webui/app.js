@@ -9,7 +9,7 @@ fetch('/config')
       config: CONFIG,
       model: null,            // fetched from /models on startup
       modelError: null,       // error message if /models fetch fails
-      messages: [],           // { role, content, rawContent, reasoning, images[], isStreaming, stopped, errorDetail }
+      messages: [],           // { role, content, rawContent, reasoning, images[], isStreaming, cancelled, errorDetail }
       userInput: '',
       isLoading: false,
       showSettings: false,
@@ -177,10 +177,10 @@ fetch('/config')
     },
 
     // ----------------------------------------------------------------
-    // Edit last message after error: restore user text and remove the
-    // failed exchange so the user can correct and resend.
+    // Retry after error: remove the failed assistant message and
+    // re-send the original user message.
     // ----------------------------------------------------------------
-    editLastMessage(assistantMsgIndex) {
+    retryMessage(assistantMsgIndex) {
       const userMsgIndex = assistantMsgIndex - 1;
       const userMsg = this.messages[userMsgIndex];
       if (!userMsg || userMsg.role !== 'user') return;
@@ -190,7 +190,12 @@ fetch('/config')
         ? content
         : (content.find(p => p.type === 'text')?.text ?? '');
 
+      if (userMsg.images?.length) {
+        this.attachedImage = userMsg.images[0];
+      }
+
       this.messages.splice(userMsgIndex, 2);
+      this.sendMessage();
     },
 
     // ----------------------------------------------------------------
@@ -248,7 +253,7 @@ fetch('/config')
 
       try {
         const apiMessages = this.messages
-          .filter(m => !m.isStreaming && !m.stopped)
+          .filter(m => !m.isStreaming && !m.cancelled)
           .map(({ role, content }) => ({ role, content }));
 
         const response = await fetch(`${this.config.openAIBaseURL}/chat/completions`, {
@@ -310,11 +315,11 @@ fetch('/config')
           // Keep partial response visible but exclude it and the triggering user
           // message from future context.
           if (this.messages[msgIndex]) {
-            this.messages[msgIndex].stopped = true;
+            this.messages[msgIndex].cancelled = true;
           }
           const userMsg = this.messages[msgIndex - 1];
           if (userMsg && userMsg.role === 'user') {
-            userMsg.stopped = true;
+            userMsg.cancelled = true;
           }
         } else {
           // Show a friendly error; store raw details for the modal.

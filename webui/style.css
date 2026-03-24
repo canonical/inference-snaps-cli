@@ -269,8 +269,8 @@ body {
   border-radius: 0 0 0.4rem 0.4rem;
 }
 
-/* Stopped message notice */
-.message-stopped-notice {
+/* Cancelled message notice */
+.message-cancelled-notice {
   margin-top: 0.4rem;
   font-size: 0.75rem;
   color: #c7a000;
