@@ -3,7 +3,6 @@ package debug
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
 	"github.com/spf13/cobra"
@@ -39,16 +38,9 @@ func ServeUICommand(ctx *common.Context) *cobra.Command {
 	return cobraCmd
 }
 
-type webUIConfig struct {
-	OpenAIBaseURL  string `json:"openAIBaseURL"`
-	SupportsImages bool   `json:"supportsImages"`
-	UITitle        string `json:"uiTitle"`
-	EngineName     string `json:"engineName"`
-}
-
 func (cmd *serveUICommand) serveUI(_ *cobra.Command, args []string) error {
 
-	config := webUIConfig{
+	config := common.WebUIConfig{
 		OpenAIBaseURL:  cmd.baseUrl,
 		SupportsImages: true,
 		UITitle:        "Debug Inference Snaps Web UI",
@@ -58,22 +50,10 @@ func (cmd *serveUICommand) serveUI(_ *cobra.Command, args []string) error {
 	j, _ := json.MarshalIndent(config, "", "  ")
 	fmt.Printf("Config: %s\n", j)
 
-	mux := http.NewServeMux()
+	err := common.ServeUI(config, cmd.htmlDir, cmd.port, "localhost")
+	if err != nil {
+		return fmt.Errorf("error serving UI: %v", err)
+	}
 
-	// Serve configuration
-	mux.HandleFunc("/config", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Cache-Control", "no-store")
-		if err := json.NewEncoder(w).Encode(config); err != nil {
-			http.Error(w, "failed to encode config", http.StatusInternalServerError)
-		}
-	})
-
-	// Serve the frontend static files
-	mux.Handle("/", http.FileServer(http.Dir(cmd.htmlDir)))
-
-	addr := fmt.Sprintf(":%d", cmd.port)
-	fmt.Printf("Serving %q on http://localhost%s\n", cmd.htmlDir, addr)
-
-	return http.ListenAndServe(addr, mux)
+	return nil
 }
