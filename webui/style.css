@@ -221,11 +221,6 @@ body {
   flex: 1;
 }
 
-.chat-error__details-link {
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
-
 .chat-error__actions {
   margin-top: 0.5rem;
 }

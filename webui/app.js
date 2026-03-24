@@ -9,7 +9,7 @@ fetch('/config')
       config: CONFIG,
       model: null,            // fetched from /models on startup
       modelError: null,       // error message if /models fetch fails
-      messages: [],           // { role, content, rawContent, reasoning, images[], isStreaming, cancelled, errorDetail }
+      messages: [],           // { role, content, rawContent, reasoning, images[], isStreaming, cancelled, friendlyError, errorDetail, reasoningOpen }
       userInput: '',
       isLoading: false,
       showSettings: false,
@@ -28,6 +28,7 @@ fetch('/config')
 
   beforeUnmount() {
     window.removeEventListener('keydown', this.handleGlobalKeydown);
+    if (this.abortController) this.abortController.abort();
   },
 
   methods: {
@@ -158,10 +159,7 @@ fetch('/config')
       const thinkMatch = /<think>([\s\S]*?)(<\/think>|$)/.exec(raw);
       if (thinkMatch) {
         msg.reasoning = thinkMatch[1];
-        msg.content = raw
-          .replace(/<think>[\s\S]*?<\/think>/g, '')
-          .replace(/<think>[\s\S]*$/, '')
-          .trim();
+        msg.content = raw.replace(/<think>[\s\S]*?(<\/think>|$)/g, '').trim();
       } else {
         msg.content = raw;
       }
@@ -204,7 +202,7 @@ fetch('/config')
     async sendMessage() {
       if (this.isLoading) return;
       if (!this.model) {
-        alert('Model is not available yet. Please wait or check the API endpoint in config.js.');
+        alert('Model is not available yet. Please wait or check the server logs.');
         return;
       }
       const text = this.userInput.trim();
@@ -245,6 +243,9 @@ fetch('/config')
         reasoning: '',
         images: [],
         isStreaming: true,
+        cancelled: false,
+        friendlyError: null,
+        errorDetail: null,
         reasoningOpen: true,
       });
       const msgIndex = this.messages.length - 1;
@@ -291,6 +292,7 @@ fetch('/config')
             if (!line.startsWith('data: ')) continue;
             const data = line.slice(6).trim();
             if (data === '[DONE]') continue;
+            if (!this.messages[msgIndex]) break;
             try {
               const chunk = JSON.parse(data);
               const delta = chunk.choices?.[0]?.delta ?? {};
