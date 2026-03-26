@@ -77,10 +77,10 @@ func (cmd *serveUICommand) serveUI(_ *cobra.Command, args []string) error {
 	}
 
 	if cmd.Verbose {
-		fmt.Println("OpenAI Base URL:", config.OpenAIBaseURL)
+		fmt.Println("OpenAI base URL:", config.OpenAIBaseURL)
 		fmt.Println("Capabilities:", config.Capabilities)
 		fmt.Println("Instance name:", config.InstanceName)
-		fmt.Println("Engine Name:", config.EngineName)
+		fmt.Println("Engine name:", config.EngineName)
 	}
 
 	err = common.ServeUI(config, cmd.htmlDir, cmd.port, cmd.host)
