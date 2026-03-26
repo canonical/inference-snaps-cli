@@ -76,14 +76,14 @@ func serverHttpUrl(ctx *Context, serverConfig map[string]string) (string, error)
 	return endpointUrl.String(), nil
 }
 
-func OpenAIEndpoint(ctx *Context) (string, error) {
+func OpenAiEndpoint(ctx *Context) (string, error) {
 	serverEndpoints, err := ServerEndpoints(ctx)
 	if err != nil {
 		return "", fmt.Errorf("error getting server endpoints: %v", err)
 	}
-	chatBaseUrl, found := serverEndpoints[openAiEndpointKey]
+	openaiEndpoint, found := serverEndpoints[openAiEndpointKey]
 	if !found {
 		return "", fmt.Errorf("%q not found in server endpoints", openAiEndpointKey)
 	}
-	return chatBaseUrl, nil
+	return openaiEndpoint, nil
 }

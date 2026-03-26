@@ -35,7 +35,7 @@ func ChatEnabled() bool {
 }
 
 func (cmd *chatCommand) run(_ *cobra.Command, _ []string) error {
-	chatBaseUrl, err := common.OpenAIEndpoint(cmd.Context)
+	chatBaseUrl, err := common.OpenAiEndpoint(cmd.Context)
 	if err != nil {
 		return fmt.Errorf("error getting OpenAI base URL: %v", err)
 	}

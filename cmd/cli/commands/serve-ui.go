@@ -45,7 +45,7 @@ func ServeUI(ctx *common.Context) *cobra.Command {
 
 func (cmd *serveUICommand) serveUI(_ *cobra.Command, args []string) error {
 
-	baseURL, err := common.OpenAIEndpoint(cmd.Context)
+	baseURL, err := common.OpenAiEndpoint(cmd.Context)
 	if err != nil {
 		return fmt.Errorf("error getting OpenAI base URL: %v", err)
 	}
