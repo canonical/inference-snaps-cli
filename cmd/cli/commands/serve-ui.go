@@ -2,6 +2,8 @@ package commands
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/canonical/go-snapctl/env"
@@ -32,10 +34,12 @@ func ServeUI(ctx *common.Context) *cobra.Command {
 		RunE:              cmd.serveUI,
 	}
 
+	defaultHtmlDir := filepath.Join(os.Getenv("SNAP"), "/etc/webui")
+
 	// flags
 	cobraCmd.Flags().IntVar(&cmd.port, "port", 8081, "HTTP bind port")
 	cobraCmd.Flags().StringVar(&cmd.host, "host", "localhost", "HTTP bind address")
-	cobraCmd.Flags().StringVar(&cmd.htmlDir, "dir", "./webui", "Directory to serve HTML files from")
+	cobraCmd.Flags().StringVar(&cmd.htmlDir, "dir", defaultHtmlDir, "Directory to serve HTML files from")
 	cobraCmd.Flags().StringVar(&cmd.capabilities, "capabilities", "text",
 		fmt.Sprintf("Comma-separated list of capabilities (%s)",
 			strings.Join(common.SupportedUICapabilities(), ", ")))

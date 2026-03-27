@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 )
 
 type WebUIConfig struct {
@@ -23,6 +24,14 @@ func SupportedUICapabilities() []string {
 }
 
 func ServeUI(conf WebUIConfig, htmlDir string, port int, bindAddress string) error {
+
+	info, err := os.Stat(htmlDir)
+	if err != nil {
+		return fmt.Errorf("failed to open html directory: %v", err)
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("html directory is not a directory")
+	}
 
 	mux := http.NewServeMux()
 
