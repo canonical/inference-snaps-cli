@@ -35,9 +35,8 @@
 
     <!-- Settings Panel -->
     <aside v-show="showSettings" class="settings-panel p-strip--light u-no-padding--top u-no-padding--bottom">
-      <div class="row">
-        <div class="col-12">
-          <div class="settings-content">
+      <div class="content-box">
+        <div class="settings-content">
             <h4 class="u-no-margin--bottom">Settings</h4>
 
             <table class="p-table--mobile-card settings-table" aria-label="Settings">
@@ -84,13 +83,13 @@
                 </p>
               </div>
             </div>
-          </div>
         </div>
       </div>
     </aside>
 
     <!-- Chat Area -->
     <main class="chat-main">
+      <div class="content-box chat-content">
 
       <!-- Messages -->
       <div class="chat-messages" ref="messagesContainer" role="log" aria-live="polite" aria-label="Conversation history">
@@ -211,7 +210,7 @@
           <div class="chat-input-actions">
             <label
               v-if="supportsVision && !isLoading"
-              class="p-button--neutral u-no-margin--bottom"
+              class="p-button--neutral u-no-margin--bottom chat-attach-button"
               title="Attach an image"
               role="button"
               tabindex="0"
@@ -246,6 +245,8 @@
         <p class="chat-input-hint u-text--muted">
           <small>Enter to send &nbsp;&bull;&nbsp; Shift+Enter for new line</small>
         </p>
+
+      </div>
 
       </div>
     </main>
