@@ -48,14 +48,13 @@ func Status(ctx *common.Context) *cobra.Command {
 func (cmd *statusCommand) run(_ *cobra.Command, args []string) error {
 	var statusText string
 	var err error
-	if len(args) != 1 {
-		return fmt.Errorf("unexpected number of arguments, expected 1 got %d", len(args))
-	}
+
 	if cmd.waitForComponentsFlag {
 		if err := common.WaitForComponents(cmd.Context); err != nil {
 			return fmt.Errorf("error waiting for component: %s", err)
 		}
 	}
+
 	stopProgress := common.StartProgressSpinner("Getting status")
 	defer stopProgress()
 
