@@ -19,10 +19,15 @@ const (
 	ProgressScoring = "Checking engines"
 )
 
+type ComponentLayout struct {
+	Symlink string `yaml:"symlink"`
+}
+
 type ComponentSettings struct {
 	componentName string
 	Servers       map[string]map[string]string `yaml:"servers"`
 	Environment   []string                     `yaml:"environment"`
+	Layout        map[string]ComponentLayout   `yaml:"layout"`
 }
 
 func EngineComponentSettings(ctx *Context) ([]ComponentSettings, error) {
@@ -82,6 +87,13 @@ func LoadEngineEnvironment(ctx *Context) error {
 	}
 
 	for _, settings := range settingsCollection {
+
+		// Set component path env var for expansion
+		componentPath := filepath.Join(componentsDir, settings.componentName)
+		if err := os.Setenv(componentEnv, componentPath); err != nil {
+			return fmt.Errorf("error setting %q: %v", componentEnv, err)
+		}
+
 		for i := range settings.Environment {
 			// Split into key/value
 			kv := settings.Environment[i]
@@ -91,19 +103,8 @@ func LoadEngineEnvironment(ctx *Context) error {
 			}
 			k, v := parts[0], parts[1]
 
-			// Set component path env var for expansion
-			componentPath := filepath.Join(componentsDir, settings.componentName)
-			if err := os.Setenv(componentEnv, componentPath); err != nil {
-				return fmt.Errorf("error setting %q: %v", componentEnv, err)
-			}
-
 			// Expand all env vars in value
 			v = os.ExpandEnv(v)
-
-			// Unset the component path
-			if err := os.Unsetenv(componentEnv); err != nil {
-				return fmt.Errorf("error unsetting %q: %v", componentEnv, err)
-			}
 
 			err = os.Setenv(k, v)
 			if err != nil {
@@ -111,6 +112,30 @@ func LoadEngineEnvironment(ctx *Context) error {
 			}
 		}
 
+		for layoutPath, layout := range settings.Layout {
+			if layout.Symlink != "" {
+				target := os.ExpandEnv(layout.Symlink)
+				link := os.ExpandEnv(layoutPath)
+
+				// Ensure the parent directory for the link exists
+				if err := os.MkdirAll(filepath.Dir(link), 0755); err != nil {
+					return fmt.Errorf("error creating directory for symlink %q: %v", link, err)
+				}
+
+				// Remove existing file, symlink, or directory if it exists
+				if err := os.RemoveAll(link); err != nil {
+					return fmt.Errorf("error removing existing path %q: %v", link, err)
+				}
+				err = os.Symlink(target, link)
+				if err != nil {
+					return fmt.Errorf("error creating symlink from %q to %q: %v", link, target, err)
+				}
+			}
+		}
+
+		if err := os.Unsetenv(componentEnv); err != nil {
+			return fmt.Errorf("error unsetting %q: %v", componentEnv, err)
+		}
 	}
 
 	return nil
