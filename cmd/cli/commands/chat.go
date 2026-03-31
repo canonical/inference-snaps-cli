@@ -37,7 +37,7 @@ func ChatEnabled() bool {
 func (cmd *chatCommand) run(_ *cobra.Command, _ []string) error {
 	chatBaseUrl, err := chatBaseURL(cmd.Context)
 	if err != nil {
-		return fmt.Errorf("error getting OpenAI base URL: %v", err)
+		return fmt.Errorf("OpenAI base URL: %v", err)
 	}
 
 	if env.SnapInstanceName() != "" {
@@ -45,7 +45,7 @@ func (cmd *chatCommand) run(_ *cobra.Command, _ []string) error {
 		serviceName := env.SnapInstanceName() + ".server"
 		services, err := snapctl.Services(serviceName).Run()
 		if err != nil {
-			return fmt.Errorf("error getting services: %v", err)
+			return fmt.Errorf("services: %v", err)
 		}
 		if services[serviceName].Current == "inactive" {
 			return fmt.Errorf("server not active\n\n%s",
@@ -61,7 +61,7 @@ func (cmd *chatCommand) run(_ *cobra.Command, _ []string) error {
 func chatBaseURL(ctx *common.Context) (string, error) {
 	serverEndpoints, err := common.ServerEndpoints(ctx)
 	if err != nil {
-		return "", fmt.Errorf("error getting server endpoints: %v", err)
+		return "", fmt.Errorf("server endpoints: %v", err)
 	}
 	chatBaseUrl, found := serverEndpoints[common.OpenAiEndpointKey]
 	if !found {

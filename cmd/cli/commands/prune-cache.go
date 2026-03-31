@@ -55,9 +55,9 @@ func (cmd *pruneCacheCommand) run(_ *cobra.Command, _ []string) error {
 			if cmd.Verbose {
 				fmt.Println(err)
 			}
-			return fmt.Errorf("No active engine found")
+			return fmt.Errorf("no active engine found")
 		}
-		return fmt.Errorf("error loading engine manifest: %v", err)
+		return fmt.Errorf("loading engine manifest: %v", err)
 	}
 
 	var componentsWithEnginesToRemove map[string][]string
@@ -88,7 +88,7 @@ func (cmd *pruneCacheCommand) run(_ *cobra.Command, _ []string) error {
 				}
 				return fmt.Errorf("%q not found", cmd.engine)
 			}
-			return fmt.Errorf("error loading engine manifest: %v", err)
+			return fmt.Errorf("loading engine manifest: %v", err)
 		}
 
 		componentsWithEnginesToRemove, err = cmd.calculateRemovableComponents([]engines.Manifest{*engineManifest}, *activeEngineManifest)
@@ -135,7 +135,7 @@ func (cmd *pruneCacheCommand) calculateRemovableComponents(enginesToCheck []engi
 func (cmd *pruneCacheCommand) getAllComponentsToRemove(activeEngineManifest engines.Manifest) (map[string][]string, error) {
 	enginesToCheck, err := engines.LoadManifests(cmd.EnginesDir)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load manifests: %w", err)
+		return nil, fmt.Errorf("loading manifests: %w", err)
 	}
 	return cmd.calculateRemovableComponents(enginesToCheck, activeEngineManifest)
 }
@@ -154,7 +154,7 @@ func (cmd *pruneCacheCommand) pruneEngine(componentsToRemove []string, engine en
 
 	if len(installed) != 0 {
 		if err := snapctl.RemoveComponents(installed...).Run(); err != nil {
-			return fmt.Errorf("failed to remove components: %w", err)
+			return fmt.Errorf("removing components: %w", err)
 		}
 	}
 	return nil
@@ -168,7 +168,7 @@ func (cmd *pruneCacheCommand) pruneAllInactiveEngines(componentsToRemove []strin
 	var allEngines []engines.Manifest
 	allEngines, err = engines.LoadManifests(cmd.EnginesDir)
 	if err != nil {
-		return fmt.Errorf("failed to load manifests: %w", err)
+		return fmt.Errorf("loading manifests: %w", err)
 	}
 
 	for _, engine := range allEngines {
@@ -212,7 +212,7 @@ func (cmd *pruneCacheCommand) printComponentsAndConfirm(componentsWithEngines ma
 
 	engineList, err := cmd.inactiveEngines()
 	if err != nil {
-		return false, fmt.Errorf("unable to get list of inactive engines: %v", err)
+		return false, fmt.Errorf("getting list of inactive engines: %v", err)
 	}
 
 	var confirmationPromptSentence string

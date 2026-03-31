@@ -15,7 +15,7 @@ const (
 func ServerEndpoints(ctx *Context) (map[string]string, error) {
 	settings, err := EngineComponentSettings(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error loading engine environment: %v", err)
+		return nil, fmt.Errorf("loading engine environment: %v", err)
 	}
 	return serverEndpoints(ctx, settings)
 }

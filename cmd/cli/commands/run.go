@@ -46,13 +46,13 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 
 	if cmd.waitForComponentsFlag {
 		if err := cmd.waitForComponents(); err != nil {
-			return fmt.Errorf("error waiting for component: %s", err)
+			return fmt.Errorf("%s", err)
 		}
 	}
 
 	err := common.LoadEngineEnvironment(cmd.Context)
 	if err != nil {
-		return fmt.Errorf("error loading engine environment: %v", err)
+		return fmt.Errorf("loading engine environment: %v", err)
 	}
 
 	path := args[0]
@@ -87,7 +87,7 @@ func (cmd *runCommand) waitForComponents() error {
 
 	activeEngineName, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("error looking up active engine: %v", err)
+		return fmt.Errorf("getting active engine: %v", err)
 	}
 
 	if activeEngineName == "" {
@@ -96,7 +96,7 @@ func (cmd *runCommand) waitForComponents() error {
 
 	manifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngineName)
 	if err != nil {
-		return fmt.Errorf("error loading engine manifest: %v", err)
+		return fmt.Errorf("loading engine manifest: %v", err)
 	}
 
 	missing, err := cmd.checkMissingComponents(manifest)
@@ -117,7 +117,7 @@ func (cmd *runCommand) waitForComponents() error {
 	}
 
 	if len(missing) > 0 {
-		return fmt.Errorf("timed out after %ds while waiting for required components: %s",
+		return fmt.Errorf("%ds timeout waiting for required components: %s",
 			maxWait, strings.Join(missing, ", "))
 	}
 

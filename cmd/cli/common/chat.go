@@ -81,7 +81,7 @@ func (c *chatClient) Start() error {
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("error initializing readline: %v", err)
+		return fmt.Errorf("initializing readline: %v", err)
 	}
 	defer rl.Close()
 	//rl.CaptureExitSignal() // Should readline capture and handle the exit signal? - Can be used to interrupt the chat response stream.
@@ -246,7 +246,7 @@ func (c *chatClient) lookupModelName() error {
 			for _, model := range modelPage.Data {
 				names = append(names, model.ID)
 			}
-			return fmt.Errorf("expected one but server returned multiple models: %s", strings.Join(names, ", "))
+			return fmt.Errorf("server returned multiple models; expected one: %s", strings.Join(names, ", "))
 		}
 
 		c.modelName = modelPage.Data[0].ID
