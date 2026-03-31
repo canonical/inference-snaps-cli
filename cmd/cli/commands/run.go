@@ -52,7 +52,7 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 
 	err := common.LoadEngineEnvironment(cmd.Context)
 	if err != nil {
-		return fmt.Errorf("loading engine environment: %v", err)
+		return fmt.Errorf("%v", err)
 	}
 
 	path := args[0]

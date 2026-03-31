@@ -60,7 +60,7 @@ func (cmd *showEngineCommand) run(_ *cobra.Command, args []string) error {
 func (cmd *showEngineCommand) validateArgs(_ *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
 	manifests, err := engines.LoadManifests(cmd.EnginesDir)
 	if err != nil {
-		fmt.Printf("Error loading engines: %v\n", err)
+		fmt.Printf("Error: loading engines: %v\n", err)
 		return nil, cobra.ShellCompDirectiveError
 	}
 
@@ -89,7 +89,7 @@ func (cmd *showEngineCommand) showEngine(engineName string) error {
 
 	scoredEngines, err := common.ScoreEngines(cmd.Context)
 	if err != nil {
-		return fmt.Errorf("checking engines: %v", err)
+		return fmt.Errorf("%v", err)
 	}
 	stopProgress()
 
@@ -105,7 +105,7 @@ func (cmd *showEngineCommand) showEngine(engineName string) error {
 
 	err = cmd.printEngineManifest(scoredManifest)
 	if err != nil {
-		return fmt.Errorf("engine manifest: %v", err)
+		return fmt.Errorf("%v", err)
 	}
 	return nil
 }

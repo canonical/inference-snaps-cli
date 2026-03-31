@@ -73,7 +73,7 @@ func EngineComponentSettings(ctx *Context) ([]ComponentSettings, error) {
 func LoadEngineEnvironment(ctx *Context) error {
 	settingsCollection, err := EngineComponentSettings(ctx)
 	if err != nil {
-		return fmt.Errorf("loading engine component settings: %v", err)
+		return fmt.Errorf("%v", err)
 	}
 
 	componentsDir, found := os.LookupEnv("SNAP_COMPONENTS")

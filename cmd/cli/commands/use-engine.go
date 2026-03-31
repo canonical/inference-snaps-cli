@@ -53,7 +53,7 @@ func UseEngine(ctx *common.Context) *cobra.Command {
 func (cmd *useEngineCommand) validateArgs(_ *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
 	manifests, err := engines.LoadManifests(cmd.EnginesDir)
 	if err != nil {
-		fmt.Printf("Error loading engines: %v\n", err)
+		fmt.Printf("Error: loading engines: %v\n", err)
 		return nil, cobra.ShellCompDirectiveError
 	}
 
@@ -95,7 +95,7 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 
 	scoredEngines, err := common.ScoreEngines(cmd.Context)
 	if err != nil {
-		return fmt.Errorf("checking engines: %v", err)
+		return fmt.Errorf("%v", err)
 	}
 	stopProgress()
 
@@ -127,7 +127,7 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 
 	err = cmd.switchEngine(selectedEngine.Name)
 	if err != nil {
-		return fmt.Errorf("using engine: %s", err)
+		return fmt.Errorf("%s", err)
 	}
 
 	return nil
@@ -149,7 +149,7 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 
 	componentsInstalled, err := cmd.installMissingComponents(engine)
 	if err != nil {
-		return fmt.Errorf("installing missing components: %v", err)
+		return fmt.Errorf("%v", err)
 	}
 
 	activeEngineName, err := cmd.Cache.GetActiveEngine()
@@ -166,7 +166,7 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 	if activeEngineName != "" {
 		err = common.UnsetEngineConfig(activeEngineName, true, cmd.Context)
 		if err != nil {
-			return fmt.Errorf("un-setting engine configurations: %v", err)
+			return fmt.Errorf("%v", err)
 		}
 	}
 
@@ -180,7 +180,7 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 	}
 
 	if err = common.SetEngineConfig(engine, cmd.Context); err != nil {
-		return fmt.Errorf("setting new engine configurations: %v", err)
+		return fmt.Errorf("%v", err)
 	}
 
 	fmt.Printf("Engine changed to %q.\n", engineName)
@@ -290,13 +290,13 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 
 	// If engine exists, make sure it is correctly installed and configured
 	if _, err = cmd.installMissingComponents(engine); err != nil {
-		return fmt.Errorf("installing missing components: %v", err)
+		return fmt.Errorf("%v", err)
 	}
 	if err = common.UnsetEngineConfig(activeEngineName, false, cmd.Context); err != nil {
-		return fmt.Errorf("un-setting engine configurations: %v", err)
+		return fmt.Errorf("%v", err)
 	}
 	if err = common.SetEngineConfig(engine, cmd.Context); err != nil {
-		return fmt.Errorf("setting engine configurations: %v", err)
+		return fmt.Errorf("%v", err)
 	}
 
 	return nil
@@ -344,7 +344,7 @@ func (cmd *useEngineCommand) installMissingComponents(engine *engines.Manifest) 
 	// https://github.com/canonical/inference-snaps-cli/issues/122
 	err = cmd.installComponents(missingComponents)
 	if err != nil {
-		return false, fmt.Errorf("installing components: %v", err)
+		return false, fmt.Errorf("%v", err)
 	}
 
 	return true, nil

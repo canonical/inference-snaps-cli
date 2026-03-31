@@ -76,7 +76,7 @@ func (cmd *statusCommand) run(_ *cobra.Command, _ []string) error {
 func (cmd *statusCommand) statusYaml() (string, error) {
 	statusStr, err := cmd.statusStruct()
 	if err != nil {
-		return "", fmt.Errorf("status: %v", err)
+		return "", fmt.Errorf("%v", err)
 	}
 	yamlStr, err := yaml.Marshal(statusStr)
 	if err != nil {
@@ -88,7 +88,7 @@ func (cmd *statusCommand) statusYaml() (string, error) {
 func (cmd *statusCommand) statusJson() (string, error) {
 	statusStr, err := cmd.statusStruct()
 	if err != nil {
-		return "", fmt.Errorf("status: %v", err)
+		return "", fmt.Errorf("%v", err)
 	}
 	jsonStr, err := json.MarshalIndent(statusStr, "", "  ")
 	if err != nil {
@@ -133,7 +133,7 @@ func (cmd *statusCommand) statusStruct() (*status, error) {
 
 	endpoints, err := common.ServerEndpoints(cmd.Context)
 	if err != nil {
-		return nil, fmt.Errorf("getting server api endpoints: %v", err)
+		return nil, fmt.Errorf("%v", err)
 	}
 	statusStr.Endpoints = endpoints
 

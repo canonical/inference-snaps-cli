@@ -57,7 +57,7 @@ func (cmd *listEnginesCommand) run(_ *cobra.Command, _ []string) error {
 
 	scoredEngines, err := common.ScoreEngines(cmd.Context)
 	if err != nil {
-		return fmt.Errorf("checking engines: %v", err)
+		return fmt.Errorf("%v", err)
 	}
 	stopProgress()
 
@@ -78,12 +78,12 @@ func (cmd *listEnginesCommand) run(_ *cobra.Command, _ []string) error {
 	case "table":
 		err = cmd.printEnginesTable(enginesList)
 		if err != nil {
-			return fmt.Errorf("printing list: %v", err)
+			return fmt.Errorf("%v", err)
 		}
 	case "json":
 		err = cmd.printEnginesJson(enginesList)
 		if err != nil {
-			return fmt.Errorf("printing list: %v", err)
+			return fmt.Errorf("%v", err)
 		}
 	default:
 		return fmt.Errorf("unknown format %q", cmd.format)

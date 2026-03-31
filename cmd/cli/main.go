@@ -143,7 +143,7 @@ func appendCommandToGroup(rootCmd *cobra.Command, groupID string, cmd *cobra.Com
 			return nil
 		}
 	}
-	return fmt.Errorf("group with ID %q not found", groupID)
+	return fmt.Errorf("command group with ID %q not found", groupID)
 }
 
 // addCommands adds commands to the root command without a group
