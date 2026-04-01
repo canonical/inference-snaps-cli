@@ -74,7 +74,7 @@ func WaitForComponents(ctx *Context) error {
 	return nil
 }
 
-// TODO: unify with similar code in use.go
+// TODO: unify with similar code in use-engine.go
 func checkMissingComponents(manifest *engines.Manifest) ([]string, error) {
 	componentsDir, found := os.LookupEnv("SNAP_COMPONENTS")
 	if !found {
