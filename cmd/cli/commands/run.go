@@ -54,13 +54,15 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("error loading engine environment: %v", err)
 	}
-
+	defer common.UnloadEngineEnvironment(cmd.Context)
 	path := args[0]
 
 	execCmd := exec.Command(path)
 	execCmd.Stdout = os.Stdout
 	execCmd.Stderr = os.Stderr
-	return execCmd.Run()
+	err = execCmd.Run()
+
+	return err
 }
 
 // TODO: unify with similar code in use.go
