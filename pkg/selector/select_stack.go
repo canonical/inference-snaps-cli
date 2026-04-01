@@ -70,7 +70,7 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, en
 	if manifest.Memory != nil {
 		requiredMemory, err := utils.StringToBytes(*manifest.Memory)
 		if err != nil {
-			return 0, compatibilityReport, fmt.Errorf("failed to parse required memory: %v", err)
+			return 0, compatibilityReport, fmt.Errorf("parsing required memory: %v", err)
 		}
 
 		if hardwareInfo.Memory.TotalRam == 0 {
@@ -97,7 +97,7 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, en
 		requiredDisk, err := utils.StringToBytes(*manifest.DiskSpace)
 
 		if err != nil {
-			return 0, compatibilityReport, fmt.Errorf("failed to parse required disk space: %v", err)
+			return 0, compatibilityReport, fmt.Errorf("parsing required disk space: %v", err)
 		}
 
 		if _, ok := hardwareInfo.Disk[constants.SnapStoragePath]; !ok {

@@ -20,7 +20,7 @@ func gpuProperties(pciDevice types.PciDevice) (map[string]string, error) {
 
 	vRamVal, err := vRam(pciDevice)
 	if err != nil {
-		return nil, fmt.Errorf("error looking up vRAM: %v", err)
+		return nil, fmt.Errorf("vRAM: %v", err)
 	}
 	if vRamVal != nil {
 		properties["vram"] = strconv.FormatUint(*vRamVal, 10)
@@ -54,7 +54,7 @@ func vRam(device types.PciDevice) (*uint64, error) {
 
 	clinfo, err := parseClinfoJson(data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse clinfo json: %w", err)
+		return nil, fmt.Errorf("parsing clinfo json: %w", err)
 	}
 	if len(clinfo.Devices) == 0 {
 		return nil, fmt.Errorf("clinfo: no devices found")

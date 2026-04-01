@@ -13,7 +13,7 @@ func hostProcCpuInfo() (string, error) {
 	// cat /proc/cpuinfo
 	cpuInfoBytes, err := os.ReadFile("/proc/cpuinfo")
 	if err != nil {
-		return "", fmt.Errorf("error reading /proc/cpuinfo: %v", err)
+		return "", fmt.Errorf("reading /proc/cpuinfo: %v", err)
 	}
 	return string(cpuInfoBytes), nil
 }
@@ -25,7 +25,7 @@ func parseProcCpuInfo(cpuInfoString string, architecture string) ([]ProcCpuInfo,
 	case constants.Arm64:
 		return parseProcCpuInfoArm64(cpuInfoString)
 	default:
-		return nil, fmt.Errorf("can't parse /proc/cpuinfo. unsupported architecture: %s", architecture)
+		return nil, fmt.Errorf("unsupported architecture: %s", architecture)
 	}
 }
 

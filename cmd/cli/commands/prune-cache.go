@@ -191,7 +191,11 @@ func (cmd *pruneCacheCommand) printComponentsAndConfirm(componentsWithEngines ma
 
 		componentSizes, err := snap_store.ComponentSizes()
 		if err != nil {
-			fmt.Printf("Warning: unable to get component sizes: %v\n", err)
+			if cmd.Verbose {
+				fmt.Printf("Warning: unable to get component sizes: %v\n", err)
+			} else {
+				fmt.Printf("Warning: unable to get component sizes\n")
+			}
 		}
 
 		for componentName, engineNames := range componentsWithEngines {

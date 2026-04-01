@@ -42,7 +42,7 @@ func checkVram(device engines.Device, pciDevice types.PciDevice) error {
 	if vram, ok := pciDevice.AdditionalProperties["vram"]; ok {
 		vramAvailable, err := utils.StringToBytes(vram)
 		if err != nil {
-			return fmt.Errorf("error parsing vRAM: %v", err)
+			return fmt.Errorf("parsing vRAM: %v", err)
 		}
 		if vramAvailable >= vramRequired {
 			return nil

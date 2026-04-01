@@ -18,7 +18,7 @@ func Info() (map[string]types.DirStats, error) {
 	for _, dir := range directories {
 		dirInfo, err := statFs(dir)
 		if err != nil {
-			return nil, fmt.Errorf("error getting directory info: %v", err)
+			return nil, fmt.Errorf("%v", err)
 		}
 		info[dir] = dirInfo
 	}

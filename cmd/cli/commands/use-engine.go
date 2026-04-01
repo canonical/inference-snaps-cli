@@ -305,7 +305,7 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 func (cmd *useEngineCommand) installMissingComponents(engine *engines.Manifest) (installed bool, err error) {
 	missingComponents, err := cmd.missingComponents(engine.Components)
 	if err != nil {
-		return false, fmt.Errorf("checking installed components: %v", err)
+		return false, fmt.Errorf("%v", err)
 	}
 	if len(missingComponents) == 0 {
 		return false, nil
@@ -315,7 +315,11 @@ func (cmd *useEngineCommand) installMissingComponents(engine *engines.Manifest) 
 	componentSizes, err := snap_store.ComponentSizes()
 	if err != nil {
 		// If component size lookup failed, continue but log the error
-		fmt.Fprintf(os.Stderr, "Warning: unable to get component sizes: %v\n", err)
+		if cmd.Verbose {
+			fmt.Fprintf(os.Stderr, "Warning: unable to get component sizes: %v\n", err)
+		} else {
+			fmt.Fprintf(os.Stderr, "Warning: unable to get component sizes")
+		}
 	}
 
 	// Format list of components, adding size if it is known

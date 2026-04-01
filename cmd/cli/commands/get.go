@@ -72,7 +72,7 @@ func (cmd *getCommand) getValue(key string) error {
 
 	// Warn the user about deprecated fields. These are still consumed by the engines.
 	if slices.Contains(deprecatedConfig, key) && utils.IsTerminalOutput() {
-		fmt.Fprintf(os.Stderr, "Note: %q configuration field is deprecated!\n", key)
+		fmt.Fprintf(os.Stderr, "Warning: %q configuration field is deprecated!\n", key)
 	}
 
 	return nil

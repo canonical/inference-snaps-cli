@@ -46,7 +46,7 @@ func ShowMachine(ctx *common.Context) *cobra.Command {
 func (cmd *showMachineCommand) run(_ *cobra.Command, _ []string) error {
 	hwInfo, err := hardware_info.Get(true)
 	if err != nil {
-		return fmt.Errorf("machine info: %s", err)
+		return fmt.Errorf("%s", err)
 	}
 
 	switch cmd.format {
