@@ -55,7 +55,7 @@ func WaitForComponents(ctx *Context) error {
 	}
 
 	for elapsed := 0; elapsed < maxWait && len(missing) > 0; elapsed += interval {
-		fmt.Printf("Waiting for required snap components: %s (%d/%ds)\n",
+		fmt.Fprintf(os.Stderr, "Waiting for required snap components: %s (%d/%ds)\n",
 			strings.Join(missing, ", "), elapsed, maxWait)
 
 		time.Sleep(interval * time.Second)
