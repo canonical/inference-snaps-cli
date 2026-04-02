@@ -46,22 +46,6 @@ func invalidVarTestSettingsCollection(symlinkPath string) []ComponentSettings {
 	}
 }
 
-func invalidSymlinkTestSettingsCollection(symlinkPath string) []ComponentSettings {
-	return []ComponentSettings{
-		{
-			componentName: "dummy-component-2",
-			Layout: map[string]ComponentLayout{
-				symlinkPath: {
-					Symlink: "$SNAP_COMPONENTS/dummy-component-2/inexistent_test_file.txt",
-				},
-			},
-			Environment: []string{
-				"TEST_ENV_VAR=test",
-			},
-		},
-	}
-}
-
 func invalidDirTestSettingsCollection() []ComponentSettings {
 	return []ComponentSettings{
 		{
