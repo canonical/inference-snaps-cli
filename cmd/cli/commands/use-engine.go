@@ -152,6 +152,10 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 		return fmt.Errorf("error installing missing components: %v", err)
 	}
 
+	if !componentsInstalled {
+		return nil
+	}
+
 	activeEngineName, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
 		return fmt.Errorf("error getting active engine: %v", err)
@@ -308,7 +312,7 @@ func (cmd *useEngineCommand) installMissingComponents(engine *engines.Manifest) 
 		return false, fmt.Errorf("error checking installed components: %v", err)
 	}
 	if len(missingComponents) == 0 {
-		return false, nil
+		return true, nil
 	}
 
 	// Look up component sizes from the snap store
