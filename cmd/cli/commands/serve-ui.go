@@ -6,6 +6,7 @@ import (
 
 	"github.com/canonical/go-snapctl/env"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
+	ui "github.com/canonical/inference-snaps-ui"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +16,7 @@ type serveUICommand struct {
 	// flags
 	port         int
 	host         string // bind address
-	htmlDir      string
+	staticDir    string
 	capabilities string
 }
 
@@ -35,7 +36,7 @@ func ServeUI(ctx *common.Context) *cobra.Command {
 	// flags
 	cobraCmd.Flags().IntVar(&cmd.port, "port", 8081, "HTTP bind port")
 	cobraCmd.Flags().StringVar(&cmd.host, "host", "localhost", "HTTP bind address")
-	cobraCmd.Flags().StringVar(&cmd.htmlDir, "dir", "./webui", "Directory to serve HTML files from")
+	cobraCmd.Flags().StringVar(&cmd.staticDir, "dir", "./webui", "Directory to serve static files from")
 	cobraCmd.Flags().StringVar(&cmd.capabilities, "capabilities", "text",
 		fmt.Sprintf("Comma-separated list of capabilities (%s)",
 			strings.Join(common.SupportedUICapabilities(), ", ")))
@@ -69,7 +70,7 @@ func (cmd *serveUICommand) serveUI(_ *cobra.Command, args []string) error {
 		}
 	}
 
-	config := common.WebUIConfig{
+	config := ui.Config{
 		OpenAIBaseURL: baseURL,
 		Capabilities:  capabilities,
 		InstanceName:  env.SnapInstanceName(),
@@ -83,7 +84,7 @@ func (cmd *serveUICommand) serveUI(_ *cobra.Command, args []string) error {
 		fmt.Println("Engine name:", config.EngineName)
 	}
 
-	err = common.ServeUI(config, cmd.htmlDir, cmd.port, cmd.host)
+	err = ui.Serve(config, cmd.staticDir, cmd.port, cmd.host)
 	if err != nil {
 		return fmt.Errorf("error serving UI: %v", err)
 	}
