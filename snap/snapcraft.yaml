@@ -155,7 +155,7 @@ apps:
       - hardware-observe
       - home
       - network
-      - network-bind # for testing 
+      - network-bind # for serving webui 
       - opengl
     environment:
       ADDITIONAL_FEATURES: chat
