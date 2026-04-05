@@ -39,7 +39,7 @@ func ServeUI(ctx *common.Context) *cobra.Command {
 	cobraCmd.Flags().StringVar(&cmd.staticDir, "dir", "./webui", "Directory to serve static files from")
 	cobraCmd.Flags().StringVar(&cmd.capabilities, "capabilities", "text",
 		fmt.Sprintf("Comma-separated list of capabilities (%s)",
-			strings.Join(common.SupportedUICapabilities(), ", ")))
+			strings.Join(ui.SupportedCapabilities(), ", ")))
 
 	return cobraCmd
 }
@@ -60,14 +60,8 @@ func (cmd *serveUICommand) serveUI(_ *cobra.Command, args []string) error {
 	}
 
 	var capabilities []string
-	for _, c := range strings.Split(cmd.capabilities, ",") {
-		c = strings.TrimSpace(c)
-		switch c {
-		case common.UICapabilityText, common.UICapabilityVision:
-			capabilities = append(capabilities, c)
-		default:
-			return fmt.Errorf("unsupported capability: %s", c)
-		}
+	for cap := range strings.SplitSeq(cmd.capabilities, ",") {
+		capabilities = append(capabilities, strings.TrimSpace(cap))
 	}
 
 	config := ui.Config{
@@ -75,6 +69,10 @@ func (cmd *serveUICommand) serveUI(_ *cobra.Command, args []string) error {
 		Capabilities:  capabilities,
 		InstanceName:  env.SnapInstanceName(),
 		EngineName:    activeEngineName,
+	}
+
+	if err := config.Validate(); err != nil {
+		return fmt.Errorf("invalid configuration: %v", err)
 	}
 
 	if cmd.Verbose {
