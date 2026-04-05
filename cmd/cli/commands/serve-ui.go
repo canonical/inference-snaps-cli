@@ -16,7 +16,6 @@ type serveUICommand struct {
 	// flags
 	port         int
 	host         string // bind address
-	staticDir    string
 	capabilities string
 }
 
@@ -25,10 +24,10 @@ func ServeUI(ctx *common.Context) *cobra.Command {
 	cmd.Context = ctx
 
 	cobraCmd := &cobra.Command{
-		Use:               "serve-ui",
+		Use:               "serve-ui <static-files-dir>",
 		Short:             "Run a debug web server to serve the Web UI",
 		Hidden:            true,
-		Args:              cobra.NoArgs,
+		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: cobra.NoFileCompletions,
 		RunE:              cmd.serveUI,
 	}
@@ -36,15 +35,14 @@ func ServeUI(ctx *common.Context) *cobra.Command {
 	// flags
 	cobraCmd.Flags().IntVar(&cmd.port, "port", 8081, "HTTP bind port")
 	cobraCmd.Flags().StringVar(&cmd.host, "host", "localhost", "HTTP bind address")
-	cobraCmd.Flags().StringVar(&cmd.staticDir, "dir", "./webui", "Directory to serve static files from")
 	cobraCmd.Flags().StringVar(&cmd.capabilities, "capabilities", "text",
-		fmt.Sprintf("Comma-separated list of capabilities (%s)",
-			strings.Join(ui.SupportedCapabilities(), ", ")))
+		fmt.Sprintf("Comma-separated list of capabilities (%s)", strings.Join(ui.SupportedCapabilities(), ", ")))
 
 	return cobraCmd
 }
 
 func (cmd *serveUICommand) serveUI(_ *cobra.Command, args []string) error {
+	staticDir := args[0]
 
 	baseURL, err := common.OpenAiEndpoint(cmd.Context)
 	if err != nil {
@@ -82,10 +80,5 @@ func (cmd *serveUICommand) serveUI(_ *cobra.Command, args []string) error {
 		fmt.Println("Engine name:", config.EngineName)
 	}
 
-	err = ui.Serve(config, cmd.staticDir, cmd.port, cmd.host)
-	if err != nil {
-		return fmt.Errorf("error serving UI: %v", err)
-	}
-
-	return nil
+	return ui.Serve(config, staticDir, cmd.port, cmd.host)
 }
