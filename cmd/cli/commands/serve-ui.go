@@ -6,7 +6,7 @@ import (
 
 	"github.com/canonical/go-snapctl/env"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
-	"github.com/canonical/inference-snaps-ui/pkg/ui"
+	"github.com/canonical/inference-snaps-cli/pkg/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -80,5 +80,6 @@ func (cmd *serveUICommand) serveUI(_ *cobra.Command, args []string) error {
 		fmt.Println("Engine name:", config.EngineName)
 	}
 
+	fmt.Printf("Serving %q on http://localhost:%d\n", staticDir, cmd.port)
 	return ui.Serve(config, staticDir, cmd.port, cmd.host)
 }
