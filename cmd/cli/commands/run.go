@@ -55,6 +55,7 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("error loading engine environment: %v", err)
 	}
 	defer clean()
+
 	path := args[0]
 
 	execCmd := exec.Command(path)
