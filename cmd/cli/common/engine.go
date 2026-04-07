@@ -110,12 +110,16 @@ func loadEngineEnvironmentFromSettingsCollection(settingsCollection []ComponentS
 
 		settingsCollection[i].ExpandedLayout = make(map[string]ComponentLayout, len(settings.Layout))
 		for k, v := range settings.Layout {
-			settingsCollection[i].ExpandedLayout[os.ExpandEnv(k)] = v
+			ComponentLayout := ComponentLayout{
+				Symlink: os.ExpandEnv(v.Symlink),
+			}
+			settingsCollection[i].ExpandedLayout[os.ExpandEnv(k)] = ComponentLayout
 		}
 		for layoutPath, layout := range settingsCollection[i].ExpandedLayout {
 			if layout.Symlink != "" {
-				target := os.ExpandEnv(layout.Symlink)
-				link := os.ExpandEnv(layoutPath)
+				// Assigning variables for better readability
+				target := layout.Symlink
+				link := layoutPath
 
 				// Ensure the parent directory for the link exists
 				if err := os.MkdirAll(filepath.Dir(link), 0755); err != nil {
@@ -143,16 +147,14 @@ func unloadEngineEnvironmentFromSettingsCollection(settingsCollection []Componen
 
 	// remove the symlinks created for the engine components
 	for _, settings := range settingsCollection {
-		for layoutPath := range settings.ExpandedLayout {
+		for layoutPath, _ := range settings.ExpandedLayout {
 			if err := os.RemoveAll(layoutPath); err != nil {
 				fmt.Printf("Error removing symlink %q: %v\n", layoutPath, err)
 				return err
 			}
 		}
 	}
-	if err := os.Unsetenv(componentEnv); err != nil {
-		return fmt.Errorf("error unsetting %q: %v", componentEnv, err)
-	}
+
 	return nil
 }
 
@@ -167,19 +169,11 @@ func LoadEngineEnvironment(ctx *Context) (func() error, error) {
 	err = loadEngineEnvironmentFromSettingsCollection(settingsCollection)
 
 	return func() error {
-		if err := unloadEngineEnvironment(ctx); err != nil {
-			fmt.Errorf("error unloading engine environment: %v", err)
+		if err := unloadEngineEnvironmentFromSettingsCollection(settingsCollection); err != nil {
+			fmt.Printf("error unloading engine environment: %v\n", err)
 		}
 		return nil
 	}, err
-}
-
-func unloadEngineEnvironment(ctx *Context) error {
-	settingsCollection, err := EngineComponentSettings(ctx)
-	if err != nil {
-		return fmt.Errorf("error loading engine component settings: %v", err)
-	}
-	return unloadEngineEnvironmentFromSettingsCollection(settingsCollection)
 }
 
 // SetEngineConfig sets configurations of the given engine.
