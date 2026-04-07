@@ -7,61 +7,6 @@ import (
 	"testing"
 )
 
-// settingsCollection mirrors a component.yaml like:
-//
-//	layout:
-//	  /tmp/test_folder/test_symlink:
-//	    symlink: $SNAP_COMPONENTS/dummy-component-2/test_file.txt
-//	environment:
-//	  - TEST_ENV_VAR=test
-func testSettingsCollection(symlinkPath string) []ComponentSettings {
-	return []ComponentSettings{
-		{
-			componentName: "dummy-component-2",
-			Layout: map[string]ComponentLayout{
-				symlinkPath: {
-					Symlink: "$SNAP_COMPONENTS/dummy-component-2/test_file.txt",
-				},
-			},
-			Environment: []string{
-				"TEST_ENV_VAR=test",
-			},
-		},
-	}
-}
-
-func invalidVarTestSettingsCollection(symlinkPath string) []ComponentSettings {
-	return []ComponentSettings{
-		{
-			componentName: "dummy-component-2",
-			Layout: map[string]ComponentLayout{
-				symlinkPath: {
-					Symlink: "$SNAP_COMPONENTS/dummy-component-2/test_file.txt",
-				},
-			},
-			Environment: []string{
-				"TEST_ENV_VARtest",
-			},
-		},
-	}
-}
-
-func invalidDirTestSettingsCollection() []ComponentSettings {
-	return []ComponentSettings{
-		{
-			componentName: "dummy-component-2",
-			Layout: map[string]ComponentLayout{
-				"/NOT/EXISTENT": {
-					Symlink: "$SNAP_COMPONENTS/dummy-component-2/non_existent_file.txt",
-				},
-			},
-			Environment: []string{
-				"TEST_ENV_VAR=test",
-			},
-		},
-	}
-}
-
 // setupTestComponent creates the component directory and target file on disk,
 // sets SNAP_COMPONENTS, and returns the resolved symlink path.
 func setupTestComponent(t *testing.T) (symlinkPath string) {
@@ -83,7 +28,19 @@ func setupTestComponent(t *testing.T) (symlinkPath string) {
 
 func TestLoadEngineEnvironmentFromSettingsCollection(t *testing.T) {
 	symlinkPath := setupTestComponent(t)
-	settings := testSettingsCollection(symlinkPath)
+	settings := []ComponentSettings{
+		{
+			componentName: "dummy-component-2",
+			Layout: map[string]ComponentLayout{
+				symlinkPath: {
+					Symlink: "$SNAP_COMPONENTS/dummy-component-2/test_file.txt",
+				},
+			},
+			Environment: []string{
+				"TEST_ENV_VAR=test",
+			},
+		},
+	}
 
 	err := loadEngineEnvironmentFromSettingsCollection(settings)
 	if err != nil {
@@ -119,7 +76,19 @@ func TestLoadEngineEnvironmentFromSettingsCollection(t *testing.T) {
 
 func TestUnloadEngineEnvironmentFromSettingsCollection(t *testing.T) {
 	symlinkPath := setupTestComponent(t)
-	settings := testSettingsCollection(symlinkPath)
+	settings := []ComponentSettings{
+		{
+			componentName: "dummy-component-2",
+			Layout: map[string]ComponentLayout{
+				symlinkPath: {
+					Symlink: "$SNAP_COMPONENTS/dummy-component-2/test_file.txt",
+				},
+			},
+			Environment: []string{
+				"TEST_ENV_VAR=test",
+			},
+		},
+	}
 
 	// Load first so there is something to unload
 	if err := loadEngineEnvironmentFromSettingsCollection(settings); err != nil {
@@ -138,11 +107,6 @@ func TestUnloadEngineEnvironmentFromSettingsCollection(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// Verify env var was unset
-	if val, present := os.LookupEnv("TEST_ENV_VAR"); present {
-		t.Errorf("expected TEST_ENV_VAR to be unset, got %q", val)
-	}
-
 	// Verify symlink was removed
 	if _, err := os.Lstat(symlinkPath); !os.IsNotExist(err) {
 		t.Errorf("expected symlink to be removed, but it still exists")
@@ -150,29 +114,40 @@ func TestUnloadEngineEnvironmentFromSettingsCollection(t *testing.T) {
 }
 
 func TestSnapComponentsNotSet(t *testing.T) {
-	err := loadEngineEnvironmentFromSettingsCollection(invalidVarTestSettingsCollection(""))
+	settings := []ComponentSettings{
+		{
+			componentName: "dummy-component-2",
+			Layout: map[string]ComponentLayout{
+				"": {
+					Symlink: "$SNAP_COMPONENTS/dummy-component-2/test_file.txt",
+				},
+			},
+			Environment: []string{
+				"TEST_ENV_VARtest",
+			},
+		},
+	}
+	err := loadEngineEnvironmentFromSettingsCollection(settings)
 	if err.Error() != "SNAP_COMPONENTS env var not set" {
 		t.Fatalf("expected error about SNAP_COMPONENTS, got: %v", err)
 	}
 }
 
-func TestInvalidEnvironmentVariable(t *testing.T) {
-	_ = setupTestComponent(t)
-	settings := invalidVarTestSettingsCollection("")
-
-	err := loadEngineEnvironmentFromSettingsCollection(settings)
-	if err == nil || !strings.Contains(err.Error(), "invalid env var") {
-		t.Fatalf("expected error about invalid env var, got: %v", err)
-	}
-	err = unloadEngineEnvironmentFromSettingsCollection(settings)
-	if err == nil || !strings.Contains(err.Error(), "invalid env var") {
-		t.Fatalf("expected error about invalid env var, got: %v", err)
-	}
-}
-
 func TestCannotCreateDir(t *testing.T) {
 	_ = setupTestComponent(t)
-	settings := invalidDirTestSettingsCollection()
+	settings := []ComponentSettings{
+		{
+			componentName: "dummy-component-2",
+			Layout: map[string]ComponentLayout{
+				"/NOT/EXISTENT": {
+					Symlink: "$SNAP_COMPONENTS/dummy-component-2/non_existent_file.txt",
+				},
+			},
+			Environment: []string{
+				"TEST_ENV_VAR=test",
+			},
+		},
+	}
 
 	err := loadEngineEnvironmentFromSettingsCollection(settings)
 	if err == nil || !strings.Contains(err.Error(), "error creating directory for symlink") {

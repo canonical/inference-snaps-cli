@@ -24,10 +24,11 @@ type ComponentLayout struct {
 }
 
 type ComponentSettings struct {
-	componentName string
-	Servers       map[string]map[string]string `yaml:"servers"`
-	Environment   []string                     `yaml:"environment"`
-	Layout        map[string]ComponentLayout   `yaml:"layout"`
+	componentName  string
+	Servers        map[string]map[string]string `yaml:"servers"`
+	Environment    []string                     `yaml:"environment"`
+	Layout         map[string]ComponentLayout   `yaml:"layout"`
+	ExpandedLayout map[string]ComponentLayout
 }
 
 func EngineComponentSettings(ctx *Context) ([]ComponentSettings, error) {
@@ -81,7 +82,7 @@ func loadEngineEnvironmentFromSettingsCollection(settingsCollection []ComponentS
 		return fmt.Errorf("SNAP_COMPONENTS env var not set")
 	}
 
-	for _, settings := range settingsCollection {
+	for i, settings := range settingsCollection {
 
 		// Set component path env var for expansion
 		componentPath := filepath.Join(componentsDir, settings.componentName)
@@ -107,7 +108,11 @@ func loadEngineEnvironmentFromSettingsCollection(settingsCollection []ComponentS
 			}
 		}
 
-		for layoutPath, layout := range settings.Layout {
+		settingsCollection[i].ExpandedLayout = make(map[string]ComponentLayout, len(settings.Layout))
+		for k, v := range settings.Layout {
+			settingsCollection[i].ExpandedLayout[os.ExpandEnv(k)] = v
+		}
+		for layoutPath, layout := range settingsCollection[i].ExpandedLayout {
 			if layout.Symlink != "" {
 				target := os.ExpandEnv(layout.Symlink)
 				link := os.ExpandEnv(layoutPath)
@@ -128,53 +133,45 @@ func loadEngineEnvironmentFromSettingsCollection(settingsCollection []ComponentS
 			}
 		}
 	}
-
+	if err := os.Unsetenv(componentEnv); err != nil {
+		return fmt.Errorf("error unsetting %q: %v", componentEnv, err)
+	}
 	return nil
 }
 
 func unloadEngineEnvironmentFromSettingsCollection(settingsCollection []ComponentSettings) error {
 
-	// Unset environment variables
-	for _, settings := range settingsCollection {
-		for i := range settings.Environment {
-			kv := settings.Environment[i]
-			parts := strings.SplitN(kv, "=", 2)
-			if len(parts) != 2 {
-				return fmt.Errorf("invalid env var %q", kv)
-			}
-			k := parts[0]
-
-			err := os.Unsetenv(k)
-			if err != nil {
-				return fmt.Errorf("error unsetting %q: %v", k, err)
-			}
-		}
-	}
 	// remove the symlinks created for the engine components
 	for _, settings := range settingsCollection {
-		for layoutPath := range settings.Layout {
-			layoutPath = os.ExpandEnv(layoutPath)
+		for layoutPath := range settings.ExpandedLayout {
 			if err := os.RemoveAll(layoutPath); err != nil {
-				return fmt.Errorf("error removing symlink %q: %v", layoutPath, err)
+				fmt.Printf("Error removing symlink %q: %v\n", layoutPath, err)
+				return err
 			}
 		}
 	}
-
+	if err := os.Unsetenv(componentEnv); err != nil {
+		return fmt.Errorf("error unsetting %q: %v", componentEnv, err)
+	}
 	return nil
 }
 
 // LoadEngineEnvironment sets env vars of the active engine's components for the current process
 // and creates any necessary symlinks
-func LoadEngineEnvironment(ctx *Context) error {
+func LoadEngineEnvironment(ctx *Context) (func() error, error) {
 	settingsCollection, err := EngineComponentSettings(ctx)
 	if err != nil {
-		return fmt.Errorf("error loading engine component settings: %v", err)
+		return nil, fmt.Errorf("error loading engine component settings: %v", err)
 	}
 
-	return loadEngineEnvironmentFromSettingsCollection(settingsCollection)
+	err = loadEngineEnvironmentFromSettingsCollection(settingsCollection)
+
+	return func() error {
+		return unloadEngineEnvironment(ctx)
+	}, err
 }
 
-func UnloadEngineEnvironment(ctx *Context) error {
+func unloadEngineEnvironment(ctx *Context) error {
 	settingsCollection, err := EngineComponentSettings(ctx)
 	if err != nil {
 		return fmt.Errorf("error loading engine component settings: %v", err)

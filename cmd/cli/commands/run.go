@@ -50,19 +50,18 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 		}
 	}
 
-	err := common.LoadEngineEnvironment(cmd.Context)
+	clean, err := common.LoadEngineEnvironment(cmd.Context)
 	if err != nil {
 		return fmt.Errorf("error loading engine environment: %v", err)
 	}
-	defer common.UnloadEngineEnvironment(cmd.Context)
+	defer clean()
 	path := args[0]
 
 	execCmd := exec.Command(path)
 	execCmd.Stdout = os.Stdout
 	execCmd.Stderr = os.Stderr
-	err = execCmd.Run()
 
-	return err
+	return execCmd.Run()
 }
 
 // TODO: unify with similar code in use.go
