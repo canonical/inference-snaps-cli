@@ -167,7 +167,10 @@ func LoadEngineEnvironment(ctx *Context) (func() error, error) {
 	err = loadEngineEnvironmentFromSettingsCollection(settingsCollection)
 
 	return func() error {
-		return unloadEngineEnvironment(ctx)
+		if err := unloadEngineEnvironment(ctx); err != nil {
+			fmt.Errorf("error unloading engine environment: %v", err)
+		}
+		return nil
 	}, err
 }
 
