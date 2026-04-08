@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"os/signal"
-	"syscall"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
 	"github.com/spf13/cobra"
@@ -58,27 +56,5 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 	execCmd := exec.Command(path)
 	execCmd.Stdout = os.Stdout
 	execCmd.Stderr = os.Stderr
-
-	if err := execCmd.Start(); err != nil {
-		return fmt.Errorf("error starting subprocess: %v", err)
-	}
-
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGUSR1, syscall.SIGUSR2)
-	defer signal.Stop(sigChan)
-
-	go func() {
-		var lastSig os.Signal
-		for sig := range sigChan {
-			if sig == lastSig {
-				fmt.Printf("Ignoring duplicate signal: %v\n", sig)
-				continue
-			}
-			lastSig = sig
-			fmt.Printf("Received signal: %v, cleaning engine configuration\n", sig)
-			execCmd.Process.Signal(sig)
-		}
-	}()
-
-	return execCmd.Wait()
+	return execCmd.Run()
 }
