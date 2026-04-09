@@ -37,17 +37,17 @@ All rows are `RunE` errors → printed as `Error: <message>` by cobra.
 
 | Full error printed to user |
 |---|
-| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: looking up active engine: <snapctl error>` |
-| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: no active engine` |
-| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: loading engine manifest: engine manifest not found: <os error>` |
-| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: loading engine manifest: <filepath>/engine.yaml: <os error>` |
-| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: loading engine manifest: <enginesDir>: <yaml error>` |
-| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: SNAP_COMPONENTS env var not set` |
-| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: reading <componentYamlFile>: <os error>` |
-| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: unmarshaling <componentYamlFile>: <yaml error>` |
-| `Error: getting OpenAI base URL: error getting server endpoints: OPENAI_BASE_PATH env in component "<name>" is deprecated; set server settings in "servers".` |
-| `Error: getting OpenAI base URL: error getting server endpoints: getting server HTTP URL: getting config "http.port": <snapctl error>` |
-| `Error: getting OpenAI base URL: error getting server endpoints: unsupported protocol "<proto>" for server "<name>" in component "<name>"` |
+| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: looking up active engine: <snapctl error>` |
+| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: no active engine` |
+| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: loading engine manifest: engine manifest not found: <os error>` |
+| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: loading engine manifest: <filepath>/engine.yaml: <os error>` |
+| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: loading engine manifest: <enginesDir>: <yaml error>` |
+| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: SNAP_COMPONENTS env var not set` |
+| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: reading <componentYamlFile>: <os error>` |
+| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: unmarshaling <componentYamlFile>: <yaml error>` |
+| `Error: getting OpenAI base URL: getting server endpoints: OPENAI_BASE_PATH env in component "<name>" is deprecated; set server settings in "servers".` |
+| `Error: getting OpenAI base URL: getting server endpoints: getting server HTTP URL: getting config "http.port": <snapctl error>` |
+| `Error: getting OpenAI base URL: getting server endpoints: unsupported protocol "<proto>" for server "<name>" in component "<name>"` |
 | `Error: getting OpenAI base URL: "openai" not found in server endpoints` |
 | `Error: getting services: <snapctl error>` |
 | `Error: server not active`<br><br>`Run "sudo snap start <snap>.server" to start the server.` |
@@ -340,17 +340,17 @@ All `RunE` errors → `Error: <message>`.
 
 | Full text printed to user |
 |---|
-| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: looking up active engine: <snapctl error>` |
-| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: no active engine` |
-| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: loading engine manifest: engine manifest not found: <os error>` |
-| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: loading engine manifest: <filepath>/engine.yaml: <os error>` |
-| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: loading engine manifest: <enginesDir>: <yaml error>` |
-| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: SNAP_COMPONENTS env var not set` |
-| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: reading <componentYamlFile>: <os error>` |
-| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: unmarshaling <componentYamlFile>: <yaml error>` |
-| `Error: getting OpenAI base URL: error getting server endpoints: OPENAI_BASE_PATH env in component "<name>" is deprecated; set server settings in "servers".` |
-| `Error: getting OpenAI base URL: error getting server endpoints: getting server HTTP URL: getting config "http.port": <snapctl error>` |
-| `Error: getting OpenAI base URL: error getting server endpoints: unsupported protocol "<proto>" for server "<name>" in component "<name>"` |
+| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: looking up active engine: <snapctl error>` |
+| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: no active engine` |
+| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: loading engine manifest: engine manifest not found: <os error>` |
+| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: loading engine manifest: <filepath>/engine.yaml: <os error>` |
+| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: loading engine manifest: <enginesDir>: <yaml error>` |
+| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: SNAP_COMPONENTS env var not set` |
+| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: reading <componentYamlFile>: <os error>` |
+| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: unmarshaling <componentYamlFile>: <yaml error>` |
+| `Error: getting OpenAI base URL: getting server endpoints: OPENAI_BASE_PATH env in component "<name>" is deprecated; set server settings in "servers".` |
+| `Error: getting OpenAI base URL: getting server endpoints: getting server HTTP URL: getting config "http.port": <snapctl error>` |
+| `Error: getting OpenAI base URL: getting server endpoints: unsupported protocol "<proto>" for server "<name>" in component "<name>"` |
 | `Error: getting OpenAI base URL: "openai" not found in server endpoints` |
 | `Error: getting active engine: <snapctl error>` |
 | `Error: no engine is active` |
