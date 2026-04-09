@@ -122,7 +122,7 @@ func addAdditionalProperties(devices []types.PciDevice) []types.PciDevice {
 			if errors.Is(err, ErrorVendorNotSupported) {
 				// We do not log unsupported vendors, as that would be the majority of PCI devices
 			} else {
-				fmt.Fprintf(os.Stderr, "Error getting additional properties for pci device: %v\n", err)
+				fmt.Fprintf(os.Stderr, "Warning: unable to get additional properties for pci device: %v\n", err)
 			}
 		}
 		devices[i].AdditionalProperties = properties

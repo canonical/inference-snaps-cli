@@ -176,18 +176,18 @@ All `RunE` errors → `Error: <message>`.
 | `Error: json: <json marshal error>` |
 | `Error: yaml: <yaml marshal error>` |
 | `Error: unknown format "<format>"` |
-| *(stderr, non-fatal, no cobra prefix)* `Error looking up friendly name: opening pci database: <pcidb error>` |
-| *(stderr, non-fatal, no cobra prefix)* `Error getting additional properties for pci device: AMD: getting gpu properties: looking up vram: <os error>` |
-| *(stderr, non-fatal, no cobra prefix)* `Error getting additional properties for pci device: AMD: getting gpu properties: looking up gfx architecture: <os error>` |
-| *(stderr, non-fatal, no cobra prefix)* `Error getting additional properties for pci device: AMD: getting gpu properties: looking up gfx architecture: gfx_target_version not found for device with pci slot <slot>` |
-| *(stderr, non-fatal, no cobra prefix)* `Error getting additional properties for pci device: NVIDIA: getting gpu properties: looking up vram: querying nvidia-smi: <exec error>` |
-| *(stderr, non-fatal, no cobra prefix)* `Error getting additional properties for pci device: NVIDIA: getting gpu properties: looking up vram: querying nvidia-smi: <exec error>: <nvidia-smi stdout>` |
-| *(stderr, non-fatal, no cobra prefix)* `Error getting additional properties for pci device: NVIDIA: getting gpu properties: looking up vram: <strconv error>` |
-| *(stderr, non-fatal, no cobra prefix)* `Error getting additional properties for pci device: NVIDIA: getting gpu properties: looking up compute capability: querying nvidia-smi: <exec error>` |
-| *(stderr, non-fatal, no cobra prefix)* `Error getting additional properties for pci device: Intel: getting gpu properties: looking up vram: querying clinfo: <exec error>` |
-| *(stderr, non-fatal, no cobra prefix)* `Error getting additional properties for pci device: Intel: getting gpu properties: looking up vram: parsing clinfo response: <json unmarshal error>` |
-| *(stderr, non-fatal, no cobra prefix)* `Error getting additional properties for pci device: Intel: getting gpu properties: looking up vram: clinfo: no devices found` |
-| *(stderr, non-fatal, no cobra prefix)* `Error getting additional properties for pci device: Intel: getting gpu properties: looking up vram: clinfo: no online devices found` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get friendly name for pci device: opening pci database: <pcidb error>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get additional properties for pci device: AMD: getting gpu properties: looking up vram: <os error>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get additional properties for pci device: AMD: getting gpu properties: looking up gfx architecture: <os error>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get additional properties for pci device: AMD: getting gpu properties: looking up gfx architecture: gfx_target_version not found for device with pci slot <slot>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get additional properties for pci device: NVIDIA: getting gpu properties: looking up vram: querying nvidia-smi: <exec error>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get additional properties for pci device: NVIDIA: getting gpu properties: looking up vram: querying nvidia-smi: <exec error>: <nvidia-smi stdout>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get additional properties for pci device: NVIDIA: getting gpu properties: looking up vram: <strconv error>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get additional properties for pci device: NVIDIA: getting gpu properties: looking up compute capability: querying nvidia-smi: <exec error>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get additional properties for pci device: Intel: getting gpu properties: looking up vram: querying clinfo: <exec error>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get additional properties for pci device: Intel: getting gpu properties: looking up vram: parsing clinfo response: <json unmarshal error>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get additional properties for pci device: Intel: getting gpu properties: looking up vram: clinfo: no devices found` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get additional properties for pci device: Intel: getting gpu properties: looking up vram: clinfo: no online devices found` |
 
 ---
 
@@ -351,8 +351,8 @@ All `RunE` errors → `Error: <message>`.
 
 | Full text printed to user |
 |---|
-| `Error: failed to marshal to JSON: <json marshal error>` |
-| `Error: failed to marshal to YAML: <yaml marshal error>` |
+| `Error: marshalling json: <json marshal error>` |
+| `Error: marshalling yaml: <yaml marshal error>` |
 | `Error: unknown format "<format>"` |
 
 ---
@@ -447,5 +447,5 @@ All `RunE` errors → `Error: <message>`.
 - `<snapctl error>` is any error returned by the `go-snapctl` library (e.g. snapd not running, permission issues).
 - `<os error>`, `<yaml error>`, `<json marshal error>`, `<strconv error>`, `<http error>`, `<exec error>` are standard library errors whose text is set by the Go standard library and the underlying OS.
 - The `show-machine` command calls `hardware_info.Get(true)` (with `friendlyNames=true`) so it additionally triggers the PCI database and vendor-specific tool calls that `list-engines` / `use-engine` do not (those use `friendlyNames=false`).
-- Additional-properties errors from AMD/NVIDIA/Intel sub-packages are silently dropped unless they pass through `addAdditionalProperties → deviceAdditionalProperties`, at which point they are written to stderr without the cobra `Error:` prefix.
+- Additional-properties errors from AMD/NVIDIA/Intel sub-packages are silently dropped unless they pass through `addAdditionalProperties → deviceAdditionalProperties`, at which point they are written to stderr as `Warning: unable to get additional properties for pci device: …` without the cobra `Error:` prefix.
 
