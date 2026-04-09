@@ -37,11 +37,11 @@ func WaitForComponents(ctx *Context) error {
 	const interval = 10  // seconds
 	activeEngineName, err := ctx.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("looking up active engine: %v", err)
+		return fmt.Errorf("%w: %w", ErrGetActiveEngine, err)
 	}
 
 	if activeEngineName == "" {
-		return fmt.Errorf("no active engine")
+		return ErrNoActiveEngine
 	}
 
 	manifest, err := engines.LoadManifest(ctx.EnginesDir, activeEngineName)
@@ -67,7 +67,7 @@ func WaitForComponents(ctx *Context) error {
 	}
 
 	if len(missing) > 0 {
-		return fmt.Errorf("timed out after %ds while waiting for required components: %s",
+		return fmt.Errorf("timeout after waiting %ds for required components: %s",
 			maxWait, strings.Join(missing, ", "))
 	}
 

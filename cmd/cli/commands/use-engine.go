@@ -154,7 +154,7 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 
 	activeEngineName, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("getting active engine: %v", err)
+		return fmt.Errorf("%w: %w", common.ErrGetActiveEngine, err)
 	}
 
 	if activeEngineName == engineName {
@@ -273,10 +273,10 @@ func (*useEngineCommand) installComponents(components []string) error {
 func (cmd *useEngineCommand) fixActiveEngine() error {
 	activeEngineName, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("getting active engine: %v", err)
+		return fmt.Errorf("%w: %w", common.ErrGetActiveEngine, err)
 	}
 	if activeEngineName == "" {
-		return fmt.Errorf("no active engine to fix")
+		return common.ErrNoActiveEngine
 	}
 
 	// If active engine no longer exist, auto select another one
@@ -315,7 +315,7 @@ func (cmd *useEngineCommand) installMissingComponents(engine *engines.Manifest) 
 	componentSizes, err := snap_store.ComponentSizes()
 	if err != nil {
 		// If component size lookup failed, continue but log the error
-		fmt.Fprintf(os.Stderr, "Warning: unable to get component sizes: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Warning: unable to query component sizes: %v\n", err)
 	}
 
 	// Format list of components, adding size if it is known

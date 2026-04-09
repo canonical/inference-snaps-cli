@@ -116,16 +116,16 @@ func (cmd *statusCommand) statusStruct() (*status, error) {
 
 	activeEngineName, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return nil, fmt.Errorf("getting active engine: %v", err)
+		return nil, fmt.Errorf("%w: %w", common.ErrGetActiveEngine, err)
 	}
 	if activeEngineName == "" {
-		return nil, fmt.Errorf("no engine is active")
+		return nil, common.ErrNoActiveEngine
 	}
 	statusStr.Engine = activeEngineName
 
 	services, err := snapctl.Services().Run()
 	if err != nil {
-		return nil, fmt.Errorf("getting services: %v", err)
+		return nil, fmt.Errorf("getting list of services: %v", err)
 	}
 	statusStr.Services = make(map[string]string)
 	for name, service := range services {

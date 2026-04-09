@@ -28,11 +28,11 @@ type ComponentSettings struct {
 func EngineComponentSettings(ctx *Context) ([]ComponentSettings, error) {
 	activeEngineName, err := ctx.Cache.GetActiveEngine()
 	if err != nil {
-		return nil, fmt.Errorf("looking up active engine: %v", err)
+		return nil, fmt.Errorf("%w: %w", ErrGetActiveEngine, err)
 	}
 
 	if activeEngineName == "" {
-		return nil, fmt.Errorf("no active engine")
+		return nil, ErrNoActiveEngine
 	}
 
 	manifest, err := engines.LoadManifest(ctx.EnginesDir, activeEngineName)

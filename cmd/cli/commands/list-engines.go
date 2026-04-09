@@ -63,7 +63,7 @@ func (cmd *listEnginesCommand) run(_ *cobra.Command, _ []string) error {
 
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("could not determine active engine: %v", err)
+		return fmt.Errorf("%w: %w", common.ErrGetActiveEngine, err)
 	}
 
 	enginesList := outputEngines{

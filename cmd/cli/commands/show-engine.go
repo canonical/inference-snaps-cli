@@ -75,10 +75,10 @@ func (cmd *showEngineCommand) validateArgs(_ *cobra.Command, args []string, toCo
 func (cmd *showEngineCommand) showCurrentEngine() error {
 	currentEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("could not get the active engine: %v", err)
+		return fmt.Errorf("%w: %w", common.ErrGetActiveEngine, err)
 	}
 	if currentEngine == "" {
-		return fmt.Errorf("no active engine")
+		return common.ErrNoActiveEngine
 	}
 	return cmd.showEngine(currentEngine)
 }

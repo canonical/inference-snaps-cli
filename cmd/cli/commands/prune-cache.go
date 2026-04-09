@@ -47,7 +47,7 @@ func (cmd *pruneCacheCommand) run(_ *cobra.Command, _ []string) error {
 
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %w", common.ErrGetActiveEngine, err)
 	}
 	activeEngineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngine)
 	if err != nil {
@@ -55,7 +55,7 @@ func (cmd *pruneCacheCommand) run(_ *cobra.Command, _ []string) error {
 			if cmd.Verbose {
 				fmt.Println(err)
 			}
-			return fmt.Errorf("no active engine found")
+			return common.ErrNoActiveEngine
 		}
 		return fmt.Errorf("loading engine manifest: %v", err)
 	}
@@ -163,7 +163,7 @@ func (cmd *pruneCacheCommand) pruneEngine(componentsToRemove []string, engine en
 func (cmd *pruneCacheCommand) pruneAllInactiveEngines(componentsToRemove []string) error {
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %w", common.ErrGetActiveEngine, err)
 	}
 	var allEngines []engines.Manifest
 	allEngines, err = engines.LoadManifests(cmd.EnginesDir)
@@ -191,7 +191,7 @@ func (cmd *pruneCacheCommand) printComponentsAndConfirm(componentsWithEngines ma
 
 		componentSizes, err := snap_store.ComponentSizes()
 		if err != nil {
-			fmt.Printf("Warning: unable to get component sizes: %v\n", err)
+			fmt.Printf("Warning: unable to query component sizes: %v\n", err)
 		}
 
 		for componentName, engineNames := range componentsWithEngines {
@@ -241,7 +241,7 @@ func (cmd *pruneCacheCommand) inactiveEngines() ([]string, error) {
 	var engineList []string
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", common.ErrGetActiveEngine, err)
 	}
 
 	for _, manifest := range enginesManifests {
