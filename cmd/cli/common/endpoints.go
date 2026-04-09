@@ -79,7 +79,7 @@ func serverHttpUrl(ctx *Context, serverConfig map[string]string) (string, error)
 func OpenAiEndpoint(ctx *Context) (string, error) {
 	serverEndpoints, err := ServerEndpoints(ctx)
 	if err != nil {
-		return "", fmt.Errorf("error getting server endpoints: %v", err)
+		return "", fmt.Errorf("getting server endpoints: %v", err)
 	}
 	openaiEndpoint, found := serverEndpoints[openAiEndpointKey]
 	if !found {
