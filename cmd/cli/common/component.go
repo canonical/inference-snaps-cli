@@ -21,7 +21,7 @@ func ComponentInstalled(component string) (bool, error) {
 		if os.IsNotExist(err) {
 			return false, nil
 		} else {
-			return false, fmt.Errorf("error checking component directory %q: %v", component, err)
+			return false, fmt.Errorf("checking component directory %q: %v", component, err)
 		}
 	} else {
 		if info.IsDir() {
@@ -37,7 +37,7 @@ func WaitForComponents(ctx *Context) error {
 	const interval = 10  // seconds
 	activeEngineName, err := ctx.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("error looking up active engine: %v", err)
+		return fmt.Errorf("looking up active engine: %v", err)
 	}
 
 	if activeEngineName == "" {
@@ -46,7 +46,7 @@ func WaitForComponents(ctx *Context) error {
 
 	manifest, err := engines.LoadManifest(ctx.EnginesDir, activeEngineName)
 	if err != nil {
-		return fmt.Errorf("error loading engine manifest: %v", err)
+		return fmt.Errorf("loading engine manifest: %v", err)
 	}
 
 	missing, err := checkMissingComponents(manifest)
