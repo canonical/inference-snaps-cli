@@ -134,7 +134,7 @@ All `RunE` errors → `Error: <message>`.
 | `Error: checking engines: scoring engines: total memory not reported by host system` |
 | `Error: checking engines: scoring engines: parsing required disk space: <strconv error>` |
 | `Error: checking engines: scoring engines: disk space not reported by host system` |
-| `Error: could not determine active engine: <snapctl error>` |
+| `Error: looking up active engine: <snapctl error>` |
 | `Error: printing table: adding data: <tablewriter error>` |
 | `Error: printing table: rendering: <tablewriter error>` |
 | `Error: printing json: marshalling engines: <json marshal error>` |
@@ -150,7 +150,7 @@ All `RunE` errors → `Error: <message>`.
 | Full text printed to user |
 |---|
 | `Error: invalid number of arguments` |
-| `Error: could not get the active engine: <snapctl error>` |
+| `Error: looking up active engine: <snapctl error>` |
 | `Error: no active engine` |
 | `Error: checking engines: …` *(same tree as list-engines above)* |
 | `Error: engine "<name>" does not exist` |
@@ -202,10 +202,10 @@ All `RunE` errors → `Error: <message>`.
 | `Error: waiting for component: loading engine manifest: engine manifest not found: <os error>` |
 | `Error: waiting for component: loading engine manifest: <filepath>/engine.yaml: <os/yaml error>` |
 | `Error: waiting for component: SNAP_COMPONENTS env var not set` |
-| `Error: waiting for component: timed out after 3600s while waiting for required components: <comp1>, <comp2>, ...` |
-| `Error: getting json status: getting status: getting active engine: <snapctl error>` |
-| `Error: getting json status: getting status: no engine is active` |
-| `Error: getting json status: getting status: getting services: <snapctl error>` |
+| `Error: waiting for component: timeout after waiting 3600s for required components: <comp1>, <comp2>, ...` |
+| `Error: getting json status: getting status: looking up active engine: <snapctl error>` |
+| `Error: getting json status: getting status: no active engine` |
+| `Error: getting json status: getting status: getting list of services: <snapctl error>` |
 | `Error: getting json status: getting status: unexpected service name format: "<name>"` |
 | `Error: getting json status: getting status: getting server api endpoints: loading engine environment: looking up active engine: <snapctl error>` |
 | `Error: getting json status: getting status: getting server api endpoints: loading engine environment: no active engine` |
@@ -244,7 +244,7 @@ All `RunE` errors → `Error: <message>`.
 | `Error: use engine: installing missing components: installing components: timed out while installing "<comp>":`<br>`Monitor the installation progress with "snap changes"`<br><br>`Rerun this command once the installation is complete` |
 | `Error: use engine: installing missing components: installing components: snap not known to the store:`<br>`Rerun this command after manually installing "<comp>"` |
 | `Error: use engine: installing missing components: installing components: installing "<comp>": <snapctl error>` |
-| `Error: use engine: getting active engine: <snapctl error>` |
+| `Error: use engine: looking up active engine: <snapctl error>` |
 | `Error: use engine: un-setting engine configurations: un-setting engine configurations: <snapctl error>` |
 | `Error: use engine: un-setting engine configurations: loading engine manifest: engine manifest not found: <os error>` |
 | `Error: use engine: un-setting engine configurations: loading engine manifest: <filepath>/engine.yaml: <os/yaml error>` |
@@ -253,8 +253,8 @@ All `RunE` errors → `Error: <message>`.
 | `Error: use engine: setting active engine: <snapctl error>` |
 | `Error: use engine: setting new engine configurations: setting engine configuration "<key>": <snapctl/json marshal error>` |
 | **`--fix` path:** |
-| `Error: getting active engine: <snapctl error>` |
-| `Error: no active engine to fix` |
+| `Error: looking up active engine: <snapctl error>` |
+| `Error: no active engine` |
 | `Error: loading active engine manifest: <filepath>/engine.yaml: <os/yaml error>` |
 | `Error: installing missing components: …` *(same subtree as --auto above)* |
 | `Error: un-setting engine configurations: …` *(same subtree as --auto above)* |
@@ -263,26 +263,26 @@ All `RunE` errors → `Error: <message>`.
 | `Error: "<engine>" not found` |
 | `Error: loading engine manifest: <filepath>/engine.yaml: <os/yaml error>` |
 | `Error: installing missing components: …` *(same subtree as --auto above)* |
-| `Error: getting active engine: <snapctl error>` |
+| `Error: looking up active engine: <snapctl error>` |
 | `Error: un-setting engine configurations: …` *(same subtree as --auto above)* |
 | `Error: setting active engine: engine name cannot be empty` |
 | `Error: setting active engine: <snapctl error>` |
 | `Error: setting new engine configurations: setting engine configuration "<key>": <snapctl/json marshal error>` |
-| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get component sizes: finding snap components: SNAP_NAME is not set. Likely not inside a snap` |
-| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get component sizes: finding snap components: SNAP_REVISION is not set` |
-| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get component sizes: finding snap components: not installed from store` |
-| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get component sizes: finding snap components: parsing snap revision: <strconv error>` |
-| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get component sizes: finding snap components: getting snap info: creating http request: <http error>` |
-| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get component sizes: finding snap components: getting snap info: making http request: <http error>` |
-| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get component sizes: finding snap components: getting snap info: http status not OK: <status code>` |
-| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get component sizes: finding snap components: getting snap info: decoding json: <json error>` |
-| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get component sizes: finding snap components: getting components: fetching refresh data from store: marshalling request: <json error>` |
-| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get component sizes: finding snap components: getting components: fetching refresh data from store: creating http request: <http error>` |
-| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get component sizes: finding snap components: getting components: fetching refresh data from store: making http request: <http error>` |
-| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get component sizes: finding snap components: getting components: fetching refresh data from store: http status not OK: <status code>` |
-| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get component sizes: finding snap components: getting components: fetching refresh data from store: decoding json: <json error>` |
-| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get component sizes: finding snap components: getting components: store returned no refresh results` |
-| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to get component sizes: finding snap components: getting components: no refresh results found for snap id <id>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: finding snap components: SNAP_NAME is not set. Likely not inside a snap` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: finding snap components: SNAP_REVISION is not set` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: finding snap components: not installed from store` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: finding snap components: parsing snap revision: <strconv error>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: finding snap components: getting snap info: creating http request: <http error>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: finding snap components: getting snap info: making http request: <http error>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: finding snap components: getting snap info: http status not OK: <status code>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: finding snap components: getting snap info: decoding json: <json error>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: finding snap components: getting components: fetching refresh data from store: marshalling request: <json error>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: finding snap components: getting components: fetching refresh data from store: creating http request: <http error>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: finding snap components: getting components: fetching refresh data from store: making http request: <http error>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: finding snap components: getting components: fetching refresh data from store: http status not OK: <status code>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: finding snap components: getting components: fetching refresh data from store: decoding json: <json error>` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: finding snap components: getting components: store returned no refresh results` |
+| *(stderr, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: finding snap components: getting components: no refresh results found for snap id <id>` |
 | *(tab-completion, stdout, direct `fmt.Printf`, no cobra prefix)* `Error loading engines: <enginesDir>: <os error>` |
 | *(stderr, non-fatal, no cobra prefix)* `Warning: previously active engine "<name>" not found; skipping user configuration cleanup.` |
 
@@ -295,8 +295,8 @@ All `RunE` errors → `Error: <message>`.
 | Full text printed to user |
 |---|
 | `Error: permission denied, try again with sudo` |
-| `Error: <snapctl error>` *(from GetActiveEngine at top of run)* |
-| `Error: no active engine found` |
+| `Error: looking up active engine: <snapctl error>` |
+| `Error: no active engine` |
 | `Error: loading engine manifest: <filepath>/engine.yaml: <os/yaml error>` |
 | `Error: cannot prune the active engine "<engine>"` |
 | `Error: "<engine>" not found` |
@@ -308,10 +308,10 @@ All `RunE` errors → `Error: <message>`.
 | `Error: un-setting engine configurations: loading engine manifest: engine manifest not found: <os error>` |
 | `Error: un-setting engine configurations: un-setting configuration "<key>": <snapctl error>` |
 | `Error: removing components: <snapctl error>` |
-| `Error: getting list of inactive engines: <snapctl error>` |
+| `Error: getting list of inactive engines: looking up active engine: <snapctl error>` |
 | `Error: getting list of inactive engines: <enginesDir>: <os error>` |
 | `Error: confirming component: <snapctl error>` |
-| *(stdout, non-fatal, no cobra prefix)* `Warning: unable to get component sizes: …` *(same subtree as use-engine above)* |
+| *(stdout, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: …` *(same subtree as use-engine above)* |
 | *(stderr, non-fatal, no cobra prefix)* `Warning: previously active engine "<name>" not found; skipping user configuration cleanup.` |
 
 ---
@@ -328,7 +328,7 @@ All `RunE` errors → `Error: <message>`.
 | `Error: waiting for component: loading engine manifest: engine manifest not found: <os error>` |
 | `Error: waiting for component: loading engine manifest: <filepath>/engine.yaml: <os/yaml error>` |
 | `Error: waiting for component: SNAP_COMPONENTS env var not set` |
-| `Error: waiting for component: timed out after 3600s while waiting for required components: <comp1>, <comp2>, ...` |
+| `Error: waiting for component: timeout after waiting 3600s for required components: <comp1>, <comp2>, ...` |
 | `Error: loading engine environment: loading engine component settings: looking up active engine: <snapctl error>` |
 | `Error: loading engine environment: loading engine component settings: no active engine` |
 | `Error: loading engine environment: loading engine component settings: loading engine manifest: engine manifest not found: <os error>` |
@@ -435,6 +435,8 @@ All `RunE` errors → `Error: <message>`.
 | Sentinel | Declared in |
 |---|---|
 | `permission denied, try again with sudo` | `cmd/cli/common/errors.go` |
+| `looking up active engine` | `cmd/cli/common/errors.go` |
+| `no active engine` | `cmd/cli/common/errors.go` |
 | `not found` | `pkg/storage/storage.go` |
 | `engine manifest not found` (wrapped with underlying OS error) | `pkg/engines/load.go` |
 | `no compatible engines found` | `pkg/selector/select_stack.go` |
