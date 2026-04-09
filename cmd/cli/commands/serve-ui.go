@@ -46,12 +46,12 @@ func (cmd *serveUICommand) serveUI(_ *cobra.Command, args []string) error {
 
 	baseURL, err := common.OpenAiEndpoint(cmd.Context)
 	if err != nil {
-		return fmt.Errorf("error getting OpenAI base URL: %v", err)
+		return fmt.Errorf("getting OpenAI base URL: %v", err)
 	}
 
 	activeEngineName, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("error getting active engine: %v", err)
+		return fmt.Errorf("getting active engine: %v", err)
 	}
 	if activeEngineName == "" {
 		return fmt.Errorf("no engine is active")

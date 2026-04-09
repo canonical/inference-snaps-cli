@@ -34,7 +34,7 @@ func ServeUICommand(ctx *common.Context) *cobra.Command {
 
 	// flags
 	cobraCmd.Flags().StringVar(&cmd.baseUrl, "base-url", "http://localhost:8080/v1", "Base URL of the OpenAI-compatible server")
-	cobraCmd.Flags().IntVar(&cmd.port, "port", 8080, "HTTP bind port of the web server")
+	cobraCmd.Flags().IntVar(&cmd.port, "port", 8081, "HTTP bind port of the web server")
 	cmd.host = "localhost" // fixed to localhost as this is for debugging only
 
 	return cobraCmd
