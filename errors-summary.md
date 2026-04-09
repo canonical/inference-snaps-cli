@@ -37,16 +37,17 @@ All rows are `RunE` errors → printed as `Error: <message>` by cobra.
 
 | Full error printed to user |
 |---|
-| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: looking up active engine: <snapctl error>` |
-| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: no active engine` |
-| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: loading engine manifest: engine manifest not found: <os error>` |
-| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: loading engine manifest: <filepath>/engine.yaml: <os/yaml error>` |
-| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: SNAP_COMPONENTS env var not set` |
-| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: reading <componentYamlFile>: <os error>` |
-| `Error: getting OpenAI base URL: getting server endpoints: loading engine environment: unmarshaling <componentYamlFile>: <yaml error>` |
-| `Error: getting OpenAI base URL: getting server endpoints: OPENAI_BASE_PATH env in component "<name>" is deprecated; set server settings in "servers".` |
-| `Error: getting OpenAI base URL: getting server endpoints: getting server HTTP URL: getting config "http.port": <snapctl error>` |
-| `Error: getting OpenAI base URL: getting server endpoints: unsupported protocol "<proto>" for server "<name>" in component "<name>"` |
+| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: looking up active engine: <snapctl error>` |
+| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: no active engine` |
+| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: loading engine manifest: engine manifest not found: <os error>` |
+| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: loading engine manifest: <filepath>/engine.yaml: <os error>` |
+| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: loading engine manifest: <enginesDir>: <yaml error>` |
+| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: SNAP_COMPONENTS env var not set` |
+| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: reading <componentYamlFile>: <os error>` |
+| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: unmarshaling <componentYamlFile>: <yaml error>` |
+| `Error: getting OpenAI base URL: error getting server endpoints: OPENAI_BASE_PATH env in component "<name>" is deprecated; set server settings in "servers".` |
+| `Error: getting OpenAI base URL: error getting server endpoints: getting server HTTP URL: getting config "http.port": <snapctl error>` |
+| `Error: getting OpenAI base URL: error getting server endpoints: unsupported protocol "<proto>" for server "<name>" in component "<name>"` |
 | `Error: getting OpenAI base URL: "openai" not found in server endpoints` |
 | `Error: getting services: <snapctl error>` |
 | `Error: server not active`<br><br>`Run "sudo snap start <snap>.server" to start the server.` |
@@ -114,7 +115,8 @@ All `RunE` errors → `Error: <message>`.
 | Full text printed to user |
 |---|
 | `Error: checking engines: loading engines: <enginesDir>: <os error>` |
-| `Error: checking engines: loading engines: <filepath>/engine.yaml: <os/yaml error>` |
+| `Error: checking engines: loading engines: <filepath>/engine.yaml: <os error>` |
+| `Error: checking engines: loading engines: <enginesDir>: <yaml error>` |
 | `Error: checking engines: getting machine info: getting memory info: querying host meminfo: reading /proc/meminfo: <os error>` |
 | `Error: checking engines: getting machine info: getting memory info: parsing meminfo: parsing MemTotal: parsing kB value: <strconv error>` |
 | `Error: checking engines: getting machine info: getting memory info: parsing meminfo: parsing MemTotal: parsing byte value: <strconv error>` |
@@ -158,6 +160,8 @@ All `RunE` errors → `Error: <message>`.
 | `Error: printing engine manifest: yaml: <yaml marshal error>` |
 | `Error: printing engine manifest: unknown format "<format>"` |
 | *(tab-completion, stdout, direct `fmt.Printf`, no cobra prefix)* `Error: loading engines: <enginesDir>: <os error>` |
+| *(tab-completion, stdout, direct `fmt.Printf`, no cobra prefix)* `Error: loading engines: <filepath>/engine.yaml: <os error>` |
+| *(tab-completion, stdout, direct `fmt.Printf`, no cobra prefix)* `Error: loading engines: <enginesDir>: <yaml error>` |
 
 ---
 
@@ -200,7 +204,8 @@ All `RunE` errors → `Error: <message>`.
 | `Error: waiting for component: looking up active engine: <snapctl error>` |
 | `Error: waiting for component: no active engine` |
 | `Error: waiting for component: loading engine manifest: engine manifest not found: <os error>` |
-| `Error: waiting for component: loading engine manifest: <filepath>/engine.yaml: <os/yaml error>` |
+| `Error: waiting for component: loading engine manifest: <filepath>/engine.yaml: <os error>` |
+| `Error: waiting for component: loading engine manifest: <enginesDir>: <yaml error>` |
 | `Error: waiting for component: SNAP_COMPONENTS env var not set` |
 | `Error: waiting for component: timeout after waiting 3600s for required components: <comp1>, <comp2>, ...` |
 | `Error: getting json status: getting status: looking up active engine: <snapctl error>` |
@@ -210,7 +215,8 @@ All `RunE` errors → `Error: <message>`.
 | `Error: getting json status: getting status: getting server api endpoints: loading engine environment: looking up active engine: <snapctl error>` |
 | `Error: getting json status: getting status: getting server api endpoints: loading engine environment: no active engine` |
 | `Error: getting json status: getting status: getting server api endpoints: loading engine environment: loading engine manifest: engine manifest not found: <os error>` |
-| `Error: getting json status: getting status: getting server api endpoints: loading engine environment: loading engine manifest: <filepath>/engine.yaml: <os/yaml error>` |
+| `Error: getting json status: getting status: getting server api endpoints: loading engine environment: loading engine manifest: <filepath>/engine.yaml: <os error>` |
+| `Error: getting json status: getting status: getting server api endpoints: loading engine environment: loading engine manifest: <enginesDir>: <yaml error>` |
 | `Error: getting json status: getting status: getting server api endpoints: loading engine environment: SNAP_COMPONENTS env var not set` |
 | `Error: getting json status: getting status: getting server api endpoints: loading engine environment: reading <componentYamlFile>: <os error>` |
 | `Error: getting json status: getting status: getting server api endpoints: loading engine environment: unmarshaling <componentYamlFile>: <yaml error>` |
@@ -238,7 +244,8 @@ All `RunE` errors → `Error: <message>`.
 | `Error: checking engines: …` *(same tree as list-engines above)* |
 | `Error: finding top engine: no compatible engines found` |
 | `Error: use engine: "<engine>" not found` |
-| `Error: use engine: loading engine manifest: <filepath>/engine.yaml: <os/yaml error>` |
+| `Error: use engine: loading engine manifest: <filepath>/engine.yaml: <os error>` |
+| `Error: use engine: loading engine manifest: <enginesDir>: <yaml error>` |
 | `Error: use engine: installing missing components: checking installed components: checking component directory "<comp>": <os error>` |
 | `Error: use engine: installing missing components: checking installed components: component "<comp>" exists but is not a directory` |
 | `Error: use engine: installing missing components: installing components: timed out while installing "<comp>":`<br>`Monitor the installation progress with "snap changes"`<br><br>`Rerun this command once the installation is complete` |
@@ -247,7 +254,8 @@ All `RunE` errors → `Error: <message>`.
 | `Error: use engine: looking up active engine: <snapctl error>` |
 | `Error: use engine: un-setting engine configurations: un-setting engine configurations: <snapctl error>` |
 | `Error: use engine: un-setting engine configurations: loading engine manifest: engine manifest not found: <os error>` |
-| `Error: use engine: un-setting engine configurations: loading engine manifest: <filepath>/engine.yaml: <os/yaml error>` |
+| `Error: use engine: un-setting engine configurations: loading engine manifest: <filepath>/engine.yaml: <os error>` |
+| `Error: use engine: un-setting engine configurations: loading engine manifest: <enginesDir>: <yaml error>` |
 | `Error: use engine: un-setting engine configurations: un-setting configuration "<key>": <snapctl error>` |
 | `Error: use engine: setting active engine: engine name cannot be empty` |
 | `Error: use engine: setting active engine: <snapctl error>` |
@@ -255,13 +263,15 @@ All `RunE` errors → `Error: <message>`.
 | **`--fix` path:** |
 | `Error: looking up active engine: <snapctl error>` |
 | `Error: no active engine` |
-| `Error: loading active engine manifest: <filepath>/engine.yaml: <os/yaml error>` |
+| `Error: loading active engine manifest: <filepath>/engine.yaml: <os error>` |
+| `Error: loading active engine manifest: <enginesDir>: <yaml error>` |
 | `Error: installing missing components: …` *(same subtree as --auto above)* |
 | `Error: un-setting engine configurations: …` *(same subtree as --auto above)* |
 | `Error: setting engine configurations: setting engine configuration "<key>": <snapctl/json marshal error>` |
 | **Named engine path:** |
 | `Error: "<engine>" not found` |
-| `Error: loading engine manifest: <filepath>/engine.yaml: <os/yaml error>` |
+| `Error: loading engine manifest: <filepath>/engine.yaml: <os error>` |
+| `Error: loading engine manifest: <enginesDir>: <yaml error>` |
 | `Error: installing missing components: …` *(same subtree as --auto above)* |
 | `Error: looking up active engine: <snapctl error>` |
 | `Error: un-setting engine configurations: …` *(same subtree as --auto above)* |
@@ -284,6 +294,8 @@ All `RunE` errors → `Error: <message>`.
 | *(stderr, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: finding snap components: getting components: store returned no refresh results` |
 | *(stderr, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: finding snap components: getting components: no refresh results found for snap id <id>` |
 | *(tab-completion, stdout, direct `fmt.Printf`, no cobra prefix)* `Error loading engines: <enginesDir>: <os error>` |
+| *(tab-completion, stdout, direct `fmt.Printf`, no cobra prefix)* `Error loading engines: <filepath>/engine.yaml: <os error>` |
+| *(tab-completion, stdout, direct `fmt.Printf`, no cobra prefix)* `Error loading engines: <enginesDir>: <yaml error>` |
 | *(stderr, non-fatal, no cobra prefix)* `Warning: previously active engine "<name>" not found; skipping user configuration cleanup.` |
 
 ---
@@ -297,22 +309,55 @@ All `RunE` errors → `Error: <message>`.
 | `Error: permission denied, try again with sudo` |
 | `Error: looking up active engine: <snapctl error>` |
 | `Error: no active engine` |
-| `Error: loading engine manifest: <filepath>/engine.yaml: <os/yaml error>` |
+| `Error: loading engine manifest: <filepath>/engine.yaml: <os error>` |
+| `Error: loading engine manifest: <enginesDir>: <yaml error>` |
 | `Error: cannot prune the active engine "<engine>"` |
 | `Error: "<engine>" not found` |
 | `Error: loading manifests: <enginesDir>: <os error>` |
-| `Error: loading manifests: <filepath>/engine.yaml: <os/yaml error>` |
+| `Error: loading manifests: <filepath>/engine.yaml: <os error>` |
+| `Error: loading manifests: <enginesDir>: <yaml error>` |
 | `Error: checking component directory "<comp>": <os error>` |
 | `Error: component "<comp>" exists but is not a directory` |
-| `Error: un-setting engine configurations: un-setting engine configurations: <snapctl error>` |
+| `Error: un-setting engine configurations: <snapctl error>` |
 | `Error: un-setting engine configurations: loading engine manifest: engine manifest not found: <os error>` |
+| `Error: un-setting engine configurations: loading engine manifest: <filepath>/engine.yaml: <os error>` |
+| `Error: un-setting engine configurations: loading engine manifest: <enginesDir>: <yaml error>` |
 | `Error: un-setting engine configurations: un-setting configuration "<key>": <snapctl error>` |
 | `Error: removing components: <snapctl error>` |
 | `Error: getting list of inactive engines: looking up active engine: <snapctl error>` |
 | `Error: getting list of inactive engines: <enginesDir>: <os error>` |
+| `Error: getting list of inactive engines: <filepath>/engine.yaml: <os error>` |
+| `Error: getting list of inactive engines: <enginesDir>: <yaml error>` |
 | `Error: confirming component: <snapctl error>` |
 | *(stdout, non-fatal, no cobra prefix)* `Warning: unable to query component sizes: …` *(same subtree as use-engine above)* |
 | *(stderr, non-fatal, no cobra prefix)* `Warning: previously active engine "<name>" not found; skipping user configuration cleanup.` |
+
+---
+
+## `cmd/cli/commands/serve-ui.go` — `serve-ui` command (hidden)
+
+`serve-ui` uses `cobra.ExactArgs(1)`. All `RunE` errors → `Error: <message>`.
+
+| Full text printed to user |
+|---|
+| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: looking up active engine: <snapctl error>` |
+| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: no active engine` |
+| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: loading engine manifest: engine manifest not found: <os error>` |
+| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: loading engine manifest: <filepath>/engine.yaml: <os error>` |
+| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: loading engine manifest: <enginesDir>: <yaml error>` |
+| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: SNAP_COMPONENTS env var not set` |
+| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: reading <componentYamlFile>: <os error>` |
+| `Error: getting OpenAI base URL: error getting server endpoints: loading engine environment: unmarshaling <componentYamlFile>: <yaml error>` |
+| `Error: getting OpenAI base URL: error getting server endpoints: OPENAI_BASE_PATH env in component "<name>" is deprecated; set server settings in "servers".` |
+| `Error: getting OpenAI base URL: error getting server endpoints: getting server HTTP URL: getting config "http.port": <snapctl error>` |
+| `Error: getting OpenAI base URL: error getting server endpoints: unsupported protocol "<proto>" for server "<name>" in component "<name>"` |
+| `Error: getting OpenAI base URL: "openai" not found in server endpoints` |
+| `Error: getting active engine: <snapctl error>` |
+| `Error: no engine is active` |
+| `Error: invalid configuration: invalid OpenAI base URL: <url parse error>` |
+| `Error: invalid configuration: unsupported capability: "<cap>"` |
+| *(from `ui.Serve` → `http.ListenAndServe`)* `Error: <net listen error>` |
+| *(from `ui.Serve` → `verifyStaticContent`)* `Error: unexpected static files: checking "<indexFile>": <os error>` |
 
 ---
 
@@ -326,13 +371,15 @@ All `RunE` errors → `Error: <message>`.
 | `Error: waiting for component: looking up active engine: <snapctl error>` |
 | `Error: waiting for component: no active engine` |
 | `Error: waiting for component: loading engine manifest: engine manifest not found: <os error>` |
-| `Error: waiting for component: loading engine manifest: <filepath>/engine.yaml: <os/yaml error>` |
+| `Error: waiting for component: loading engine manifest: <filepath>/engine.yaml: <os error>` |
+| `Error: waiting for component: loading engine manifest: <enginesDir>: <yaml error>` |
 | `Error: waiting for component: SNAP_COMPONENTS env var not set` |
 | `Error: waiting for component: timeout after waiting 3600s for required components: <comp1>, <comp2>, ...` |
 | `Error: loading engine environment: loading engine component settings: looking up active engine: <snapctl error>` |
 | `Error: loading engine environment: loading engine component settings: no active engine` |
 | `Error: loading engine environment: loading engine component settings: loading engine manifest: engine manifest not found: <os error>` |
-| `Error: loading engine environment: loading engine component settings: loading engine manifest: <filepath>/engine.yaml: <os/yaml error>` |
+| `Error: loading engine environment: loading engine component settings: loading engine manifest: <filepath>/engine.yaml: <os error>` |
+| `Error: loading engine environment: loading engine component settings: loading engine manifest: <enginesDir>: <yaml error>` |
 | `Error: loading engine environment: loading engine component settings: SNAP_COMPONENTS env var not set` |
 | `Error: loading engine environment: loading engine component settings: reading <componentYamlFile>: <os error>` |
 | `Error: loading engine environment: loading engine component settings: unmarshaling <componentYamlFile>: <yaml error>` |
@@ -405,7 +452,6 @@ The per-file `❌` lines are printed directly with `fmt.Printf` — **no** cobra
 | *(stdout, direct `fmt.Printf`, no cobra prefix)* `❌ <path>: invalid device: allof <i>/<n>: gpu: bus: pci: invalid field: <fieldname>` |
 | *(stdout, direct `fmt.Printf`, no cobra prefix)* `❌ <path>: invalid device: allof <i>/<n>: npu: bus: …` *(same as gpu subtree)* |
 | *(stdout, direct `fmt.Printf`, no cobra prefix)* `❌ <path>: invalid device: allof <i>/<n>: typeless: bus: …` *(same as gpu subtree)* |
-| *(stdout, direct `fmt.Printf`, no cobra prefix)* `❌ <path>: invalid device: allof <i>/<n>: invalid device type: <type>` |
 | *(stdout, direct `fmt.Printf`, no cobra prefix)* `❌ <path>: invalid device: anyof <i>/<n>: …` *(same subtree as allof above)* |
 
 ---
@@ -418,7 +464,8 @@ All `RunE` errors → `Error: <message>`.
 |---|
 | `Error: decoding hardware info: <yaml decode error>` |
 | `Error: loading engines from directory: <enginesDir>: <os error>` |
-| `Error: loading engines from directory: <filepath>/engine.yaml: <os/yaml error>` |
+| `Error: loading engines from directory: <filepath>/engine.yaml: <os error>` |
+| `Error: loading engines from directory: <enginesDir>: <yaml error>` |
 | `Error: checking engines: parsing required memory: <strconv error>` |
 | `Error: checking engines: total memory not reported by host system` |
 | `Error: checking engines: parsing required disk space: <strconv error>` |
@@ -450,4 +497,3 @@ All `RunE` errors → `Error: <message>`.
 - `<os error>`, `<yaml error>`, `<json marshal error>`, `<strconv error>`, `<http error>`, `<exec error>` are standard library errors whose text is set by the Go standard library and the underlying OS.
 - The `show-machine` command calls `hardware_info.Get(true)` (with `friendlyNames=true`) so it additionally triggers the PCI database and vendor-specific tool calls that `list-engines` / `use-engine` do not (those use `friendlyNames=false`).
 - Additional-properties errors from AMD/NVIDIA/Intel sub-packages are silently dropped unless they pass through `addAdditionalProperties → deviceAdditionalProperties`, at which point they are written to stderr as `Warning: unable to get additional properties for pci device: …` without the cobra `Error:` prefix.
-
