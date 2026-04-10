@@ -118,7 +118,7 @@ func loadEngineEnvironmentFromSettingsCollection(settingsCollection []ComponentS
 				target := layout.Symlink
 				link := layoutPath
 				if !strings.HasPrefix(link, "/tmp") {
-					fmt.Fprintf(os.Stderr, "Warning: cannot create symlink because path %q is not in /tmp\n", settings.componentName, link)
+					fmt.Fprintf(os.Stderr, "Warning: skipping symlink %q for component %q: path is not in /tmp\n", link, settings.componentName)
 					continue
 				}
 
