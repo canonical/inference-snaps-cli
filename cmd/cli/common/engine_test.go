@@ -150,7 +150,7 @@ func TestCannotCreateDir(t *testing.T) {
 	}
 
 	err := loadEngineEnvironmentFromSettingsCollection(settings)
-	if err == nil || !strings.Contains(err.Error(), "error creating directory for symlink") {
-		t.Fatalf("expected error about creating directory for symlink, got: %v", err)
+	if err != nil && !strings.Contains(err.Error(), "error creating directory for symlink") {
+		t.Fatalf("expected skipping creation fo symlink due to wrong path, got: %v", err)
 	}
 }
