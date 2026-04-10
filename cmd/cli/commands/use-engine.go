@@ -336,7 +336,7 @@ func (cmd *useEngineCommand) installMissingComponents(engine *engines.Manifest) 
 	if !cmd.assumeYes && term.IsTerminal(int(os.Stdin.Fd())) {
 		fmt.Println()
 		if !common.ConfirmationPrompt("Do you want to continue?") {
-			fmt.Println("Exiting. No changes applied.")
+			fmt.Println("Cancelled. No changes applied.")
 			return false, nil
 		}
 	}
