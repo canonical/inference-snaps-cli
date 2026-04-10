@@ -147,12 +147,12 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 		return fmt.Errorf("error loading engine manifest: %v", err)
 	}
 
-	componentsInstalled, err := cmd.installMissingComponents(engine)
+	cancelledByUser, err := cmd.installMissingComponents(engine)
 	if err != nil {
 		return fmt.Errorf("error installing missing components: %v", err)
 	}
 
-	if !componentsInstalled {
+	if cancelledByUser {
 		return nil
 	}
 
@@ -174,11 +174,6 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 		}
 	}
 
-	if componentsInstalled {
-		// Leave a blank line before continuing
-		fmt.Println()
-	}
-
 	if err = cmd.Cache.SetActiveEngine(engine.Name); err != nil {
 		return fmt.Errorf("error setting active engine: %v", err)
 	}
@@ -187,7 +182,7 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 		return fmt.Errorf("error setting new engine configurations: %v", err)
 	}
 
-	fmt.Printf("Engine changed to %q.\n", engineName)
+	fmt.Printf("\nEngine changed to %q.\n", engineName)
 
 	// TODO: get this from an env var instead (e.g. ENGINE_SERVICES=server,proxy)
 	serviceName := env.SnapInstanceName() + ".server"
@@ -306,13 +301,13 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 	return nil
 }
 
-func (cmd *useEngineCommand) installMissingComponents(engine *engines.Manifest) (installed bool, err error) {
+func (cmd *useEngineCommand) installMissingComponents(engine *engines.Manifest) (cancelledByUser bool, err error) {
 	missingComponents, err := cmd.missingComponents(engine.Components)
 	if err != nil {
 		return false, fmt.Errorf("error checking installed components: %v", err)
 	}
 	if len(missingComponents) == 0 {
-		return true, nil
+		return false, nil
 	}
 
 	// Look up component sizes from the snap store
@@ -337,7 +332,7 @@ func (cmd *useEngineCommand) installMissingComponents(engine *engines.Manifest) 
 		fmt.Println()
 		if !common.ConfirmationPrompt("Do you want to continue?") {
 			fmt.Println("Cancelled. No changes applied.")
-			return false, nil
+			return true, nil
 		}
 	}
 
@@ -351,7 +346,7 @@ func (cmd *useEngineCommand) installMissingComponents(engine *engines.Manifest) 
 		return false, fmt.Errorf("error installing components: %v", err)
 	}
 
-	return true, nil
+	return false, nil
 }
 
 func (cmd *useEngineCommand) verboseIncompatibilityReasons(report engines.CompatibilityReport) []string {
