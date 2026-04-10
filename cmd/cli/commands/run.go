@@ -50,9 +50,8 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("error loading engine environment: %v", err)
 	}
 
-	// this defer will not be called if this process receives a SIGTERM or a SIGKILL
-	// but it will be called if the spawned process exits no matter how
-	// signal management should be implemented to catch signals and properly call the clean() method
+	// NOTE: defer does not run on SIGTERM or SIGKILL. It only runs when the child process exits.
+	// TODO: add signal handling to intercept SIGTERM and invoke clean() before exiting.
 	defer clean()
 
 	path := args[0]
