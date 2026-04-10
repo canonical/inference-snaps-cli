@@ -116,7 +116,7 @@ func (cmd *statusCommand) statusStruct() (*status, error) {
 
 	activeEngineName, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", common.ErrGetActiveEngine, err)
+		return nil, fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
 	if activeEngineName == "" {
 		return nil, common.ErrNoActiveEngine

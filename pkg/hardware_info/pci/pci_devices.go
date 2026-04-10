@@ -25,11 +25,11 @@ func Devices(friendlyNames bool) ([]types.PciDevice, error) {
 
 	hostLsPciData, err := hostLsPci()
 	if err != nil {
-		return nil, fmt.Errorf("querying host lspci: %v", err)
+		return nil, fmt.Errorf("executing lspci: %v", err)
 	}
 	devices, err := ParseLsPci(hostLsPciData, friendlyNames)
 	if err != nil {
-		return nil, fmt.Errorf("parsing lspci response: %v", err)
+		return nil, fmt.Errorf("parsing lspci output: %v", err)
 	}
 
 	// Additional properties are obtained by running vendor specific tools on the host
@@ -42,7 +42,7 @@ func Devices(friendlyNames bool) ([]types.PciDevice, error) {
 func DevicesFromRawData(lspciData string, friendlyNames bool) ([]types.PciDevice, error) {
 	devices, err := ParseLsPci(lspciData, friendlyNames)
 	if err != nil {
-		return nil, fmt.Errorf("parsing lspci response: %v", err)
+		return nil, fmt.Errorf("parsing lspci output: %v", err)
 	}
 
 	return devices, nil

@@ -154,7 +154,7 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 
 	activeEngineName, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("%w: %w", common.ErrGetActiveEngine, err)
+		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
 
 	if activeEngineName == engineName {
@@ -273,7 +273,7 @@ func (*useEngineCommand) installComponents(components []string) error {
 func (cmd *useEngineCommand) fixActiveEngine() error {
 	activeEngineName, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("%w: %w", common.ErrGetActiveEngine, err)
+		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
 	if activeEngineName == "" {
 		return common.ErrNoActiveEngine

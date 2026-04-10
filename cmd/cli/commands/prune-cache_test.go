@@ -43,7 +43,7 @@ func TestPrune(t *testing.T) {
 	cmd := pruneCacheCommand{Context: ctx}
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		t.Fatalf("%v: %v", common.ErrGetActiveEngine, err)
+		t.Fatalf("%s: %v", common.LookingUpActiveEngine, err)
 	}
 
 	activeEngineManifest, err := engines.LoadManifest(ctx.EnginesDir, activeEngine)

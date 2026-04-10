@@ -47,7 +47,7 @@ func (cmd *pruneCacheCommand) run(_ *cobra.Command, _ []string) error {
 
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("%w: %w", common.ErrGetActiveEngine, err)
+		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
 	activeEngineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngine)
 	if err != nil {
@@ -55,7 +55,7 @@ func (cmd *pruneCacheCommand) run(_ *cobra.Command, _ []string) error {
 			if cmd.Verbose {
 				fmt.Println(err)
 			}
-			return common.ErrNoActiveEngine
+			return fmt.Errorf("active engine manifest not found")
 		}
 		return fmt.Errorf("loading engine manifest: %v", err)
 	}
@@ -163,7 +163,7 @@ func (cmd *pruneCacheCommand) pruneEngine(componentsToRemove []string, engine en
 func (cmd *pruneCacheCommand) pruneAllInactiveEngines(componentsToRemove []string) error {
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("%w: %w", common.ErrGetActiveEngine, err)
+		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
 	var allEngines []engines.Manifest
 	allEngines, err = engines.LoadManifests(cmd.EnginesDir)
@@ -241,7 +241,7 @@ func (cmd *pruneCacheCommand) inactiveEngines() ([]string, error) {
 	var engineList []string
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", common.ErrGetActiveEngine, err)
+		return nil, fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
 
 	for _, manifest := range enginesManifests {

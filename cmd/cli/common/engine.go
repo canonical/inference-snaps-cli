@@ -28,7 +28,7 @@ type ComponentSettings struct {
 func EngineComponentSettings(ctx *Context) ([]ComponentSettings, error) {
 	activeEngineName, err := ctx.Cache.GetActiveEngine()
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrGetActiveEngine, err)
+		return nil, fmt.Errorf("%s: %w", LookingUpActiveEngine, err)
 	}
 
 	if activeEngineName == "" {

@@ -37,7 +37,7 @@ func WaitForComponents(ctx *Context) error {
 	const interval = 10  // seconds
 	activeEngineName, err := ctx.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("%w: %w", ErrGetActiveEngine, err)
+		return fmt.Errorf("%s: %w", LookingUpActiveEngine, err)
 	}
 
 	if activeEngineName == "" {

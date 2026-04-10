@@ -49,12 +49,12 @@ func vRam(device types.PciDevice) (*uint64, error) {
 
 	data, err := command.Output()
 	if err != nil {
-		return nil, fmt.Errorf("querying clinfo: %v", err)
+		return nil, fmt.Errorf("executing clinfo: %v", err)
 	}
 
 	clinfo, err := parseClinfoJson(data)
 	if err != nil {
-		return nil, fmt.Errorf("parsing clinfo response: %w", err)
+		return nil, fmt.Errorf("parsing clinfo output: %w", err)
 	}
 	if len(clinfo.Devices) == 0 {
 		return nil, fmt.Errorf("clinfo: no devices found")
