@@ -182,7 +182,7 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 		return fmt.Errorf("error setting new engine configurations: %v", err)
 	}
 
-	fmt.Printf("\nEngine changed to %q.\n", engineName)
+	fmt.Printf("Engine changed to %q.\n", engineName)
 
 	// TODO: get this from an env var instead (e.g. ENGINE_SERVICES=server,proxy)
 	serviceName := env.SnapInstanceName() + ".server"
