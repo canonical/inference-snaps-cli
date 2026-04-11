@@ -80,6 +80,7 @@ func loadEngineEnvironmentFromSettingsCollection(settingsCollection []ComponentS
 	if !found {
 		return fmt.Errorf("SNAP_COMPONENTS env var not set")
 	}
+
 	for i, settings := range settingsCollection {
 		// Set component path env var for expansion
 		componentPath := filepath.Join(componentsDir, settings.componentName)
@@ -112,35 +113,85 @@ func loadEngineEnvironmentFromSettingsCollection(settingsCollection []ComponentS
 			}
 			settingsCollection[i].expandedLayout[os.ExpandEnv(k)] = ComponentLayout
 		}
+
 		for layoutPath, layout := range settingsCollection[i].expandedLayout {
 			if layout.Symlink != "" {
-				// Assigning variables for better readability
-				target := layout.Symlink
-				link := layoutPath
-				if !strings.HasPrefix(link, "/tmp") {
-					fmt.Fprintf(os.Stderr, "Warning: skipping symlink %q for component %q: path is not in /tmp\n", link, settings.componentName)
-					continue
-				}
-
-				// Ensure the parent directory for the link exists
-				if err := os.MkdirAll(filepath.Dir(link), 0755); err != nil {
-					return fmt.Errorf("error creating directory for symlink %q: %v", link, err)
-				}
-
-				// Remove existing file, symlink, or directory if it exists
-				if err := os.RemoveAll(link); err != nil {
-					return fmt.Errorf("error removing existing path %q: %v", link, err)
-				}
-				err := os.Symlink(target, link)
-				if err != nil {
-					return fmt.Errorf("error creating symlink from %q to %q: %v", link, target, err)
+				if err := createTemporarySymlink(layout.Symlink, layoutPath); err != nil {
+					return fmt.Errorf("creating temporary symlink for component %q: %v", settings.componentName, err)
 				}
 			}
 		}
 	}
+
 	if err := os.Unsetenv(componentEnv); err != nil {
 		return fmt.Errorf("error unsetting %q: %v", componentEnv, err)
 	}
+
+	return nil
+}
+
+func pathWithinTmp(path string) (bool, error) {
+	link, err := filepath.Abs(path)
+	if err != nil {
+		return false, fmt.Errorf("getting absolute path of %s: %v", path, err)
+	}
+	if strings.HasPrefix(link, "/tmp") {
+		return true, nil
+	}
+	return false, nil
+}
+
+func removeTemporarySymlink(path string) error {
+	info, err := os.Lstat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil // If the file doesn't exist, consider it removed
+		}
+		return fmt.Errorf("stat %s: %v", path, err)
+	}
+
+	// Check if the path is within /tmp before removing
+	if withinTmp, err := pathWithinTmp(path); err != nil {
+		return fmt.Errorf("checking if path is within /tmp: %v", err)
+	} else if !withinTmp {
+		return fmt.Errorf("layout path outside of /tmp: %s", path)
+	}
+
+	// Only remove if it's a symlink to avoid accidentally deleting other files
+	if info.Mode()&os.ModeSymlink != 0 {
+		if err := os.Remove(path); err != nil {
+			return fmt.Errorf("removing file %s: %v", path, err)
+		}
+	} else {
+		fmt.Fprintf(os.Stderr, "Warning: expected %q to be a symlink but it is not; skipping removal.\n", path)
+	}
+
+	return nil
+}
+
+func createTemporarySymlink(target, link string) error {
+	// Reject any layout path that is outside of /tmp
+	if withinTmp, err := pathWithinTmp(link); err != nil {
+		return fmt.Errorf("checking if path is within /tmp: %v", err)
+	} else if !withinTmp {
+		return fmt.Errorf("layout path outside of /tmp: %s", link)
+	}
+
+	// Create directory tree for the link
+	if err := os.MkdirAll(filepath.Dir(link), 0755); err != nil {
+		return fmt.Errorf("creating directory for symlink %q: %v", link, err)
+	}
+
+	// Remove existing symlink if it exists
+	if err := removeTemporarySymlink(link); err != nil {
+		return fmt.Errorf("removing existing symlink at %q: %v", link, err)
+	}
+
+	// Create new symlink
+	if err := os.Symlink(target, link); err != nil {
+		return fmt.Errorf("creating symlink from %q to %q: %v", link, target, err)
+	}
+
 	return nil
 }
 
@@ -149,7 +200,7 @@ func unloadEngineEnvironmentFromSettingsCollection(settingsCollection []Componen
 	// remove the symlinks created for the engine components
 	for _, settings := range settingsCollection {
 		for layoutPath := range settings.expandedLayout {
-			if err := os.RemoveAll(layoutPath); err != nil {
+			if err := removeTemporarySymlink(layoutPath); err != nil {
 				return fmt.Errorf("removing symlink %q: %v", layoutPath, err)
 			}
 		}
@@ -170,7 +221,6 @@ func LoadEngineEnvironment(ctx *Context) (func(), error) {
 		if err := unloadEngineEnvironmentFromSettingsCollection(settingsCollection); err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: failed to unload engine environment: %v\n", err)
 		}
-		return
 	}, err
 }
 
