@@ -11,6 +11,7 @@ import (
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info"
 	"github.com/canonical/inference-snaps-cli/pkg/selector"
 	"github.com/canonical/inference-snaps-cli/pkg/storage"
+	"github.com/canonical/inference-snaps-cli/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
 
@@ -116,7 +117,7 @@ func loadEngineEnvironmentFromSettingsCollection(settingsCollection []ComponentS
 
 		for layoutPath, layout := range settingsCollection[i].expandedLayout {
 			if layout.Symlink != "" {
-				if err := createTemporarySymlink(layout.Symlink, layoutPath); err != nil {
+				if err := utils.CreateTempSymlink(layout.Symlink, layoutPath); err != nil {
 					return fmt.Errorf("creating temporary symlink for component %q: %v", settings.componentName, err)
 				}
 			}
@@ -130,77 +131,12 @@ func loadEngineEnvironmentFromSettingsCollection(settingsCollection []ComponentS
 	return nil
 }
 
-func pathWithinTmp(path string) (bool, error) {
-	link, err := filepath.Abs(path)
-	if err != nil {
-		return false, fmt.Errorf("getting absolute path of %s: %v", path, err)
-	}
-	if strings.HasPrefix(link, "/tmp") {
-		return true, nil
-	}
-	return false, nil
-}
-
-func removeTemporarySymlink(path string) error {
-	info, err := os.Lstat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil // If the file doesn't exist, consider it removed
-		}
-		return fmt.Errorf("stat %s: %v", path, err)
-	}
-
-	// Check if the path is within /tmp before removing
-	if withinTmp, err := pathWithinTmp(path); err != nil {
-		return fmt.Errorf("checking if path is within /tmp: %v", err)
-	} else if !withinTmp {
-		return fmt.Errorf("layout path outside of /tmp: %s", path)
-	}
-
-	// Only remove if it's a symlink to avoid accidentally deleting other files
-	if info.Mode()&os.ModeSymlink != 0 {
-		if err := os.Remove(path); err != nil {
-			return fmt.Errorf("removing file %s: %v", path, err)
-		}
-	} else {
-		fmt.Fprintf(os.Stderr, "Warning: expected %q to be a symlink but it is not; skipping removal.\n", path)
-	}
-
-	return nil
-}
-
-func createTemporarySymlink(target, link string) error {
-	// Reject any layout path that is outside of /tmp
-	if withinTmp, err := pathWithinTmp(link); err != nil {
-		return fmt.Errorf("checking if path is within /tmp: %v", err)
-	} else if !withinTmp {
-		return fmt.Errorf("layout path outside of /tmp: %s", link)
-	}
-
-	// Create directory tree for the link
-	if err := os.MkdirAll(filepath.Dir(link), 0755); err != nil {
-		return fmt.Errorf("creating directory for symlink %q: %v", link, err)
-	}
-
-	// Remove existing symlink if it exists
-	if err := removeTemporarySymlink(link); err != nil {
-		return fmt.Errorf("removing existing symlink at %q: %v", link, err)
-	}
-
-	// Create new symlink
-	if err := os.Symlink(target, link); err != nil {
-		return fmt.Errorf("creating symlink from %q to %q: %v", link, target, err)
-	}
-
-	return nil
-}
-
 func unloadEngineEnvironmentFromSettingsCollection(settingsCollection []ComponentSettings) error {
 
 	// remove the symlinks created for the engine components
 	for _, settings := range settingsCollection {
 		for layoutPath := range settings.expandedLayout {
-			if err := removeTemporarySymlink(layoutPath); err != nil {
+			if _, err := utils.RemoveTempSymlink(layoutPath); err != nil {
 				return fmt.Errorf("removing symlink %q: %v", layoutPath, err)
 			}
 		}
