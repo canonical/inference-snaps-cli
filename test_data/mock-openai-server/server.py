@@ -17,6 +17,9 @@ import json
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
+# Global delay in seconds applied before every response and between SSE chunks.
+RESPONSE_DELAY = 0.5
+
 
 # ---------------------------------------------------------------------------
 # Static response payloads
@@ -102,12 +105,14 @@ def _chat_completion_sse_chunks():
     Each item is a bytes object ready to be written to the socket.
     """
     for i, word in enumerate(_MOCK_REPLY_WORDS):
+        time.sleep(RESPONSE_DELAY)
         # Add a space before each word except the first
         token = word if i == 0 else " " + word
         chunk = _chat_completion_chunk(token, finish_reason=None, is_first=(i == 0))
         yield f"data: {json.dumps(chunk)}\n\n".encode("utf-8")
 
     # Final chunk: empty delta, finish_reason="stop"
+    time.sleep(RESPONSE_DELAY)
     stop_chunk = _chat_completion_chunk("", finish_reason="stop")
     yield f"data: {json.dumps(stop_chunk)}\n\n".encode("utf-8")
 
@@ -135,6 +140,7 @@ class MockOpenAIHandler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
     def _send_json(self, payload, status=200):
+        time.sleep(RESPONSE_DELAY)
         body = json.dumps(payload, indent=2).encode("utf-8")
         self.send_response(status)
         self._send_cors_headers()
@@ -237,6 +243,8 @@ class MockOpenAIHandler(BaseHTTPRequestHandler):
 # ---------------------------------------------------------------------------
 
 def main():
+    global RESPONSE_DELAY
+
     parser = argparse.ArgumentParser(
         description="Mock OpenAI-compatible HTTP API server for testing."
     )
@@ -251,11 +259,21 @@ def main():
         default=8080,
         help="Port to listen on (default: 8080)",
     )
+    parser.add_argument(
+        "--delay",
+        type=float,
+        default=RESPONSE_DELAY,
+        metavar="SECONDS",
+        help="Delay in seconds before each response and between SSE chunks (default: 0)",
+    )
     args = parser.parse_args()
+
+    RESPONSE_DELAY = args.delay
 
     server_address = (args.host, args.port)
     httpd = HTTPServer(server_address, MockOpenAIHandler)
     print(f"[mock-openai] Listening on http://{args.host}:{args.port}")
+    print(f"[mock-openai] Response delay: {RESPONSE_DELAY}s")
     print("[mock-openai] Serving /v1 and /v3 prefixes")
     print("[mock-openai] Endpoints:")
     print(f"  GET  http://{args.host}:{args.port}/v1/models")
