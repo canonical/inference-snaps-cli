@@ -66,14 +66,14 @@ func main() {
 		commands.Status(ctx),
 		// Chat is added conditionally
 	)
-	if commands.ChatEnabled() {
+	if common.ChatEnabled() {
 		err := appendCommandToGroup(rootCmd, "basic", commands.Chat(ctx))
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
 	}
-	if commands.UiEnabled() {
+	if common.UiEnabled() {
 		err := appendCommandToGroup(rootCmd, "basic", commands.Ui(ctx))
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)

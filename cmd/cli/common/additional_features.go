@@ -34,3 +34,13 @@ func AdditionalFeatures() additionalFeatures {
 
 	return features
 }
+
+func ChatEnabled() bool {
+	features := AdditionalFeatures()
+	return features.Chat
+}
+
+func UiEnabled() bool {
+	features := AdditionalFeatures()
+	return features.Ui
+}

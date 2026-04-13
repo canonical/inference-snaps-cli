@@ -29,11 +29,6 @@ func Ui(ctx *common.Context) *cobra.Command {
 	return cobraCmd
 }
 
-func UiEnabled() bool {
-	features := common.AdditionalFeatures()
-	return features.Ui
-}
-
 func (cmd *uiCommand) run(_ *cobra.Command, _ []string) error {
 	// Having all the components installed is not required, but it provides good feedback
 	if err := common.WaitForComponents(cmd.Context); err != nil {

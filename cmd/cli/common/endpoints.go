@@ -45,6 +45,15 @@ func serverEndpoints(ctx *Context, settingsCollection []ComponentSettings) (map[
 					serverSettings["protocol"], serverName, settings.componentName)
 			}
 		}
+
+		// If builtin webui is enabled, also list it as an endpoint
+		if UiEnabled() {
+			webUiUrl, err := UiServerHttpUrl(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("getting web UI url: %v", err)
+			}
+			endpoints["webui"] = webUiUrl
+		}
 	}
 
 	return endpoints, nil
