@@ -77,6 +77,9 @@ func (cmd *uiCommand) run(_ *cobra.Command, _ []string) error {
 	fmt.Printf("Press Enter to open %s in the default browser ...\n", url)
 	reader := bufio.NewReader(os.Stdin)
 	_, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("waiting for Enter: %v", err)
+	}
 
 	// Use desktop portal to open URL in default browser
 	err = exec.Command("xdg-open", url).Start()
