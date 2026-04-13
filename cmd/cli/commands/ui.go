@@ -1,10 +1,12 @@
 package commands
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
 
+	"github.com/canonical/go-snapctl/env"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
 	"github.com/spf13/cobra"
 )
@@ -41,23 +43,42 @@ func (cmd *uiCommand) run(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("getting ui server url: %s", err)
 	}
 
-	// Check ui server
 	services, err := common.ServiceStatuses()
 	if err != nil {
 		return fmt.Errorf("getting service statuses: %v", err)
 	}
-	serverStatus, ok := services["ui-server"]
-	if !ok {
-		return fmt.Errorf("ui-server: service not found")
+
+	// Check ui server and engine server
+	checkServices := []string{"ui-server", "server"}
+	for _, service := range checkServices {
+		uiServerStatus, ok := services[service]
+		if !ok {
+			return fmt.Errorf("%s: service not found", service)
+		}
+		if uiServerStatus == "inactive" {
+			return fmt.Errorf("%s.%s not active\n\n%s",
+				env.SnapInstanceName(), service, common.SuggestStartServer())
+		}
 	}
 
-	if serverStatus != "active" {
-		fmt.Fprintf(os.Stderr, "Warning: ui-server: service is not \"active\" (current status: %s)\n\n", serverStatus)
-		fmt.Printf("Make sure the ui server is running, then open %s in your browser.\n", url)
-		return nil
+	// Wait until the openai server endpoint is ready to accept chat prompts. This should be handled in the webui in the future.
+	chatBaseUrl, err := common.OpenAiEndpoint(cmd.Context)
+	if err != nil {
+		return fmt.Errorf("getting OpenAI base URL: %v", err)
 	}
 
-	// xdg open
+	chatClient := common.ChatClient(chatBaseUrl, "", cmd.Verbose)
+	err = chatClient.WaitChatServerReady() // prints same spinner as used for chat
+	if err != nil {
+		return err
+	}
+
+	// Print url and ask confirmation before opening
+	fmt.Printf("Press Enter to open %s in the default browser ...\n", url)
+	reader := bufio.NewReader(os.Stdin)
+	_, err = reader.ReadString('\n')
+
+	// Use desktop portal to open URL in default browser
 	err = exec.Command("xdg-open", url).Start()
 	if err != nil {
 		return fmt.Errorf("xdg-open: %v", err)
