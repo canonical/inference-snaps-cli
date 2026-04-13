@@ -87,3 +87,24 @@ func OpenAiEndpoint(ctx *Context) (string, error) {
 	}
 	return openaiEndpoint, nil
 }
+
+func UiServerHttpUrl(ctx *Context) (string, error) {
+	const (
+		confHttpPort    = "webui.http.port"
+		defaultBasePath = "/"
+	)
+
+	httpPortMap, err := ctx.Config.Get(confHttpPort)
+	if err != nil {
+		return "", fmt.Errorf("getting config %q: %v", confHttpPort, err)
+	}
+	httpPort := httpPortMap[confHttpPort]
+
+	endpointUrl := url.URL{
+		Scheme: "http",
+		Host:   fmt.Sprintf("localhost:%v", httpPort),
+		Path:   defaultBasePath,
+	}
+
+	return endpointUrl.String(), nil
+}

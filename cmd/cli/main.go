@@ -73,6 +73,13 @@ func main() {
 			return
 		}
 	}
+	if commands.UiEnabled() {
+		err := appendCommandToGroup(rootCmd, "basic", commands.Ui(ctx))
+		if err != nil {
+			fmt.Printf("Error: %v\n", err)
+			return
+		}
+	}
 
 	addCommandGroup(rootCmd, "config", "Configuration Commands:",
 		commands.Get(ctx),
