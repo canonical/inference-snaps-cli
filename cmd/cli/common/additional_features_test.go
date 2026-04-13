@@ -25,6 +25,7 @@ func TestAdditionalFeatures(t *testing.T) {
 			setEnv: true,
 			expectedFeatures: additionalFeatures{
 				Chat: true,
+				Ui:   true,
 			},
 		},
 		"chat with whitespaces": {
@@ -32,6 +33,7 @@ func TestAdditionalFeatures(t *testing.T) {
 			setEnv: true,
 			expectedFeatures: additionalFeatures{
 				Chat: true,
+				Ui:   true,
 			},
 		},
 		"no chat": {
@@ -39,6 +41,7 @@ func TestAdditionalFeatures(t *testing.T) {
 			setEnv: true,
 			expectedFeatures: additionalFeatures{
 				Chat: false,
+				Ui:   true,
 			},
 		},
 		"missing value": {
