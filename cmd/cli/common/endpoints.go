@@ -99,15 +99,15 @@ func OpenAiEndpoint(ctx *Context) (string, error) {
 
 func UiServerHttpUrl(ctx *Context) (string, error) {
 	const (
-		confHttpPort    = "webui.http.port"
-		defaultBasePath = "/"
+		confWebuiHttpPort = "webui.http.port"
+		defaultBasePath   = "/"
 	)
 
-	httpPortMap, err := ctx.Config.Get(confHttpPort)
+	httpPortMap, err := ctx.Config.Get(confWebuiHttpPort)
 	if err != nil {
-		return "", fmt.Errorf("getting config %q: %v", confHttpPort, err)
+		return "", fmt.Errorf("getting config %q: %v", confWebuiHttpPort, err)
 	}
-	httpPort := httpPortMap[confHttpPort]
+	httpPort := httpPortMap[confWebuiHttpPort]
 
 	endpointUrl := url.URL{
 		Scheme: "http",
