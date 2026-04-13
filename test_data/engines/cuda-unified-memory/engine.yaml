@@ -1,0 +1,18 @@
+name: cuda-unified-memory
+description: Nvidia GPUs using CUDA on ADM64/ARm64. No VRAM required.
+vendor: Canonical Ltd
+grade: stable
+devices:
+  allof:
+    - type: gpu
+      vendor-id: 0x10de # Nvidia Corporation
+  anyof:
+    - type: cpu
+      architecture: amd64
+    - type: cpu
+      architecture: arm64
+memory: 1G
+disk-space: 5G
+components:
+  - dummy-component-1
+  - dummy-component-2
