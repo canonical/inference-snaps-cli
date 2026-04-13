@@ -51,6 +51,9 @@ func vRam(device types.PciDevice) (*uint64, error) {
 	if err != nil {
 		return nil, fmt.Errorf("executing nvidia-smi: %v", err)
 	}
+	if *output == "[N/A]" {
+		return nil, nil
+	}
 
 	valueStr, unit, hasUnit := strings.Cut(*output, " ")
 	vramValue, err := strconv.ParseUint(valueStr, 10, 64)
