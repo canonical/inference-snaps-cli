@@ -138,6 +138,12 @@ parts:
     organize:
       "*": engines/
 
+  mock-openai-server:
+    plugin: dump
+    source: test_data/mock-openai-server
+    organize:
+      "*": bin/mock-openai-server/
+
 components:
   dummy-component-1: &test-component
     type: standard
@@ -179,6 +185,8 @@ apps:
   server:
     command: bin/server.sh
     daemon: simple
+    plugs:
+      - network-bind
 
   ui-server:
     command: bin/ui-server.sh
