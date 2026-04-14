@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/canonical/go-snapctl/env"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
 	"github.com/spf13/cobra"
 )
@@ -56,8 +55,7 @@ func (cmd *uiCommand) run(_ *cobra.Command, _ []string) error {
 			return fmt.Errorf("%s: service not found", service)
 		}
 		if uiServerStatus == "inactive" {
-			return fmt.Errorf("%s.%s not active\n\n%s",
-				env.SnapInstanceName(), service, common.SuggestStartServer())
+			return fmt.Errorf("%s not active\n\n%s", service, common.SuggestStartService(service))
 		}
 	}
 
