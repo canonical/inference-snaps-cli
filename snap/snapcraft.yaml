@@ -37,9 +37,9 @@ parts:
     source: snap/local
     plugin: dump
     organize:
-      "server.sh": bin/
       "completion.bash": bin/
-      "ui-server.sh": bin/
+      "server.sh": bin/
+      "server-webui.sh": bin/
 
   system-utilities:
     plugin: nil
@@ -188,8 +188,8 @@ apps:
     plugs:
       - network-bind
 
-  ui-server:
-    command: bin/ui-server.sh
+  server-webui:
+    command: bin/server-webui.sh
     daemon: simple
     plugs:
       - network-bind

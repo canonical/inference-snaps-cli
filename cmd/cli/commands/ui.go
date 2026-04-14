@@ -49,7 +49,7 @@ func (cmd *uiCommand) run(_ *cobra.Command, _ []string) error {
 	}
 
 	// Check ui server and engine server
-	checkServices := []string{"ui-server", "server"}
+	checkServices := []string{"server", "server-webui"}
 	for _, service := range checkServices {
 		uiServerStatus, ok := services[service]
 		if !ok {
