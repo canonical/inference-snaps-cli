@@ -167,7 +167,7 @@ apps:
       - opengl
       - desktop # for xdg-open
     environment:
-      ADDITIONAL_FEATURES: chat, ui
+      ADDITIONAL_FEATURES: chat, webui
 
   clinfo:
     plugs:

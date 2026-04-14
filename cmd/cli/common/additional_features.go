@@ -6,15 +6,15 @@ import (
 )
 
 type additionalFeatures struct {
-	Chat bool
-	Ui   bool
+	Chat  bool
+	WebUi bool
 }
 
 func AdditionalFeatures() additionalFeatures {
 	const (
 		additionalFeaturesEnv = "ADDITIONAL_FEATURES"
 		featureChat           = "chat"
-		featureUi             = "ui"
+		featureWebUi          = "webui"
 	)
 
 	featuresCsv, found := os.LookupEnv(additionalFeaturesEnv)
@@ -27,8 +27,8 @@ func AdditionalFeatures() additionalFeatures {
 		switch strings.TrimSpace(feature) {
 		case featureChat:
 			features.Chat = true
-		case featureUi:
-			features.Ui = true
+		case featureWebUi:
+			features.WebUi = true
 		}
 	}
 
@@ -40,7 +40,7 @@ func ChatEnabled() bool {
 	return features.Chat
 }
 
-func UiEnabled() bool {
+func WebUiEnabled() bool {
 	features := AdditionalFeatures()
-	return features.Ui
+	return features.WebUi
 }

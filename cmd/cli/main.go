@@ -73,7 +73,7 @@ func main() {
 			return
 		}
 	}
-	if common.UiEnabled() {
+	if common.WebUiEnabled() {
 		err := appendCommandToGroup(rootCmd, "basic", commands.WebUi(ctx))
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
