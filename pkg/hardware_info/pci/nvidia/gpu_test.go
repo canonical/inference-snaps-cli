@@ -14,17 +14,17 @@ func TestVRam(t *testing.T) {
 	}{
 		{
 			name:      "converts MiB to bytes",
-			testInput: stringPtr("4096 MiB"),
-			expected:  uint64Ptr(4096 * 1024 * 1024),
+			testInput: new("4096 MiB"),
+			expected:  new(uint64(4096 * 1024 * 1024)),
 		},
 		{
 			name:      "returns nil for unavailable VRAM",
-			testInput: stringPtr("[N/A]"),
+			testInput: new("[N/A]"),
 			expected:  nil,
 		},
 		{
 			name:      "reports parsing errors",
-			testInput: stringPtr("not-a-number MiB"),
+			testInput: new("not-a-number MiB"),
 			shouldErr: true,
 		},
 	}
@@ -55,12 +55,4 @@ func TestVRam(t *testing.T) {
 			}
 		})
 	}
-}
-
-func stringPtr(value string) *string {
-	return &value
-}
-
-func uint64Ptr(value uint64) *uint64 {
-	return &value
 }
