@@ -10,16 +10,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type uiCommand struct {
+type webUiCommand struct {
 	*common.Context
 }
 
-func Ui(ctx *common.Context) *cobra.Command {
-	var cmd uiCommand
+func WebUi(ctx *common.Context) *cobra.Command {
+	var cmd webUiCommand
 	cmd.Context = ctx
 
 	cobraCmd := &cobra.Command{
-		Use:               "ui",
+		Use:               "webui",
 		Short:             "Launch web UI",
 		Long:              "Open the snap's builtin web user interface in the default browser",
 		Args:              cobra.NoArgs,
@@ -30,7 +30,7 @@ func Ui(ctx *common.Context) *cobra.Command {
 	return cobraCmd
 }
 
-func (cmd *uiCommand) run(_ *cobra.Command, _ []string) error {
+func (cmd *webUiCommand) run(_ *cobra.Command, _ []string) error {
 	// Having all the components installed is not required, but it provides good feedback
 	if err := common.WaitForComponents(cmd.Context); err != nil {
 		return fmt.Errorf("waiting for component: %s", err)
@@ -39,7 +39,7 @@ func (cmd *uiCommand) run(_ *cobra.Command, _ []string) error {
 	// Get web ui url
 	url, err := common.UiServerHttpUrl(cmd.Context)
 	if err != nil {
-		return fmt.Errorf("getting ui server url: %s", err)
+		return fmt.Errorf("getting webui server url: %s", err)
 	}
 
 	services, err := common.ServiceStatuses()
