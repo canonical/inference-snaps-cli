@@ -21,7 +21,7 @@ func TestAdditionalFeatures(t *testing.T) {
 			},
 		},
 		"chat and others": {
-			value:  "chat,ui",
+			value:  "chat,webui",
 			setEnv: true,
 			expectedFeatures: additionalFeatures{
 				Chat:  true,
@@ -29,7 +29,7 @@ func TestAdditionalFeatures(t *testing.T) {
 			},
 		},
 		"chat with whitespaces": {
-			value:  " chat ,ui",
+			value:  " chat ,webui",
 			setEnv: true,
 			expectedFeatures: additionalFeatures{
 				Chat:  true,
@@ -37,7 +37,7 @@ func TestAdditionalFeatures(t *testing.T) {
 			},
 		},
 		"no chat": {
-			value:  "ui",
+			value:  "webui",
 			setEnv: true,
 			expectedFeatures: additionalFeatures{
 				Chat:  false,
