@@ -39,20 +39,12 @@ func ConfirmationPrompt(prompt string) bool {
 func ConfirmationPromptEnter(prompt string) bool {
 	reader := bufio.NewReader(os.Stdin)
 
-	for {
-		fmt.Printf("%s [Enter] ", prompt)
+	fmt.Printf("%s Press [Enter] to continue... ", prompt)
 
-		input, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Printf("Error reading input: %v\n", err)
-			continue
-		}
-		input = strings.TrimSpace(input)
-
-		if input == "" {
-			return true
-		} else {
-			fmt.Println(`Invalid input. Please press "Enter" to continue or "Ctrl+C" to cancel.`)
-		}
+	_, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Printf("\nError reading input: %v\n", err)
+		return false
 	}
+	return true
 }

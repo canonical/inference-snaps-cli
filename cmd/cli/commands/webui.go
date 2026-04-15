@@ -69,7 +69,7 @@ func (cmd *webUiCommand) run(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if common.ConfirmationPromptEnter(fmt.Sprintf("Open %s in the default browser", url)) {
+	if common.ConfirmationPromptEnter(fmt.Sprintf("Opening %s in the default browser.", url)) {
 		// Use desktop portal to open URL in default browser
 		err = exec.Command("xdg-open", url).Start()
 		if err != nil {
