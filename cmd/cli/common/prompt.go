@@ -7,13 +7,16 @@ import (
 	"strings"
 )
 
-// ConfirmationPrompt prompts the user and returns true for 'y', false for 'n'.
-// It defaults to true if the user presses Enter without a response.
-func ConfirmationPrompt(prompt string) bool {
+// Prompt prompts the user and returns true for 'y', false for 'n'.
+func PromptYN(prompt string, defaultResponse bool) bool {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
-		fmt.Printf("%s [Y/n] ", prompt) // default to yes
+		if defaultResponse == true {
+			fmt.Printf("%s [Y/n] ", prompt) // default is yes
+		} else {
+			fmt.Printf("%s [y/N] ", prompt) // default is no
+		}
 
 		input, err := reader.ReadString('\n')
 		if err != nil {
@@ -23,8 +26,8 @@ func ConfirmationPrompt(prompt string) bool {
 
 		input = strings.ToLower(strings.TrimSpace(input))
 		switch input {
-		case "": // default to yes on empty input
-			return true
+		case "": // default on empty input
+			return defaultResponse
 		case "Y", "y":
 			return true
 		case "N", "n":
