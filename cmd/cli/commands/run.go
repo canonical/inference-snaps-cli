@@ -50,6 +50,11 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("loading engine environment: %v", err)
 	}
 
+	err = common.ProcessPassthroughConfigs(cmd.Context)
+	if err != nil {
+		// Print warning but continue with execution, as passthrough configs are optional and should not block the execution of the subprocess.
+		fmt.Fprintf(os.Stderr, "Warning: processing passthrough configs: %v\n", err)
+	}
 	// NOTE: defer does not run on SIGTERM or SIGKILL. It only runs when the child process exits.
 	// TODO: add signal handling to intercept SIGTERM and invoke clean() before exiting.
 	defer clean()

@@ -91,3 +91,34 @@ func checkMissingComponents(manifest *engines.Manifest) ([]string, error) {
 
 	return missing, nil
 }
+
+func ProcessPassthroughConfigs(ctx *Context) error {
+	configs, err := ctx.Config.GetAll()
+	if err != nil {
+		return fmt.Errorf("getting passthrough configs: %v", err)
+	}
+
+	// Filter configs for passthrough keys starting with "passthrough." But remove the "passthrough." prefix for easier processing by the engine components.
+	passthroughConfigs := make(map[string]any)
+	for k, v := range configs {
+		if strings.HasPrefix(k, "passthrough.") {
+			passthroughConfigs[strings.TrimPrefix(k, "passthrough.")] = v
+		}
+	}
+
+	// Set environment variables for passthrough configs. The engine components will read these environment variables.
+	for k, v := range passthroughConfigs {
+		if strings.HasPrefix(k, "environment.") {
+			envVarName := strings.TrimPrefix(k, "environment.")
+			envVarValue := fmt.Sprintf("%v", v)
+			// envVarName is kebab-case and lower case, environment variables conventionally are upper case and snake case, so convert kebab-case to snake_case and uppercase the env var name
+			envVarName = strings.ToUpper(strings.ReplaceAll(envVarName, "-", "_"))
+			err := os.Setenv(envVarName, envVarValue)
+			if err != nil {
+				return fmt.Errorf("setting environment variable for passthrough config %q: %v", k, err)
+			}
+		}
+	}
+	return nil
+
+}
