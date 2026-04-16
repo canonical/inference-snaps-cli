@@ -38,16 +38,21 @@ func PromptYN(prompt string, defaultResponse bool) bool {
 	}
 }
 
-// ConfirmationPromptEnter prompts the user for Enter
-func ConfirmationPromptEnter(prompt string) bool {
+// PromptEnterln prompts the user for Enter in a new line
+func PromptlnEnter(action string) bool {
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Printf("%s Press [Enter] to continue... ", prompt)
+	fmt.Printf("Press [Enter] to %s, or [q] to abort. ", action)
 
-	_, err := reader.ReadString('\n')
+	input, err := reader.ReadString('\n')
 	if err != nil {
 		fmt.Printf("\nError reading input: %v\n", err)
 		return false
 	}
+
+	if strings.TrimSpace(input) == "q" {
+		return false
+	}
+
 	return true
 }
