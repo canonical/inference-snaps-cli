@@ -55,14 +55,5 @@ func ExamplePromptlnEnter() {
 	})
 
 	// Output:
-	// Press [Enter] to continue, or [q] to abort. -> true
-}
-
-func ExamplePromptlnEnter_abort() {
-	withStdin("q\n", func() {
-		printToStdout(PromptlnEnter("continue"))
-	})
-
-	// Output:
-	// Press [Enter] to continue, or [q] to abort. -> false
+	// Press [Enter] to continue, or [Ctrl+C] to abort. -> true
 }
