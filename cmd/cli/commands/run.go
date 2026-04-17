@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
+	"github.com/canonical/inference-snaps-cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -50,10 +52,8 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("loading engine environment: %v", err)
 	}
 
-	err = common.ProcessPassthroughConfigs(cmd.Context)
-	if err != nil {
-		// Print warning but continue with execution, as passthrough configs are optional and should not block the execution of the subprocess.
-		fmt.Fprintf(os.Stderr, "Warning: processing passthrough configs: %v\n", err)
+	if err := processPassthroughConfigs(cmd.Context); err != nil {
+		return fmt.Errorf("processing passthrough configs: %v", err)
 	}
 	// NOTE: defer does not run on SIGTERM or SIGKILL. It only runs when the child process exits.
 	// TODO: add signal handling to intercept SIGTERM and invoke clean() before exiting.
@@ -65,4 +65,52 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 	execCmd.Stdout = os.Stdout
 	execCmd.Stderr = os.Stderr
 	return execCmd.Run()
+}
+
+func extractPassthroughConfigs(ctx *common.Context) (map[string]any, error) {
+	configs, err := ctx.Config.GetAll()
+	if err != nil {
+		return nil, fmt.Errorf("getting passthrough configs: %v", err)
+	}
+
+	// Filter configs for passthrough keys starting with "passthrough." But remove the "passthrough." prefix for easier processing by the engine components.
+	passthroughConfigs := make(map[string]any)
+	for k, v := range configs {
+		if strings.HasPrefix(k, "passthrough.") {
+			passthroughConfigs[strings.TrimPrefix(k, "passthrough.")] = v
+		}
+	}
+
+	return passthroughConfigs, nil
+}
+
+func getEnvVarsFromPassthroughConfigs(envVars map[string]any) (map[string]any, error) {
+	result := make(map[string]any)
+	for k, v := range envVars {
+		if strings.HasPrefix(k, "environment.") {
+			envVarName := strings.TrimPrefix(k, "environment.")
+			envVarValue := fmt.Sprintf("%v", v)
+			// envVarName is kebab-case and lower case, environment variables conventionally are upper case and snake case, so convert kebab-case to snake_case and uppercase the env var name
+			envVarName = strings.ToUpper(strings.ReplaceAll(envVarName, "-", "_"))
+			result[envVarName] = envVarValue
+		}
+	}
+
+	return result, nil
+}
+
+func processPassthroughConfigs(ctx *common.Context) error {
+	passthroughConfigs, err := extractPassthroughConfigs(ctx)
+	if err != nil {
+		return err
+	}
+	envVars, err := getEnvVarsFromPassthroughConfigs(passthroughConfigs)
+	if err != nil {
+		return err
+	}
+	err = utils.SetEnvironmentVariables(envVars)
+	if err != nil {
+		return fmt.Errorf("setting environment variables from passthrough configs: %v", err)
+	}
+	return nil
 }
