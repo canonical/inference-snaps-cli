@@ -50,7 +50,7 @@ func (c *config) Set(key, value string, confType configType) error {
 		if err != nil {
 			return fmt.Errorf("checking existing keys: %s", err)
 		}
-		if len(valMap) == 0 {
+		if !strings.HasPrefix(key, "passthrough.") && len(valMap) == 0 {
 			return fmt.Errorf("unknown key")
 		}
 	}
