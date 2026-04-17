@@ -21,10 +21,10 @@ func Run(ctx *common.Context) *cobra.Command {
 	cmd.Context = ctx
 
 	cobraCmd := &cobra.Command{
-		Use:               "run <path>",
+		Use:               "run <path> [args...]",
 		Short:             "Run a subprocess",
 		Hidden:            true,
-		Args:              cobra.MaximumNArgs(1),
+		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: cobra.NoFileCompletions,
 		RunE:              cmd.run,
 	}
@@ -36,8 +36,8 @@ func Run(ctx *common.Context) *cobra.Command {
 }
 
 func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
-	if len(args) != 1 {
-		return fmt.Errorf("unexpected number of arguments, expected 1 got %d", len(args))
+	if len(args) < 1 {
+		return fmt.Errorf("unexpected number of arguments, expected at least 1 got %d", len(args))
 	}
 	if cmd.waitForComponents {
 		if err := common.WaitForComponents(cmd.Context); err != nil {
@@ -56,7 +56,7 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 
 	path := args[0]
 
-	execCmd := exec.Command(path)
+	execCmd := exec.Command(path, args[1:]...)
 	execCmd.Stdout = os.Stdout
 	execCmd.Stderr = os.Stderr
 	return execCmd.Run()
