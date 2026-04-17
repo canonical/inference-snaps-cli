@@ -52,12 +52,13 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("loading engine environment: %v", err)
 	}
 
-	if err := processPassthroughConfigs(cmd.Context); err != nil {
-		return fmt.Errorf("processing passthrough configs: %v", err)
-	}
 	// NOTE: defer does not run on SIGTERM or SIGKILL. It only runs when the child process exits.
 	// TODO: add signal handling to intercept SIGTERM and invoke clean() before exiting.
 	defer clean()
+
+	if err := processPassthroughConfigs(cmd.Context); err != nil {
+		return fmt.Errorf("processing passthrough configs: %v", err)
+	}
 
 	path := args[0]
 
@@ -67,12 +68,7 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 	return execCmd.Run()
 }
 
-func extractPassthroughConfigs(ctx *common.Context) (map[string]any, error) {
-	configs, err := ctx.Config.GetAll()
-	if err != nil {
-		return nil, fmt.Errorf("getting passthrough configs: %v", err)
-	}
-
+func extractPassthroughConfigs(configs map[string]any) (map[string]any, error) {
 	// Filter configs for passthrough keys starting with "passthrough." But remove the "passthrough." prefix for easier processing by the engine components.
 	passthroughConfigs := make(map[string]any)
 	for k, v := range configs {
@@ -90,7 +86,7 @@ func getEnvVarsFromPassthroughConfigs(envVars map[string]any) (map[string]any, e
 		if strings.HasPrefix(k, "environment.") {
 			envVarName := strings.TrimPrefix(k, "environment.")
 			envVarValue := fmt.Sprintf("%v", v)
-			// envVarName is kebab-case and lower case, environment variables conventionally are upper case and snake case, so convert kebab-case to snake_case and uppercase the env var name
+			// Convert passthrough keys (my-key) to environment variables names (MY_KEY)
 			envVarName = strings.ToUpper(strings.ReplaceAll(envVarName, "-", "_"))
 			result[envVarName] = envVarValue
 		}
@@ -100,7 +96,11 @@ func getEnvVarsFromPassthroughConfigs(envVars map[string]any) (map[string]any, e
 }
 
 func processPassthroughConfigs(ctx *common.Context) error {
-	passthroughConfigs, err := extractPassthroughConfigs(ctx)
+	configs, err := ctx.Config.GetAll()
+	if err != nil {
+		return fmt.Errorf("getting configs: %v", err)
+	}
+	passthroughConfigs, err := extractPassthroughConfigs(configs)
 	if err != nil {
 		return err
 	}
@@ -110,7 +110,7 @@ func processPassthroughConfigs(ctx *common.Context) error {
 	}
 	err = utils.SetEnvironmentVariables(envVars)
 	if err != nil {
-		return fmt.Errorf("setting environment variables from passthrough configs: %v", err)
+		return fmt.Errorf("setting environment variables: %v", err)
 	}
 	return nil
 }
