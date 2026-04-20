@@ -46,7 +46,7 @@ func TestSetValueValidation(t *testing.T) {
 }
 
 func TestSetValueSuccessForUserConfig(t *testing.T) {
-	config := storage.NewMockConfig(map[string]any{})
+	config := storage.NewMockConfig(map[string]any{"api.endpoint": "https://old.example.com"})
 	cmd := setCommand{
 		assumeYes: true,
 		Context: &common.Context{
@@ -67,5 +67,21 @@ func TestSetValueSuccessForUserConfig(t *testing.T) {
 
 	if value, found := values["api.endpoint"]; !found || value != "https://example.com?x=1=y" {
 		t.Fatalf("expected api.endpoint to be set to full value, got %#v", values)
+	}
+}
+
+func TestSetNoPromptIfValueNotChanged(t *testing.T) {
+	config := storage.NewMockConfig(map[string]any{"api.port": 8080})
+	cmd := setCommand{
+		assumeYes: false, // should not prompt since no change is needed
+		Context: &common.Context{
+			Config: config,
+			Snap:   snap.Mock(),
+		},
+	}
+
+	err := cmd.setValue("api.port=8080")
+	if err != nil {
+		t.Fatalf("setValue returned an unexpected error: %v", err)
 	}
 }

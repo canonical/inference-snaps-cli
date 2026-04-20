@@ -74,12 +74,17 @@ func (cmd *setCommand) setValue(keyValue string) error {
 	} else { // configurations set by the user
 
 		// User configs are overrides, reject unknown keys
-		valMap, err := cmd.Config.Get(key)
+		currValMap, err := cmd.Config.Get(key)
 		if err != nil {
 			return fmt.Errorf("checking existing keys: %s", err)
 		}
-		if len(valMap) == 0 {
+		currVal, found := currValMap[key]
+		if !found {
 			return fmt.Errorf("unknown key: %q", key)
+		}
+
+		if fmt.Sprint(currVal) == value {
+			return nil // no change needed
 		}
 
 		msg := fmt.Sprintf("Apply changes and restart %s?", cmd.Snap.InstanceName())
