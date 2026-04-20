@@ -17,6 +17,7 @@ type setCommand struct {
 	packageConfig bool
 	engineConfig  bool
 	assumeYes     bool
+	noRestart     bool
 }
 
 func Set(ctx *common.Context) *cobra.Command {
@@ -42,6 +43,7 @@ func Set(ctx *common.Context) *cobra.Command {
 		panic(err)
 	}
 	cobraCmd.Flags().BoolVar(&cmd.assumeYes, "assume-yes", false, "assume yes for all prompts")
+	cobraCmd.Flags().BoolVar(&cmd.noRestart, "no-restart", false, "do not restart the snap after setting the configuration")
 
 	return cobraCmd
 }
@@ -87,10 +89,12 @@ func (cmd *setCommand) setValue(keyValue string) error {
 			return nil // no change needed
 		}
 
-		msg := fmt.Sprintf("Apply changes and restart %s?", cmd.Snap.InstanceName())
-		if !(cmd.assumeYes || common.PromptYN(msg, true)) {
-			fmt.Println("Cancelled. Discarded configurations.")
-			return nil
+		if !cmd.noRestart {
+			msg := fmt.Sprintf("Apply changes and restart %s?", cmd.Snap.InstanceName())
+			if !(cmd.assumeYes || common.PromptYN(msg, true)) {
+				fmt.Println("Cancelled. Discarded configurations.")
+				return nil
+			}
 		}
 
 		err = cmd.Config.Set(key, value, storage.UserConfig)
@@ -99,8 +103,12 @@ func (cmd *setCommand) setValue(keyValue string) error {
 		return fmt.Errorf("setting %q to %q: %v", key, value, err)
 	}
 
-	if err := cmd.Snap.Restart(); err != nil {
-		return fmt.Errorf("restarting snap: %v", err)
+	if cmd.noRestart {
+		fmt.Println(common.SuggestRestartToApplyChanges())
+	} else {
+		if err := cmd.Snap.Restart(); err != nil {
+			return fmt.Errorf("restarting snap: %v", err)
+		}
 	}
 
 	return nil

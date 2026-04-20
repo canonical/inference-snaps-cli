@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"os"
 	"strings"
 	"testing"
 
@@ -12,7 +13,7 @@ import (
 func TestSetValueValidation(t *testing.T) {
 	config := storage.NewMockConfig(map[string]any{})
 	cmd := setCommand{
-		assumeYes: true,
+		noRestart: true,
 		Context: &common.Context{
 			Config: config,
 			Snap:   snap.Mock(),
@@ -48,7 +49,7 @@ func TestSetValueValidation(t *testing.T) {
 func TestSetValueSuccessForUserConfig(t *testing.T) {
 	config := storage.NewMockConfig(map[string]any{"api.endpoint": "https://old.example.com"})
 	cmd := setCommand{
-		assumeYes: true,
+		noRestart: true,
 		Context: &common.Context{
 			Config: config,
 			Snap:   snap.Mock(),
@@ -84,4 +85,29 @@ func TestSetNoPromptIfValueNotChanged(t *testing.T) {
 	if err != nil {
 		t.Fatalf("setValue returned an unexpected error: %v", err)
 	}
+}
+
+func ExampleSet_noRestartSuggestsRestart() {
+	if err := os.Setenv("SNAP_INSTANCE_NAME", "example-snap"); err != nil {
+		panic(err)
+	}
+	defer func() {
+		_ = os.Unsetenv("SNAP_INSTANCE_NAME")
+	}()
+
+	config := storage.NewMockConfig(map[string]any{"api.endpoint": "https://old.example.com"})
+	cmd := setCommand{
+		noRestart: true,
+		Context: &common.Context{
+			Config: config,
+			Snap:   snap.Mock(),
+		},
+	}
+
+	if err := cmd.setValue("api.endpoint=https://example.com"); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// Run "snap restart example-snap" to apply the changes.
 }
