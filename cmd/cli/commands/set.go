@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
-	"github.com/canonical/inference-snaps-cli/pkg/snap"
 	"github.com/canonical/inference-snaps-cli/pkg/storage"
 	"github.com/canonical/inference-snaps-cli/pkg/utils"
 	"github.com/spf13/cobra"
@@ -61,7 +60,7 @@ func (cmd *setCommand) run(_ *cobra.Command, args []string) error {
 }
 
 func (cmd *setCommand) setValue(keyValue string) error {
-	msg := fmt.Sprintf("Apply changes and restart %s?", snap.InstanceName())
+	msg := fmt.Sprintf("Apply changes and restart %s?", cmd.Snap.InstanceName())
 	if !(cmd.assumeYes || common.PromptYN(msg, true)) {
 		fmt.Println("Cancelled. Discarded the configurations.")
 		return nil
