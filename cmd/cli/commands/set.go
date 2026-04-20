@@ -92,7 +92,7 @@ func (cmd *setCommand) setValue(keyValue string) error {
 		if !cmd.noRestart {
 			msg := fmt.Sprintf("Apply changes and restart %s?", cmd.Snap.InstanceName())
 			if !(cmd.assumeYes || common.PromptYN(msg, true)) {
-				fmt.Println("Cancelled. Discarded configurations.")
+				fmt.Println("Cancelled. Changes not applied.")
 				return nil
 			}
 		}
