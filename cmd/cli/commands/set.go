@@ -51,20 +51,10 @@ func (cmd *setCommand) run(_ *cobra.Command, args []string) error {
 		return common.ErrPermissionDenied
 	}
 
-	if err := cmd.setValue(args[0]); err != nil {
-		return fmt.Errorf("set: %v", err)
-	}
-
-	return nil
+	return cmd.setValue(args[0])
 }
 
 func (cmd *setCommand) setValue(keyValue string) error {
-	msg := fmt.Sprintf("Apply changes and restart %s?", cmd.Snap.InstanceName())
-	if !(cmd.assumeYes || common.PromptYN(msg, true)) {
-		fmt.Println("Cancelled. Discarded the configurations.")
-		return nil
-	}
-
 	if keyValue[0] == '=' {
 		return fmt.Errorf("key must not start with an equal sign")
 	}
@@ -76,12 +66,24 @@ func (cmd *setCommand) setValue(keyValue string) error {
 	}
 	key, value := parts[0], parts[1]
 
+	msg := fmt.Sprintf("Apply changes and restart %s?", cmd.Snap.InstanceName())
+	if !(cmd.assumeYes || common.PromptYN(msg, true)) {
+		fmt.Println("Cancelled. Discarded configurations.")
+		return nil
+	}
+
 	var err error
 	if cmd.packageConfig {
 		err = cmd.Config.Set(key, value, storage.PackageConfig)
 	} else if cmd.engineConfig {
 		err = cmd.Config.Set(key, value, storage.EngineConfig)
-	} else {
+	} else { // configurations set by the user
+		msg := fmt.Sprintf("Apply changes and restart %s?", cmd.Snap.InstanceName())
+		if !(cmd.assumeYes || common.PromptYN(msg, true)) {
+			fmt.Println("Cancelled. Discarded configurations.")
+			return nil
+		}
+
 		err = cmd.Config.Set(key, value, storage.UserConfig)
 	}
 	if err != nil {
