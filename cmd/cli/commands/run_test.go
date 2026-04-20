@@ -8,37 +8,12 @@ import (
 	"github.com/canonical/inference-snaps-cli/pkg/storage"
 )
 
-func TestExtractPassthroughConfigs(t *testing.T) {
-	configs := map[string]any{
-		"passthrough.environment.my-key": "hello",
-		"passthrough.other":              42,
-		"regular.config":                 "ignored",
-	}
-	cmd := runCommand{}
-	got, err := cmd.extractPassthroughConfigs(configs)
-	if err != nil {
-		t.Fatalf("extractPassthroughConfigs returned error: %v", err)
-	}
-
-	if len(got) != 2 {
-		t.Fatalf("extractPassthroughConfigs returned %d keys, want 2", len(got))
-	}
-
-	if got["environment.my-key"] != "hello" {
-		t.Fatalf("extractPassthroughConfigs returned %v for environment.my-key, want hello", got["environment.my-key"])
-	}
-
-	if got["other"] != 42 {
-		t.Fatalf("extractPassthroughConfigs returned %v for other, want 42", got["other"])
-	}
-}
-
 func TestGetEnvVarsFromPassthroughConfigs(t *testing.T) {
 	cmd := runCommand{}
 	passthrough := map[string]any{
-		"environment.my-key": "value",
-		"environment.other":  123,
-		"not-environment":    "ignored",
+		"passthrough.environment.my-key": "value",
+		"passthrough.environment.other":  123,
+		"passthrough.not-environment":    "ignored",
 	}
 
 	got, err := cmd.getEnvVarsFromPassthroughConfigs(passthrough)

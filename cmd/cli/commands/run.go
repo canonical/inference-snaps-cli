@@ -68,23 +68,12 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 	return execCmd.Run()
 }
 
-func (cmd *runCommand) extractPassthroughConfigs(configs map[string]any) (map[string]any, error) {
-	// Filter configs for passthrough keys starting with "passthrough." But remove the "passthrough." prefix for easier processing by the engine components.
-	passthroughConfigs := make(map[string]any)
-	for k, v := range configs {
-		if strings.HasPrefix(k, "passthrough.") {
-			passthroughConfigs[strings.TrimPrefix(k, "passthrough.")] = v
-		}
-	}
-
-	return passthroughConfigs, nil
-}
-
 func (cmd *runCommand) getEnvVarsFromPassthroughConfigs(envVars map[string]any) (map[string]any, error) {
 	result := make(map[string]any)
+	const keyPrefix = "passthrough.environment."
 	for k, v := range envVars {
-		if strings.HasPrefix(k, "environment.") {
-			envVarName := strings.TrimPrefix(k, "environment.")
+		if strings.HasPrefix(k, keyPrefix) {
+			envVarName := strings.TrimPrefix(k, keyPrefix)
 			envVarValue := fmt.Sprintf("%v", v)
 			// Convert passthrough keys (my-key) to environment variables names (MY_KEY)
 			envVarName = strings.ToUpper(strings.ReplaceAll(envVarName, "-", "_"))
@@ -99,10 +88,6 @@ func (cmd *runCommand) processPassthroughConfigs() error {
 	passthroughConfigs, err := cmd.Config.Get("passthrough")
 	if err != nil {
 		return fmt.Errorf("getting configs: %v", err)
-	}
-	passthroughConfigs, err = cmd.extractPassthroughConfigs(passthroughConfigs)
-	if err != nil {
-		return err
 	}
 	envVars, err := cmd.getEnvVarsFromPassthroughConfigs(passthroughConfigs)
 	if err != nil {
