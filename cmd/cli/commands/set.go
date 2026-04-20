@@ -66,18 +66,22 @@ func (cmd *setCommand) setValue(keyValue string) error {
 	}
 	key, value := parts[0], parts[1]
 
-	msg := fmt.Sprintf("Apply changes and restart %s?", cmd.Snap.InstanceName())
-	if !(cmd.assumeYes || common.PromptYN(msg, true)) {
-		fmt.Println("Cancelled. Discarded configurations.")
-		return nil
-	}
-
 	var err error
 	if cmd.packageConfig {
 		err = cmd.Config.Set(key, value, storage.PackageConfig)
 	} else if cmd.engineConfig {
 		err = cmd.Config.Set(key, value, storage.EngineConfig)
 	} else { // configurations set by the user
+
+		// User configs are overrides, reject unknown keys
+		valMap, err := cmd.Config.Get(key)
+		if err != nil {
+			return fmt.Errorf("checking existing keys: %s", err)
+		}
+		if len(valMap) == 0 {
+			return fmt.Errorf("unknown key: %q", key)
+		}
+
 		msg := fmt.Sprintf("Apply changes and restart %s?", cmd.Snap.InstanceName())
 		if !(cmd.assumeYes || common.PromptYN(msg, true)) {
 			fmt.Println("Cancelled. Discarded configurations.")
