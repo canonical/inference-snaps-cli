@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
+	"github.com/canonical/inference-snaps-cli/pkg/snap"
 	"github.com/canonical/inference-snaps-cli/pkg/storage"
 	"github.com/canonical/inference-snaps-cli/pkg/utils"
 	"github.com/spf13/cobra"
@@ -17,6 +18,7 @@ type setCommand struct {
 	// flags
 	packageConfig bool
 	engineConfig  bool
+	assumeYes     bool
 }
 
 func Set(ctx *common.Context) *cobra.Command {
@@ -34,15 +36,14 @@ func Set(ctx *common.Context) *cobra.Command {
 
 	// flags
 	cobraCmd.Flags().BoolVar(&cmd.packageConfig, "package", false, "set package configurations")
-	err := cobraCmd.Flags().MarkHidden("package")
-	if err != nil {
+	if err := cobraCmd.Flags().MarkHidden("package"); err != nil {
 		panic(err)
 	}
 	cobraCmd.Flags().BoolVar(&cmd.engineConfig, "engine", false, "set engine configuration")
-	err = cobraCmd.Flags().MarkHidden("engine")
-	if err != nil {
+	if err := cobraCmd.Flags().MarkHidden("engine"); err != nil {
 		panic(err)
 	}
+	cobraCmd.Flags().BoolVar(&cmd.assumeYes, "assume-yes", false, "assume yes for all prompts")
 
 	return cobraCmd
 }
@@ -51,10 +52,21 @@ func (cmd *setCommand) run(_ *cobra.Command, args []string) error {
 	if !utils.IsRootUser() {
 		return common.ErrPermissionDenied
 	}
-	return cmd.setValue(args[0])
+
+	if err := cmd.setValue(args[0]); err != nil {
+		return fmt.Errorf("set: %v", err)
+	}
+
+	return nil
 }
 
 func (cmd *setCommand) setValue(keyValue string) error {
+	msg := fmt.Sprintf("Apply changes and restart %s?", snap.InstanceName())
+	if !(cmd.assumeYes || common.PromptYN(msg, true)) {
+		fmt.Println("Cancelled. Discarded the configurations.")
+		return nil
+	}
+
 	if keyValue[0] == '=' {
 		return fmt.Errorf("key must not start with an equal sign")
 	}
@@ -80,6 +92,10 @@ func (cmd *setCommand) setValue(keyValue string) error {
 	}
 	if err != nil {
 		return fmt.Errorf("setting %q to %q: %v", key, value, err)
+	}
+
+	if err := cmd.Snap.Restart(); err != nil {
+		return fmt.Errorf("restarting snap: %v", err)
 	}
 
 	return nil
