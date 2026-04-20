@@ -56,7 +56,7 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 	// TODO: add signal handling to intercept SIGTERM and invoke clean() before exiting.
 	defer clean()
 
-	if err := processPassthroughConfigs(cmd.Context); err != nil {
+	if err := cmd.processPassthroughConfigs(); err != nil {
 		return fmt.Errorf("processing passthrough configs: %v", err)
 	}
 
@@ -68,7 +68,7 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 	return execCmd.Run()
 }
 
-func extractPassthroughConfigs(configs map[string]any) (map[string]any, error) {
+func (cmd *runCommand) extractPassthroughConfigs(configs map[string]any) (map[string]any, error) {
 	// Filter configs for passthrough keys starting with "passthrough." But remove the "passthrough." prefix for easier processing by the engine components.
 	passthroughConfigs := make(map[string]any)
 	for k, v := range configs {
@@ -80,7 +80,7 @@ func extractPassthroughConfigs(configs map[string]any) (map[string]any, error) {
 	return passthroughConfigs, nil
 }
 
-func getEnvVarsFromPassthroughConfigs(envVars map[string]any) (map[string]any, error) {
+func (cmd *runCommand) getEnvVarsFromPassthroughConfigs(envVars map[string]any) (map[string]any, error) {
 	result := make(map[string]any)
 	for k, v := range envVars {
 		if strings.HasPrefix(k, "environment.") {
@@ -95,16 +95,16 @@ func getEnvVarsFromPassthroughConfigs(envVars map[string]any) (map[string]any, e
 	return result, nil
 }
 
-func processPassthroughConfigs(ctx *common.Context) error {
-	configs, err := ctx.Config.GetAll()
+func (cmd *runCommand) processPassthroughConfigs() error {
+	passthroughConfigs, err := cmd.Config.Get("passthrough")
 	if err != nil {
 		return fmt.Errorf("getting configs: %v", err)
 	}
-	passthroughConfigs, err := extractPassthroughConfigs(configs)
+	passthroughConfigs, err = cmd.extractPassthroughConfigs(passthroughConfigs)
 	if err != nil {
 		return err
 	}
-	envVars, err := getEnvVarsFromPassthroughConfigs(passthroughConfigs)
+	envVars, err := cmd.getEnvVarsFromPassthroughConfigs(passthroughConfigs)
 	if err != nil {
 		return err
 	}
