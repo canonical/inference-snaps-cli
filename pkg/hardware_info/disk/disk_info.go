@@ -2,6 +2,7 @@ package disk
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/canonical/inference-snaps-cli/pkg/constants"
 	"github.com/canonical/inference-snaps-cli/pkg/types"
@@ -16,6 +17,14 @@ func Info() (map[string]types.DirStats, error) {
 	var info = make(map[string]types.DirStats)
 
 	for _, dir := range directories {
+		// Skip directories that don't exist
+		if _, err := os.Stat(dir); err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return nil, fmt.Errorf("checking directory %s: %v", dir, err)
+		}
+		
 		dirInfo, err := statFs(dir)
 		if err != nil {
 			return nil, fmt.Errorf("getting directory info for %s: %v", dir, err)

@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/cpu"
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/disk"
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/memory"
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/pci"
+	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/qualcomm"
 	"github.com/canonical/inference-snaps-cli/pkg/types"
 )
 
@@ -39,6 +41,13 @@ func Get(friendlyNames bool) (*types.HwInfo, error) {
 		return nil, fmt.Errorf("getting pci devices: %v", err)
 	}
 	hwInfo.PciDevices = pciDevices
+
+	platforms, devices, err := qualcomm.Info()
+	if err != nil {
+		return nil, fmt.Errorf("getting qualcomm devices: %v", err)
+	}
+	hwInfo.Platforms = platforms
+	hwInfo.Devices = devices
 
 	return &hwInfo, nil
 }
@@ -96,6 +105,21 @@ func GetFromRawData(t *testing.T, device string, friendlyNames bool, testDir str
 		t.Fatal(err)
 	}
 	hwInfo.PciDevices = pciDevices
+
+	fastrpcNodesFile := devicePath + "fastrpc-nodes.txt"
+	if _, err := os.Stat(fastrpcNodesFile); err == nil {
+		nodesData, err := os.ReadFile(fastrpcNodesFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		nodes := strings.Fields(string(nodesData))
+		platforms, devices := qualcomm.DetectFromNodes(nodes)
+		hwInfo.Platforms = platforms
+		hwInfo.Devices = devices
+	} else if !os.IsNotExist(err) {
+		t.Fatalf("error checking file '%s': %v\n", fastrpcNodesFile, err)
+	}
 
 	// Additional properties - we append these directly from a file, as we can not run the vendor specific tools on the machine
 	addPropsFile := devicePath + "additional-properties.json"
