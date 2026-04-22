@@ -23,8 +23,15 @@ func Run(ctx *common.Context) *cobra.Command {
 	cmd.Context = ctx
 
 	cobraCmd := &cobra.Command{
-		Use:               "run <path> [args...]",
-		Short:             "Run a subprocess",
+		Use:   "run <command>",
+		Short: "Run a subprocess",
+		Long: "Run a command in the engine's environment\n\n" +
+			"Use run to execute a program as a sub-process, within the active engine's environment.\n" +
+			"To pass arguments to the program itself, separate the command and its arguments with\n" +
+			"double dashes (--) from the run command and its flags. ",
+		Example: "  cli run env\n" +
+			"  cli run -- echo \"Hello World!\"\n" +
+			"  cli run --wait-for-components -- python3 -m http.server",
 		Hidden:            true,
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: cobra.NoFileCompletions,
@@ -60,9 +67,9 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("processing passthrough configs: %v", err)
 	}
 
-	path := args[0]
+	command := args[0]
 
-	execCmd := exec.Command(path, args[1:]...)
+	execCmd := exec.Command(command, args[1:]...)
 	execCmd.Stdout = os.Stdout
 	execCmd.Stderr = os.Stderr
 	return execCmd.Run()
