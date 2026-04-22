@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/canonical/go-snapctl"
-	"github.com/canonical/go-snapctl/env"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
 	"github.com/canonical/inference-snaps-cli/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/pkg/selector"
@@ -183,14 +182,11 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 
 	fmt.Printf("Engine changed to %q.\n", engineName)
 
-	// TODO: get this from an env var instead (e.g. ENGINE_SERVICES=server,proxy)
-	serviceName := env.SnapInstanceName() + ".server"
-
 	// Currently we cannot reliably determine if the service is active to automatically restart it
 	// See https://bugs.launchpad.net/snapd/+bug/2137543
 	//
 	// Ask the user to restart the service manually
-	fmt.Printf("\nRun \"snap restart %s\" to use the new engine.\n", serviceName)
+	fmt.Printf("\nRun \"snap restart %s\" to use the new engine.\n", cmd.Snap.InstanceName())
 
 	return nil
 }
