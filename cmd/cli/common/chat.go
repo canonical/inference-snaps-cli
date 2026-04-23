@@ -335,7 +335,7 @@ func (c *chatClient) processStream(stream *ssestream.Stream[openai.ChatCompletio
 				thinking = true
 				fmt.Printf("%s", color.BlueString(reasoningChunk))
 			}
-			// If the response has main content, and we were printing reasoning, add a new line
+			// If the response has main content, but we were printing reasoning, add a new line to split them
 			if thinking && contentChunk != "" {
 				thinking = false
 				fmt.Print("\n\n")
