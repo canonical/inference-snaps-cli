@@ -47,9 +47,28 @@ func (cmd *unsetCommand) run(_ *cobra.Command, args []string) error {
 }
 
 func (cmd *unsetCommand) unsetValue(keyValue string) error {
-	err := cmd.Config.Unset(keyValue, storage.UserConfig)
+	currValMap, err := cmd.Config.Get(keyValue)
+	if err != nil {
+		return fmt.Errorf("checking existing keys: %s", err)
+	}
+	currVal, found := currValMap[keyValue]
+	if !found {
+		return fmt.Errorf("key %q is not found\n\nUse \"%s get\" to view available keys", keyValue, cmd.Snap.InstanceName())
+	}
+
+	err = cmd.Config.Unset(keyValue, storage.UserConfig)
 	if err != nil {
 		return fmt.Errorf("unsetting %q: %v", keyValue, err)
+	}
+
+	newValMap, err := cmd.Config.Get(keyValue)
+	if err != nil {
+		return fmt.Errorf("checking existing keys: %s", err)
+	}
+	newVal, _ := newValMap[keyValue]
+
+	if fmt.Sprint(currVal) == fmt.Sprint(newVal) {
+		return nil // no change needed
 	}
 
 	if !cmd.noRestart {
