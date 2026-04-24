@@ -324,7 +324,7 @@ func (c *chatClient) processStream(stream *ssestream.Stream[openai.ChatCompletio
 			}
 			err := json.Unmarshal([]byte(chunk.Choices[0].Delta.RawJSON()), &rawDelta)
 			if err != nil {
-				// ignore err and continue printing main content
+				return nil, fmt.Errorf("unmarshalling response chunk: %v", err)
 			}
 
 			contentChunk := chunk.Choices[0].Delta.Content
