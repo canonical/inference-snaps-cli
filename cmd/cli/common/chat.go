@@ -317,7 +317,7 @@ func (c *chatClient) processStream(stream *ssestream.Stream[openai.ChatCompletio
 		// Print chunks as they are received
 		if len(chunk.Choices) > 0 {
 
-			// Gemma-4 and Nemotron-3 uses a field `reasoning_content` for thinking.
+			// Gemma-4 and Nemotron-3 set a `reasoning_content` field for thinking output.
 			// The OpenAI library does not contain it, so parse it manually.
 			var rawDelta struct {
 				ReasoningContent string `json:"reasoning_content"`
