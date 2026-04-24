@@ -9,6 +9,7 @@ import (
 
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/cpu"
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/disk"
+	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/mediatek"
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/memory"
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/pci"
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/qualcomm"
@@ -42,12 +43,18 @@ func Get(friendlyNames bool) (*types.HwInfo, error) {
 	}
 	hwInfo.PciDevices = pciDevices
 
-	devices, err := qualcomm.Info()
+	QCDevices, err := qualcomm.Info()
 	if err != nil {
 		return nil, fmt.Errorf("getting qualcomm devices: %v", err)
 	}
-	hwInfo.Devices = devices
+	hwInfo.Devices = QCDevices
 
+	MediatekDevices, err = mediatek.Info()
+	if err != nil {
+		return nil, fmt.Errorf("getting mediatek devices: %v", err)
+	}
+	hwInfo.Devices = append(hwInfo.Devices, MediatekDevices...)
+	
 	return &hwInfo, nil
 }
 
@@ -117,6 +124,19 @@ func GetFromRawData(t *testing.T, device string, friendlyNames bool, testDir str
 		hwInfo.Devices = devices
 	} else if !os.IsNotExist(err) {
 		t.Fatalf("error checking file '%s': %v\n", fastrpcNodesFile, err)
+	}
+
+	mediatekCompatiblesFile := devicePath + "mediatek-compatible.txt"
+	if _, err := os.Stat(mediatekCompatiblesFile); err == nil {
+		compatiblesData, err := os.ReadFile(mediatekCompatiblesFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		devices := mediatek.DetectFromCompatibles(strings.Fields(string(compatiblesData)))
+		hwInfo.Devices = append(hwInfo.Devices, devices...)
+	} else if !os.IsNotExist(err) {
+		t.Fatalf("error checking file '%s': %v\n", mediatekCompatiblesFile, err)
 	}
 
 	// Additional properties - we append these directly from a file, as we can not run the vendor specific tools on the machine
