@@ -3,6 +3,7 @@ package fastrpc
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/canonical/go-snapctl"
@@ -23,36 +24,56 @@ func Match(manifestDevice engines.Device, hostDevices []types.DetectedDevice) (i
 		if hostDevice.Bus != "fastrpc" {
 			continue
 		}
-		if manifestDevice.Type != "" && hostDevice.Type != manifestDevice.Type {
+		if !deviceTypeMatch(manifestDevice.Type, hostDevice.Type) {
+			continue
+		}
+		if hostDevice.PlatformInfo == nil || hostDevice.PlatformInfo.Name == "" {
 			continue
 		}
 
-		for _, node := range hostDevice.Nodes {
-			matched, err := filepath.Match(nodeGlob, node)
-			if err != nil {
-				return 0, []string{fmt.Sprintf("invalid node-glob %q: %v", nodeGlob, err)}
-			}
-			if !matched {
+		matched, err := filepath.Match(nodeGlob, hostDevice.PlatformInfo.Name)
+		if err != nil {
+			return 0, []string{fmt.Sprintf("invalid node-glob %q: %v", nodeGlob, err)}
+		}
+		if !matched {
+			continue
+		}
+
+		score := weights.PciDevice + weights.PciDeviceType
+		for _, connection := range manifestDevice.SnapConnections {
+			if testing.Testing() {
 				continue
 			}
-
-			score := weights.PciDevice + weights.PciDeviceType
-			for _, connection := range manifestDevice.SnapConnections {
-				if testing.Testing() {
-					continue
-				}
-				connected, err := snapctl.IsConnected(connection).Run()
-				if err != nil {
-					return 0, []string{fmt.Sprintf("checking snap connection %q: %v", connection, err)}
-				}
-				if !connected {
-					return 0, []string{fmt.Sprintf("%q is not connected", connection)}
-				}
+			connected, err := snapctl.IsConnected(connection).Run()
+			if err != nil {
+				return 0, []string{fmt.Sprintf("checking snap connection %q: %v", connection, err)}
 			}
-
-			return score, nil
+			if !connected {
+				return 0, []string{fmt.Sprintf("%q is not connected", connection)}
+			}
 		}
+
+		return score, nil
 	}
 
 	return 0, []string{fmt.Sprintf("device node matching %q not found", nodeGlob)}
+}
+
+func deviceTypeMatch(manifestType, hostType string) bool {
+	if manifestType == "" {
+		return true
+	}
+
+	manifest := strings.ToLower(strings.TrimSpace(manifestType))
+	host := strings.ToLower(strings.TrimSpace(hostType))
+
+	if manifest == host {
+		return true
+	}
+
+	if manifest == "npu" && strings.HasPrefix(host, "npu") {
+		return true
+	}
+
+	return false
 }

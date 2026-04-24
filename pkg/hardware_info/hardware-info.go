@@ -42,11 +42,10 @@ func Get(friendlyNames bool) (*types.HwInfo, error) {
 	}
 	hwInfo.PciDevices = pciDevices
 
-	platforms, devices, err := qualcomm.Info()
+	devices, err := qualcomm.Info()
 	if err != nil {
 		return nil, fmt.Errorf("getting qualcomm devices: %v", err)
 	}
-	hwInfo.Platforms = platforms
 	hwInfo.Devices = devices
 
 	return &hwInfo, nil
@@ -114,8 +113,7 @@ func GetFromRawData(t *testing.T, device string, friendlyNames bool, testDir str
 		}
 
 		nodes := strings.Fields(string(nodesData))
-		platforms, devices := qualcomm.DetectFromNodes(nodes)
-		hwInfo.Platforms = platforms
+		devices := qualcomm.DetectFromNodes(nodes)
 		hwInfo.Devices = devices
 	} else if !os.IsNotExist(err) {
 		t.Fatalf("error checking file '%s': %v\n", fastrpcNodesFile, err)

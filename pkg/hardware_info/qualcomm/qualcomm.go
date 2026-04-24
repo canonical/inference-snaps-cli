@@ -11,40 +11,17 @@ import (
 
 var devRoot = "/dev"
 
-func Info() ([]types.PlatformInfo, []types.DetectedDevice, error) {
-	fastrpcNodes, err := globSorted(filepath.Join(devRoot, "fastrpc-*"))
+func Info() ([]types.DetectedDevice, error) {
+	nodes, err := globSorted(filepath.Join(devRoot, "fastrpc-*"))
 	if err != nil {
-		return nil, nil, fmt.Errorf("detecting fastrpc nodes: %v", err)
+		return nil, fmt.Errorf("detecting fastrpc nodes: %v", err)
 	}
 
-	cdspNodes, err := globSorted(filepath.Join(devRoot, "fastrpc-cdsp*"))
-	if err != nil {
-		return nil, nil, fmt.Errorf("detecting cdsp fastrpc nodes: %v", err)
-	}
-
-	var platforms []types.PlatformInfo
-	if len(fastrpcNodes) > 0 {
-		platforms = append(platforms, types.PlatformInfo{
-			Vendor: "qualcomm",
-			Name:   "dragonwing",
-		})
-	}
-
-	var devices []types.DetectedDevice
-	if len(cdspNodes) > 0 {
-		devices = append(devices, types.DetectedDevice{
-			Type:  "npu",
-			Bus:   "fastrpc",
-			Nodes: cdspNodes,
-		})
-	}
-
-	return platforms, devices, nil
+	return DetectFromNodes(nodes), nil
 }
 
-func DetectFromNodes(nodes []string) ([]types.PlatformInfo, []types.DetectedDevice) {
-	var fastrpcNodes []string
-	var cdspNodes []string
+func DetectFromNodes(nodes []string) []types.DetectedDevice {
+	var devices []types.DetectedDevice
 
 	for _, node := range nodes {
 		node = strings.TrimSpace(node)
@@ -53,35 +30,35 @@ func DetectFromNodes(nodes []string) ([]types.PlatformInfo, []types.DetectedDevi
 		}
 
 		base := filepath.Base(node)
-		if strings.HasPrefix(base, "fastrpc-") {
-			fastrpcNodes = append(fastrpcNodes, node)
+		if !strings.HasPrefix(base, "fastrpc-") {
+			continue
 		}
-		if strings.HasPrefix(base, "fastrpc-cdsp") {
-			cdspNodes = append(cdspNodes, node)
-		}
-	}
 
-	sort.Strings(fastrpcNodes)
-	sort.Strings(cdspNodes)
-
-	var platforms []types.PlatformInfo
-	if len(fastrpcNodes) > 0 {
-		platforms = append(platforms, types.PlatformInfo{
-			Vendor: "qualcomm",
-			Name:   "dragonwing",
-		})
-	}
-
-	var devices []types.DetectedDevice
-	if len(cdspNodes) > 0 {
 		devices = append(devices, types.DetectedDevice{
-			Type:  "npu",
-			Bus:   "fastrpc",
-			Nodes: cdspNodes,
+			Type: detectNpuType(base),
+			Bus:  "fastrpc",
+			PlatformInfo: &types.PlatformInfo{
+				Vendor: "qualcomm",
+				Name:   node,
+				SoC:    "dragonwing",
+			},
 		})
 	}
 
-	return platforms, devices
+	sort.Slice(devices, func(i, j int) bool {
+		return devices[i].PlatformInfo.Name < devices[j].PlatformInfo.Name
+	})
+
+	return devices
+}
+
+func detectNpuType(nodeBaseName string) string {
+	const prefix = "fastrpc-"
+	if strings.HasPrefix(nodeBaseName, prefix) {
+		suffix := strings.TrimPrefix(nodeBaseName, prefix)
+		return fmt.Sprintf("NPU - %s", suffix)
+	}
+	return "NPU"
 }
 
 func globSorted(pattern string) ([]string, error) {
@@ -89,6 +66,7 @@ func globSorted(pattern string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	sort.Strings(matches)
 	return matches, nil
 }

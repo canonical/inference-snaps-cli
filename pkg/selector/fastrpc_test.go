@@ -19,8 +19,10 @@ func TestFastRpcNpuSelection(t *testing.T) {
 			{
 				Type: "npu",
 				Bus:  "fastrpc",
-				Nodes: []string{
-					"/dev/fastrpc-cdsp",
+				PlatformInfo: &types.PlatformInfo{
+					Vendor: "qualcomm",
+					Name:   "/dev/fastrpc-cdsp",
+					SoC:    "dragonwing",
 				},
 			},
 		},
