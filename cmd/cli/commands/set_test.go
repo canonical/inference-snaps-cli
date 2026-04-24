@@ -68,7 +68,7 @@ func TestParseKeyValue(t *testing.T) {
 }
 
 func TestSetValueSuccessForUserConfig(t *testing.T) {
-	config := storage.NewMockConfig(map[string]any{"api.endpoint": "https://old.example.com"})
+	config := storage.NewMockConfig(map[string]any{"user.api.endpoint": "https://old.example.com"})
 	cmd := setCommand{
 		noRestart: true,
 		Context: &common.Context{
@@ -82,13 +82,13 @@ func TestSetValueSuccessForUserConfig(t *testing.T) {
 		t.Fatalf("setValue returned an unexpected error: %v", err)
 	}
 
-	values, err := config.Get("api.endpoint")
+	values, err := config.Get("user.api.endpoint")
 	if err != nil {
 		t.Fatalf("Get returned an unexpected error: %v", err)
 	}
 
-	if value, found := values["api.endpoint"]; !found || value != "https://new.example.com" {
-		t.Fatalf("expected api.endpoint to be set to full value, got %#v", values)
+	if value, found := values["user.api.endpoint"]; !found || value != "https://new.example.com" {
+		t.Fatalf("expected user.api.endpoint to be set to full value, got %#v", values)
 	}
 }
 
@@ -106,14 +106,14 @@ func TestSetValueRejectsUnknownKeys(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for unknown key, got nil")
 	} else {
-		if !strings.Contains(err.Error(), "unknown key") {
+		if !strings.Contains(err.Error(), "is not found") {
 			t.Fatalf("expected unknown key error, got: %s", err)
 		}
 	}
 }
 
 func TestSetNoPromptIfValueNotChanged(t *testing.T) {
-	config := storage.NewMockConfig(map[string]any{"api.port": 8080})
+	config := storage.NewMockConfig(map[string]any{"user.api.port": 8080})
 	cmd := setCommand{
 		assumeYes: false, // should not prompt since no change is needed
 		Context: &common.Context{
