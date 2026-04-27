@@ -227,6 +227,8 @@ func ScoreEngines(ctx *Context) ([]engines.ScoredManifest, []string, error) {
 	return scoredEngines, warnings, nil
 }
 
+// ScoreEnginesWithSpinner is same as ScoreEngines but with a progress spinner.
+// It prints the warnings to stderr.
 func ScoreEnginesWithSpinner(ctx *Context) ([]engines.ScoredManifest, error) {
 	stopProgress := StartProgressSpinner("Checking engines")
 	scoredEngines, warnings, err := ScoreEngines(ctx)
@@ -238,9 +240,5 @@ func ScoreEnginesWithSpinner(ctx *Context) ([]engines.ScoredManifest, error) {
 		}
 	}
 
-	if err != nil {
-		return nil, fmt.Errorf("checking engines: %v", err)
-	}
-
-	return scoredEngines, nil
+	return scoredEngines, err
 }
