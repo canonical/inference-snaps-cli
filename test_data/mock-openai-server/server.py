@@ -20,6 +20,9 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 # Global delay in seconds applied before every response and between SSE chunks.
 RESPONSE_DELAY = 0.5
 
+# When True, responses include reasoning_content in addition to content.
+INCLUDE_REASONING = False
+
 
 # ---------------------------------------------------------------------------
 # Static response payloads
@@ -53,6 +56,12 @@ def _extract_last_user_message(request_json):
 
 def _chat_completion_payload(reply):
     """Plain (non-streaming) chat.completion response."""
+    message = {
+        "role": "assistant",
+        "content": reply,
+    }
+    if INCLUDE_REASONING:
+        message["reasoning_content"] = reply
     return {
         "id": "chatcmpl-mock-0000000000000001",
         "object": "chat.completion",
@@ -61,11 +70,7 @@ def _chat_completion_payload(reply):
         "choices": [
             {
                 "index": 0,
-                "message": {
-                    "role": "assistant",
-                    "content": reply,
-                    "reasoning_content": reply,
-                },
+                "message": message,
                 "finish_reason": "stop",
                 "logprobs": None,
             }
@@ -79,13 +84,15 @@ def _chat_completion_payload(reply):
     }
 
 
-def _chat_completion_chunk(content, finish_reason=None, is_first=False):
+def _chat_completion_chunk(content=None, reasoning_content=None, finish_reason=None, is_first=False):
     """Build a single ChatCompletionChunk payload."""
     delta = {}
     if is_first:
         delta["role"] = "assistant"
-    delta["content"] = content
-    delta["reasoning_content"] = content
+    if content is not None:
+        delta["content"] = content
+    if reasoning_content is not None:
+        delta["reasoning_content"] = reasoning_content
 
     return {
         "id": "chatcmpl-mock-0000000000000001",
@@ -108,18 +115,28 @@ def _chat_completion_sse_chunks(reply):
     """
     Yield SSE-formatted lines for a complete streaming chat response.
     Each item is a bytes object ready to be written to the socket.
+    First emits all reasoning_content chunks, then all content chunks.
     """
     words = reply.split(" ")
+
+    # Phase 1: reasoning_content chunks (only when reasoning is enabled)
+    if INCLUDE_REASONING:
+        for i, word in enumerate(words):
+            time.sleep(RESPONSE_DELAY)
+            token = word if i == 0 else " " + word
+            chunk = _chat_completion_chunk(reasoning_content=token, is_first=(i == 0))
+            yield f"data: {json.dumps(chunk)}\n\n".encode("utf-8")
+
+    # Phase 2: content chunks
     for i, word in enumerate(words):
         time.sleep(RESPONSE_DELAY)
-        # Add a space before each word except the first
         token = word if i == 0 else " " + word
-        chunk = _chat_completion_chunk(token, finish_reason=None, is_first=(i == 0))
+        chunk = _chat_completion_chunk(content=token, is_first=(i == 0 and not INCLUDE_REASONING))
         yield f"data: {json.dumps(chunk)}\n\n".encode("utf-8")
 
     # Final chunk: empty delta, finish_reason="stop"
     time.sleep(RESPONSE_DELAY)
-    stop_chunk = _chat_completion_chunk("", finish_reason="stop")
+    stop_chunk = _chat_completion_chunk(content="", finish_reason="stop")
     yield f"data: {json.dumps(stop_chunk)}\n\n".encode("utf-8")
 
     # SSE stream terminator
@@ -251,7 +268,7 @@ class MockOpenAIHandler(BaseHTTPRequestHandler):
 # ---------------------------------------------------------------------------
 
 def main():
-    global RESPONSE_DELAY
+    global RESPONSE_DELAY, INCLUDE_REASONING
 
     parser = argparse.ArgumentParser(
         description="Mock OpenAI-compatible HTTP API server for testing."
@@ -274,14 +291,22 @@ def main():
         metavar="SECONDS",
         help="Delay in seconds before each response and between SSE chunks (default: 0)",
     )
+    parser.add_argument(
+        "--reasoning",
+        action="store_true",
+        default=False,
+        help="Include reasoning_content in responses (default: off)",
+    )
     args = parser.parse_args()
 
     RESPONSE_DELAY = args.delay
+    INCLUDE_REASONING = args.reasoning
 
     server_address = (args.host, args.port)
     httpd = HTTPServer(server_address, MockOpenAIHandler)
     print(f"[mock-openai] Listening on http://{args.host}:{args.port}")
     print(f"[mock-openai] Response delay: {RESPONSE_DELAY}s")
+    print(f"[mock-openai] Reasoning: {'on' if INCLUDE_REASONING else 'off'}")
     print("[mock-openai] Serving /v1 and /v3 prefixes")
     print("[mock-openai] Endpoints:")
     print(f"  GET  http://{args.host}:{args.port}/v1/models")
