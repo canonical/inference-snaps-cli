@@ -42,13 +42,16 @@ def _models_payload():
     }
 
 
-_MOCK_REPLY = "Hello! I am a mock assistant. How can I help you today?"
+def _extract_last_user_message(request_json):
+    """Return the content of the last user message in the request, or a fallback."""
+    messages = request_json.get("messages", [])
+    for msg in reversed(messages):
+        if msg.get("role") == "user":
+            return msg.get("content", "")
+    return ""
 
-# Words of the reply, emitted as individual SSE chunks to simulate streaming.
-_MOCK_REPLY_WORDS = _MOCK_REPLY.split(" ")
 
-
-def _chat_completion_payload():
+def _chat_completion_payload(reply):
     """Plain (non-streaming) chat.completion response."""
     return {
         "id": "chatcmpl-mock-0000000000000001",
@@ -60,7 +63,8 @@ def _chat_completion_payload():
                 "index": 0,
                 "message": {
                     "role": "assistant",
-                    "content": _MOCK_REPLY,
+                    "content": reply,
+                    "reasoning_content": reply,
                 },
                 "finish_reason": "stop",
                 "logprobs": None,
@@ -68,8 +72,8 @@ def _chat_completion_payload():
         ],
         "usage": {
             "prompt_tokens": 10,
-            "completion_tokens": 12,
-            "total_tokens": 22,
+            "completion_tokens": len(reply.split()),
+            "total_tokens": 10 + len(reply.split()),
         },
         "system_fingerprint": None,
     }
@@ -81,6 +85,7 @@ def _chat_completion_chunk(content, finish_reason=None, is_first=False):
     if is_first:
         delta["role"] = "assistant"
     delta["content"] = content
+    delta["reasoning_content"] = content
 
     return {
         "id": "chatcmpl-mock-0000000000000001",
@@ -99,12 +104,13 @@ def _chat_completion_chunk(content, finish_reason=None, is_first=False):
     }
 
 
-def _chat_completion_sse_chunks():
+def _chat_completion_sse_chunks(reply):
     """
     Yield SSE-formatted lines for a complete streaming chat response.
     Each item is a bytes object ready to be written to the socket.
     """
-    for i, word in enumerate(_MOCK_REPLY_WORDS):
+    words = reply.split(" ")
+    for i, word in enumerate(words):
         time.sleep(RESPONSE_DELAY)
         # Add a space before each word except the first
         token = word if i == 0 else " " + word
@@ -220,6 +226,8 @@ class MockOpenAIHandler(BaseHTTPRequestHandler):
         except json.JSONDecodeError:
             request_json = {}
 
+        reply = _extract_last_user_message(request_json)
+
         if request_json.get("stream", False):
             # Streaming response: Server-Sent Events (SSE) of ChatCompletionChunk
             self.send_response(200)
@@ -228,14 +236,14 @@ class MockOpenAIHandler(BaseHTTPRequestHandler):
             self.send_header("Cache-Control", "no-cache")
             self.end_headers()
             try:
-                for sse_line in _chat_completion_sse_chunks():
+                for sse_line in _chat_completion_sse_chunks(reply):
                     self.wfile.write(sse_line)
                 self.wfile.flush()
             except BrokenPipeError:
                 pass  # client disconnected mid-stream
         else:
             # Non-streaming response: plain application/json ChatCompletion
-            self._send_json(_chat_completion_payload())
+            self._send_json(_chat_completion_payload(reply))
 
 
 # ---------------------------------------------------------------------------
