@@ -43,18 +43,18 @@ func Get(friendlyNames bool) (*types.HwInfo, error) {
 	}
 	hwInfo.PciDevices = pciDevices
 
-	QCDevices, err := qualcomm.Info()
+	qcDevices, err := qualcomm.Info()
 	if err != nil {
 		return nil, fmt.Errorf("getting qualcomm devices: %v", err)
 	}
-	hwInfo.Devices = QCDevices
+	hwInfo.Devices = qcDevices
 
-	MediatekDevices, err = mediatek.Info()
+	mediatekDevices, err := mediatek.Info()
 	if err != nil {
 		return nil, fmt.Errorf("getting mediatek devices: %v", err)
 	}
-	hwInfo.Devices = append(hwInfo.Devices, MediatekDevices...)
-	
+	hwInfo.Devices = append(hwInfo.Devices, mediatekDevices...)
+
 	return &hwInfo, nil
 }
 

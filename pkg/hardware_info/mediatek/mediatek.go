@@ -19,19 +19,18 @@ var socToPlatform = map[string]string{
 	"mt8189": "genio-520-720",
 }
 
-func Info() ([]types.PlatformInfo, []types.DetectedDevice, error) {
+func Info() ([]types.DetectedDevice, error) {
 	compatibleValues, err := readCompatibleValues(deviceTreeRoot)
 	if err != nil {
-		return nil, nil, fmt.Errorf("detecting mediatek apusys: %v", err)
+		return nil, fmt.Errorf("detecting mediatek apusys: %v", err)
 	}
 
-	platforms, devices := DetectFromCompatibles(compatibleValues)
-	return platforms, devices, nil
+	devices := DetectFromCompatibles(compatibleValues)
+	return devices, nil
 }
 
-func DetectFromCompatibles(compatibleValues []string) ([]types.PlatformInfo, []types.DetectedDevice) {
+func DetectFromCompatibles(compatibleValues []string) []types.DetectedDevice {
 	platSet := make(map[string]struct{})
-	matchSet := make(map[string]struct{})
 
 	for _, value := range compatibleValues {
 		soc, ok := extractAPUSoC(value)
@@ -45,11 +44,10 @@ func DetectFromCompatibles(compatibleValues []string) ([]types.PlatformInfo, []t
 		}
 
 		platSet[platformName] = struct{}{}
-		matchSet[value] = struct{}{}
 	}
 
-	if len(matchSet) == 0 {
-		return nil, nil
+	if len(platSet) == 0 {
+		return nil
 	}
 
 	platformNames := make([]string, 0, len(platSet))
@@ -58,27 +56,19 @@ func DetectFromCompatibles(compatibleValues []string) ([]types.PlatformInfo, []t
 	}
 	sort.Strings(platformNames)
 
-	platforms := make([]types.PlatformInfo, 0, len(platformNames))
+	devices := make([]types.DetectedDevice, 0, len(platformNames))
 	for _, name := range platformNames {
-		platforms = append(platforms, types.PlatformInfo{
-			Vendor: "mediatek",
-			Name:   name,
+		devices = append(devices, types.DetectedDevice{
+			Type: "npu",
+			Bus:  "mdla",
+			Metadata: &types.DeviceMetadata{
+				VendorName:  "mediatek",
+				ProductName: name,
+			},
 		})
 	}
 
-	matches := make([]string, 0, len(matchSet))
-	for value := range matchSet {
-		matches = append(matches, value)
-	}
-	sort.Strings(matches)
-
-	devices := []types.DetectedDevice{{
-		Type:  "npu",
-		Bus:   "mdla",
-		Nodes: matches,
-	}}
-
-	return platforms, devices
+	return devices
 }
 
 func readCompatibleValues(root string) ([]string, error) {

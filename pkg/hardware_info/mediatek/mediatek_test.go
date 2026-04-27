@@ -10,7 +10,7 @@ import (
 )
 
 func TestDetectFromCompatibles(t *testing.T) {
-	platforms, devices := DetectFromCompatibles([]string{
+	devices := DetectFromCompatibles([]string{
 		"arm,v8",
 		"mediatek,mt8195-apusys_rv",
 		"mediatek,mt8188-apusys_rv",
@@ -19,24 +19,33 @@ func TestDetectFromCompatibles(t *testing.T) {
 		"mediatek,mt8188-apusys_rv", // duplicate should be deduped
 	})
 
-	expectedPlatforms := []types.PlatformInfo{
-		{Vendor: "mediatek", Name: "genio-1200"},
-		{Vendor: "mediatek", Name: "genio-510-700"},
-		{Vendor: "mediatek", Name: "genio-520-720"},
-		{Vendor: "mediatek", Name: "mediatek-mt9999"},
-	}
-	if !reflect.DeepEqual(platforms, expectedPlatforms) {
-		t.Fatalf("platforms=%+v expected=%+v", platforms, expectedPlatforms)
-	}
-
 	expectedDevices := []types.DetectedDevice{{
 		Type: "npu",
 		Bus:  "mdla",
-		Nodes: []string{
-			"mediatek,mt8188-apusys_rv",
-			"mediatek,mt8189-apusys_rv",
-			"mediatek,mt8195-apusys_rv",
-			"mediatek,mt9999-apusys_rv",
+		Metadata: &types.DeviceMetadata{
+			VendorName:  "mediatek",
+			ProductName: "genio-1200",
+		},
+	}, {
+		Type: "npu",
+		Bus:  "mdla",
+		Metadata: &types.DeviceMetadata{
+			VendorName:  "mediatek",
+			ProductName: "genio-510-700",
+		},
+	}, {
+		Type: "npu",
+		Bus:  "mdla",
+		Metadata: &types.DeviceMetadata{
+			VendorName:  "mediatek",
+			ProductName: "genio-520-720",
+		},
+	}, {
+		Type: "npu",
+		Bus:  "mdla",
+		Metadata: &types.DeviceMetadata{
+			VendorName:  "mediatek",
+			ProductName: "mediatek-mt9999",
 		},
 	}}
 	if !reflect.DeepEqual(devices, expectedDevices) {
@@ -70,20 +79,18 @@ func TestInfo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	platforms, devices, err := Info()
+	devices, err := Info()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	expectedPlatforms := []types.PlatformInfo{{Vendor: "mediatek", Name: "genio-510-700"}}
-	if !reflect.DeepEqual(platforms, expectedPlatforms) {
-		t.Fatalf("platforms=%+v expected=%+v", platforms, expectedPlatforms)
-	}
-
 	expectedDevices := []types.DetectedDevice{{
-		Type:  "npu",
-		Bus:   "mdla",
-		Nodes: []string{"mediatek,mt8188-apusys_rv"},
+		Type: "npu",
+		Bus:  "mdla",
+		Metadata: &types.DeviceMetadata{
+			VendorName:  "mediatek",
+			ProductName: "genio-510-700",
+		},
 	}}
 	if !reflect.DeepEqual(devices, expectedDevices) {
 		t.Fatalf("devices=%+v expected=%+v", devices, expectedDevices)
@@ -105,11 +112,11 @@ func TestInfoNoMatch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	platforms, devices, err := Info()
+	devices, err := Info()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(platforms) != 0 || len(devices) != 0 {
-		t.Fatalf("expected no mediatek npu match, got platforms=%+v devices=%+v", platforms, devices)
+	if len(devices) != 0 {
+		t.Fatalf("expected no mediatek npu match, got devices=%+v", devices)
 	}
 }
