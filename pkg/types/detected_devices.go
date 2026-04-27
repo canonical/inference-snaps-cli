@@ -1,9 +1,8 @@
 package types
 
 type DeviceMetadata struct {
-	Vendor     string `json:"vendor" yaml:"vendor"`
-	Name       string `json:"name" yaml:"name"`
-	VendorName string `json:"vendor_name,omitempty" yaml:"vendor_name,omitempty"`
+	VendorName  string `json:"vendor_name" yaml:"vendor_name"`
+	ProductName string `json:"product_name,omitempty" yaml:"product_name,omitempty"`
 }
 
 type DetectedDevice struct {
