@@ -230,7 +230,7 @@ func ScoreEngines(ctx *Context) ([]engines.ScoredManifest, []string, error) {
 // ScoreEnginesWithSpinner is same as ScoreEngines but with a progress spinner.
 // It prints the warnings to stderr.
 func ScoreEnginesWithSpinner(ctx *Context) ([]engines.ScoredManifest, error) {
-	stopProgress := StartProgressSpinner("Checking engines")
+	stopProgress := StartProgressSpinner("Checking engine compatibility")
 	scoredEngines, warnings, err := ScoreEngines(ctx)
 	stopProgress()
 

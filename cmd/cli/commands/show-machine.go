@@ -72,7 +72,7 @@ func (cmd *showMachineCommand) run(_ *cobra.Command, _ []string) error {
 }
 
 func (cmd *showMachineCommand) fetchMachineInfoWithSpinner() (*types.HwInfo, error) {
-	stopProgress := common.StartProgressSpinner("Getting machine info")
+	stopProgress := common.StartProgressSpinner("Gathering machine information")
 	hwInfo, warnings, err := hardware_info.Get(true)
 	stopProgress()
 
