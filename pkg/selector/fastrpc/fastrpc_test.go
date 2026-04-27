@@ -12,19 +12,19 @@ func TestMatch(t *testing.T) {
 		{
 			Type: "npu",
 			Bus:  "fastrpc",
-			PlatformInfo: &types.PlatformInfo{
+			Metadata: &types.DeviceMetadata{
 				Vendor: "qualcomm",
 				Name:   "/dev/fastrpc-cdsp",
-				SoC:    "dragonwing",
+				VendorName:    "dragonwing",
 			},
 		},
 		{
 			Type: "npu",
 			Bus:  "fastrpc",
-			PlatformInfo: &types.PlatformInfo{
+			Metadata: &types.DeviceMetadata{
 				Vendor: "qualcomm",
 				Name:   "/dev/fastrpc-cdsp1-secure",
-				SoC:    "dragonwing",
+				VendorName:    "dragonwing",
 			},
 		},
 	}

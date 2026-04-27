@@ -27,11 +27,11 @@ func Match(manifestDevice engines.Device, hostDevices []types.DetectedDevice) (i
 		if !deviceTypeMatch(manifestDevice.Type, hostDevice.Type) {
 			continue
 		}
-		if hostDevice.PlatformInfo == nil || hostDevice.PlatformInfo.Name == "" {
+		if hostDevice.Metadata == nil || hostDevice.Metadata.Name == "" {
 			continue
 		}
 
-		matched, err := filepath.Match(nodeGlob, hostDevice.PlatformInfo.Name)
+		matched, err := filepath.Match(nodeGlob, hostDevice.Metadata.Name)
 		if err != nil {
 			return 0, []string{fmt.Sprintf("invalid node-glob %q: %v", nodeGlob, err)}
 		}

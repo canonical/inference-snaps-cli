@@ -1,13 +1,13 @@
 package types
 
-type PlatformInfo struct {
-	Vendor string `json:"vendor" yaml:"vendor"`
-	Name   string `json:"name" yaml:"name"`
-	SoC  string `json:"soc,omitempty" yaml:"soc,omitempty"`
+type DeviceMetadata struct {
+	Vendor     string `json:"vendor" yaml:"vendor"`
+	Name       string `json:"name" yaml:"name"`
+	VendorName string `json:"vendor_name,omitempty" yaml:"vendor_name,omitempty"`
 }
 
 type DetectedDevice struct {
-	Type  string   `json:"type" yaml:"type"`
-	Bus   string   `json:"bus" yaml:"bus"`
-	PlatformInfo *PlatformInfo `json:"platform_info,omitempty" yaml:"platform_info,omitempty"`
+	Type     string          `json:"type" yaml:"type"`
+	Bus      string          `json:"bus" yaml:"bus"`
+	Metadata *DeviceMetadata `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 }

@@ -39,28 +39,28 @@ func TestInfo(t *testing.T) {
 		{
 			Type: "NPU - adsp-secure",
 			Bus:  "fastrpc",
-			PlatformInfo: &types.PlatformInfo{
+			Metadata: &types.DeviceMetadata{
 				Vendor: "qualcomm",
 				Name:   filepath.Join(tmp, "fastrpc-adsp-secure"),
-				SoC:    "dragonwing",
+				VendorName:    "dragonwing",
 			},
 		},
 		{
 			Type: "NPU - cdsp",
 			Bus:  "fastrpc",
-			PlatformInfo: &types.PlatformInfo{
+			Metadata: &types.DeviceMetadata{
 				Vendor: "qualcomm",
 				Name:   filepath.Join(tmp, "fastrpc-cdsp"),
-				SoC:    "dragonwing",
+				VendorName:    "dragonwing",
 			},
 		},
 		{
 			Type: "NPU - cdsp1",
 			Bus:  "fastrpc",
-			PlatformInfo: &types.PlatformInfo{
+			Metadata: &types.DeviceMetadata{
 				Vendor: "qualcomm",
 				Name:   filepath.Join(tmp, "fastrpc-cdsp1"),
-				SoC:    "dragonwing",
+				VendorName:    "dragonwing",
 			},
 		},
 	}
@@ -83,28 +83,28 @@ func TestDetectFromNodes(t *testing.T) {
 		{
 			Type: "NPU - adsp",
 			Bus:  "fastrpc",
-			PlatformInfo: &types.PlatformInfo{
+			Metadata: &types.DeviceMetadata{
 				Vendor: "qualcomm",
 				Name:   "/dev/fastrpc-adsp",
-				SoC:    "dragonwing",
+				VendorName:    "dragonwing",
 			},
 		},
 		{
 			Type: "NPU - cdsp",
 			Bus:  "fastrpc",
-			PlatformInfo: &types.PlatformInfo{
+			Metadata: &types.DeviceMetadata{
 				Vendor: "qualcomm",
 				Name:   "/dev/fastrpc-cdsp",
-				SoC:    "dragonwing",
+				VendorName:    "dragonwing",
 			},
 		},
 		{
 			Type: "NPU - cdsp1-secure",
 			Bus:  "fastrpc",
-			PlatformInfo: &types.PlatformInfo{
+			Metadata: &types.DeviceMetadata{
 				Vendor: "qualcomm",
 				Name:   "/dev/fastrpc-cdsp1-secure",
-				SoC:    "dragonwing",
+				VendorName:    "dragonwing",
 			},
 		},
 	}

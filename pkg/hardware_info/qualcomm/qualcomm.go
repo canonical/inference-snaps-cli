@@ -37,16 +37,16 @@ func DetectFromNodes(nodes []string) []types.DetectedDevice {
 		devices = append(devices, types.DetectedDevice{
 			Type: detectNpuType(base),
 			Bus:  "fastrpc",
-			PlatformInfo: &types.PlatformInfo{
+			Metadata: &types.DeviceMetadata{
 				Vendor: "qualcomm",
 				Name:   node,
-				SoC:    "dragonwing",
+				VendorName:    "dragonwing",
 			},
 		})
 	}
 
 	sort.Slice(devices, func(i, j int) bool {
-		return devices[i].PlatformInfo.Name < devices[j].PlatformInfo.Name
+		return devices[i].Metadata.Name < devices[j].Metadata.Name
 	})
 
 	return devices
