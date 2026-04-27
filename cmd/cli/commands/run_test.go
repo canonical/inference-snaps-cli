@@ -35,13 +35,15 @@ func TestGetEnvVarsFromPassthroughConfigs(t *testing.T) {
 }
 
 func TestProcessPassthroughConfigs(t *testing.T) {
+	mockConfig := storage.NewMockConfig()
+	mockConfig.SetAll(map[string]any{
+		"passthrough.environment.my-key": "value",
+		"passthrough.environment.other":  123,
+		"passthrough.not-environment":    "ignored",
+	}, storage.UserConfig)
 	cmd := runCommand{
 		Context: &common.Context{
-			Config: storage.NewMockConfig(map[string]any{
-				"user.passthrough.environment.my-key": "value",
-				"user.passthrough.environment.other":  123,
-				"user.passthrough.not-environment":    "ignored",
-			}),
+			Config: mockConfig,
 		},
 	}
 

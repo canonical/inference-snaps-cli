@@ -43,7 +43,7 @@ func (cmd *getCommand) getValue(key string) error {
 	}
 
 	if len(value) == 0 {
-		return fmt.Errorf("key %q is not found\n\nUse \"%s get\" to view available keys", key, cmd.Snap.InstanceName())
+		return fmt.Errorf("%s", common.SuggestKeyNotFound(key))
 	}
 
 	if len(value) == 1 {

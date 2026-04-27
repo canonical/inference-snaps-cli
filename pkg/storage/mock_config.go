@@ -5,30 +5,38 @@ import (
 	"strings"
 )
 
-type mockConfig struct {
+type MockConfig struct {
 	values map[string]any
 }
 
-func NewMockConfig(values map[string]any) Config {
+func NewMockConfig() *MockConfig {
 	configValues := make(map[string]any)
-	maps.Copy(configValues, values)
 
-	return &mockConfig{values: configValues}
+	return &MockConfig{values: configValues}
 }
 
-func (c *mockConfig) Set(key, value string, confType configType) error {
+func (c *MockConfig) Set(key, value string, confType configType) error {
 	scopedKey := string(confType) + "." + key
 	c.values[scopedKey] = value
 	return nil
 }
 
-func (c *mockConfig) SetDocument(key string, value any, confType configType) error {
+// SetAll sets multiple key/value pairs at once under the given config type.
+func (c *MockConfig) SetAll(values map[string]any, confType configType) error {
+	for k, v := range values {
+		scopedKey := string(confType) + "." + k
+		c.values[scopedKey] = v
+	}
+	return nil
+}
+
+func (c *MockConfig) SetDocument(key string, value any, confType configType) error {
 	scopedKey := string(confType) + "." + key
 	c.values[scopedKey] = value
 	return nil
 }
 
-func (c *mockConfig) Get(key string) (map[string]any, error) {
+func (c *MockConfig) Get(key string) (map[string]any, error) {
 	if value, found := c.values[key]; found {
 		return map[string]any{key: value}, nil
 	}
@@ -62,13 +70,13 @@ func (c *mockConfig) Get(key string) (map[string]any, error) {
 	return map[string]any{}, nil
 }
 
-func (c *mockConfig) GetAll() (map[string]any, error) {
+func (c *MockConfig) GetAll() (map[string]any, error) {
 	allValues := make(map[string]any)
 	maps.Copy(allValues, c.values)
 	return allValues, nil
 }
 
-func (c *mockConfig) Unset(key string, confType configType) error {
+func (c *MockConfig) Unset(key string, confType configType) error {
 	scopedKey := string(confType) + "." + key
 	delete(c.values, scopedKey)
 	return nil

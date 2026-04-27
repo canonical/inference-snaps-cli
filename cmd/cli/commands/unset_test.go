@@ -9,7 +9,10 @@ import (
 )
 
 func TestUnsetValueRemovesUserConfigWithoutRestart(t *testing.T) {
-	config := storage.NewMockConfig(map[string]any{"user.api.endpoint": "https://example.com"})
+	config := storage.NewMockConfig()
+	config.SetAll(map[string]any{
+		"api.endpoint": "https://example.com",
+	}, storage.UserConfig)
 	cmd := unsetCommand{
 		noRestart: false,
 		assumeYes: true,
@@ -33,7 +36,12 @@ func TestUnsetValueRemovesUserConfigWithoutRestart(t *testing.T) {
 }
 
 func TestUnsetKeyToDefaultValue(t *testing.T) {
-	config := storage.NewMockConfig(map[string]any{"engine.test-key": "engine-value", "package.test-key": "package-value", "user.test-key": "user-value"})
+	config := storage.NewMockConfig()
+	config.SetAll(map[string]any{
+		"engine.test-key":  "engine-value",
+		"package.test-key": "package-value",
+		"test-key":         "user-value",
+	}, storage.UserConfig)
 	cmd := unsetCommand{
 		noRestart: true,
 		assumeYes: true,
@@ -59,8 +67,8 @@ func TestUnsetKeyToDefaultValue(t *testing.T) {
 	}
 }
 
-func TestUnsetInexistentKey(t *testing.T) {
-	config := storage.NewMockConfig(map[string]any{})
+func TestUnsetNonexistentKey(t *testing.T) {
+	config := storage.NewMockConfig()
 	cmd := unsetCommand{
 		noRestart: true,
 		assumeYes: true,

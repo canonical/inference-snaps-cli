@@ -68,11 +68,14 @@ func TestParseKeyValue(t *testing.T) {
 }
 
 func TestSetValueSuccessForUserConfig(t *testing.T) {
-	config := storage.NewMockConfig(map[string]any{"user.api.endpoint": "https://old.example.com"})
+	mockConfig := storage.NewMockConfig()
+	mockConfig.SetAll(map[string]any{
+		"api.endpoint": "https://old.example.com",
+	}, storage.UserConfig)
 	cmd := setCommand{
 		noRestart: true,
 		Context: &common.Context{
-			Config: config,
+			Config: mockConfig,
 			Snap:   snap.Mock(),
 		},
 	}
@@ -82,7 +85,7 @@ func TestSetValueSuccessForUserConfig(t *testing.T) {
 		t.Fatalf("setValue returned an unexpected error: %v", err)
 	}
 
-	values, err := config.Get("user.api.endpoint")
+	values, err := mockConfig.Get("user.api.endpoint")
 	if err != nil {
 		t.Fatalf("Get returned an unexpected error: %v", err)
 	}
@@ -93,7 +96,7 @@ func TestSetValueSuccessForUserConfig(t *testing.T) {
 }
 
 func TestSetValueRejectsUnknownKeys(t *testing.T) {
-	config := storage.NewMockConfig(map[string]any{})
+	config := storage.NewMockConfig()
 	cmd := setCommand{
 		noRestart: true,
 		Context: &common.Context{
@@ -113,7 +116,10 @@ func TestSetValueRejectsUnknownKeys(t *testing.T) {
 }
 
 func TestSetNoPromptIfValueNotChanged(t *testing.T) {
-	config := storage.NewMockConfig(map[string]any{"user.api.port": 8080})
+	config := storage.NewMockConfig()
+	config.SetAll(map[string]any{
+		"api.port": "8080",
+	}, storage.UserConfig)
 	cmd := setCommand{
 		assumeYes: false, // should not prompt since no change is needed
 		Context: &common.Context{
@@ -136,7 +142,10 @@ func ExampleSet_assumeYesRestartServices() {
 		_ = os.Unsetenv("SNAP_INSTANCE_NAME")
 	}()
 
-	config := storage.NewMockConfig(map[string]any{"api.endpoint": "https://old.example.com"})
+	config := storage.NewMockConfig()
+	config.SetAll(map[string]any{
+		"api.endpoint": "https://old.example.com",
+	}, storage.UserConfig)
 	cmd := setCommand{
 		assumeYes: true,
 		Context: &common.Context{

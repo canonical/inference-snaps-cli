@@ -46,29 +46,29 @@ func (cmd *unsetCommand) run(_ *cobra.Command, args []string) error {
 	return cmd.unsetValue(args[0])
 }
 
-func (cmd *unsetCommand) unsetValue(keyValue string) error {
-	currValMap, err := cmd.Config.Get(keyValue)
+func (cmd *unsetCommand) unsetValue(key string) error {
+	currValMap, err := cmd.Config.Get(key)
 	if err != nil {
 		return fmt.Errorf("checking existing keys: %s", err)
 	}
-	currVal, found := currValMap[keyValue]
+	currVal, found := currValMap[key]
 	if !found {
-		return fmt.Errorf("key %q is not found\n\nUse \"%s get\" to view available keys", keyValue, cmd.Snap.InstanceName())
+		return fmt.Errorf("%s", common.SuggestKeyNotFound(key))
 	}
 
-	err = cmd.Config.Unset(keyValue, storage.UserConfig)
+	err = cmd.Config.Unset(key, storage.UserConfig)
 	if err != nil {
-		return fmt.Errorf("unsetting %q: %v", keyValue, err)
+		return fmt.Errorf("unsetting %q: %v", key, err)
 	}
 
-	newValMap, err := cmd.Config.Get(keyValue)
+	newValMap, err := cmd.Config.Get(key)
 	if err != nil {
 		return fmt.Errorf("checking existing keys: %s", err)
 	}
-	newVal, _ := newValMap[keyValue]
+	newVal := newValMap[key]
 
 	if fmt.Sprint(currVal) == fmt.Sprint(newVal) {
-		return nil // no change needed
+		return nil // value not changed
 	}
 
 	if !cmd.noRestart {
