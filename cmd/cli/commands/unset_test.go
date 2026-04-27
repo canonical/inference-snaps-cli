@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"os"
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
@@ -37,11 +38,9 @@ func TestUnsetValueRemovesUserConfigWithoutRestart(t *testing.T) {
 
 func TestUnsetKeyToDefaultValue(t *testing.T) {
 	config := storage.NewMockConfig()
-	config.SetAll(map[string]any{
-		"engine.test-key":  "engine-value",
-		"package.test-key": "package-value",
-		"test-key":         "user-value",
-	}, storage.UserConfig)
+	config.Set("test-key", "user-value", storage.UserConfig)
+	config.Set("test-key", "engine-value", storage.EngineConfig)
+	config.Set("test-key", "package-value", storage.PackageConfig)
 	cmd := unsetCommand{
 		noRestart: true,
 		assumeYes: true,
@@ -77,12 +76,17 @@ func TestUnsetNonexistentKey(t *testing.T) {
 			Snap:   snap.Mock(),
 		},
 	}
-
+	if err := os.Setenv("SNAP_INSTANCE_NAME", "mock-snap"); err != nil {
+		panic(err)
+	}
+	defer func() {
+		_ = os.Unsetenv("SNAP_INSTANCE_NAME")
+	}()
 	err := cmd.unsetValue("nonexistent-key")
 	if err == nil {
 		t.Fatal("expected an error when unsetting a non-existent key, got nil")
 	}
-	expectedErrMsg := "key \"nonexistent-key\" is not found\n\nUse \"mock-snap get\" to view available keys"
+	expectedErrMsg := "Key \"nonexistent-key\" is not found\n\nUse \"mock-snap get\" to view available keys"
 	if err.Error() != expectedErrMsg {
 		t.Fatalf("expected error message %q, got %q", expectedErrMsg, err.Error())
 	}
