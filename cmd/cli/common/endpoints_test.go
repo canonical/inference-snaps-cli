@@ -108,11 +108,15 @@ func TestServerEndpoints(t *testing.T) {
 func TestServerHttpUrl(t *testing.T) {
 	testCases := []struct {
 		name         string
+		configValues map[string]any
 		serverConfig map[string]string
 		want         string
 	}{
 		{
 			name: "default base path",
+			configValues: map[string]any{
+				"http.port": "8080",
+			},
 			serverConfig: map[string]string{
 				"protocol": "http",
 			},
@@ -120,6 +124,9 @@ func TestServerHttpUrl(t *testing.T) {
 		},
 		{
 			name: "custom base path",
+			configValues: map[string]any{
+				"http.port": "8080",
+			},
 			serverConfig: map[string]string{
 				"protocol":  "http",
 				"base-path": "/v1",
@@ -128,18 +135,34 @@ func TestServerHttpUrl(t *testing.T) {
 		},
 		{
 			name: "https protocol",
+			configValues: map[string]any{
+				"http.port": "8080",
+			},
 			serverConfig: map[string]string{
 				"protocol":  "https",
 				"base-path": "/v3",
 			},
 			want: "https://localhost:8080/v3",
 		},
+		{
+			name: "configured fqdn",
+			configValues: map[string]any{
+				"http.port": "8080",
+				"http.fqdn": "inference.example.com",
+			},
+			serverConfig: map[string]string{
+				"protocol":  "http",
+				"base-path": "/v1",
+			},
+			want: "http://inference.example.com:8080/v1",
+		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			config := storage.NewMockConfig(testCase.configValues)
 			ctx := &Context{
-				Config: storage.NewMockConfig(map[string]any{"http.port": "8080"}),
+				Config: config,
 			}
 
 			got, err := serverHttpUrl(ctx, testCase.serverConfig)

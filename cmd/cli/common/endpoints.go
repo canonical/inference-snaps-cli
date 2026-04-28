@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/canonical/inference-snaps-cli/pkg/storage"
 )
 
 const (
@@ -61,9 +63,23 @@ func serverEndpoints(ctx *Context, settingsCollection []ComponentSettings) (map[
 
 func serverHttpUrl(ctx *Context, serverConfig map[string]string) (string, error) {
 	const (
+		confHttpFqdn    = "http.fqdn"
 		confHttpPort    = "http.port"
 		defaultBasePath = "/"
+		defaultFqdn     = "localhost"
 	)
+
+	httpFqdnMap, err := ctx.Config.Get(confHttpFqdn)
+	if err != nil {
+		return "", fmt.Errorf("getting config %q: %v", confHttpPort, err)
+	}
+	httpFqdn, found := httpFqdnMap[confHttpFqdn]
+	if !found {
+		httpFqdn = defaultFqdn
+		if err := ctx.Config.Set(confHttpFqdn, defaultFqdn, storage.PackageConfig); err != nil {
+			return "", fmt.Errorf("setting default config %q: %v", confHttpFqdn, err)
+		}
+	}
 
 	httpPortMap, err := ctx.Config.Get(confHttpPort)
 	if err != nil {
@@ -78,7 +94,7 @@ func serverHttpUrl(ctx *Context, serverConfig map[string]string) (string, error)
 
 	endpointUrl := url.URL{
 		Scheme: serverConfig[protocolKey],
-		Host:   fmt.Sprintf("localhost:%v", httpPort),
+		Host:   fmt.Sprintf("%s:%v", httpFqdn, httpPort),
 		Path:   basePath,
 	}
 
