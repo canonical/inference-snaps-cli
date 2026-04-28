@@ -115,7 +115,7 @@ func TestSetValueRejectsUnknownKeys(t *testing.T) {
 
 func TestSetNoPromptIfValueNotChanged(t *testing.T) {
 	config := storage.NewMockConfig()
-	config.Set("api.port", "8000", storage.UserConfig)
+	config.Set("api.port", "8080", storage.UserConfig)
 	cmd := setCommand{
 		assumeYes: false, // should not prompt since no change is needed
 		Context: &common.Context{
