@@ -43,7 +43,7 @@ func (cmd *getCommand) getValue(key string) error {
 	}
 
 	if len(value) == 0 {
-		return fmt.Errorf("%s", common.SuggestKeyNotFound(key))
+		return fmt.Errorf("Key %q is not found\n\n%s", key, common.SuggestKeyNotFound(key))
 	}
 
 	if len(value) == 1 {

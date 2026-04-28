@@ -70,7 +70,7 @@ func TestServerEndpoints(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			config := storage.NewMockConfig()
-			config.SetAll(map[string]any{"http.port": "8080"}, storage.UserConfig)
+			config.Set("http.port", "8080", storage.UserConfig)
 			ctx := &Context{
 				Config: config,
 			}
@@ -141,7 +141,7 @@ func TestServerHttpUrl(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			config := storage.NewMockConfig()
-			config.SetAll(map[string]any{"http.port": "8080"}, storage.UserConfig)
+			config.Set("http.port", "8080", storage.UserConfig)
 			ctx := &Context{
 				Config: config,
 			}

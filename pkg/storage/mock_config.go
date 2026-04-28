@@ -9,7 +9,7 @@ type MockConfig struct {
 	values map[string]any
 }
 
-func NewMockConfig() *MockConfig {
+func NewMockConfig() Config {
 	configValues := make(map[string]any)
 
 	return &MockConfig{values: configValues}
@@ -18,15 +18,6 @@ func NewMockConfig() *MockConfig {
 func (c *MockConfig) Set(key, value string, confType configType) error {
 	scopedKey := string(confType) + "." + key
 	c.values[scopedKey] = value
-	return nil
-}
-
-// SetAll sets multiple key/value pairs at once under the given config type.
-func (c *MockConfig) SetAll(values map[string]any, confType configType) error {
-	for k, v := range values {
-		scopedKey := string(confType) + "." + k
-		c.values[scopedKey] = v
-	}
 	return nil
 }
 

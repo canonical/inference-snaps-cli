@@ -73,5 +73,5 @@ func SuggestKeyNotFound(key string) string {
 		instanceName = "<snap-instance-name>"
 	}
 
-	return fmt.Sprintf("Key %q is not found\n\nUse \"%s get\" to view available keys", key, instanceName)
+	return fmt.Sprintf("Use \"%s get\" to view available keys", instanceName)
 }

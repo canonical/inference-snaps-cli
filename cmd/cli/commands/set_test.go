@@ -69,9 +69,7 @@ func TestParseKeyValue(t *testing.T) {
 
 func TestSetValueSuccessForUserConfig(t *testing.T) {
 	mockConfig := storage.NewMockConfig()
-	mockConfig.SetAll(map[string]any{
-		"api.endpoint": "https://old.example.com",
-	}, storage.UserConfig)
+	mockConfig.Set("api.endpoint", "https://old.example.com", storage.UserConfig)
 	cmd := setCommand{
 		noRestart: true,
 		Context: &common.Context{
@@ -117,9 +115,7 @@ func TestSetValueRejectsUnknownKeys(t *testing.T) {
 
 func TestSetNoPromptIfValueNotChanged(t *testing.T) {
 	config := storage.NewMockConfig()
-	config.SetAll(map[string]any{
-		"api.port": "8080",
-	}, storage.UserConfig)
+	config.Set("api.port", "8000", storage.UserConfig)
 	cmd := setCommand{
 		assumeYes: false, // should not prompt since no change is needed
 		Context: &common.Context{
@@ -143,9 +139,7 @@ func ExampleSet_assumeYesRestartServices() {
 	}()
 
 	config := storage.NewMockConfig()
-	config.SetAll(map[string]any{
-		"api.endpoint": "https://old.example.com",
-	}, storage.UserConfig)
+	config.Set("api.endpoint", "https://old.example.com", storage.UserConfig)
 	cmd := setCommand{
 		assumeYes: true,
 		Context: &common.Context{

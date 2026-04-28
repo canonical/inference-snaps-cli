@@ -53,7 +53,7 @@ func (cmd *unsetCommand) unsetValue(key string) error {
 	}
 	currVal, found := currValMap[key]
 	if !found {
-		return fmt.Errorf("%s", common.SuggestKeyNotFound(key))
+		return fmt.Errorf("Key %q is not found\n\n%s", key, common.SuggestKeyNotFound(key))
 	}
 
 	err = cmd.Config.Unset(key, storage.UserConfig)

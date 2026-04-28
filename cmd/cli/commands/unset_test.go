@@ -11,9 +11,7 @@ import (
 
 func TestUnsetValueRemovesUserConfigWithoutRestart(t *testing.T) {
 	config := storage.NewMockConfig()
-	config.SetAll(map[string]any{
-		"api.endpoint": "https://example.com",
-	}, storage.UserConfig)
+	config.Set("api.endpoint", "https://example.com", storage.UserConfig)
 	cmd := unsetCommand{
 		noRestart: false,
 		assumeYes: true,
