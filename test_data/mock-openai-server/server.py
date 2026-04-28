@@ -20,6 +20,9 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 # Global delay in seconds applied before every response and between SSE chunks.
 RESPONSE_DELAY = 0.5
 
+# Delay in seconds before the first SSE chunk is sent (time to first token).
+TIME_TO_FIRST_TOKEN = 0.0
+
 # When True, responses include reasoning_content in addition to content.
 INCLUDE_REASONING = False
 
@@ -118,6 +121,10 @@ def _chat_completion_sse_chunks(reply):
     First emits all reasoning_content chunks, then all content chunks.
     """
     words = reply.split(" ")
+
+    # Time-to-first-token delay before any chunk is sent
+    if TIME_TO_FIRST_TOKEN > 0:
+        time.sleep(TIME_TO_FIRST_TOKEN)
 
     # Phase 1: reasoning_content chunks (only when reasoning is enabled)
     if INCLUDE_REASONING:
@@ -268,7 +275,7 @@ class MockOpenAIHandler(BaseHTTPRequestHandler):
 # ---------------------------------------------------------------------------
 
 def main():
-    global RESPONSE_DELAY, INCLUDE_REASONING
+    global RESPONSE_DELAY, TIME_TO_FIRST_TOKEN, INCLUDE_REASONING
 
     parser = argparse.ArgumentParser(
         description="Mock OpenAI-compatible HTTP API server for testing."
@@ -292,6 +299,13 @@ def main():
         help="Delay in seconds before each response and between SSE chunks (default: 0)",
     )
     parser.add_argument(
+        "--ttft",
+        type=float,
+        default=TIME_TO_FIRST_TOKEN,
+        metavar="SECONDS",
+        help="Delay in seconds before the first SSE chunk is sent, i.e. time to first token (default: 0)",
+    )
+    parser.add_argument(
         "--reasoning",
         action="store_true",
         default=False,
@@ -300,12 +314,14 @@ def main():
     args = parser.parse_args()
 
     RESPONSE_DELAY = args.delay
+    TIME_TO_FIRST_TOKEN = args.ttft
     INCLUDE_REASONING = args.reasoning
 
     server_address = (args.host, args.port)
     httpd = HTTPServer(server_address, MockOpenAIHandler)
     print(f"[mock-openai] Listening on http://{args.host}:{args.port}")
     print(f"[mock-openai] Response delay: {RESPONSE_DELAY}s")
+    print(f"[mock-openai] Time to first token: {TIME_TO_FIRST_TOKEN}s")
     print(f"[mock-openai] Reasoning: {'on' if INCLUDE_REASONING else 'off'}")
     print("[mock-openai] Serving /v1 and /v3 prefixes")
     print("[mock-openai] Endpoints:")
