@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/cpu"
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/disk"
+	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/mediatek"
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/memory"
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/pci"
+	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/qualcomm"
 	"github.com/canonical/inference-snaps-cli/pkg/types"
 )
 
@@ -99,6 +102,33 @@ func GetFromRawData(t *testing.T, device string, friendlyNames bool, testDir str
 		t.Fatal(err)
 	}
 	hwInfo.PciDevices = pciDevices
+
+	fastrpcNodesFile := devicePath + "fastrpc-nodes.txt"
+	if _, err := os.Stat(fastrpcNodesFile); err == nil {
+		nodesData, err := os.ReadFile(fastrpcNodesFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		nodes := strings.Fields(string(nodesData))
+		devices := qualcomm.DetectFromNodes(nodes)
+		hwInfo.Devices = devices
+	} else if !os.IsNotExist(err) {
+		t.Fatalf("error checking file '%s': %v\n", fastrpcNodesFile, err)
+	}
+
+	mediatekCompatiblesFile := devicePath + "mediatek-compatible.txt"
+	if _, err := os.Stat(mediatekCompatiblesFile); err == nil {
+		compatiblesData, err := os.ReadFile(mediatekCompatiblesFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		devices := mediatek.DetectFromCompatibles(strings.Fields(string(compatiblesData)))
+		hwInfo.Devices = append(hwInfo.Devices, devices...)
+	} else if !os.IsNotExist(err) {
+		t.Fatalf("error checking file '%s': %v\n", mediatekCompatiblesFile, err)
+	}
 
 	// Additional properties - we append these directly from a file, as we can not run the vendor specific tools on the machine
 	addPropsFile := devicePath + "additional-properties.json"
