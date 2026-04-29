@@ -74,8 +74,8 @@ func (cmd *setCommand) set(keyValuePairs []string) error {
 
 func (cmd *setCommand) setPackageConfigs(keyValues map[string]string) error {
 	for k, v := range keyValues {
-		if err := cmd.setConfig(k, v, storage.PackageConfig); err != nil {
-			return err
+		if err := cmd.Config.Set(k, v, storage.PackageConfig); err != nil {
+			return fmt.Errorf("setting %q to %q: %v", k, v, err)
 		}
 	}
 	return nil
@@ -83,8 +83,8 @@ func (cmd *setCommand) setPackageConfigs(keyValues map[string]string) error {
 
 func (cmd *setCommand) setEngineConfigs(keyValues map[string]string) error {
 	for k, v := range keyValues {
-		if err := cmd.setConfig(k, v, storage.EngineConfig); err != nil {
-			return err
+		if err := cmd.Config.Set(k, v, storage.EngineConfig); err != nil {
+			return fmt.Errorf("setting %q to %q: %v", k, v, err)
 		}
 	}
 	return nil
@@ -109,8 +109,8 @@ func (cmd *setCommand) setUserConfigs(keyValues map[string]string) error {
 	// Apply configurations
 	anyChange := false
 	for k, v := range keyValues {
-		if err := cmd.setConfig(k, v, storage.UserConfig); err != nil {
-			return err
+		if err := cmd.Config.Set(k, v, storage.UserConfig); err != nil {
+			return fmt.Errorf("setting %q to %q: %v", k, v, err)
 		}
 
 		// User keys are known, except for passthrough keys
@@ -190,13 +190,6 @@ func (cmd *setCommand) restartToApply() error {
 				return fmt.Errorf("restarting snap: %v", err)
 			}
 		}
-	}
-	return nil
-}
-
-func (cmd *setCommand) setConfig(key, value string, confType storage.ConfigType) error {
-	if err := cmd.Config.Set(key, value, confType); err != nil {
-		return fmt.Errorf("setting %q to %q: %v", key, value, err)
 	}
 	return nil
 }
