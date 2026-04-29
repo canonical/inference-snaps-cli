@@ -25,10 +25,10 @@ func Set(ctx *common.Context) *cobra.Command {
 	cmd.Context = ctx
 
 	cobraCmd := &cobra.Command{
-		Use:               "set <key=value>",
+		Use:               "set <key=value>...",
 		Short:             "Set configurations",
 		Long:              "Set a configuration",
-		Args:              cobra.ExactArgs(1),
+		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: cobra.NoFileCompletions,
 		RunE:              cmd.run,
 	}
@@ -53,26 +53,58 @@ func (cmd *setCommand) run(_ *cobra.Command, args []string) error {
 		return common.ErrPermissionDenied
 	}
 
-	return cmd.setValue(args[0])
+	return cmd.setValues(args)
 }
 
-func (cmd *setCommand) setValue(keyValue string) error {
-	key, value, err := cmd.parseKeyValue(keyValue)
-	if err != nil {
-		return err
+func (cmd *setCommand) setValues(keyValues []string) error {
+
+	currentValues := map[string]string{}
+	currentKnown := map[string]bool{}
+	seenKeys := map[string]bool{}
+	finalValues := map[string]string{}
+
+	// Validate key values
+	for _, keyValue := range keyValues {
+		key, value, err := cmd.parseKeyValue(keyValue)
+		if err != nil {
+			return err
+		}
+
+		// Reject duplicate keys
+		if seenKeys[key] {
+			return fmt.Errorf("duplicate key: %q", key)
+		}
+		seenKeys[key] = true
+
+		currentValue, found, err := cmd.validateAndGetCurrentValue(key)
+		if err != nil {
+			return err
+		}
+
+		currentValues[key] = currentValue
+		currentKnown[key] = found
+		finalValues[key] = value
 	}
 
-	if cmd.packageConfig {
-		if err := cmd.Config.Set(key, value, storage.PackageConfig); err != nil {
-			return fmt.Errorf("setting %q to %q: %v", key, value, err)
+	// Apply configurations
+	anyChange := false
+	for k, v := range finalValues {
+		if err := cmd.setConfigs(k, v); err != nil {
+			return err
 		}
-	} else if cmd.engineConfig {
-		if err := cmd.Config.Set(key, value, storage.EngineConfig); err != nil {
-			return fmt.Errorf("setting %q to %q: %v", key, value, err)
+		if !currentKnown[k] || currentValues[k] != v {
+			anyChange = true
 		}
 	}
 
-	return cmd.setUserConfig(key, value)
+	// Restart if configurations were changed
+	if anyChange {
+		if err := cmd.restartToApply(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (cmd *setCommand) parseKeyValue(keyValue string) (key, value string, err error) {
@@ -92,27 +124,40 @@ func (cmd *setCommand) parseKeyValue(keyValue string) (key, value string, err er
 	return parts[0], parts[1], nil
 }
 
-// setUserConfig overrides existing package and engine configurations.
-// Unknown keys are rejected, except for passthrough keys.
-func (cmd *setCommand) setUserConfig(key, value string) error {
-
+func (cmd *setCommand) validateAndGetCurrentValue(key string) (string, bool, error) {
 	currValMap, err := cmd.Config.Get(key)
 	if err != nil {
-		return fmt.Errorf("checking existing keys: %s", err)
+		return "", false, fmt.Errorf("checking existing keys: %s", err)
 	}
 	currVal, found := currValMap[key]
 	if !found && !strings.HasPrefix(key, "passthrough.") {
-		return fmt.Errorf("unknown key: %q", key)
+		return "", false, fmt.Errorf("unknown key: %q", key)
 	}
 
-	if fmt.Sprint(currVal) == value {
-		return nil // no change needed
+	if !found {
+		return "", false, nil
 	}
 
-	if err := cmd.Config.Set(key, value, storage.UserConfig); err != nil {
+	return fmt.Sprint(currVal), true, nil
+}
+
+func (cmd *setCommand) setConfigs(key, value string) error {
+	var err error
+	switch {
+	case cmd.packageConfig:
+		err = cmd.Config.Set(key, value, storage.PackageConfig)
+	case cmd.engineConfig:
+		err = cmd.Config.Set(key, value, storage.EngineConfig)
+	default:
+		err = cmd.Config.Set(key, value, storage.UserConfig)
+	}
+	if err != nil {
 		return fmt.Errorf("setting %q to %q: %v", key, value, err)
 	}
+	return nil
+}
 
+func (cmd *setCommand) restartToApply() error {
 	if !cmd.noRestart {
 		msg := fmt.Sprintf("Restart %s to apply the changes?", cmd.Snap.InstanceName())
 		if cmd.assumeYes || common.PromptYN(msg, true) {
