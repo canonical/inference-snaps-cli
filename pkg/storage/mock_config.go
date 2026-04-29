@@ -5,29 +5,29 @@ import (
 	"strings"
 )
 
-type MockConfig struct {
+type mockConfig struct {
 	values map[string]any
 }
 
 func NewMockConfig() Config {
 	configValues := make(map[string]any)
 
-	return &MockConfig{values: configValues}
+	return &mockConfig{values: configValues}
 }
 
-func (c *MockConfig) Set(key, value string, confType configType) error {
+func (c *mockConfig) Set(key, value string, confType configType) error {
 	scopedKey := string(confType) + "." + key
 	c.values[scopedKey] = value
 	return nil
 }
 
-func (c *MockConfig) SetDocument(key string, value any, confType configType) error {
+func (c *mockConfig) SetDocument(key string, value any, confType configType) error {
 	scopedKey := string(confType) + "." + key
 	c.values[scopedKey] = value
 	return nil
 }
 
-func (c *MockConfig) Get(key string) (map[string]any, error) {
+func (c *mockConfig) Get(key string) (map[string]any, error) {
 	if value, found := c.values[key]; found {
 		return map[string]any{key: value}, nil
 	}
@@ -61,13 +61,13 @@ func (c *MockConfig) Get(key string) (map[string]any, error) {
 	return map[string]any{}, nil
 }
 
-func (c *MockConfig) GetAll() (map[string]any, error) {
+func (c *mockConfig) GetAll() (map[string]any, error) {
 	allValues := make(map[string]any)
 	maps.Copy(allValues, c.values)
 	return allValues, nil
 }
 
-func (c *MockConfig) Unset(key string, confType configType) error {
+func (c *mockConfig) Unset(key string, confType configType) error {
 	scopedKey := string(confType) + "." + key
 	delete(c.values, scopedKey)
 	return nil

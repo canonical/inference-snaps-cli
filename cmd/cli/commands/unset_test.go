@@ -84,7 +84,7 @@ func TestUnsetNonexistentKey(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected an error when unsetting a non-existent key, got nil")
 	}
-	expectedErrMsg := "Key \"nonexistent-key\" is not found\n\nUse \"mock-snap get\" to view available keys"
+	expectedErrMsg := "key \"nonexistent-key\" is not found\n\nUse \"mock-snap get\" to view available keys"
 	if err.Error() != expectedErrMsg {
 		t.Fatalf("expected error message %q, got %q", expectedErrMsg, err.Error())
 	}

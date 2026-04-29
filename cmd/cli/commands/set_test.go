@@ -83,13 +83,13 @@ func TestSetValueSuccessForUserConfig(t *testing.T) {
 		t.Fatalf("setValue returned an unexpected error: %v", err)
 	}
 
-	values, err := mockConfig.Get("user.api.endpoint")
+	values, err := mockConfig.Get("api.endpoint")
 	if err != nil {
 		t.Fatalf("Get returned an unexpected error: %v", err)
 	}
 
-	if value, found := values["user.api.endpoint"]; !found || value != "https://new.example.com" {
-		t.Fatalf("expected user.api.endpoint to be set to full value, got %#v", values)
+	if value, found := values["api.endpoint"]; !found || value != "https://new.example.com" {
+		t.Fatalf("expected api.endpoint in user config to be set to full value, got %#v", values)
 	}
 }
 
