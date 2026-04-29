@@ -12,6 +12,10 @@ func (device Device) validateBus(extraFields []string) error {
 		return device.validatePci(extraFields)
 	case "usb":
 		return device.validateUsb(extraFields)
+	case "fastrpc":
+		return device.validateFastRpc(extraFields)
+	case "drpai":
+		return device.validateDrpAi(extraFields)
 	case "": // default to pci bus
 		return device.validatePci(extraFields)
 	default:
@@ -43,6 +47,64 @@ func (device Device) validatePci(extraFields []string) error {
 		if fieldValue.IsValid() && !fieldValue.IsZero() {
 			if !slices.Contains(validFields, fieldName) {
 				return fmt.Errorf("pci: invalid field: %s", fieldName)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (device Device) validateFastRpc(extraFields []string) error {
+	if device.Type != "" && device.Type != "npu" {
+		return fmt.Errorf("fastrpc bus only supports npu devices")
+	}
+
+	validFields := []string{
+		"Type",
+		"Bus",
+		"NodeGlob",
+		"SnapConnections",
+	}
+	validFields = append(validFields, extraFields...)
+
+	t := reflect.TypeOf(device)
+	v := reflect.ValueOf(device)
+
+	for i := 0; i < t.NumField(); i++ {
+		fieldName := t.Field(i).Name
+		fieldValue := v.FieldByName(fieldName)
+		if fieldValue.IsValid() && !fieldValue.IsZero() {
+			if !slices.Contains(validFields, fieldName) {
+				return fmt.Errorf("fastrpc: invalid field: %s", fieldName)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (device Device) validateDrpAi(extraFields []string) error {
+	if device.Type != "" && device.Type != "npu" {
+		return fmt.Errorf("drpai bus only supports npu devices")
+	}
+
+	validFields := []string{
+		"Type",
+		"Bus",
+		"NodeGlob",
+		"SnapConnections",
+	}
+	validFields = append(validFields, extraFields...)
+
+	t := reflect.TypeOf(device)
+	v := reflect.ValueOf(device)
+
+	for i := 0; i < t.NumField(); i++ {
+		fieldName := t.Field(i).Name
+		fieldValue := v.FieldByName(fieldName)
+		if fieldValue.IsValid() && !fieldValue.IsZero() {
+			if !slices.Contains(validFields, fieldName) {
+				return fmt.Errorf("drpai: invalid field: %s", fieldName)
 			}
 		}
 	}

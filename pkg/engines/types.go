@@ -45,7 +45,7 @@ type Devices struct {
 type Device struct {
 	// General
 	Type string `yaml:"type,omitempty" json:"type,omitempty"` // cpu, gpu, npu or nil
-	Bus  string `yaml:"bus,omitempty" json:"bus,omitempty"`   // pci, usb or nil
+	Bus  string `yaml:"bus,omitempty" json:"bus,omitempty"`   // pci, usb, fastrpc or nil
 
 	// CPUs
 	Architecture *string `yaml:"architecture,omitempty" json:"architecture,omitempty"`
@@ -69,7 +69,7 @@ type Device struct {
 	ComputeCapability *string `yaml:"compute-capability,omitempty" json:"compute-capability,omitempty"`
 
 	// NPU
-	// no additional properties for now
+	NodeGlob *string `yaml:"node-glob,omitempty" json:"node-glob,omitempty"`
 
 	// Drivers
 	SnapConnections []string `yaml:"snap-connections,omitempty" json:"snap-connections,omitempty"`

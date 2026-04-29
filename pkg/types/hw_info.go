@@ -5,4 +5,5 @@ type HwInfo struct {
 	Memory     MemoryInfo          `json:"memory,omitempty" yaml:"memory,omitempty"`
 	Disk       map[string]DirStats `json:"disk,omitempty" yaml:"disk,omitempty"`
 	PciDevices []PciDevice         `json:"pci,omitempty" yaml:"pci"`
+	Devices    []DetectedDevice    `json:"devices,omitempty" yaml:"devices,omitempty"`
 }

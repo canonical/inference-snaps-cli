@@ -4,12 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/cpu"
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/disk"
+	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/mediatek"
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/memory"
 	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/pci"
+	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/qualcomm"
+	"github.com/canonical/inference-snaps-cli/pkg/hardware_info/renesas"
 	"github.com/canonical/inference-snaps-cli/pkg/types"
 )
 
@@ -39,6 +43,24 @@ func Get(friendlyNames bool) (*types.HwInfo, []string, error) {
 		return nil, nil, fmt.Errorf("getting pci devices: %v", err)
 	}
 	hwInfo.PciDevices = pciDevices
+
+	qualcommDevices, err := qualcomm.Info()
+	if err != nil {
+		return nil, nil, fmt.Errorf("getting qualcomm devices: %v", err)
+	}
+	hwInfo.Devices = append(hwInfo.Devices, qualcommDevices...)
+
+	mediatekDevices, err := mediatek.Info()
+	if err != nil {
+		return nil, nil, fmt.Errorf("getting mediatek devices: %v", err)
+	}
+	hwInfo.Devices = append(hwInfo.Devices, mediatekDevices...)
+
+	renesasDevices, err := renesas.Info()
+	if err != nil {
+		return nil, nil, fmt.Errorf("getting renesas devices: %v", err)
+	}
+	hwInfo.Devices = append(hwInfo.Devices, renesasDevices...)
 
 	return &hwInfo, warnings, nil
 }
@@ -99,6 +121,47 @@ func GetFromRawData(t *testing.T, device string, friendlyNames bool, testDir str
 		t.Fatal(err)
 	}
 	hwInfo.PciDevices = pciDevices
+
+	fastrpcNodesFile := devicePath + "fastrpc-nodes.txt"
+	if _, err := os.Stat(fastrpcNodesFile); err == nil {
+		nodesData, err := os.ReadFile(fastrpcNodesFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		nodes := strings.Fields(string(nodesData))
+		devices := qualcomm.DetectFromNodes(nodes)
+		hwInfo.Devices = devices
+	} else if !os.IsNotExist(err) {
+		t.Fatalf("error checking file '%s': %v\n", fastrpcNodesFile, err)
+	}
+
+	mediatekCompatiblesFile := devicePath + "mediatek-compatible.txt"
+	if _, err := os.Stat(mediatekCompatiblesFile); err == nil {
+		compatiblesData, err := os.ReadFile(mediatekCompatiblesFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		devices := mediatek.DetectFromCompatibles(strings.Fields(string(compatiblesData)))
+		hwInfo.Devices = append(hwInfo.Devices, devices...)
+	} else if !os.IsNotExist(err) {
+		t.Fatalf("error checking file '%s': %v\n", mediatekCompatiblesFile, err)
+	}
+
+	drpAiNodesFile := devicePath + "drpai-nodes.txt"
+	if _, err := os.Stat(drpAiNodesFile); err == nil {
+		nodesData, err := os.ReadFile(drpAiNodesFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		nodes := strings.Fields(string(nodesData))
+		devices := renesas.DetectFromNodes(nodes)
+		hwInfo.Devices = append(hwInfo.Devices, devices...)
+	} else if !os.IsNotExist(err) {
+		t.Fatalf("error checking file '%s': %v\n", drpAiNodesFile, err)
+	}
 
 	// Additional properties - we append these directly from a file, as we can not run the vendor specific tools on the machine
 	addPropsFile := devicePath + "additional-properties.json"

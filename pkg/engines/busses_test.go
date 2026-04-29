@@ -42,4 +42,22 @@ func TestDeviceBus(t *testing.T) {
 		}
 		t.Log(err)
 	})
+
+	t.Run("FastRPC bus with non-NPU type", func(t *testing.T) {
+		device.Bus = "fastrpc"
+		err := device.validate()
+		if err == nil {
+			t.Fatal("FastRPC bus should be invalid for GPU type")
+		}
+		t.Log(err)
+	})
+
+	t.Run("DRP-AI bus with non-NPU type", func(t *testing.T) {
+		device.Bus = "drpai"
+		err := device.validate()
+		if err == nil {
+			t.Fatal("DRP-AI bus should be invalid for GPU type")
+		}
+		t.Log(err)
+	})
 }
