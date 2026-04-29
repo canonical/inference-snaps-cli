@@ -7,17 +7,9 @@ import (
 	"github.com/canonical/inference-snaps-cli/pkg/types"
 )
 
-func GetFromRawDataWrapper(t *testing.T) (*types.HwInfo, error) {
-	info, err := hardware_info.GetFromRawData(t, "dummy-machine", true, "../../../test_data")
-	if err != nil {
-		return nil, err
-	}
-	return info, nil
-}
 func Example_showMachineCommand_printMachineInfoJson() {
 	cmd := showMachineCommand{format: "json"}
-	testingT := &testing.T{}
-	info, err := GetFromRawDataWrapper(testingT)
+	info, err := hardware_info.GetFromRawData("dummy-machine", true, "../../../test_data")
 	if err != nil {
 		panic(err)
 	}
@@ -69,8 +61,7 @@ func Example_showMachineCommand_printMachineInfoJson() {
 
 func Example_showMachineCommand_printMachineInfoYaml() {
 	cmd := showMachineCommand{format: "yaml"}
-	testingT := &testing.T{}
-	info, err := GetFromRawDataWrapper(testingT)
+	info, err := hardware_info.GetFromRawData("dummy-machine", true, "../../../test_data")
 	if err != nil {
 		panic(err)
 	}
