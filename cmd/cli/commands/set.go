@@ -172,7 +172,7 @@ func (cmd *setCommand) getCurrentValue(key string) (string, bool, error) {
 	}
 	currVal, found := currValMap[key]
 	if !found && !strings.HasPrefix(key, "passthrough.") {
-		return "", false, fmt.Errorf("unknown key: %q", key)
+		return "", false, fmt.Errorf("key %q is not found\n\n%s", key, common.SuggestKeyNotFound(key))
 	}
 
 	if !found {

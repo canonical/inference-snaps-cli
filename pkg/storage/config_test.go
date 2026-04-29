@@ -5,7 +5,7 @@ import (
 )
 
 func TestSetEngineOverridesPackage(t *testing.T) {
-	config := NewMockConfig(map[string]any{})
+	config := NewMockConfig()
 
 	// Set package config
 	err := config.Set("model", "llama", PackageConfig)
@@ -31,7 +31,7 @@ func TestSetEngineOverridesPackage(t *testing.T) {
 }
 
 func TestSetUserOverridesEngine(t *testing.T) {
-	config := NewMockConfig(map[string]any{})
+	config := NewMockConfig()
 
 	// Set engine config
 	err := config.Set("model", "mistral", EngineConfig)
@@ -57,7 +57,7 @@ func TestSetUserOverridesEngine(t *testing.T) {
 }
 
 func TestSetUserOverridesPackage(t *testing.T) {
-	config := NewMockConfig(map[string]any{})
+	config := NewMockConfig()
 
 	// Set package config
 	err := config.Set("api.endpoint", "https://package.example.com", PackageConfig)

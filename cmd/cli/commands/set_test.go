@@ -130,11 +130,12 @@ func TestParseKeyValues(t *testing.T) {
 }
 
 func TestSetValueSuccessForUserConfig(t *testing.T) {
-	config := storage.NewMockConfig(map[string]any{"api.endpoint": "https://old.example.com"})
+	mockConfig := storage.NewMockConfig()
+	mockConfig.Set("api.endpoint", "https://old.example.com", storage.UserConfig)
 	cmd := setCommand{
 		noRestart: true,
 		Context: &common.Context{
-			Config: config,
+			Config: mockConfig,
 			Snap:   snap.Mock(),
 		},
 	}
@@ -144,18 +145,18 @@ func TestSetValueSuccessForUserConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	values, err := config.Get("api.endpoint")
+	values, err := mockConfig.Get("api.endpoint")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if value, found := values["api.endpoint"]; !found || value != "https://new.example.com" {
-		t.Fatalf("expected api.endpoint to be set to full value, got %#v", values)
+		t.Fatalf("expected api.endpoint in user config to be set to full value, got %#v", values)
 	}
 }
 
 func TestSetValueRejectsUnknownKeys(t *testing.T) {
-	config := storage.NewMockConfig(map[string]any{})
+	config := storage.NewMockConfig()
 	cmd := setCommand{
 		noRestart: true,
 		Context: &common.Context{
@@ -168,17 +169,16 @@ func TestSetValueRejectsUnknownKeys(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for unknown key, got nil")
 	} else {
-		if !strings.Contains(err.Error(), "unknown key") {
+		if !strings.Contains(err.Error(), "is not found") {
 			t.Fatalf("expected unknown key error, got: %s", err)
 		}
 	}
 }
 
-func TestSetValuesSuccessForUserConfig(t *testing.T) {
-	config := storage.NewMockConfig(map[string]any{
-		"api.endpoint": "https://old.example.com",
-		"api.port":     8080,
-	})
+func TestSetNoPromptIfValueNotChanged(t *testing.T) {
+	config := storage.NewMockConfig()
+	config.Set("api.port", "8080", storage.UserConfig)
+	config.Set("api.endpoint", "https://old.example.com", storage.UserConfig)
 	cmd := setCommand{
 		noRestart: true,
 		Context: &common.Context{
@@ -209,10 +209,9 @@ func TestSetValuesSuccessForUserConfig(t *testing.T) {
 }
 
 func TestSetValuesRejectsUnknownKeysAtomically(t *testing.T) {
-	config := storage.NewMockConfig(map[string]any{
-		"api.endpoint": "https://old.example.com",
-		"api.port":     8080,
-	})
+	config := storage.NewMockConfig()
+	config.Set("api.endpoint", "https://old.example.com", storage.UserConfig)
+	config.Set("api.port", "8080", storage.UserConfig)
 	cmd := setCommand{
 		noRestart: true,
 		Context: &common.Context{
@@ -227,8 +226,9 @@ func TestSetValuesRejectsUnknownKeysAtomically(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected unknown key error, got nil")
 	}
-	if !strings.Contains(err.Error(), "unknown key") {
-		t.Fatalf("expected unknown key error, got: %s", err)
+	expectedErr := "not found"
+	if !strings.Contains(err.Error(), expectedErr) {
+		t.Fatalf("expected error containing %q, got: %s", expectedErr, err)
 	}
 
 	values, err := config.Get("api")
@@ -242,7 +242,7 @@ func TestSetValuesRejectsUnknownKeysAtomically(t *testing.T) {
 }
 
 func TestSetAcceptsUnknownPassthroughKeys(t *testing.T) {
-	config := storage.NewMockConfig(map[string]any{})
+	config := storage.NewMockConfig()
 	cmd := setCommand{
 		noRestart: true,
 		Context: &common.Context{
@@ -269,7 +269,7 @@ func TestSetAcceptsUnknownPassthroughKeys(t *testing.T) {
 func TestSet(t *testing.T) {
 	cmd := setCommand{
 		Context: &common.Context{
-			Config: storage.NewMockConfig(map[string]any{}),
+			Config: storage.NewMockConfig(),
 			Snap:   snap.Mock(),
 		},
 	}
@@ -308,7 +308,8 @@ func ExampleSet_assumeYesRestartServices() {
 		_ = os.Unsetenv("SNAP_INSTANCE_NAME")
 	}()
 
-	config := storage.NewMockConfig(map[string]any{"api.endpoint": "https://old.example.com"})
+	config := storage.NewMockConfig()
+	config.Set("api.endpoint", "https://old.example.com", storage.UserConfig)
 	cmd := setCommand{
 		assumeYes: true,
 		Context: &common.Context{
@@ -326,7 +327,8 @@ func ExampleSet_assumeYesRestartServices() {
 }
 
 func ExampleSet_noRestartWhenFinalValueUnchanged() {
-	config := storage.NewMockConfig(map[string]any{"api.port": 8080})
+	config := storage.NewMockConfig()
+	config.Set("api.port", "8080", storage.UserConfig)
 	cmd := setCommand{
 		assumeYes: true,
 		Context: &common.Context{
@@ -344,7 +346,8 @@ func ExampleSet_noRestartWhenFinalValueUnchanged() {
 }
 
 func ExampleSet_restartWhenFinalValueUnchanged() {
-	config := storage.NewMockConfig(map[string]any{"api.port": 8080})
+	config := storage.NewMockConfig()
+	config.Set("api.port", "8080", storage.UserConfig)
 	cmd := setCommand{
 		assumeYes: true,
 		Context: &common.Context{
