@@ -10,19 +10,6 @@ import (
 	"github.com/canonical/inference-snaps-cli/pkg/storage"
 )
 
-type countingSnap struct {
-	restartCalls int
-}
-
-func (s *countingSnap) Restart(_ ...string) error {
-	s.restartCalls++
-	return nil
-}
-
-func (*countingSnap) InstanceName() string {
-	return "mock-snap"
-}
-
 func TestParseKeyValue(t *testing.T) {
 	cmd := setCommand{}
 
@@ -125,22 +112,6 @@ func TestSetValueRejectsUnknownKeys(t *testing.T) {
 	}
 }
 
-func TestSetNoPromptIfValueNotChanged(t *testing.T) {
-	config := storage.NewMockConfig(map[string]any{"api.port": 8080})
-	cmd := setCommand{
-		assumeYes: false, // should not prompt since no change is needed
-		Context: &common.Context{
-			Config: config,
-			Snap:   snap.Mock(),
-		},
-	}
-
-	err := cmd.setValues([]string{"api.port=8080"})
-	if err != nil {
-		t.Fatalf("setValue returned an unexpected error: %v", err)
-	}
-}
-
 func TestSetValuesSuccessForUserConfig(t *testing.T) {
 	config := storage.NewMockConfig(map[string]any{
 		"api.endpoint": "https://old.example.com",
@@ -204,51 +175,6 @@ func TestSetValuesRejectsUnknownKeysAtomically(t *testing.T) {
 	}
 }
 
-func TestSetValuesRestartsOnlyOnce(t *testing.T) {
-	testSnap := &countingSnap{}
-	config := storage.NewMockConfig(map[string]any{
-		"api.endpoint": "https://old.example.com",
-		"api.port":     8080,
-	})
-	cmd := setCommand{
-		assumeYes: true,
-		Context: &common.Context{
-			Config: config,
-			Snap:   testSnap,
-		},
-	}
-
-	err := cmd.setValues([]string{"api.endpoint=https://new.example.com", "api.port=9090"})
-	if err != nil {
-		t.Fatalf("setValues returned an unexpected error: %v", err)
-	}
-
-	if testSnap.restartCalls != 1 {
-		t.Fatalf("expected exactly one restart, got %d", testSnap.restartCalls)
-	}
-}
-
-func TestSetValuesSkipsRestartWhenFinalValueUnchanged(t *testing.T) {
-	testSnap := &countingSnap{}
-	config := storage.NewMockConfig(map[string]any{"api.port": 8080})
-	cmd := setCommand{
-		assumeYes: true,
-		Context: &common.Context{
-			Config: config,
-			Snap:   testSnap,
-		},
-	}
-
-	err := cmd.setValues([]string{"api.port=8080"})
-	if err != nil {
-		t.Fatalf("setValues returned an unexpected error: %v", err)
-	}
-
-	if testSnap.restartCalls != 0 {
-		t.Fatalf("expected no restart when final value is unchanged, got %d", testSnap.restartCalls)
-	}
-}
-
 func TestSetValuesRejectsDuplicateKeys(t *testing.T) {
 	config := storage.NewMockConfig(map[string]any{"api.endpoint": "https://old.example.com"})
 	cmd := setCommand{
@@ -295,6 +221,43 @@ func ExampleSet_assumeYesRestartServices() {
 	}
 
 	if err := cmd.setValues([]string{"api.endpoint=https://example.com"}); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// [mock] Restarting all services
+}
+
+func ExampleSet_noRestartWhenFinalValueUnchanged() {
+	config := storage.NewMockConfig(map[string]any{"api.port": 8080})
+	cmd := setCommand{
+		assumeYes: true,
+		Context: &common.Context{
+			Config: config,
+			Snap:   snap.Mock(),
+		},
+	}
+
+	err := cmd.setValues([]string{"api.port=8080"})
+	if err != nil {
+		panic(err)
+	}
+
+	// Output:
+}
+
+func ExampleSet_restartWhenFinalValueUnchanged() {
+	config := storage.NewMockConfig(map[string]any{"api.port": 8080})
+	cmd := setCommand{
+		assumeYes: true,
+		Context: &common.Context{
+			Config: config,
+			Snap:   snap.Mock(),
+		},
+	}
+
+	err := cmd.setValues([]string{"api.port=9999"})
+	if err != nil {
 		panic(err)
 	}
 

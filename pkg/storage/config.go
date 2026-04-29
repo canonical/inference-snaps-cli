@@ -6,11 +6,11 @@ import (
 )
 
 type Config interface {
-	Set(key, value string, confType configType) error
-	SetDocument(key string, value any, confType configType) error
+	Set(key, value string, confType ConfigType) error
+	SetDocument(key string, value any, confType ConfigType) error
 	Get(key string) (map[string]any, error)
 	GetAll() (map[string]any, error)
-	Unset(key string, confType configType) error
+	Unset(key string, confType ConfigType) error
 }
 
 type config struct {
@@ -25,10 +25,10 @@ func NewConfig() Config {
 
 const configKeyPrefix = "config"
 
-type configType string
+type ConfigType string
 
 // config precedence, from lowest to highest
-var confPrecedence = []configType{
+var confPrecedence = []ConfigType{
 	PackageConfig, // values set by the package
 	EngineConfig,  // values set by the active engine, overriding package values
 	UserConfig,    // values set by the user, overriding all others
@@ -36,18 +36,18 @@ var confPrecedence = []configType{
 
 // config types
 const (
-	PackageConfig configType = "package"
-	EngineConfig  configType = "engine"
-	UserConfig    configType = "user"
+	PackageConfig ConfigType = "package"
+	EngineConfig  ConfigType = "engine"
+	UserConfig    ConfigType = "user"
 )
 
 // Set sets a configuration value
-func (c *config) Set(key, value string, confType configType) error {
+func (c *config) Set(key, value string, confType ConfigType) error {
 	return c.storage.Set(c.nestKeys(confType, key), value)
 }
 
 // SetDocument sets a configuration value that is primitive or an object
-func (c *config) SetDocument(key string, value any, confType configType) error {
+func (c *config) SetDocument(key string, value any, confType ConfigType) error {
 	return c.storage.SetDocument(c.nestKeys(confType, key), value)
 }
 
@@ -76,7 +76,7 @@ func (c *config) GetAll() (map[string]any, error) {
 	return c.loadConfigs()
 }
 
-func (c *config) Unset(key string, confType configType) error {
+func (c *config) Unset(key string, confType ConfigType) error {
 	return c.storage.Unset(c.nestKeys(confType, key))
 }
 
@@ -126,7 +126,7 @@ func (c *config) flattenMap(input map[string]any) map[string]any {
 }
 
 // nestKeys creates a dot-separated key with the expected prefix
-func (c *config) nestKeys(confType configType, key string) string {
+func (c *config) nestKeys(confType ConfigType, key string) string {
 	if key == "." { // special case, referencing the parent
 		return strings.Join([]string{configKeyPrefix, string(confType)}, ".")
 	} else {
