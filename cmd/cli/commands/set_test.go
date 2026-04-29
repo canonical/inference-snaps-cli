@@ -203,6 +203,31 @@ func TestSetValuesRejectsDuplicateKeys(t *testing.T) {
 	}
 }
 
+func TestSetAcceptsUnknownPassthroughKeys(t *testing.T) {
+	config := storage.NewMockConfig(map[string]any{})
+	cmd := setCommand{
+		noRestart: true,
+		Context: &common.Context{
+			Config: config,
+			Snap:   snap.Mock(),
+		},
+	}
+
+	err := cmd.setValues([]string{"passthrough.custom-key=custom-value"})
+	if err != nil {
+		t.Fatalf("setValues returned an unexpected error for passthrough key: %v", err)
+	}
+
+	values, err := config.Get("passthrough.custom-key")
+	if err != nil {
+		t.Fatalf("Get returned an unexpected error: %v", err)
+	}
+
+	if value, found := values["passthrough.custom-key"]; !found || value != "custom-value" {
+		t.Fatalf("expected passthrough.custom-key to be set to custom-value, got %#v", values)
+	}
+}
+
 func ExampleSet_assumeYesRestartServices() {
 	if err := os.Setenv("SNAP_INSTANCE_NAME", "example-snap"); err != nil {
 		panic(err)

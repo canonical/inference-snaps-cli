@@ -76,7 +76,7 @@ func (cmd *setCommand) setValues(keyValues []string) error {
 		}
 		seenKeys[key] = true
 
-		currentValue, found, err := cmd.validateAndGetCurrentValue(key)
+		currentValue, found, err := cmd.getCurrentValue(key)
 		if err != nil {
 			return err
 		}
@@ -124,7 +124,7 @@ func (cmd *setCommand) parseKeyValue(keyValue string) (key, value string, err er
 	return parts[0], parts[1], nil
 }
 
-func (cmd *setCommand) validateAndGetCurrentValue(key string) (string, bool, error) {
+func (cmd *setCommand) getCurrentValue(key string) (string, bool, error) {
 	currValMap, err := cmd.Config.Get(key)
 	if err != nil {
 		return "", false, fmt.Errorf("checking existing keys: %s", err)
