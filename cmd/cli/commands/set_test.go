@@ -57,7 +57,7 @@ func TestParseKeyValue(t *testing.T) {
 			}
 
 			if err != nil {
-				t.Fatalf("parseKeyValue returned an unexpected error: %v", err)
+				t.Fatal(err)
 			}
 
 			if gotKey != testCase.wantKey || gotValue != testCase.wantValue {
@@ -112,7 +112,7 @@ func TestParseKeyValues(t *testing.T) {
 			}
 
 			if err != nil {
-				t.Fatalf("parseKeyValues returned an unexpected error: %v", err)
+				t.Fatal(err)
 			}
 
 			if len(got) != len(testCase.want) {
@@ -141,12 +141,12 @@ func TestSetValueSuccessForUserConfig(t *testing.T) {
 
 	err := cmd.setUserConfigs(map[string]string{"api.endpoint": "https://new.example.com"})
 	if err != nil {
-		t.Fatalf("setValue returned an unexpected error: %v", err)
+		t.Fatal(err)
 	}
 
 	values, err := config.Get("api.endpoint")
 	if err != nil {
-		t.Fatalf("Get returned an unexpected error: %v", err)
+		t.Fatal(err)
 	}
 
 	if value, found := values["api.endpoint"]; !found || value != "https://new.example.com" {
@@ -196,7 +196,7 @@ func TestSetValuesSuccessForUserConfig(t *testing.T) {
 
 	values, err := config.Get("api")
 	if err != nil {
-		t.Fatalf("Get returned an unexpected error: %v", err)
+		t.Fatal(err)
 	}
 
 	if value, found := values["api.endpoint"]; !found || value != "https://new.example.com" {
@@ -233,7 +233,7 @@ func TestSetValuesRejectsUnknownKeysAtomically(t *testing.T) {
 
 	values, err := config.Get("api")
 	if err != nil {
-		t.Fatalf("Get returned an unexpected error: %v", err)
+		t.Fatal(err)
 	}
 
 	if value, found := values["api.endpoint"]; !found || value != "https://old.example.com" {
@@ -253,12 +253,12 @@ func TestSetAcceptsUnknownPassthroughKeys(t *testing.T) {
 
 	err := cmd.setUserConfigs(map[string]string{"passthrough.custom-key": "custom-value"})
 	if err != nil {
-		t.Fatalf("setValues returned an unexpected error for passthrough key: %v", err)
+		t.Fatal(err)
 	}
 
 	values, err := config.Get("passthrough.custom-key")
 	if err != nil {
-		t.Fatalf("Get returned an unexpected error: %v", err)
+		t.Fatal(err)
 	}
 
 	if value, found := values["passthrough.custom-key"]; !found || value != "custom-value" {
@@ -286,7 +286,7 @@ func TestSet(t *testing.T) {
 		cmd.engineConfig = false
 		err := cmd.set([]string{"model=llama"})
 		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
+			t.Fatal(err)
 		}
 	})
 
@@ -295,7 +295,7 @@ func TestSet(t *testing.T) {
 		cmd.engineConfig = true
 		err := cmd.set([]string{"model=llama"})
 		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
+			t.Fatal(err)
 		}
 	})
 }
