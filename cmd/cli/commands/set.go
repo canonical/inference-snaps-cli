@@ -53,29 +53,50 @@ func (cmd *setCommand) run(_ *cobra.Command, args []string) error {
 		return common.ErrPermissionDenied
 	}
 
-	return cmd.setValues(args)
+	return cmd.set(args)
 }
 
-func (cmd *setCommand) setValues(keyValues []string) error {
+func (cmd *setCommand) set(keyValuePairs []string) error {
+	keyValues, err := cmd.parseKeyValues(keyValuePairs)
+	if err != nil {
+		return err
+	}
+
+	switch {
+	case cmd.packageConfig:
+		return cmd.setPackageConfigs(keyValues)
+	case cmd.engineConfig:
+		return cmd.setEngineConfigs(keyValues)
+	default:
+		return cmd.setUserConfigs(keyValues)
+	}
+}
+
+func (cmd *setCommand) setPackageConfigs(keyValues map[string]string) error {
+	for k, v := range keyValues {
+		if err := cmd.setConfig(k, v, storage.PackageConfig); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (cmd *setCommand) setEngineConfigs(keyValues map[string]string) error {
+	for k, v := range keyValues {
+		if err := cmd.setConfig(k, v, storage.EngineConfig); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (cmd *setCommand) setUserConfigs(keyValues map[string]string) error {
 
 	currentValues := map[string]string{}
 	currentKnown := map[string]bool{}
-	seenKeys := map[string]bool{}
-	finalValues := map[string]string{}
 
 	// Validate key values
-	for _, keyValue := range keyValues {
-		key, value, err := cmd.parseKeyValue(keyValue)
-		if err != nil {
-			return err
-		}
-
-		// Reject duplicate keys
-		if seenKeys[key] {
-			return fmt.Errorf("duplicate key: %q", key)
-		}
-		seenKeys[key] = true
-
+	for key := range keyValues {
 		currentValue, found, err := cmd.getCurrentValue(key)
 		if err != nil {
 			return err
@@ -83,15 +104,16 @@ func (cmd *setCommand) setValues(keyValues []string) error {
 
 		currentValues[key] = currentValue
 		currentKnown[key] = found
-		finalValues[key] = value
 	}
 
 	// Apply configurations
 	anyChange := false
-	for k, v := range finalValues {
-		if err := cmd.setConfigs(k, v); err != nil {
+	for k, v := range keyValues {
+		if err := cmd.setConfig(k, v, storage.UserConfig); err != nil {
 			return err
 		}
+
+		// User keys are known, except for passthrough keys
 		if !currentKnown[k] || currentValues[k] != v {
 			anyChange = true
 		}
@@ -105,6 +127,25 @@ func (cmd *setCommand) setValues(keyValues []string) error {
 	}
 
 	return nil
+}
+
+func (cmd *setCommand) parseKeyValues(keyValues []string) (map[string]string, error) {
+	kvMap := map[string]string{}
+	seenKeys := map[string]bool{}
+
+	for _, keyValue := range keyValues {
+		key, value, err := cmd.parseKeyValue(keyValue)
+		if err != nil {
+			return nil, err
+		}
+		kvMap[key] = value
+
+		if seenKeys[key] {
+			return nil, fmt.Errorf("duplicate key: %q", key)
+		}
+		seenKeys[key] = true
+	}
+	return kvMap, nil
 }
 
 func (cmd *setCommand) parseKeyValue(keyValue string) (key, value string, err error) {
@@ -141,23 +182,6 @@ func (cmd *setCommand) getCurrentValue(key string) (string, bool, error) {
 	return fmt.Sprint(currVal), true, nil
 }
 
-func (cmd *setCommand) setConfigs(key, value string) error {
-	var confType storage.ConfigType
-	switch {
-	case cmd.packageConfig:
-		confType = storage.PackageConfig
-	case cmd.engineConfig:
-		confType = storage.EngineConfig
-	default:
-		confType = storage.UserConfig
-	}
-
-	if err := cmd.Config.Set(key, value, confType); err != nil {
-		return fmt.Errorf("setting %q to %q: %v", key, value, err)
-	}
-	return nil
-}
-
 func (cmd *setCommand) restartToApply() error {
 	if !cmd.noRestart {
 		msg := fmt.Sprintf("Restart %s to apply the changes?", cmd.Snap.InstanceName())
@@ -166,6 +190,13 @@ func (cmd *setCommand) restartToApply() error {
 				return fmt.Errorf("restarting snap: %v", err)
 			}
 		}
+	}
+	return nil
+}
+
+func (cmd *setCommand) setConfig(key, value string, confType storage.ConfigType) error {
+	if err := cmd.Config.Set(key, value, confType); err != nil {
+		return fmt.Errorf("setting %q to %q: %v", key, value, err)
 	}
 	return nil
 }

@@ -67,6 +67,68 @@ func TestParseKeyValue(t *testing.T) {
 	}
 }
 
+func TestParseKeyValues(t *testing.T) {
+	cmd := setCommand{}
+
+	tests := map[string]struct {
+		input       []string
+		want        map[string]string
+		errContains string
+	}{
+		"single pair": {
+			input: []string{"model=llama"},
+			want: map[string]string{
+				"model": "llama",
+			},
+		},
+		"multiple pairs": {
+			input: []string{"model=llama", "api.endpoint=https://example.com?a=b"},
+			want: map[string]string{
+				"model":        "llama",
+				"api.endpoint": "https://example.com?a=b",
+			},
+		},
+		"duplicate key": {
+			input:       []string{"model=llama", "model=mistral"},
+			errContains: "duplicate key",
+		},
+		"invalid pair is rejected": {
+			input:       []string{"model=llama", "invalid"},
+			errContains: "expected key=value",
+		},
+	}
+
+	for testName, testCase := range tests {
+		t.Run(testName, func(t *testing.T) {
+			got, err := cmd.parseKeyValues(testCase.input)
+			if testCase.errContains != "" {
+				if err == nil {
+					t.Fatalf("expected error containing %q, got nil", testCase.errContains)
+				}
+				if !strings.Contains(err.Error(), testCase.errContains) {
+					t.Fatalf("expected error containing %q, got %q", testCase.errContains, err.Error())
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("parseKeyValues returned an unexpected error: %v", err)
+			}
+
+			if len(got) != len(testCase.want) {
+				t.Fatalf("expected %d parsed keys, got %d: %#v", len(testCase.want), len(got), got)
+			}
+
+			for key, wantValue := range testCase.want {
+				gotValue, found := got[key]
+				if !found || gotValue != wantValue {
+					t.Fatalf("expected key %q to be %q, got %#v", key, wantValue, got)
+				}
+			}
+		})
+	}
+}
+
 func TestSetValueSuccessForUserConfig(t *testing.T) {
 	config := storage.NewMockConfig(map[string]any{"api.endpoint": "https://old.example.com"})
 	cmd := setCommand{
@@ -77,7 +139,7 @@ func TestSetValueSuccessForUserConfig(t *testing.T) {
 		},
 	}
 
-	err := cmd.setValues([]string{"api.endpoint=https://new.example.com"})
+	err := cmd.setUserConfigs(map[string]string{"api.endpoint": "https://new.example.com"})
 	if err != nil {
 		t.Fatalf("setValue returned an unexpected error: %v", err)
 	}
@@ -102,7 +164,7 @@ func TestSetValueRejectsUnknownKeys(t *testing.T) {
 		},
 	}
 
-	err := cmd.setValues([]string{"api.endpoint=https://example.com"})
+	err := cmd.setUserConfigs(map[string]string{"api.endpoint": "https://example.com"})
 	if err == nil {
 		t.Fatal("expected error for unknown key, got nil")
 	} else {
@@ -125,7 +187,9 @@ func TestSetValuesSuccessForUserConfig(t *testing.T) {
 		},
 	}
 
-	err := cmd.setValues([]string{"api.endpoint=https://new.example.com", "api.port=9090"})
+	err := cmd.setUserConfigs(map[string]string{
+		"api.endpoint": "https://new.example.com",
+		"api.port":     "9090"})
 	if err != nil {
 		t.Fatalf("setValues returned an unexpected error: %v", err)
 	}
@@ -157,7 +221,9 @@ func TestSetValuesRejectsUnknownKeysAtomically(t *testing.T) {
 		},
 	}
 
-	err := cmd.setValues([]string{"api.endpoint=https://new.example.com", "unknown.key=value"})
+	err := cmd.setUserConfigs(map[string]string{
+		"api.endpoint": "https://new.example.com",
+		"unknown.key":  "value"})
 	if err == nil {
 		t.Fatal("expected unknown key error, got nil")
 	}
@@ -175,34 +241,6 @@ func TestSetValuesRejectsUnknownKeysAtomically(t *testing.T) {
 	}
 }
 
-func TestSetValuesRejectsDuplicateKeys(t *testing.T) {
-	config := storage.NewMockConfig(map[string]any{"api.endpoint": "https://old.example.com"})
-	cmd := setCommand{
-		noRestart: true,
-		Context: &common.Context{
-			Config: config,
-			Snap:   snap.Mock(),
-		},
-	}
-
-	err := cmd.setValues([]string{"api.endpoint=https://new.example.com", "api.endpoint=https://another.example.com"})
-	if err == nil {
-		t.Fatal("expected duplicate key error, got nil")
-	}
-	if !strings.Contains(err.Error(), "duplicate key") {
-		t.Fatalf("expected duplicate key error, got: %s", err)
-	}
-
-	values, err := config.Get("api.endpoint")
-	if err != nil {
-		t.Fatalf("Get returned an unexpected error: %v", err)
-	}
-
-	if value, found := values["api.endpoint"]; !found || value != "https://old.example.com" {
-		t.Fatalf("expected no writes after duplicate key error, got %#v", values)
-	}
-}
-
 func TestSetAcceptsUnknownPassthroughKeys(t *testing.T) {
 	config := storage.NewMockConfig(map[string]any{})
 	cmd := setCommand{
@@ -213,7 +251,7 @@ func TestSetAcceptsUnknownPassthroughKeys(t *testing.T) {
 		},
 	}
 
-	err := cmd.setValues([]string{"passthrough.custom-key=custom-value"})
+	err := cmd.setUserConfigs(map[string]string{"passthrough.custom-key": "custom-value"})
 	if err != nil {
 		t.Fatalf("setValues returned an unexpected error for passthrough key: %v", err)
 	}
@@ -226,6 +264,40 @@ func TestSetAcceptsUnknownPassthroughKeys(t *testing.T) {
 	if value, found := values["passthrough.custom-key"]; !found || value != "custom-value" {
 		t.Fatalf("expected passthrough.custom-key to be set to custom-value, got %#v", values)
 	}
+}
+
+func TestSet(t *testing.T) {
+	cmd := setCommand{
+		Context: &common.Context{
+			Config: storage.NewMockConfig(map[string]any{}),
+			Snap:   snap.Mock(),
+		},
+	}
+
+	t.Run("user", func(t *testing.T) {
+		err := cmd.set([]string{"model=llama"})
+		if err == nil {
+			t.Fatal("expected error for unknown key, got nil")
+		}
+	})
+
+	t.Run("package", func(t *testing.T) {
+		cmd.packageConfig = true
+		cmd.engineConfig = false
+		err := cmd.set([]string{"model=llama"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("engine", func(t *testing.T) {
+		cmd.packageConfig = false
+		cmd.engineConfig = true
+		err := cmd.set([]string{"model=llama"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
 }
 
 func ExampleSet_assumeYesRestartServices() {
@@ -245,7 +317,7 @@ func ExampleSet_assumeYesRestartServices() {
 		},
 	}
 
-	if err := cmd.setValues([]string{"api.endpoint=https://example.com"}); err != nil {
+	if err := cmd.setUserConfigs(map[string]string{"api.endpoint": "https://example.com"}); err != nil {
 		panic(err)
 	}
 
@@ -263,7 +335,7 @@ func ExampleSet_noRestartWhenFinalValueUnchanged() {
 		},
 	}
 
-	err := cmd.setValues([]string{"api.port=8080"})
+	err := cmd.setUserConfigs(map[string]string{"api.port": "8080"})
 	if err != nil {
 		panic(err)
 	}
@@ -281,7 +353,7 @@ func ExampleSet_restartWhenFinalValueUnchanged() {
 		},
 	}
 
-	err := cmd.setValues([]string{"api.port=9999"})
+	err := cmd.setUserConfigs(map[string]string{"api.port": "9999"})
 	if err != nil {
 		panic(err)
 	}
