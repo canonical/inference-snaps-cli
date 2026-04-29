@@ -8,6 +8,7 @@ import (
 	"github.com/canonical/inference-snaps-cli/pkg/constants"
 	"github.com/canonical/inference-snaps-cli/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/pkg/selector/cpu"
+	"github.com/canonical/inference-snaps-cli/pkg/selector/drpai"
 	"github.com/canonical/inference-snaps-cli/pkg/selector/fastrpc"
 	"github.com/canonical/inference-snaps-cli/pkg/selector/pci"
 	"github.com/canonical/inference-snaps-cli/pkg/types"
@@ -175,6 +176,15 @@ func scoreDevicesAll(hardwareInfo *types.HwInfo, devices []engines.Device) int {
 				compatibilityScore += fastRpcScore
 			}
 
+		} else if devices[i].Bus == "drpai" {
+			drpAiScore, drpAiIssues := drpai.Match(devices[i], hardwareInfo.Devices)
+			if len(drpAiIssues) > 0 {
+				compatible = false
+				devices[i].CompatibilityIssues = append(devices[i].CompatibilityIssues, drpAiIssues...)
+			} else {
+				compatibilityScore += drpAiScore
+			}
+
 		} else if devices[i].Bus == "" || devices[i].Bus == "pci" {
 			// Fallback to PCI as default bus
 			pciScore, pciIssues := pci.Match(devices[i], hardwareInfo.PciDevices)
@@ -221,6 +231,15 @@ func scoreDevicesAny(hardwareInfo *types.HwInfo, devices []engines.Device) int {
 			} else {
 				devicesFound++
 				compatibilityScore += fastRpcScore
+			}
+
+		} else if device.Bus == "drpai" {
+			drpAiScore, drpAiIssues := drpai.Match(device, hardwareInfo.Devices)
+			if len(drpAiIssues) > 0 {
+				devices[i].CompatibilityIssues = append(device.CompatibilityIssues, drpAiIssues...)
+			} else {
+				devicesFound++
+				compatibilityScore += drpAiScore
 			}
 
 		} else if device.Bus == "" || device.Bus == "pci" {

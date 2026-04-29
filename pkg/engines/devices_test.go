@@ -153,6 +153,29 @@ func TestDeviceNpu(t *testing.T) {
 		}
 		t.Log(err)
 	})
+
+	t.Run("NPU drpai valid fields", func(t *testing.T) {
+		device = Device{Type: "npu", Bus: "drpai"}
+		nodeGlob := "/dev/drpai*"
+		device.NodeGlob = &nodeGlob
+
+		err := device.validate()
+		if err != nil {
+			t.Fatalf("NPU drpai fields should be valid: %v", err)
+		}
+	})
+
+	t.Run("NPU drpai invalid fields", func(t *testing.T) {
+		device = Device{Type: "npu", Bus: "drpai"}
+		hexValue := types.HexInt(0xAA)
+		device.VendorId = &hexValue
+
+		err := device.validate()
+		if err == nil {
+			t.Fatal("NPU drpai fields should be invalid")
+		}
+		t.Log(err)
+	})
 }
 
 func TestDeviceTypeless(t *testing.T) {
