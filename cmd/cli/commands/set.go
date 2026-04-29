@@ -142,16 +142,17 @@ func (cmd *setCommand) validateAndGetCurrentValue(key string) (string, bool, err
 }
 
 func (cmd *setCommand) setConfigs(key, value string) error {
-	var err error
+	var confType storage.ConfigType
 	switch {
 	case cmd.packageConfig:
-		err = cmd.Config.Set(key, value, storage.PackageConfig)
+		confType = storage.PackageConfig
 	case cmd.engineConfig:
-		err = cmd.Config.Set(key, value, storage.EngineConfig)
+		confType = storage.EngineConfig
 	default:
-		err = cmd.Config.Set(key, value, storage.UserConfig)
+		confType = storage.UserConfig
 	}
-	if err != nil {
+
+	if err := cmd.Config.Set(key, value, confType); err != nil {
 		return fmt.Errorf("setting %q to %q: %v", key, value, err)
 	}
 	return nil

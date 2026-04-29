@@ -16,12 +16,12 @@ func NewMockConfig(values map[string]any) Config {
 	return &mockConfig{values: configValues}
 }
 
-func (c *mockConfig) Set(key, value string, confType configType) error {
+func (c *mockConfig) Set(key, value string, confType ConfigType) error {
 	c.values[key] = value
 	return nil
 }
 
-func (c *mockConfig) SetDocument(key string, value any, confType configType) error {
+func (c *mockConfig) SetDocument(key string, value any, confType ConfigType) error {
 	c.values[key] = value
 	return nil
 }
@@ -43,7 +43,7 @@ func (c *mockConfig) GetAll() (map[string]any, error) {
 	return allValues, nil
 }
 
-func (c *mockConfig) Unset(key string, confType configType) error {
+func (c *mockConfig) Unset(key string, confType ConfigType) error {
 	delete(c.values, key)
 	return nil
 }
