@@ -175,3 +175,71 @@ func Example_showEngineCommand_printEngineManifestJson() {
 	//   ]
 	// }
 }
+
+func Example_showEngineCommand_printHappyEngineManifestYaml() {
+	engineManifest, err := scoreEngineAgainstMachine("intel-cpu", "i7-1165G7")
+	if err != nil {
+		panic(fmt.Sprintf("failed to score engine against machine: %v", err))
+	}
+
+	cmd := showEngineCommand{format: "yaml"}
+	if err := cmd.printEngineManifest(*engineManifest); err != nil {
+		panic(fmt.Sprintf("failed to print engine manifest: %v", err))
+	}
+
+	// Output:
+	// name: intel-cpu
+	// description: Use Intel CPUs
+	// vendor: Intel Corporation
+	// grade: stable
+	// devices:
+	//     allof:
+	//         - type: cpu
+	//           architecture: amd64
+	//           manufacturer-id: GenuineIntel
+	// memory: 5G
+	// disk-space: 10G
+	// components:
+	//     - dummy-component-1
+	// configurations: {}
+	// score: 18
+	// compatible: true
+}
+
+func Example_showEngineCommand_printHappyEngineManifestJson() {
+	engineManifest, err := scoreEngineAgainstMachine("intel-cpu", "i7-1165G7")
+	if err != nil {
+		panic(fmt.Sprintf("failed to score engine against machine: %v", err))
+	}
+
+	cmd := showEngineCommand{format: "json"}
+	if err := cmd.printEngineManifest(*engineManifest); err != nil {
+		panic(fmt.Sprintf("failed to print engine manifest: %v", err))
+	}
+
+	// Output:
+	// {
+	//   "name": "intel-cpu",
+	//   "description": "Use Intel CPUs",
+	//   "vendor": "Intel Corporation",
+	//   "grade": "stable",
+	//   "devices": {
+	//     "anyof": null,
+	//     "allof": [
+	//       {
+	//         "type": "cpu",
+	//         "architecture": "amd64",
+	//         "manufacturer-id": "GenuineIntel"
+	//       }
+	//     ]
+	//   },
+	//   "memory": "5G",
+	//   "disk-space": "10G",
+	//   "components": [
+	//     "dummy-component-1"
+	//   ],
+	//   "configurations": null,
+	//   "score": 18,
+	//   "compatible": true
+	// }
+}
