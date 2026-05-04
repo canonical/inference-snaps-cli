@@ -65,6 +65,6 @@ func TestFixActiveEngine_noActiveEngine(t *testing.T) {
 
 	err := cmd.fixActiveEngine()
 	if !errors.Is(err, common.ErrNoActiveEngine) {
-		t.Errorf("expected ErrNoActiveEngine, got %v", err)
+		t.Errorf("expected no active engine error, got %v", err)
 	}
 }
