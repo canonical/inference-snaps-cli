@@ -1,0 +1,17 @@
+name: dummy-engine
+description: A dummy engine for testing purposes.
+vendor: Canonical Ltd
+grade: stable
+devices:
+  anyof:
+    - type: cpu
+      architecture: amd64
+    - type: cpu
+      architecture: arm64
+    - type: gpu
+      vendor: nvidia
+    - type: gpu
+      vendor: amd
+memory: 2G
+disk-space: 5G
+
