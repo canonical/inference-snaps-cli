@@ -41,22 +41,35 @@ func TestInfoShort(t *testing.T) {
 	}
 }
 
-func Example_showEngineCommand_printEngineManifestYaml() {
-	engineManifest, err := engines.LoadManifest("../../../test_data/engines", "cuda-generic")
+func scoreEngineAgainstMachine(engineName string, machineName string) (*engines.ScoredManifest, error) {
+	engineManifest, err := engines.LoadManifest("../../../test_data/engines", engineName)
 	if err != nil {
-		panic(fmt.Sprintf("failed to load engine manifest: %v", err))
+		return nil, fmt.Errorf("failed to load engine manifest: %v", err)
 	}
-	info, err := hardware_info.GetFromRawData("dummy-machine", true, "../../../test_data")
+	info, err := hardware_info.GetFromRawData(machineName, true, "../../../test_data")
 	if err != nil {
-		panic(fmt.Sprintf("failed to get hardware info: %v", err))
+		return nil, fmt.Errorf("failed to get hardware info: %v", err)
 	}
 	scoredEngines, err := selector.ScoreEngines(info, []engines.Manifest{*engineManifest})
 	if err != nil {
-		panic(fmt.Sprintf("failed to score engines: %v", err))
+		return nil, fmt.Errorf("failed to score engines: %v", err)
+	}
+
+	if len(scoredEngines) != 1 {
+		return nil, fmt.Errorf("invalid scored engines count: %d, expected 1", len(scoredEngines))
+	}
+
+	return &scoredEngines[0], nil
+}
+
+func Example_showEngineCommand_printEngineManifestYaml() {
+	engineManifest, err := scoreEngineAgainstMachine("cuda-generic", "dummy-machine")
+	if err != nil {
+		panic(fmt.Sprintf("failed to score engine against machine: %v", err))
 	}
 
 	cmd := showEngineCommand{format: "yaml"}
-	if err := cmd.printEngineManifest(scoredEngines[0]); err != nil {
+	if err := cmd.printEngineManifest(*engineManifest); err != nil {
 		panic(fmt.Sprintf("failed to print engine manifest: %v", err))
 	}
 
@@ -100,21 +113,13 @@ func Example_showEngineCommand_printEngineManifestYaml() {
 }
 
 func Example_showEngineCommand_printEngineManifestJson() {
-	engineManifest, err := engines.LoadManifest("../../../test_data/engines", "cuda-generic")
+	engineManifest, err := scoreEngineAgainstMachine("cuda-generic", "dummy-machine")
 	if err != nil {
-		panic(fmt.Sprintf("failed to load engine manifest: %v", err))
-	}
-	info, err := hardware_info.GetFromRawData("dummy-machine", true, "../../../test_data")
-	if err != nil {
-		panic(fmt.Sprintf("failed to get hardware info: %v", err))
-	}
-	scoredEngines, err := selector.ScoreEngines(info, []engines.Manifest{*engineManifest})
-	if err != nil {
-		panic(fmt.Sprintf("failed to score engines: %v", err))
+		panic(fmt.Sprintf("failed to score engine against machine: %v", err))
 	}
 
 	cmd := showEngineCommand{format: "json"}
-	if err := cmd.printEngineManifest(scoredEngines[0]); err != nil {
+	if err := cmd.printEngineManifest(*engineManifest); err != nil {
 		panic(fmt.Sprintf("failed to print engine manifest: %v", err))
 	}
 
