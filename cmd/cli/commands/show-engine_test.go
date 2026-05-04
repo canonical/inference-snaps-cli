@@ -62,6 +62,20 @@ func scoreEngineAgainstMachine(engineName string, machineName string) (*engines.
 	return &scoredEngines[0], nil
 }
 
+func TestUnsupportedFormatResultsInError(t *testing.T) {
+	engineManifest, err := scoreEngineAgainstMachine("cpu-avx1", "dummy-machine")
+	if err != nil {
+		t.Fatalf("could not score manifest: %v", err)
+	}
+
+	cmd := showEngineCommand{format: "invalid-format"}
+	err = cmd.printEngineManifest(*engineManifest)
+
+	if err == nil {
+		t.Fatalf("expected unsupported format to error out, got nil error")
+	}
+}
+
 func Example_showEngineCommand_printEngineManifestYaml() {
 	engineManifest, err := scoreEngineAgainstMachine("cuda-generic", "dummy-machine")
 	if err != nil {
