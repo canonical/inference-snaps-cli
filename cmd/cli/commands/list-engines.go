@@ -1,7 +1,9 @@
 package commands
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -97,7 +99,9 @@ func (cmd *listEnginesCommand) printEnginesJson(enginesList outputEngines) error
 	return nil
 }
 
-func (cmd *listEnginesCommand) printEnginesTable(enginesList outputEngines) error {
+var noEnginesFoundError = errors.New("No engines found.")
+
+func (cmd *listEnginesCommand) getEnginesTable(enginesList outputEngines) (*string, error) {
 	var headerRow = []string{"engine", "vendor", "description", "compat"}
 	tableRows := [][]string{headerRow}
 
@@ -138,8 +142,7 @@ func (cmd *listEnginesCommand) printEnginesTable(enginesList outputEngines) erro
 	}
 
 	if len(tableRows) == 1 {
-		fmt.Fprintln(os.Stderr, "No engines found.")
-		return nil
+		return nil, noEnginesFoundError
 	}
 
 	tableMaxWidth := 80
@@ -207,15 +210,31 @@ func (cmd *listEnginesCommand) printEnginesTable(enginesList outputEngines) erro
 		}),
 	}
 
-	table := tablewriter.NewTable(os.Stdout, options...)
+	var tableOutput bytes.Buffer
+	table := tablewriter.NewTable(&tableOutput, options...)
 	table.Header(tableRows[0])
 	err := table.Bulk(tableRows[1:])
 	if err != nil {
-		return fmt.Errorf("adding data: %v", err)
+		return nil, fmt.Errorf("adding data: %v", err)
 	}
 	err = table.Render()
 	if err != nil {
-		return fmt.Errorf("rendering: %v", err)
+		return nil, fmt.Errorf("rendering: %v", err)
 	}
+	tableOutputStr := tableOutput.String()
+	return &tableOutputStr, nil
+}
+
+func (cmd *listEnginesCommand) printEnginesTable(enginesList outputEngines) error {
+	tableOutput, err := cmd.getEnginesTable(enginesList)
+	if err != nil {
+		if errors.Is(err, noEnginesFoundError) {
+			fmt.Fprintln(os.Stderr, "No engines found.")
+			return nil
+		}
+		return fmt.Errorf("generating table: %v", err)
+	}
+
+	fmt.Print(*tableOutput)
 	return nil
 }
