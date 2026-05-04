@@ -8,10 +8,6 @@ devices:
       architecture: amd64
     - type: cpu
       architecture: arm64
-    - type: gpu
-      vendor: nvidia
-    - type: gpu
-      vendor: amd
 memory: 2G
 disk-space: 5G
 

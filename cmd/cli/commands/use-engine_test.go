@@ -73,7 +73,7 @@ func ExampleUseEngine_autoSelectEngine() {
 	// ✘ ampere-altra: not compatible
 	//   - required device not found
 	// • cpu-devel: devel, score=12
-	// ✔ dummy-engine: compatible, score=132
+	// ✔ dummy-engine: compatible, score=12
 	// Selected engine: dummy-engine
 	// Engine changed to "dummy-engine".
 	// [mock] Restarting all services
