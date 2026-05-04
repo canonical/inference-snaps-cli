@@ -101,6 +101,10 @@ parts:
         openai:
           protocol: http
           base-path: /v3
+      properties:
+        model-name: test-model
+        model-quantization: int8
+        mmproj-name: test-mmproj
       EOF
       touch "$CRAFT_COMPONENT_DUMMY_COMPONENT_2_PRIME/component.yaml"
       touch "$CRAFT_COMPONENT_DUMMY_COMPONENT_3_PRIME/component.yaml"

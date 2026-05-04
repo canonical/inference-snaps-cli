@@ -105,9 +105,10 @@ func (cmd *statusCommand) statusJson() (string, error) {
 }
 
 type status struct {
-	Engine    string            `json:"engine" yaml:"engine"`
-	Services  map[string]string `json:"services" yaml:"services"`
-	Endpoints map[string]string `json:"endpoints,omitempty" yaml:"endpoints,omitempty"`
+	Engine    string                       `json:"engine" yaml:"engine"`
+	Services  map[string]string            `json:"services" yaml:"services"`
+	Endpoints map[string]string            `json:"endpoints,omitempty" yaml:"endpoints,omitempty"`
+	Model     common.ModelPropertiesStruct `json:"model" yaml:"model"`
 }
 
 func (cmd *statusCommand) statusStruct() (*status, error) {
@@ -133,6 +134,12 @@ func (cmd *statusCommand) statusStruct() (*status, error) {
 		return nil, fmt.Errorf("getting server api endpoints: %v", err)
 	}
 	statusStr.Endpoints = endpoints
+
+	modelProperties, err := common.ModelProperties(cmd.Context)
+	if err != nil {
+		return nil, fmt.Errorf("getting model properties: %v", err)
+	}
+	statusStr.Model = modelProperties
 
 	return &statusStr, nil
 }

@@ -27,6 +27,7 @@ type ComponentSettings struct {
 	componentName  string
 	Servers        map[string]map[string]string `yaml:"servers"`
 	Environment    []string                     `yaml:"environment"`
+	Properties     map[string]string            `yaml:"properties"`
 	Layout         map[string]ComponentLayout   `yaml:"layout"`
 	expandedLayout map[string]ComponentLayout
 }
