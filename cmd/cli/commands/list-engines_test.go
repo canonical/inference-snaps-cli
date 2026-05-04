@@ -74,3 +74,36 @@ func TestList(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestGetEnginesTable(t *testing.T) {
+	cmd, enginesList, err := prepareTestData()
+	if err != nil {
+		t.Fatalf("Error preparing test data: %v", err)
+	}
+
+	tableStr, err := cmd.getEnginesTable(*enginesList)
+	if err != nil {
+		t.Fatalf("Error getting engines table: %v", err)
+	}
+
+	expectedTable := `ENGINE           VENDOR             DESCRIPTION                          COMPAT
+intel-cpu        Intel Corporation  Use Intel CPUs                       yes   
+cpu-avx2         Canonical Ltd      CPUs with AVX2                       yes   
+cpu-avx1         Canonical Ltd      Legacy CPUs with only SSE4.2 (2008…  yes   
+cpu-devel        Canonical Ltd      Requires any CPU but is grade devel  devel 
+intel-gpu        Intel Corporation  Modern Intel GPUs (>=gen 13)         no    
+example-memory*  Canonical Ltd      Legacy CPUs, offering full accurac…  no    
+cuda-generic     Canonical Ltd      Nvidia GPUs using CUDA. All major …  no    
+rocm-generic     Canonical Ltd      AMD GPUs using ROCm. All major ROC…  no    
+arm-neon         Canonical Ltd      ARM CPUs with NEON instruction set   no    
+ampere-altra     Canonical Ltd      Test ampere selection                no    
+ampere           Canonical Ltd      Test ampere selection                no    
+intel-npu        Intel Corporation  Intel NPUs                           no    
+amd-gpu          Canonical Ltd      AMD specific engine targeting only…  no    
+cpu-avx512       Canonical Ltd      CPUs with AVX512                     no    
+`
+
+	if *tableStr != expectedTable {
+		t.Errorf("Engine table not as expected.\n\nGot:\n\n%s\n\nWant:\n\n%s", *tableStr, expectedTable)
+	}
+}
