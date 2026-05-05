@@ -227,11 +227,10 @@ func (cmd *listEnginesCommand) getEnginesTable(enginesList outputEngines) (strin
 
 func (cmd *listEnginesCommand) printEnginesTable(enginesList outputEngines) error {
 	tableOutput, err := cmd.getEnginesTable(enginesList)
-	if err != nil {
-		if errors.Is(err, noEnginesFoundError) {
-			fmt.Fprintln(os.Stderr, "No engines found.")
-			return nil
-		}
+	if errors.Is(err, noEnginesFoundError) {
+		fmt.Fprintln(os.Stderr, "No engines found.")
+		return nil
+	} else if err != nil {
 		return fmt.Errorf("generating table: %v", err)
 	}
 
