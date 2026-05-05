@@ -101,7 +101,7 @@ func (cmd *listEnginesCommand) printEnginesJson(enginesList outputEngines) error
 
 var noEnginesFoundError = errors.New("No engines found.")
 
-func (cmd *listEnginesCommand) getEnginesTable(enginesList outputEngines) (*string, error) {
+func (cmd *listEnginesCommand) getEnginesTable(enginesList outputEngines) (string, error) {
 	var headerRow = []string{"engine", "vendor", "description", "compat"}
 	tableRows := [][]string{headerRow}
 
@@ -142,7 +142,7 @@ func (cmd *listEnginesCommand) getEnginesTable(enginesList outputEngines) (*stri
 	}
 
 	if len(tableRows) == 1 {
-		return nil, noEnginesFoundError
+		return "", noEnginesFoundError
 	}
 
 	tableMaxWidth := 80
@@ -215,14 +215,14 @@ func (cmd *listEnginesCommand) getEnginesTable(enginesList outputEngines) (*stri
 	table.Header(tableRows[0])
 	err := table.Bulk(tableRows[1:])
 	if err != nil {
-		return nil, fmt.Errorf("adding data: %v", err)
+		return "", fmt.Errorf("adding data: %v", err)
 	}
 	err = table.Render()
 	if err != nil {
-		return nil, fmt.Errorf("rendering: %v", err)
+		return "", fmt.Errorf("rendering: %v", err)
 	}
 	tableOutputStr := tableOutput.String()
-	return &tableOutputStr, nil
+	return tableOutputStr, nil
 }
 
 func (cmd *listEnginesCommand) printEnginesTable(enginesList outputEngines) error {
@@ -235,6 +235,6 @@ func (cmd *listEnginesCommand) printEnginesTable(enginesList outputEngines) erro
 		return fmt.Errorf("generating table: %v", err)
 	}
 
-	fmt.Print(*tableOutput)
+	fmt.Print(tableOutput)
 	return nil
 }

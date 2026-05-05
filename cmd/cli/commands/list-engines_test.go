@@ -114,8 +114,8 @@ amd-gpu          Canonical Ltd      AMD specific engine targeting only…  no
 cpu-avx512       Canonical Ltd      CPUs with AVX512                     no    
 `
 
-	if *tableStr != expectedTable {
-		t.Errorf("Engine table not as expected.\n\nGot:\n\n%s\n\nWant:\n\n%s", *tableStr, expectedTable)
+	if tableStr != expectedTable {
+		t.Errorf("Engine table not as expected.\n\nGot:\n\n%s\n\nWant:\n\n%s", tableStr, expectedTable)
 	}
 }
 
