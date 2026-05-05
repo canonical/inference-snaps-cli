@@ -95,6 +95,11 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 		return fmt.Errorf("scoring engines: %v", err)
 	}
 
+	return cmd.autoSelectEngineWithScoredEngines(scoredEngines)
+}
+
+func (cmd *useEngineCommand) autoSelectEngineWithScoredEngines(scoredEngines []engines.ScoredManifest) error {
+
 	fmt.Println("Evaluating engines for optimal hardware compatibility:")
 	for _, engine := range scoredEngines {
 		if engine.Score == 0 {
