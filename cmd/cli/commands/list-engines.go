@@ -3,7 +3,6 @@ package commands
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -99,9 +98,11 @@ func (cmd *listEnginesCommand) printEnginesJson(enginesList outputEngines) error
 	return nil
 }
 
-var noEnginesFoundError = errors.New("No engines found.")
-
 func (cmd *listEnginesCommand) getEnginesTable(enginesList outputEngines) (string, error) {
+	if len(enginesList.Engines) == 0 {
+		return "", fmt.Errorf("No engines found.")
+	}
+
 	var headerRow = []string{"engine", "vendor", "description", "compat"}
 	tableRows := [][]string{headerRow}
 
@@ -139,10 +140,6 @@ func (cmd *listEnginesCommand) getEnginesTable(enginesList outputEngines) (strin
 		row = append(row, compatibleStr)
 
 		tableRows = append(tableRows, row)
-	}
-
-	if len(tableRows) == 1 {
-		return "", noEnginesFoundError
 	}
 
 	tableMaxWidth := 80
@@ -226,11 +223,13 @@ func (cmd *listEnginesCommand) getEnginesTable(enginesList outputEngines) (strin
 }
 
 func (cmd *listEnginesCommand) printEnginesTable(enginesList outputEngines) error {
-	tableOutput, err := cmd.getEnginesTable(enginesList)
-	if errors.Is(err, noEnginesFoundError) {
+	if len(enginesList.Engines) == 0 {
 		fmt.Fprintln(os.Stderr, "No engines found.")
 		return nil
-	} else if err != nil {
+	}
+
+	tableOutput, err := cmd.getEnginesTable(enginesList)
+	if err != nil {
 		return fmt.Errorf("generating table: %v", err)
 	}
 
