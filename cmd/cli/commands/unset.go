@@ -51,7 +51,7 @@ func (cmd *unsetCommand) completeKey(_ *cobra.Command, args []string, toComplete
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
 
-	return completeConfigKeys(cmd.Config, toComplete, false, nil)
+	return completeConfigKeys(cmd.Config, toComplete, false, nil), cobra.ShellCompDirectiveDefault
 }
 
 func (cmd *unsetCommand) unsetValue(key string) error {

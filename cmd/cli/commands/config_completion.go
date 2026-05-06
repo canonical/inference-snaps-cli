@@ -5,13 +5,12 @@ import (
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/pkg/storage"
-	"github.com/spf13/cobra"
 )
 
-func completeConfigKeys(config storage.Config, toComplete string, appendEquals bool, excludedKeys map[string]struct{}) ([]string, cobra.ShellCompDirective) {
+func completeConfigKeys(config storage.Config, toComplete string, appendEquals bool, excludedKeys map[string]struct{}) []string {
 	values, err := config.GetAll()
 	if err != nil {
-		return nil, cobra.ShellCompDirectiveNoFileComp
+		return nil
 	}
 
 	completions := make([]string, 0, len(values))
@@ -31,5 +30,5 @@ func completeConfigKeys(config storage.Config, toComplete string, appendEquals b
 	}
 
 	sort.Strings(completions)
-	return completions, cobra.ShellCompDirectiveNoFileComp
+	return completions
 }

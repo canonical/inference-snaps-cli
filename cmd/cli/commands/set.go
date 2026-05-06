@@ -58,7 +58,7 @@ func (cmd *setCommand) run(_ *cobra.Command, args []string) error {
 
 func (cmd *setCommand) completeKeyValue(_ *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	if strings.Contains(toComplete, "=") {
-		return nil, cobra.ShellCompDirectiveNoFileComp | cobra.ShellCompDirectiveNoSpace
+		return nil, cobra.ShellCompDirectiveDefault
 	}
 
 	excludedKeys := map[string]struct{}{}
@@ -72,8 +72,8 @@ func (cmd *setCommand) completeKeyValue(_ *cobra.Command, args []string, toCompl
 		}
 	}
 
-	completions, directive := completeConfigKeys(cmd.Config, toComplete, true, excludedKeys)
-	return completions, directive | cobra.ShellCompDirectiveNoSpace
+	completions := completeConfigKeys(cmd.Config, toComplete, true, excludedKeys)
+	return completions, cobra.ShellCompDirectiveDefault
 }
 
 func (cmd *setCommand) set(keyValuePairs []string) error {
