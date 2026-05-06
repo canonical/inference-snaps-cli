@@ -17,8 +17,8 @@ func TestGetCompletionSuggestsKnownKeys(t *testing.T) {
 	cmd := getCommand{Context: &common.Context{Config: cfg}}
 
 	got, directive := cmd.completeKey(nil, nil, "api.")
-	if directive != cobra.ShellCompDirectiveNoFileComp {
-		t.Fatalf("unexpected directive: %v", directive)
+	if directive != cobra.ShellCompDirectiveDefault {
+		t.Fatalf("expected %v directive, got: %v", cobra.ShellCompDirectiveDefault, directive)
 	}
 
 	want := []string{"api.endpoint", "api.port"}
@@ -33,8 +33,8 @@ func TestGetCompletionStopsAfterFirstArg(t *testing.T) {
 	cmd := getCommand{Context: &common.Context{Config: cfg}}
 
 	got, directive := cmd.completeKey(nil, []string{"api.endpoint"}, "")
-	if directive != cobra.ShellCompDirectiveNoFileComp {
-		t.Fatalf("unexpected directive: %v", directive)
+	if directive != cobra.ShellCompDirectiveError {
+		t.Fatalf("expected %v directive, got: %v", cobra.ShellCompDirectiveError, directive)
 	}
 	if len(got) != 0 {
 		t.Fatalf("expected no completion after first arg, got %v", got)
@@ -49,8 +49,8 @@ func TestUnsetCompletionSuggestsKnownKeys(t *testing.T) {
 	cmd := unsetCommand{Context: &common.Context{Config: cfg}}
 
 	got, directive := cmd.completeKey(nil, nil, "model")
-	if directive != cobra.ShellCompDirectiveNoFileComp {
-		t.Fatalf("unexpected directive: %v", directive)
+	if directive != cobra.ShellCompDirectiveDefault {
+		t.Fatalf("expected %v directive, got: %v", cobra.ShellCompDirectiveDefault, directive)
 	}
 
 	want := []string{"model"}
@@ -67,11 +67,9 @@ func TestSetCompletionSuggestsKeyEqualsAndSkipsUsedKeys(t *testing.T) {
 	cmd := setCommand{Context: &common.Context{Config: cfg}}
 
 	got, directive := cmd.completeKeyValue(nil, []string{"api.endpoint=https://example.com"}, "a")
-	if directive&cobra.ShellCompDirectiveNoFileComp == 0 {
-		t.Fatalf("expected NoFileComp directive, got: %v", directive)
-	}
-	if directive&cobra.ShellCompDirectiveNoSpace == 0 {
-		t.Fatalf("unexpected directive: %v", directive)
+
+	if directive != cobra.ShellCompDirectiveDefault {
+		t.Fatalf("expected %v directive, got: %v", cobra.ShellCompDirectiveDefault, directive)
 	}
 
 	want := []string{"api.port="}
@@ -86,12 +84,11 @@ func TestSetCompletionDisablesSuggestionsWhileCompletingValue(t *testing.T) {
 	cmd := setCommand{Context: &common.Context{Config: cfg}}
 
 	got, directive := cmd.completeKeyValue(nil, nil, "api.port=9")
-	if directive&cobra.ShellCompDirectiveNoFileComp == 0 {
-		t.Fatalf("expected NoFileComp directive, got: %v", directive)
+
+	if directive != cobra.ShellCompDirectiveDefault {
+		t.Fatalf("expected %v directive, got: %v", cobra.ShellCompDirectiveDefault, directive)
 	}
-	if directive&cobra.ShellCompDirectiveNoSpace == 0 {
-		t.Fatalf("expected NoSpace directive, got: %v", directive)
-	}
+
 	if len(got) != 0 {
 		t.Fatalf("expected no completion while value is being entered, got %v", got)
 	}

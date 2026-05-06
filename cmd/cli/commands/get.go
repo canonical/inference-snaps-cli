@@ -38,7 +38,7 @@ func (cmd *getCommand) run(_ *cobra.Command, args []string) error {
 
 func (cmd *getCommand) completeKey(_ *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	if len(args) > 0 {
-		return nil, cobra.ShellCompDirectiveNoFileComp
+		return nil, cobra.ShellCompDirectiveError
 	}
 
 	return completeConfigKeys(cmd.Config, toComplete, false, nil), cobra.ShellCompDirectiveDefault
