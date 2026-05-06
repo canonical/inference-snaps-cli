@@ -70,20 +70,14 @@ func ExampleUseEngine_autoSelectEngine() {
 	}
 	cmd.Cache.SetActiveEngine("")
 	cmd.Verbose = true
-	notCompatibleManifest, err := engines.LoadManifest(cmd.Context.EnginesDir, "not-compatible-engine")
-	if err != nil {
-		panic(err)
+	var allEngines []engines.Manifest
+	for _, name := range []string{"not-compatible-engine", "cpu-devel", "cpu"} {
+		e, err := engines.LoadManifest(cmd.Context.EnginesDir, name)
+		if err != nil {
+			panic(err)
+		}
+		allEngines = append(allEngines, *e)
 	}
-	cpuDevelManifest, err := engines.LoadManifest(cmd.Context.EnginesDir, "cpu-devel")
-	if err != nil {
-		panic(err)
-	}
-	cpuManifest, err := engines.LoadManifest(cmd.Context.EnginesDir, "cpu")
-	if err != nil {
-		panic(err)
-	}
-
-	allEngines := []engines.Manifest{*notCompatibleManifest, *cpuDevelManifest, *cpuManifest}
 	machineInfo, err := hardware_info.GetFromRawData("mustang", true, "../../../test_data")
 	if err != nil {
 		panic(err)
@@ -93,7 +87,7 @@ func ExampleUseEngine_autoSelectEngine() {
 	if err != nil {
 		panic(err)
 	}
-	if err := cmd.autoSelectEngineWithScoredEngines(scoredEngines); err != nil {
+	if err := cmd.autoSelectScoredEngine(scoredEngines); err != nil {
 		panic(err)
 	}
 
