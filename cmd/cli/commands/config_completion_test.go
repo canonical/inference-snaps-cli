@@ -68,8 +68,8 @@ func TestSetCompletionSuggestsKeyEqualsAndSkipsUsedKeys(t *testing.T) {
 
 	got, directive := cmd.completeKeyValue(nil, []string{"api.endpoint=https://example.com"}, "a")
 
-	if directive != cobra.ShellCompDirectiveDefault {
-		t.Fatalf("expected %v directive, got: %v", cobra.ShellCompDirectiveDefault, directive)
+	if directive != cobra.ShellCompDirectiveNoSpace {
+		t.Fatalf("expected %v directive, got: %v", cobra.ShellCompDirectiveNoSpace, directive)
 	}
 
 	want := []string{"api.port="}
@@ -85,8 +85,8 @@ func TestSetCompletionDisablesSuggestionsWhileCompletingValue(t *testing.T) {
 
 	got, directive := cmd.completeKeyValue(nil, nil, "api.port=9")
 
-	if directive != cobra.ShellCompDirectiveDefault {
-		t.Fatalf("expected %v directive, got: %v", cobra.ShellCompDirectiveDefault, directive)
+	if directive != cobra.ShellCompDirectiveNoSpace {
+		t.Fatalf("expected %v directive, got: %v", cobra.ShellCompDirectiveNoSpace, directive)
 	}
 
 	if len(got) != 0 {
