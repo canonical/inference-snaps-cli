@@ -29,7 +29,7 @@ func Set(ctx *common.Context) *cobra.Command {
 		Short:             "Set configurations",
 		Long:              "Set a configuration",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: cmd.completeKeyValue,
+		ValidArgsFunction: cobra.NoFileCompletions,
 		RunE:              cmd.run,
 	}
 
@@ -54,26 +54,6 @@ func (cmd *setCommand) run(_ *cobra.Command, args []string) error {
 	}
 
 	return cmd.set(args)
-}
-
-func (cmd *setCommand) completeKeyValue(_ *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	if strings.Contains(toComplete, "=") {
-		return nil, cobra.ShellCompDirectiveNoSpace
-	}
-
-	excludedKeys := map[string]struct{}{}
-	for _, arg := range args {
-		key := arg
-		if idx := strings.IndexByte(arg, '='); idx >= 0 {
-			key = arg[:idx]
-		}
-		if key != "" {
-			excludedKeys[key] = struct{}{}
-		}
-	}
-
-	completions := completeConfigKeys(cmd.Config, toComplete, true, excludedKeys)
-	return completions, cobra.ShellCompDirectiveNoSpace
 }
 
 func (cmd *setCommand) set(keyValuePairs []string) error {
