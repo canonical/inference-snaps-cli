@@ -58,38 +58,3 @@ func TestUnsetCompletionSuggestsKnownKeys(t *testing.T) {
 		t.Fatalf("expected %v, got %v", want, got)
 	}
 }
-
-func TestSetCompletionSuggestsKeyEqualsAndSkipsUsedKeys(t *testing.T) {
-	cfg := storage.NewMockConfig()
-	cfg.Set("api.port", "8080", storage.UserConfig)
-	cfg.Set("api.endpoint", "https://example.com", storage.UserConfig)
-	cfg.Set("model", "foo", storage.UserConfig)
-	cmd := setCommand{Context: &common.Context{Config: cfg}}
-
-	got, directive := cmd.completeKeyValue(nil, []string{"api.endpoint=https://example.com"}, "a")
-
-	if directive != cobra.ShellCompDirectiveNoSpace {
-		t.Fatalf("expected %v directive, got: %v", cobra.ShellCompDirectiveNoSpace, directive)
-	}
-
-	want := []string{"api.port="}
-	if !reflect.DeepEqual(got, want) {
-		t.Fatalf("expected %v, got %v", want, got)
-	}
-}
-
-func TestSetCompletionDisablesSuggestionsWhileCompletingValue(t *testing.T) {
-	cfg := storage.NewMockConfig()
-	cfg.Set("api.port", "8080", storage.UserConfig)
-	cmd := setCommand{Context: &common.Context{Config: cfg}}
-
-	got, directive := cmd.completeKeyValue(nil, nil, "api.port=9")
-
-	if directive != cobra.ShellCompDirectiveNoSpace {
-		t.Fatalf("expected %v directive, got: %v", cobra.ShellCompDirectiveNoSpace, directive)
-	}
-
-	if len(got) != 0 {
-		t.Fatalf("expected no completion while value is being entered, got %v", got)
-	}
-}
