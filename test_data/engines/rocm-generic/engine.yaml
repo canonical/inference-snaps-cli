@@ -13,9 +13,15 @@ devices:
     - type: gpu
       vendor-id: 0x1002 # AMD Corporation
       microarchitecture: gfx1030
-memory: 2G
-disk-space: 5G
-components:
-  - dummy-component-1
-  - dummy-component-2
 
+default-components:
+  - runtime-llama-cpp-rocm
+
+models:
+  - name: 270m
+    id: 270m-gguf
+  - name: 4b
+    id: 4b-gguf
+    default: true
+  - name: 7b
+    id: 7b-gguf

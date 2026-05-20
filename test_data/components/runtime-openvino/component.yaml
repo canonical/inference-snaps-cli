@@ -1,0 +1,14 @@
+environment:
+  - MODEL_PATH=\$COMPONENT
+  - MODEL_NAME=gemma-3-4b-it-ov-int4-fq
+
+servers:
+  openvino:
+    protocol: http
+    base-path: /v1
+  kserve:
+    protocol: http
+    base-path: /2
+  openai:
+    protocol: http
+    base-path: /v3

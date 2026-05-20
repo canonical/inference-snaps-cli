@@ -8,8 +8,10 @@ devices:
       architecture: amd64
       manufacturer-id: GenuineIntel
 
-memory: 5G
-disk-space: 10G
+default-components:
+  - runtime-openvino
 
-components:
-  - dummy-component-1
+models:
+  - name: 4b
+    id: 4b-ov
+    default: true

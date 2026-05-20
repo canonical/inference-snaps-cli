@@ -1,0 +1,17 @@
+models:
+  - id: 270m-gguf
+    components:
+      - model-270m-it-q4-0-gguf
+    disk-size: 200M
+  - id: 4b-gguf
+    components:
+      - model-4b-it-q4-0-gguf
+    disk-size: 5G
+  - id: 4b-ov
+    components:
+      - model-4b-it-q4-0-gguf
+    disk-size: 5G
+  - id: 7b-gguf
+    components:
+      - model-7b-it-q4-0-gguf
+    disk-size: 6G
