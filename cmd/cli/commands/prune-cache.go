@@ -110,27 +110,28 @@ func (cmd *pruneCacheCommand) run(_ *cobra.Command, _ []string) error {
 func (cmd *pruneCacheCommand) calculateRemovableComponents(enginesToCheck []engines.Manifest, activeEngineManifest engines.Manifest) (map[string][]string, error) {
 	componentsEnginesMap := make(map[string][]string)
 
-	activeSet := make(map[string]bool, len(activeEngineManifest.Components))
-	for _, c := range activeEngineManifest.Components {
-		activeSet[c] = true
-	}
-	for _, eng := range enginesToCheck {
-		if eng.Name == activeEngineManifest.Name {
-			continue
-		}
-		for _, component := range eng.Components {
-			if activeSet[component] {
-				continue
-			}
-			installed, err := common.ComponentInstalled(component)
-			if err != nil {
-				return nil, err
-			}
-			if installed {
-				componentsEnginesMap[component] = append(componentsEnginesMap[component], eng.Name)
-			}
-		}
-	}
+	// TODO components are listed in the runtime and model manifests
+	//activeSet := make(map[string]bool, len(activeEngineManifest.Components))
+	//for _, c := range activeEngineManifest.Components {
+	//	activeSet[c] = true
+	//}
+	//for _, eng := range enginesToCheck {
+	//	if eng.Name == activeEngineManifest.Name {
+	//		continue
+	//	}
+	//	for _, component := range eng.Components {
+	//		if activeSet[component] {
+	//			continue
+	//		}
+	//		installed, err := common.ComponentInstalled(component)
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//		if installed {
+	//			componentsEnginesMap[component] = append(componentsEnginesMap[component], eng.Name)
+	//		}
+	//	}
+	//}
 	return componentsEnginesMap, nil
 }
 

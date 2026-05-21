@@ -12,7 +12,6 @@ import (
 	"github.com/canonical/inference-snaps-cli/pkg/selector"
 	"github.com/canonical/inference-snaps-cli/pkg/storage"
 	"github.com/canonical/inference-snaps-cli/pkg/utils"
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -41,36 +40,37 @@ func EngineComponentSettings(ctx *Context) ([]ComponentSettings, error) {
 		return nil, ErrNoActiveEngine
 	}
 
-	manifest, err := engines.LoadManifest(ctx.EnginesDir, activeEngineName)
-	if err != nil {
-		return nil, fmt.Errorf("loading engine manifest: %v", err)
-	}
-
-	componentsDir, found := os.LookupEnv("SNAP_COMPONENTS")
-	if !found {
-		return nil, fmt.Errorf("SNAP_COMPONENTS env var not set")
-	}
+	//manifest, err := engines.LoadManifest(ctx.EnginesDir, activeEngineName)
+	//if err != nil {
+	//	return nil, fmt.Errorf("loading engine manifest: %v", err)
+	//}
+	//
+	//componentsDir, found := os.LookupEnv("SNAP_COMPONENTS")
+	//if !found {
+	//	return nil, fmt.Errorf("SNAP_COMPONENTS env var not set")
+	//}
 
 	var settingsCollection []ComponentSettings
-	for _, componentName := range manifest.Components {
-		componentPath := filepath.Join(componentsDir, componentName)
-		componentYamlFile := filepath.Join(componentPath, "component.yaml")
-
-		data, err := os.ReadFile(componentYamlFile)
-		if err != nil {
-			return nil, fmt.Errorf("reading %s: %v", componentYamlFile, err)
-		}
-
-		var settings ComponentSettings
-		err = yaml.Unmarshal(data, &settings)
-		if err != nil {
-			return nil, fmt.Errorf("unmarshaling %s: %v", componentYamlFile, err)
-		}
-
-		settings.componentName = componentName
-
-		settingsCollection = append(settingsCollection, settings)
-	}
+	// TODO get env vars and layouts from runtime and model manifests
+	//for _, componentName := range manifest.Components {
+	//	componentPath := filepath.Join(componentsDir, componentName)
+	//	componentYamlFile := filepath.Join(componentPath, "component.yaml")
+	//
+	//	data, err := os.ReadFile(componentYamlFile)
+	//	if err != nil {
+	//		return nil, fmt.Errorf("reading %s: %v", componentYamlFile, err)
+	//	}
+	//
+	//	var settings ComponentSettings
+	//	err = yaml.Unmarshal(data, &settings)
+	//	if err != nil {
+	//		return nil, fmt.Errorf("unmarshaling %s: %v", componentYamlFile, err)
+	//	}
+	//
+	//	settings.componentName = componentName
+	//
+	//	settingsCollection = append(settingsCollection, settings)
+	//}
 
 	return settingsCollection, nil
 }

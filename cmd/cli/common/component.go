@@ -3,7 +3,6 @@ package common
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -82,12 +81,14 @@ func checkMissingComponents(manifest *engines.Manifest) ([]string, error) {
 	}
 
 	var missing []string
-	for _, component := range manifest.Components {
-		componentPath := filepath.Join(componentsDir, component)
-		if _, err := os.Stat(componentPath); os.IsNotExist(err) {
-			missing = append(missing, component)
-		}
-	}
+	// TODO get list of required components from runtime manifest and model manifest
+	fmt.Println("Components directory:", componentsDir)
+	//for _, component := range manifest.Components {
+	//	componentPath := filepath.Join(componentsDir, component)
+	//	if _, err := os.Stat(componentPath); os.IsNotExist(err) {
+	//		missing = append(missing, component)
+	//	}
+	//}
 
 	return missing, nil
 }

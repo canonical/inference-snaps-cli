@@ -307,7 +307,10 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 }
 
 func (cmd *useEngineCommand) installMissingComponents(engine *engines.Manifest) (cancelledByUser bool, err error) {
-	missingComponents, err := cmd.missingComponents(engine.Components)
+
+	requiredComponents := []string{}
+	// TODO look up required components from runtime and model manifests
+	missingComponents, err := cmd.missingComponents(requiredComponents)
 	if err != nil {
 		return false, fmt.Errorf("checking installed components: %v", err)
 	}
