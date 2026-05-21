@@ -93,6 +93,7 @@ func main() {
 		commands.ListEngines(ctx),
 		commands.ShowEngine(ctx),
 		commands.UseEngine(ctx),
+		commands.ListModels(ctx),
 	)
 
 	addCommands(rootCmd,
