@@ -29,11 +29,11 @@ type Manifest struct {
 	Vendor      string `yaml:"vendor" json:"vendor"`
 	Grade       string `yaml:"grade" json:"grade"`
 
-	Devices   Devices `yaml:"devices" json:"devices"`
-	Memory    *string `yaml:"memory,omitempty" json:"memory"`
-	DiskSpace *string `yaml:"disk-space,omitempty" json:"disk-space"`
+	Devices Devices `yaml:"devices" json:"devices"`
 
-	Components     []string       `yaml:"components" json:"components"`
+	Runtime string `yaml:"runtime,omitempty" json:"runtime"`
+	Model   Model  `yaml:"model,omitempty" json:"model"`
+
 	Configurations Configurations `yaml:"configurations" json:"configurations"`
 }
 
@@ -79,6 +79,11 @@ type Device struct {
 }
 
 type Configurations map[string]interface{}
+
+type Model struct {
+	Default string   `yaml:"default" json:"default"`
+	Options []string `yaml:"options" json:"options"`
+}
 
 func (c CompatibilityReport) EngineCompatible() bool {
 	return c.CompatibleMemory && c.CompatibleDisk && c.CompatibleDevices

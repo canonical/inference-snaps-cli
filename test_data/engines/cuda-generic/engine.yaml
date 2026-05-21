@@ -13,15 +13,3 @@ devices:
       # model-ids: [ ]
       vram: 5G
       # compute-capability: 5.0
-
-default-components:
-  - runtime-llama-cpp-cuda
-
-models:
-  - name: 270m
-    id: 270m-gguf
-  - name: 4b
-    id: 4b-gguf
-    default: true
-  - name: 7b
-    id: 7b-gguf

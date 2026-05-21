@@ -7,11 +7,3 @@ devices:
     - type: cpu
       architecture: amd64
       manufacturer-id: GenuineIntel
-
-default-components:
-  - runtime-openvino
-
-models:
-  - name: 4b
-    id: 4b-ov
-    default: true

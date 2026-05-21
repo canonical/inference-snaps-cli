@@ -1,0 +1,24 @@
+package models
+
+type ModelManifest struct {
+	ID   string `json:"id" yaml:"id"`
+	Name string `json:"name" yaml:"name"`
+
+	Description  string   `json:"description" yaml:"description"`
+	ModelCardUrl string   `json:"model-card-url" yaml:"model-card-url"`
+	Quantization string   `json:"quantization" yaml:"quantization"`
+	Capabilities []string `json:"capabilities" yaml:"capabilities"`
+
+	DiskSize string `json:"disk-size" yaml:"disk-size"`
+
+	Components []string `json:"components" yaml:"components"`
+
+	Environment []string `json:"environment" yaml:"environment"`
+
+	Layout         map[string]Layout `yaml:"layout"`
+	expandedLayout map[string]Layout
+}
+
+type Layout struct {
+	Symlink string `yaml:"symlink"`
+}

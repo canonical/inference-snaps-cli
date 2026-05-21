@@ -10,8 +10,4 @@ devices:
     - type: cpu
       architecture: amd64
       manufacturer-id: GenuineIntel
-memory: 35G
-disk-space: 29G
-components:
-  - dummy-component-3
 
