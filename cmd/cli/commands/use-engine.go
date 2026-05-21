@@ -3,15 +3,10 @@ package commands
 import (
 	"errors"
 	"fmt"
-	"os"
-	"strings"
-	"time"
 
-	"github.com/canonical/go-snapctl"
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
 	"github.com/canonical/inference-snaps-cli/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/pkg/selector"
-	"github.com/canonical/inference-snaps-cli/pkg/snap_store"
 	"github.com/canonical/inference-snaps-cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -153,7 +148,12 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 		return fmt.Errorf("loading engine manifest: %v", err)
 	}
 
-	cancelledByUser, err := cmd.installMissingComponents(engine)
+	activeModel, err := common.FixActiveModel(cmd.Context)
+	if err != nil {
+		return err
+	}
+
+	cancelledByUser, err := common.InstallMissingComponents(cmd.Context, cmd.assumeYes, engine, activeModel)
 	if err != nil {
 		return fmt.Errorf("installing missing components: %v", err)
 	}
@@ -201,79 +201,6 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 	return nil
 }
 
-// TODO: unify with similar code in run.go
-func (cmd *useEngineCommand) missingComponents(components []string) ([]string, error) {
-	var missing []string
-	for _, component := range components {
-		isInstalled, err := common.ComponentInstalled(component)
-		if err != nil {
-			return missing, err
-		}
-		if !isInstalled {
-			missing = append(missing, component)
-		}
-	}
-	return missing, nil
-}
-
-func (*useEngineCommand) installComponents(components []string) error {
-	const (
-		snapdAlreadyInstalledError = "already installed"
-		snapdUnknownSnapError      = "cannot install components for a snap that is unknown to the store"
-		snapdTimeoutError          = "timeout exceeded while waiting for response"
-		snapdChangeInProgressError = "change in progress"
-		timeout                    = 60 * time.Minute
-		retryDelay                 = 10 * time.Second
-	)
-	startTime := time.Now()
-
-	for _, component := range components {
-		stopProgress := common.StartProgressSpinner("Installing " + component)
-		err := snapctl.InstallComponents(component).Run()
-		defer stopProgress()
-
-		for err != nil {
-			// Only retry up to the set timeout
-			if time.Since(startTime) > timeout {
-				return fmt.Errorf("timed out while installing %q:"+
-					"\nMonitor the installation progress with \"snap changes\""+
-					"\n\nRerun this command once the installation is complete",
-					component)
-			}
-
-			if strings.Contains(err.Error(), snapdAlreadyInstalledError) {
-				// All good. Continue installing next component.
-				break
-
-			} else if strings.Contains(err.Error(), snapdUnknownSnapError) {
-				// Install component manually
-				return fmt.Errorf("snap not known to the store:"+
-					"\nRerun this command after manually installing %q",
-					component)
-
-			} else if strings.Contains(err.Error(), snapdTimeoutError) {
-				// Snapd timed out while installing this component
-				time.Sleep(retryDelay)
-				err = snapctl.InstallComponents(component).Run()
-
-			} else if strings.Contains(err.Error(), snapdChangeInProgressError) {
-				// Snapd is busy with installing this component or busy with an unrelated change
-				time.Sleep(retryDelay)
-				err = snapctl.InstallComponents(component).Run()
-
-			} else {
-				// Any other error we do not specifically handle will stop installing components
-				return fmt.Errorf("installing %q: %s", component, err)
-			}
-		}
-
-		stopProgress()
-		fmt.Println("Installed " + component)
-	}
-
-	return nil
-}
-
 func (cmd *useEngineCommand) fixActiveEngine() error {
 	activeEngineName, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
@@ -292,10 +219,17 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 		return fmt.Errorf("loading active engine manifest: %v", err)
 	}
 
-	// If engine exists, make sure it is correctly installed and configured
-	if _, err = cmd.installMissingComponents(engine); err != nil {
+	// Verify active model is supported or switch to default
+	activeModel, err := common.FixActiveModel(cmd.Context)
+	if err != nil {
+		return err
+	}
+
+	// Make sure all components are correctly installed and engine is configured
+	if _, err = common.InstallMissingComponents(cmd.Context, cmd.assumeYes, engine, activeModel); err != nil {
 		return fmt.Errorf("installing missing components: %v", err)
 	}
+
 	if err = common.UnsetEngineConfig(activeEngineName, false, cmd.Context); err != nil {
 		return fmt.Errorf("un-setting engine configurations: %v", err)
 	}
@@ -304,55 +238,6 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 	}
 
 	return nil
-}
-
-func (cmd *useEngineCommand) installMissingComponents(engine *engines.Manifest) (cancelledByUser bool, err error) {
-
-	requiredComponents := []string{}
-	// TODO look up required components from runtime and model manifests
-	missingComponents, err := cmd.missingComponents(requiredComponents)
-	if err != nil {
-		return false, fmt.Errorf("checking installed components: %v", err)
-	}
-	if len(missingComponents) == 0 {
-		return false, nil
-	}
-
-	componentSizes, err := snap_store.ComponentSizes()
-	if err != nil && cmd.Verbose {
-		fmt.Fprintf(os.Stderr, "Warning: unable to query component sizes: %v\n", err)
-	}
-
-	// Format list of components, adding size if it is known
-	fmt.Println("Need to install the following components:")
-	for _, componentName := range missingComponents {
-		line := fmt.Sprintf("- %s", componentName)
-		if size, found := componentSizes[componentName]; found {
-			line += fmt.Sprintf(" (%s)", utils.FmtBytes(uint64(size)))
-		}
-		fmt.Println(line)
-	}
-
-	// Only ask for confirmation if it is an interactive terminal
-	if !cmd.assumeYes && utils.IsTerminalOutput() {
-		fmt.Println()
-		if !common.PromptYN("Do you want to continue?", true) {
-			fmt.Println("Cancelled. No changes applied.")
-			return true, nil
-		}
-	}
-
-	// Leave a blank line after printing component list and optional confirmation, before printing component installation progress
-	fmt.Println()
-
-	// This is blocking, but there is a timeout bug:
-	// https://github.com/canonical/inference-snaps-cli/issues/122
-	err = cmd.installComponents(missingComponents)
-	if err != nil {
-		return false, fmt.Errorf("installing components: %v", err)
-	}
-
-	return false, nil
 }
 
 func (cmd *useEngineCommand) verboseIncompatibilityReasons(report engines.CompatibilityReport) []string {

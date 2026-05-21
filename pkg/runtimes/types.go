@@ -1,6 +1,6 @@
 package runtimes
 
-type RuntimeManifest struct {
+type Manifest struct {
 	Servers        map[string]Server `json:"servers" yaml:"servers"`
 	Environment    []string          `json:"environment" yaml:"environment"`
 	Layout         map[string]Layout `yaml:"layout"`

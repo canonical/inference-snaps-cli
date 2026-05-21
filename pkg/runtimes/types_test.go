@@ -29,7 +29,7 @@ func TestParseManifest(t *testing.T) {
 				t.Fatalf("failed to read %s: %v", runtimeFile, err)
 			}
 
-			var manifest RuntimeManifest
+			var manifest Manifest
 			dec := yaml.NewDecoder(bytes.NewReader(data))
 			dec.KnownFields(true)
 			if err := dec.Decode(&manifest); err != nil {

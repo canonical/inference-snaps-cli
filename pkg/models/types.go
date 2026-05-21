@@ -1,6 +1,6 @@
 package models
 
-type ModelManifest struct {
+type Manifest struct {
 	ID   string `json:"id" yaml:"id"`
 	Name string `json:"name" yaml:"name"`
 

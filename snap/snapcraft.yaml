@@ -39,7 +39,7 @@ parts:
     build-packages:
       - git-lfs
     override-pull: |
-      craftctl set version="v3+$(git -C $SNAPCRAFT_PROJECT_DIR describe --always --dirty)"
+      craftctl set version="$(git -C $SNAPCRAFT_PROJECT_DIR describe --always --dirty)"
 
   scripts:
     source: snap/local
@@ -55,11 +55,17 @@ parts:
     organize:
       "*": engines/
 
+  runtimes:
+    plugin: dump
+    source: test_data/runtimes
+    organize:
+      "*": runtimes/
+
   models:
     plugin: dump
-    source: test_data
+    source: test_data/models
     organize:
-      "models.yaml": models/
+      "*": models/
 
   cli:
     plugin: go
