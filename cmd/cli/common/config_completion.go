@@ -1,4 +1,4 @@
-package commands
+package common
 
 import (
 	"sort"
@@ -7,7 +7,7 @@ import (
 	"github.com/canonical/inference-snaps-cli/pkg/storage"
 )
 
-func completeConfigKeys(config storage.Config, toComplete string, appendEquals bool, excludedKeys map[string]struct{}) []string {
+func CompleteConfigKeys(config storage.Config, toComplete string, appendEquals bool, excludedKeys map[string]struct{}) []string {
 	values, err := config.GetAll()
 	if err != nil {
 		return nil
