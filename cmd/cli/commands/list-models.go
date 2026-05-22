@@ -46,12 +46,12 @@ func (cmd *listModelsCommand) run(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
 
-	models, err := engines.Models(cmd.EnginesDir, activeEngine)
+	engineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngine)
 	if err != nil {
-		return fmt.Errorf("looking up models for engine %s: %w", activeEngine, err)
+		return fmt.Errorf("%s: %w", common.LoadingEngineManifest, err)
 	}
 
-	for _, model := range models {
+	for _, model := range engineManifest.Model.Options {
 		fmt.Println(model)
 	}
 

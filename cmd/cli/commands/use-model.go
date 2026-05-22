@@ -144,19 +144,19 @@ func (cmd *useModelCommand) autoSelectModel() error {
 		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
 
-	defaultModel, err := engines.DefaultModel(cmd.EnginesDir, activeEngine)
+	engineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngine)
 	if err != nil {
-		return fmt.Errorf("%s: %w", "looking up default model", err)
+		return fmt.Errorf("%s: %w", common.LoadingEngineManifest, err)
 	}
 
-	err = cmd.Cache.SetActiveModel(defaultModel)
+	err = cmd.Cache.SetActiveModel(engineManifest.Model.Default)
 	if err != nil {
 		return fmt.Errorf("setting active model: %v", err)
 	}
 
 	// TODO check if the default model size will fit, otherwise check the next smaller one, iteratively
 
-	fmt.Println("Switching to default model", defaultModel, "for engine", activeEngine)
+	fmt.Println("Switching to default model", engineManifest.Model.Default, "for engine", activeEngine)
 
-	return cmd.switchModel(defaultModel)
+	return cmd.switchModel(engineManifest.Model.Default)
 }
