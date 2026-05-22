@@ -397,11 +397,11 @@ func TestSetEngineConfig(t *testing.T) {
 	}
 
 	all, _ := cfg.GetAll()
-	if all["engine.key1"] != "value1" {
-		t.Errorf("expected engine.key1=value1, got %v", all["engine.key1"])
+	if all["key1"] != "value1" {
+		t.Errorf("expected key1=value1, got %v", all["key1"])
 	}
-	if all["engine.key2"] != 42 {
-		t.Errorf("expected engine.key2=42, got %v", all["engine.key2"])
+	if all["key2"] != 42 {
+		t.Errorf("expected key2=42, got %v", all["key2"])
 	}
 }
 
