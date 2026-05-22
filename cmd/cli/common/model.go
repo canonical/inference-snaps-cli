@@ -14,6 +14,11 @@ func FixActiveModel(ctx *Context) (string, error) {
 		return "", fmt.Errorf("getting active engine: %v", err)
 	}
 
+	if activeEngineName == "" {
+		// No engine is active, so there is no model to fix
+		return "", nil
+	}
+
 	engineManifest, err := engines.LoadManifest(ctx.EnginesDir, activeEngineName)
 	if err != nil {
 		return "", fmt.Errorf("loading active engine manifest: %v", err)

@@ -115,6 +115,10 @@ func ComponentsRequiredByCurrentSelection(ctx *Context) ([]string, error) {
 }
 
 func ComponentsRequiredByModel(ctx *Context, modelName string) ([]string, error) {
+	if modelName == "" {
+		return nil, nil
+	}
+
 	var requiredComponents []string
 
 	modelManifest, err := models.LoadManifest(ctx.ModelsDir, modelName)
@@ -127,6 +131,10 @@ func ComponentsRequiredByModel(ctx *Context, modelName string) ([]string, error)
 }
 
 func ComponentsRequiredByRuntime(ctx *Context, runtimeName string) ([]string, error) {
+	if runtimeName == "" {
+		return nil, nil
+	}
+
 	var requiredComponents []string
 
 	// Components required by runtime
@@ -163,6 +171,10 @@ func InstalledComponents() ([]string, error) {
 }
 
 func MissingComponents(requiredComponents []string) ([]string, error) {
+	if len(requiredComponents) == 0 {
+		return nil, nil
+	}
+
 	componentsDir, found := os.LookupEnv("SNAP_COMPONENTS")
 	if !found {
 		return nil, fmt.Errorf("SNAP_COMPONENTS env var not set")

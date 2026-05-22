@@ -2,6 +2,7 @@ package commands
 
 import (
 	"errors"
+	"os"
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
@@ -62,12 +63,18 @@ func ExampleUseEngine_autoSelectEngine() {
 	cmd := useEngineCommand{
 		assumeYes: true,
 		Context: &common.Context{
-			EnginesDir: "../../../test_data/engines",
-			Cache:      cache,
-			Config:     config,
-			Snap:       snap.Mock(),
+			EnginesDir:  "../../../test_data/engines",
+			RuntimesDir: "../../../test_data/runtimes",
+			Cache:       cache,
+			Config:      config,
+			Snap:        snap.Mock(),
 		},
 	}
+	// Set SNAP_COMPONENTS so that component checks can succeed (components appear as installed)
+	if err := os.Setenv("SNAP_COMPONENTS", "../../../test_data/components"); err != nil {
+		panic(err)
+	}
+	defer os.Unsetenv("SNAP_COMPONENTS")
 	cmd.Cache.SetActiveEngine("")
 	cmd.Verbose = true
 	var allEngines []engines.Manifest
@@ -95,8 +102,8 @@ func ExampleUseEngine_autoSelectEngine() {
 	// Evaluating engines for optimal hardware compatibility:
 	// ✘ not-compatible-engine: not compatible
 	//   - required device not found
-	// • cpu-devel: devel, score=12
-	// ✔ cpu: compatible, score=12
+	// • cpu-devel: devel, score=10
+	// ✔ cpu: compatible, score=10
 	// Selected engine: cpu
 	// Engine changed to "cpu".
 	// [mock] Restarting all services
