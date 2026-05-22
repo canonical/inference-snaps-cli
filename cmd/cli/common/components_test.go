@@ -305,6 +305,86 @@ func TestComponentsRequiredByCurrentSelection(t *testing.T) {
 	})
 }
 
+func TestInstalledComponents(t *testing.T) {
+	t.Run("SNAP_COMPONENTS not set returns error", func(t *testing.T) {
+		t.Setenv("SNAP_COMPONENTS", "")
+		os.Unsetenv("SNAP_COMPONENTS")
+
+		_, err := InstalledComponents()
+		if err == nil {
+			t.Fatal("expected error when SNAP_COMPONENTS is not set, got nil")
+		}
+		if !strings.Contains(err.Error(), "SNAP_COMPONENTS") {
+			t.Errorf("expected error to mention SNAP_COMPONENTS, got: %v", err)
+		}
+	})
+
+	t.Run("empty components directory returns empty slice", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		t.Setenv("SNAP_COMPONENTS", tmpDir)
+
+		installed, err := InstalledComponents()
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(installed) != 0 {
+			t.Errorf("expected empty slice, got %v", installed)
+		}
+	})
+
+	t.Run("returns names of installed component directories", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		t.Setenv("SNAP_COMPONENTS", tmpDir)
+		for _, comp := range []string{"comp-a", "comp-b", "comp-c"} {
+			if err := os.MkdirAll(filepath.Join(tmpDir, comp), 0755); err != nil {
+				t.Fatalf("MkdirAll: %v", err)
+			}
+		}
+
+		installed, err := InstalledComponents()
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(installed) != 3 {
+			t.Fatalf("expected 3 installed components, got %v", installed)
+		}
+		want := map[string]bool{"comp-a": true, "comp-b": true, "comp-c": true}
+		for _, name := range installed {
+			if !want[name] {
+				t.Errorf("unexpected component name %q in result", name)
+			}
+		}
+	})
+
+	t.Run("files in components directory are not included", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		t.Setenv("SNAP_COMPONENTS", tmpDir)
+		if err := os.MkdirAll(filepath.Join(tmpDir, "real-component"), 0755); err != nil {
+			t.Fatalf("MkdirAll: %v", err)
+		}
+		if err := os.WriteFile(filepath.Join(tmpDir, "not-a-component"), []byte("file"), 0644); err != nil {
+			t.Fatalf("WriteFile: %v", err)
+		}
+
+		installed, err := InstalledComponents()
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(installed) != 1 || installed[0] != "real-component" {
+			t.Errorf("expected [real-component], got %v", installed)
+		}
+	})
+
+	t.Run("non-existent components directory returns error", func(t *testing.T) {
+		t.Setenv("SNAP_COMPONENTS", "/this/path/does/not/exist")
+
+		_, err := InstalledComponents()
+		if err == nil {
+			t.Fatal("expected error for non-existent components directory, got nil")
+		}
+	})
+}
+
 func TestMissingComponents(t *testing.T) {
 	t.Run("SNAP_COMPONENTS not set returns error", func(t *testing.T) {
 		prev, wasSet := os.LookupEnv("SNAP_COMPONENTS")

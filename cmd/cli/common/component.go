@@ -40,6 +40,8 @@ func ComponentInstalled(component string) (bool, error) {
 	}
 }
 
+
+
 func WaitForComponents(ctx *Context) error {
 	const maxWait = 1 * time.Hour
 	const interval = 10 * time.Second
@@ -135,6 +137,29 @@ func ComponentsRequiredByRuntime(ctx *Context, runtimeName string) ([]string, er
 	requiredComponents = append(requiredComponents, runtimeManifest.Components...)
 
 	return requiredComponents, nil
+}
+
+// InstalledComponents returns the names of all currently installed components
+// by listing subdirectories inside the SNAP_COMPONENTS directory.
+func InstalledComponents() ([]string, error) {
+	componentsDir, found := os.LookupEnv("SNAP_COMPONENTS")
+	if !found {
+		return nil, fmt.Errorf("SNAP_COMPONENTS env var not set")
+	}
+
+	entries, err := os.ReadDir(componentsDir)
+	if err != nil {
+		return nil, fmt.Errorf("reading components directory %q: %v", componentsDir, err)
+	}
+
+	var installed []string
+	for _, entry := range entries {
+		if entry.IsDir() {
+			installed = append(installed, entry.Name())
+		}
+	}
+
+	return installed, nil
 }
 
 func MissingComponents(requiredComponents []string) ([]string, error) {
