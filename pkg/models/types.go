@@ -1,5 +1,7 @@
 package models
 
+import "github.com/canonical/inference-snaps-cli/pkg/types"
+
 type Manifest struct {
 	ID   string `json:"id" yaml:"id"`
 	Name string `json:"name" yaml:"name"`
@@ -15,10 +17,5 @@ type Manifest struct {
 
 	Environment []string `json:"environment" yaml:"environment"`
 
-	Layout         map[string]Layout `yaml:"layout"`
-	expandedLayout map[string]Layout
-}
-
-type Layout struct {
-	Symlink string `yaml:"symlink"`
+	Layout      map[string]types.Layout `yaml:"layout"`
 }
