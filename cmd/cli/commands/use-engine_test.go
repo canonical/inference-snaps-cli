@@ -70,8 +70,17 @@ func ExampleUseEngine_autoSelectEngine() {
 			Snap:        snap.Mock(),
 		},
 	}
-	// Set SNAP_COMPONENTS so that component checks can succeed (components appear as installed)
-	if err := os.Setenv("SNAP_COMPONENTS", "../../../test_data/components"); err != nil {
+	// Create a temporary SNAP_COMPONENTS directory with stub component directories so that
+	// required components appear "installed" and the install flow produces no extra output.
+	snapComponents, err := os.MkdirTemp("", "snap-components-*")
+	if err != nil {
+		panic(err)
+	}
+	defer os.RemoveAll(snapComponents)
+	if err := os.Mkdir(snapComponents+"/runtime-llama-cpp-cpu", 0755); err != nil {
+		panic(err)
+	}
+	if err := os.Setenv("SNAP_COMPONENTS", snapComponents); err != nil {
 		panic(err)
 	}
 	defer os.Unsetenv("SNAP_COMPONENTS")

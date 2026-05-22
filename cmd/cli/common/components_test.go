@@ -20,6 +20,23 @@ type testDirs struct {
 	requiredComponents []string
 }
 
+// unsetenvForTest unsets the named environment variable for the duration of the
+// test and restores its original value (or absence) on cleanup.
+func unsetenvForTest(t *testing.T, key string) {
+	t.Helper()
+	prev, wasSet := os.LookupEnv(key)
+	if err := os.Unsetenv(key); err != nil {
+		t.Fatalf("os.Unsetenv(%q): %v", key, err)
+	}
+	t.Cleanup(func() {
+		if wasSet {
+			os.Setenv(key, prev)
+		} else {
+			os.Unsetenv(key)
+		}
+	})
+}
+
 // setupComponentTestDirs creates a self-contained directory tree under t.TempDir()
 // with minimal engine, runtime, and model YAML manifests. No test_data is used.
 //
@@ -71,8 +88,7 @@ model:
 
 func TestComponentInstalled(t *testing.T) {
 	t.Run("SNAP_COMPONENTS not set returns error", func(t *testing.T) {
-		t.Setenv("SNAP_COMPONENTS", "")
-		os.Unsetenv("SNAP_COMPONENTS")
+		unsetenvForTest(t, "SNAP_COMPONENTS")
 
 		installed, err := ComponentInstalled("my-component")
 		if err == nil {
@@ -184,15 +200,7 @@ func TestWaitForComponentsWithTimeoutAndInterval(t *testing.T) {
 	})
 
 	t.Run("SNAP_COMPONENTS not set returns error", func(t *testing.T) {
-		prev, wasSet := os.LookupEnv("SNAP_COMPONENTS")
-		os.Unsetenv("SNAP_COMPONENTS")
-		t.Cleanup(func() {
-			if wasSet {
-				os.Setenv("SNAP_COMPONENTS", prev)
-			} else {
-				os.Unsetenv("SNAP_COMPONENTS")
-			}
-		})
+		unsetenvForTest(t, "SNAP_COMPONENTS")
 
 		ctx := makeTestCtx(t, dirs, "test-engine", "test-model")
 		err := WaitForComponentsWithTimeoutAndInterval(ctx, 5*time.Second, 100*time.Millisecond)
@@ -307,8 +315,7 @@ func TestComponentsRequiredByCurrentSelection(t *testing.T) {
 
 func TestInstalledComponents(t *testing.T) {
 	t.Run("SNAP_COMPONENTS not set returns error", func(t *testing.T) {
-		t.Setenv("SNAP_COMPONENTS", "")
-		os.Unsetenv("SNAP_COMPONENTS")
+		unsetenvForTest(t, "SNAP_COMPONENTS")
 
 		_, err := InstalledComponents()
 		if err == nil {
@@ -387,15 +394,7 @@ func TestInstalledComponents(t *testing.T) {
 
 func TestMissingComponents(t *testing.T) {
 	t.Run("SNAP_COMPONENTS not set returns error", func(t *testing.T) {
-		prev, wasSet := os.LookupEnv("SNAP_COMPONENTS")
-		os.Unsetenv("SNAP_COMPONENTS")
-		t.Cleanup(func() {
-			if wasSet {
-				os.Setenv("SNAP_COMPONENTS", prev)
-			} else {
-				os.Unsetenv("SNAP_COMPONENTS")
-			}
-		})
+		unsetenvForTest(t, "SNAP_COMPONENTS")
 
 		_, err := MissingComponents([]string{"any-component"})
 		if err == nil {

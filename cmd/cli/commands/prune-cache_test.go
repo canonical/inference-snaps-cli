@@ -18,6 +18,23 @@ type pruneTestDirs struct {
 	modelsDir   string
 }
 
+// unsetenvForTest unsets the named environment variable for the duration of the
+// test and restores its original value (or absence) on cleanup.
+func unsetenvForTest(t *testing.T, key string) {
+	t.Helper()
+	prev, wasSet := os.LookupEnv(key)
+	if err := os.Unsetenv(key); err != nil {
+		t.Fatalf("os.Unsetenv(%q): %v", key, err)
+	}
+	t.Cleanup(func() {
+		if wasSet {
+			os.Setenv(key, prev)
+		} else {
+			os.Unsetenv(key)
+		}
+	})
+}
+
 // setupPruneTestDirs creates a self-contained directory tree under t.TempDir()
 // with minimal engine, runtime, and model YAML manifests.
 //
@@ -176,8 +193,7 @@ func TestUnusedComponentsAll(t *testing.T) {
 	})
 
 	t.Run("SNAP_COMPONENTS not set returns error", func(t *testing.T) {
-		t.Setenv("SNAP_COMPONENTS", "")
-		os.Unsetenv("SNAP_COMPONENTS")
+		unsetenvForTest(t, "SNAP_COMPONENTS")
 		cmd := makePruneCmd(dirs, "active-engine", "active-model")
 
 		_, err := cmd.unusedComponentsAll()
@@ -335,8 +351,7 @@ func TestUnusedComponentsEngine(t *testing.T) {
 	})
 
 	t.Run("SNAP_COMPONENTS not set returns error", func(t *testing.T) {
-		t.Setenv("SNAP_COMPONENTS", "")
-		os.Unsetenv("SNAP_COMPONENTS")
+		unsetenvForTest(t, "SNAP_COMPONENTS")
 		cmd := makePruneCmd(dirs, "active-engine", "active-model")
 
 		_, err := cmd.unusedComponentsEngine("inactive-engine")
