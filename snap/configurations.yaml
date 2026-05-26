@@ -1,0 +1,10 @@
+package:
+  verbose: false
+  http.port: 8332
+  http.host: "localhost"
+  webui.http.port: 8333
+  webui.http.host: "localhost"
+user:
+  user-test-key: "user-test-value"
+engine:
+  engine-test-key: "engine-test-value"

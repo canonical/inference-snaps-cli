@@ -71,3 +71,24 @@ func pathWithinTmp(path string) (bool, error) {
 	}
 	return false, nil
 }
+
+func CreateSymlink(target, link string) error {
+	// Create directory tree for the link
+	if err := os.MkdirAll(filepath.Dir(link), 0755); err != nil {
+		return fmt.Errorf("creating directory for symlink %q: %v", link, err)
+	}
+
+	// Remove existing symlink if it exists
+	if _, err := os.Lstat(link); err == nil {
+		if err := os.Remove(link); err != nil {
+			return fmt.Errorf("removing existing file at %q: %v", link, err)
+		}
+	}
+
+	// Create new symlink
+	if err := os.Symlink(target, link); err != nil {
+		return fmt.Errorf("creating symlink from %q to %q: %v", link, target, err)
+	}
+
+	return nil
+}

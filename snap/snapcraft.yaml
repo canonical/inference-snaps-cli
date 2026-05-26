@@ -33,6 +33,11 @@ environment:
   SNAP_COMPONENTS: /snap/$SNAP_INSTANCE_NAME/components/$SNAP_REVISION
 
 parts:
+  configurations:
+    plugin: dump
+    source: snap
+    organize:
+      "configurations.yaml": var/configurations/
   scripts:
     source: snap/local
     plugin: dump
@@ -195,3 +200,11 @@ apps:
     daemon: simple
     plugs:
       - network-bind
+
+hooks:
+  install:
+    plugs:
+      - hardware-observe
+  post-refresh:
+    plugs:
+      - hardware-observe
