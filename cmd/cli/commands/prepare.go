@@ -136,7 +136,7 @@ func (cmd *prepareCommand) createSymbolicLinksForWSL() error {
 func (cmd *prepareCommand) setConfigurations(conf map[string]any) (bool, error) {
 
 	// cannot check for errors because if the config is not set, it will be set to nil and the error will be ignored
-	before, err := cmd.Config.GetAll()
+	before, _ := cmd.Config.GetAll()
 
 	for configurationType := range conf {
 		switch configurationType {
