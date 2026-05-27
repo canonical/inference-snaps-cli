@@ -69,18 +69,19 @@ func (cmd *prepareCommand) run(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("checking hardware-observe connection: %v", err)
 	}
 	if connected {
+		// Able to connect to hardware-observe interface
 		scoredEngines, err = common.ScoreEnginesWithSpinner(cmd.Context)
 		if err != nil {
 			return fmt.Errorf("scoring engines: %v", err)
 		}
 	} else if canAccessHardwareInfo() {
-		fmt.Fprintln(os.Stderr, "Able to access hardware info without hardware-observe interface connection: assuming dev mode installation.")
+		// Able to access hardware info without hardware-observe interface connection: assuming dev mode installation.
 		scoredEngines, err = common.ScoreEnginesWithSpinner(cmd.Context)
 		if err != nil {
 			return fmt.Errorf("scoring engines: %v", err)
 		}
 	} else {
-		fmt.Fprintln(os.Stderr, "hardware-observe interface not auto connected. Skip auto engine selection.")
+		// hardware-observe interface not auto connected. Skip auto engine selection
 	}
 
 	return cmd.load(path, cmd.Context, scoredEngines, &useEngineCmd)
@@ -109,14 +110,18 @@ func (cmd *prepareCommand) load(path string, ctx *common.Context, scoredEngines 
 	engineSelectionChanged := false
 	if cmd.install {
 		if scoredEngines != nil {
+			previousEngine, _ := cmd.Cache.GetActiveEngine()
 			if err := useEngineCmd.autoSelectScoredEngine(scoredEngines); err != nil {
 				return fmt.Errorf("auto-selecting engine: %w", err)
 			}
-			engineSelectionChanged = true
+			currentEngine, _ := cmd.Cache.GetActiveEngine()
+			engineSelectionChanged = previousEngine != currentEngine
 		}
 	} else if cmd.postRefresh {
-		if err := useEngineCmd.fixActiveEngine(); err != nil {
-			return fmt.Errorf("fixing active engine: %w", err)
+		if scoredEngines != nil {
+			if err := useEngineCmd.fixActiveEngine(); err != nil {
+				return fmt.Errorf("fixing active engine: %w", err)
+			}
 		}
 	}
 
