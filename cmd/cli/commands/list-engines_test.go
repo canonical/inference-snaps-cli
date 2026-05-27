@@ -102,7 +102,7 @@ intel-cpu              Intel Corporation  Use Intel CPUs                 yes
 cpu-avx2               Canonical Ltd      CPUs with AVX2                 yes   
 cpu-avx1               Canonical Ltd      Legacy CPUs with only SSE4.2…  yes   
 cpu                    Canonical Ltd      General CPU engine             yes   
-cpu-devel              Canonical Ltd      Requires any CPU but is grad…  devel 
+cpu-devel              Canonical Ltd      Requires any CPU but is grad…  exptl 
 rocm-generic           Canonical Ltd      AMD GPUs using ROCm. All maj…  no    
 not-compatible-engine  Canonical Ltd      This test engine is designed…  no    
 intel-npu              Intel Corporation  Intel NPUs                     no    
