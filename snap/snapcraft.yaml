@@ -205,6 +205,10 @@ hooks:
   install:
     plugs:
       - hardware-observe
+      - network
+      - opengl
   post-refresh:
     plugs:
       - hardware-observe
+      - network
+      - opengl

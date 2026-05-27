@@ -1,9 +1,9 @@
 package:
   verbose: false
-  http.port: 8332
-  http.host: "localhost"
-  webui.http.port: 8333
-  webui.http.host: "localhost"
+  http.port: 8322
+  http.host: "127.0.0.1"
+  webui.http.port: 8323
+  webui.http.host: "127.0.0.1"
 user:
   user-test-key: "user-test-value"
 engine:
