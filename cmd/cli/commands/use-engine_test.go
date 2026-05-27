@@ -95,7 +95,7 @@ func ExampleUseEngine_autoSelectEngine() {
 	// Evaluating engines for optimal hardware compatibility:
 	// ✘ not-compatible-engine: not compatible
 	//   - required device not found
-	// • cpu-devel: devel, score=12
+	// • cpu-devel: experimental, score=12
 	// ✔ cpu: compatible, score=12
 	// Selected engine: cpu
 	// Engine changed to "cpu".
