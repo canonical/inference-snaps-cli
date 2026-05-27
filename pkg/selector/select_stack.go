@@ -19,7 +19,7 @@ func TopEngine(scoredEngines []engines.ScoredManifest) (*engines.ScoredManifest,
 	var compatibleEngines []engines.ScoredManifest
 
 	for _, engine := range scoredEngines {
-		if engine.Score > 0 && !engine.Experimental == false {
+		if engine.Score > 0 && !engine.Experimental {
 			compatibleEngines = append(compatibleEngines, engine)
 		}
 	}
