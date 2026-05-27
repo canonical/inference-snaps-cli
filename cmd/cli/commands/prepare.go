@@ -38,7 +38,7 @@ func Prepare(ctx *common.Context) *cobra.Command {
 	}
 
 	cobraCmd.Flags().BoolVar(&cmd.postRefresh, "post-refresh", false, "triggered on post-refresh hook")
-	cobraCmd.Flags().BoolVar(&cmd.install, "install", true, "triggered on install hook")
+	cobraCmd.Flags().BoolVar(&cmd.install, "install", false, "triggered on install hook")
 	cobraCmd.Flags().BoolVar(&cmd.noRestart, "no-restart", false, "do not restart the snap after setting the configuration")
 	cobraCmd.Flags().BoolVar(&cmd.assumeYes, "assume-yes", false, "assume yes for any prompt")
 
@@ -50,33 +50,40 @@ func (cmd *prepareCommand) run(_ *cobra.Command, args []string) error {
 		return common.ErrPermissionDenied
 	}
 
-	if cmd.postRefresh || cmd.install {
-		path := filepath.Join(env.Snap(), "var", "configurations", "configurations.yaml")
-		if len(args) == 1 {
-			path = args[0]
-		}
-
-		// no restart set to true to avoid double prompting. Prompting is handled in the caller function
-		useEngineCmd := useEngineCommand{Context: cmd.Context, noRestart: true}
-
-		var scoredEngines []engines.ScoredManifest
-		connected, err := snapctl.IsConnected("hardware-observe").Run()
-		if err != nil {
-			return fmt.Errorf("checking hardware-observe connection: %v", err)
-		}
-		if connected {
-			scoredEngines, err = common.ScoreEnginesWithSpinner(cmd.Context)
-			if err != nil {
-				return fmt.Errorf("scoring engines: %v", err)
-			}
-		} else {
-			fmt.Fprintln(os.Stderr, "hardware-observe interface not auto connected. Skip auto engine selection.")
-		}
-
-		return cmd.load(path, cmd.Context, scoredEngines, &useEngineCmd)
-	} else {
-		return fmt.Errorf("prepare command should be run with at least one of --post-refresh or --install flag")
+	// Default to install workflow when neither flag is explicitly provided
+	if !cmd.install && !cmd.postRefresh {
+		cmd.install = true
 	}
+
+	path := filepath.Join(env.Snap(), "var", "configurations", "configurations.yaml")
+	if len(args) == 1 {
+		path = args[0]
+	}
+
+	// no restart set to true to avoid double prompting. Prompting is handled in the caller function
+	useEngineCmd := useEngineCommand{Context: cmd.Context, noRestart: true}
+
+	var scoredEngines []engines.ScoredManifest
+	connected, err := snapctl.IsConnected("hardware-observe").Run()
+	if err != nil {
+		return fmt.Errorf("checking hardware-observe connection: %v", err)
+	}
+	if connected {
+		scoredEngines, err = common.ScoreEnginesWithSpinner(cmd.Context)
+		if err != nil {
+			return fmt.Errorf("scoring engines: %v", err)
+		}
+	} else if canAccessHardwareInfo() {
+		fmt.Fprintln(os.Stderr, "Able to access hardware info without hardware-observe interface connection: assuming dev mode installation.")
+		scoredEngines, err = common.ScoreEnginesWithSpinner(cmd.Context)
+		if err != nil {
+			return fmt.Errorf("scoring engines: %v", err)
+		}
+	} else {
+		fmt.Fprintln(os.Stderr, "hardware-observe interface not auto connected. Skip auto engine selection.")
+	}
+
+	return cmd.load(path, cmd.Context, scoredEngines, &useEngineCmd)
 }
 
 func (cmd *prepareCommand) load(path string, ctx *common.Context, scoredEngines []engines.ScoredManifest, useEngineCmd *useEngineCommand) error {
@@ -99,13 +106,21 @@ func (cmd *prepareCommand) load(path string, ctx *common.Context, scoredEngines 
 		return fmt.Errorf("creating symbolic links for WSL: %w", err)
 	}
 
-	if scoredEngines != nil {
-		if err := useEngineCmd.autoSelectScoredEngine(scoredEngines); err != nil {
-			return fmt.Errorf("auto-selecting engine: %w", err)
+	engineSelectionChanged := false
+	if cmd.install {
+		if scoredEngines != nil {
+			if err := useEngineCmd.autoSelectScoredEngine(scoredEngines); err != nil {
+				return fmt.Errorf("auto-selecting engine: %w", err)
+			}
+			engineSelectionChanged = true
+		}
+	} else if cmd.postRefresh {
+		if err := useEngineCmd.fixActiveEngine(); err != nil {
+			return fmt.Errorf("fixing active engine: %w", err)
 		}
 	}
 
-	if !cmd.noRestart && changed {
+	if !cmd.noRestart && (changed || engineSelectionChanged) {
 		return common.PromptRestartToApplyChanges(ctx, cmd.assumeYes)
 	}
 
@@ -139,21 +154,25 @@ func (cmd *prepareCommand) setConfigurations(conf map[string]any) (bool, error) 
 	before, _ := cmd.Config.GetAll()
 
 	for configurationType := range conf {
+		section, ok := conf[configurationType].(map[string]any)
+		if !ok {
+			return false, fmt.Errorf("configuration section %q must be a mapping, got %T", configurationType, conf[configurationType])
+		}
 		switch configurationType {
 		case "package":
-			for k, v := range conf[configurationType].(map[string]any) {
+			for k, v := range section {
 				if err := cmd.Config.SetDocument(k, v, storage.PackageConfig); err != nil {
 					return false, fmt.Errorf("setting package configurations: %w", err)
 				}
 			}
 		case "user":
-			for k, v := range conf[configurationType].(map[string]any) {
+			for k, v := range section {
 				if err := cmd.Config.SetDocument(k, v, storage.UserConfig); err != nil {
 					return false, fmt.Errorf("setting user configurations: %w", err)
 				}
 			}
 		case "engine":
-			for k, v := range conf[configurationType].(map[string]any) {
+			for k, v := range section {
 				if err := cmd.Config.SetDocument(k, v, storage.EngineConfig); err != nil {
 					return false, fmt.Errorf("setting engine configurations: %w", err)
 				}
@@ -171,4 +190,9 @@ func (cmd *prepareCommand) setConfigurations(conf map[string]any) (bool, error) 
 	return !reflect.DeepEqual(before, after), nil
 }
 
-
+// canAccessHardwareInfo checks if hardware info is accessible without the
+// hardware-observe interface (e.g. devmode or unconfined installs).
+func canAccessHardwareInfo() bool {
+	_, err := os.ReadDir("/sys/bus/pci")
+	return err == nil
+}
