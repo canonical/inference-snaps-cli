@@ -79,9 +79,12 @@ func CreateSymlink(target, link string) error {
 	}
 
 	// Remove existing symlink if it exists
-	if _, err := os.Lstat(link); err == nil {
+	if info, err := os.Lstat(link); err == nil {
+		if info.Mode()&os.ModeSymlink == 0 {
+			return fmt.Errorf("existing path %q is not a symlink", link)
+		}
 		if err := os.Remove(link); err != nil {
-			return fmt.Errorf("removing existing file at %q: %v", link, err)
+			return fmt.Errorf("removing existing symlink at %q: %v", link, err)
 		}
 	}
 
