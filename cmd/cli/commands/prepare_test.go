@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"os"
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
@@ -11,8 +10,12 @@ import (
 )
 
 func TestPrepareLoad(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("SNAP_COMMON", tmpDir)
+
 	cmd := &prepareCommand{
 		noRestart: true,
+		install:   true,
 		Context: &common.Context{
 			Config:     storage.NewMockConfig(),
 			EnginesDir: "../../../test_data/engines",
@@ -20,7 +23,6 @@ func TestPrepareLoad(t *testing.T) {
 			Snap:       snap.Mock(),
 		},
 	}
-	os.Setenv("SNAP_COMMON", "/tmp")
 	useEngineCmd := useEngineCommand{Context: cmd.Context, noRestart: cmd.noRestart}
 	scoredEngines, err := common.ScoreEnginesWithSpinner(cmd.Context)
 	if err != nil {
