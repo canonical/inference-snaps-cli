@@ -53,6 +53,8 @@ func (cmd *prepareCommand) run(_ *cobra.Command, args []string) error {
 	// Default to install workflow when neither flag is explicitly provided
 	if !cmd.install && !cmd.postRefresh {
 		cmd.install = true
+	} else if cmd.install && cmd.postRefresh {
+		return fmt.Errorf("flags --install and --post-refresh cannot be used together")
 	}
 
 	path := filepath.Join(env.Snap(), "var", "configurations", "configurations.yaml")
@@ -68,20 +70,13 @@ func (cmd *prepareCommand) run(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("checking hardware-observe connection: %v", err)
 	}
-	if connected {
-		// Able to connect to hardware-observe interface
+	if connected || canAccessHardwareInfo() {
+		// Able to observe hardware info due to connection or because of devmode
+		// Otherwise, skip engine selection
 		scoredEngines, err = common.ScoreEnginesWithSpinner(cmd.Context)
 		if err != nil {
 			return fmt.Errorf("scoring engines: %v", err)
 		}
-	} else if canAccessHardwareInfo() {
-		// Able to access hardware info without hardware-observe interface connection: assuming dev mode installation.
-		scoredEngines, err = common.ScoreEnginesWithSpinner(cmd.Context)
-		if err != nil {
-			return fmt.Errorf("scoring engines: %v", err)
-		}
-	} else {
-		// hardware-observe interface not auto connected. Skip auto engine selection
 	}
 
 	return cmd.load(path, cmd.Context, scoredEngines, &useEngineCmd)
@@ -108,21 +103,20 @@ func (cmd *prepareCommand) load(path string, ctx *common.Context, scoredEngines 
 	}
 
 	engineSelectionChanged := false
-	if cmd.install {
-		if scoredEngines != nil {
-			previousEngine, _ := cmd.Cache.GetActiveEngine()
+
+	if scoredEngines != nil {
+		previousEngine, _ := cmd.Cache.GetActiveEngine()
+		if cmd.install {
 			if err := useEngineCmd.autoSelectScoredEngine(scoredEngines); err != nil {
 				return fmt.Errorf("auto-selecting engine: %w", err)
 			}
-			currentEngine, _ := cmd.Cache.GetActiveEngine()
-			engineSelectionChanged = previousEngine != currentEngine
-		}
-	} else if cmd.postRefresh {
-		if scoredEngines != nil {
-			if err := useEngineCmd.fixActiveEngine(); err != nil {
+		} else if cmd.postRefresh {
+			if err := useEngineCmd.fixActiveEngine(); err != nil && err != common.ErrNoActiveEngine {
 				return fmt.Errorf("fixing active engine: %w", err)
 			}
 		}
+		currentEngine, _ := cmd.Cache.GetActiveEngine()
+		engineSelectionChanged = previousEngine != currentEngine
 	}
 
 	if !cmd.noRestart && (changed || engineSelectionChanged) {
