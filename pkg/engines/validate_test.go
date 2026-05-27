@@ -105,23 +105,23 @@ func TestVendorRequired(t *testing.T) {
 
 }
 
-func TestGradeValid(t *testing.T) {
+func TestExperimentalValid(t *testing.T) {
 	manifest := templateManifest()
 
-	t.Run("grade stable", func(t *testing.T) {
+	t.Run("experimental false", func(t *testing.T) {
 		manifest.Experimental = false
 
 		err := manifest.validate("test")
 		if err != nil {
-			t.Fatalf("grade stable should be valid: %v", err)
+			t.Fatalf("experimental false should be valid: %v", err)
 		}
 	})
-	t.Run("grade experimental", func(t *testing.T) {
+	t.Run("experimental true", func(t *testing.T) {
 		manifest.Experimental = true
 
 		err := manifest.validate("test")
 		if err != nil {
-			t.Fatalf("grade experimental should be valid: %v", err)
+			t.Fatalf("experimental true should be valid: %v", err)
 		}
 	})
 }
