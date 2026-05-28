@@ -63,6 +63,7 @@ func serverHttpUrl(ctx *Context, serverConfig map[string]string) (string, error)
 	const (
 		confHttpPort    = "http.port"
 		defaultBasePath = "/"
+		confHost        = "http.host"
 	)
 
 	httpPortMap, err := ctx.Config.Get(confHttpPort)
@@ -76,9 +77,17 @@ func serverHttpUrl(ctx *Context, serverConfig map[string]string) (string, error)
 		basePath = defaultBasePath
 	}
 
+	httpHostMap, err := ctx.Config.Get(confHost)
+	if err != nil {
+		return "", fmt.Errorf("getting config %q: %v", confHost, err)
+	}
+	httpHost := httpHostMap[confHost]
+	if httpHost == "0.0.0.0" {
+		httpHost = "localhost"
+	}
 	endpointUrl := url.URL{
 		Scheme: serverConfig[protocolKey],
-		Host:   fmt.Sprintf("localhost:%v", httpPort),
+		Host:   fmt.Sprintf("%v:%v", httpHost, httpPort),
 		Path:   basePath,
 	}
 
@@ -101,6 +110,7 @@ func UiServerHttpUrl(ctx *Context) (string, error) {
 	const (
 		confWebuiHttpPort = "webui.http.port"
 		defaultBasePath   = "/"
+		confWebuiHost     = "webui.http.host"
 	)
 
 	httpPortMap, err := ctx.Config.Get(confWebuiHttpPort)
@@ -109,9 +119,18 @@ func UiServerHttpUrl(ctx *Context) (string, error) {
 	}
 	httpPort := httpPortMap[confWebuiHttpPort]
 
+	httpHostmap, err := ctx.Config.Get(confWebuiHost)
+	if err != nil {
+		return "", fmt.Errorf("getting config %q: %v", confWebuiHost, err)
+	}
+	httpHost := httpHostmap[confWebuiHost]
+	if httpHost == "0.0.0.0" {
+		httpHost = "localhost"
+	}
+
 	endpointUrl := url.URL{
 		Scheme: "http",
-		Host:   fmt.Sprintf("localhost:%v", httpPort),
+		Host:   fmt.Sprintf("%v:%v", httpHost, httpPort),
 		Path:   defaultBasePath,
 	}
 
