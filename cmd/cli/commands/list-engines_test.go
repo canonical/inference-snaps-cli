@@ -105,15 +105,15 @@ cpu                    Canonical Ltd      General CPU engine             yes
 cpu-devel              Canonical Ltd      CPU development engine         exptl 
 rocm-generic           Canonical Ltd      ROCm generic engine            no    
 not-compatible-engine  Canonical Ltd      This summary is too long and…  no    
-intel-npu              Intel Corporation  Intel NPU engine               no    
 intel-gpu              Intel Corporation  Intel GPU engine               no    
-ampere                 Canonical Ltd      Ampere ARM64 engine            no    
 example-memory*        Canonical Ltd      High-memory CPU engine         no    
-cuda-generic           Canonical Ltd      CUDA generic engine            no    
 amd-gpu                Canonical Ltd      AMD GPU engine                 no    
 cpu-avx512             Canonical Ltd      CPU AVX512 engine              no    
 ampere-altra           Canonical Ltd      Ampere Altra engine            no    
 arm-neon               Canonical Ltd      ARM NEON engine                no    
+cuda-generic           Canonical Ltd      CUDA generic engine            no    
+ampere                 Canonical Ltd      Ampere ARM64 engine            no    
+intel-npu              Intel Corporation  Intel NPU engine               no    
 `
 
 	if tableStr != expectedTable {
@@ -142,8 +142,8 @@ func Example_printEnginesJson() {
 	//   "engines": [
 	//     {
 	//       "name": "amd-gpu",
-	//       "description": "AMD specific engine targeting only one microarchitecture.",
 	//       "summary": "AMD GPU engine",
+	//       "description": "AMD specific engine targeting only one microarchitecture.",
 	//       "vendor": "Canonical Ltd",
 	//       "experimental": false,
 	//       "devices": {
@@ -178,8 +178,8 @@ func Example_printEnginesJson() {
 	//     },
 	//     {
 	//       "name": "example-memory",
-	//       "description": "Legacy CPUs, offering full accuracy but very high memory usage",
 	//       "summary": "High-memory CPU engine",
+	//       "description": "Legacy CPUs, offering full accuracy but very high memory usage",
 	//       "vendor": "Canonical Ltd",
 	//       "experimental": false,
 	//       "devices": {

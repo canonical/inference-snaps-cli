@@ -89,8 +89,8 @@ func Example_showEngineCommand_printEngineManifestYaml() {
 
 	// Output:
 	// name: cuda-generic
-	// description: Nvidia GPUs using CUDA. All major CUDA versions are targeted.
 	// summary: CUDA generic engine
+	// description: Nvidia GPUs using CUDA. All major CUDA versions are targeted.
 	// vendor: Canonical Ltd
 	// devices:
 	//     allof:
@@ -140,8 +140,8 @@ func Example_showEngineCommand_printEngineManifestJson() {
 	// Output:
 	// {
 	//   "name": "cuda-generic",
-	//   "description": "Nvidia GPUs using CUDA. All major CUDA versions are targeted.",
 	//   "summary": "CUDA generic engine",
+	//   "description": "Nvidia GPUs using CUDA. All major CUDA versions are targeted.",
 	//   "vendor": "Canonical Ltd",
 	//   "devices": {
 	//     "anyof": null,
@@ -203,8 +203,8 @@ func Example_showEngineCommand_printHappyEngineManifestYaml() {
 
 	// Output:
 	// name: intel-cpu
-	// description: Use Intel CPUs
 	// summary: Intel CPU engine
+	// description: Use Intel CPUs
 	// vendor: Intel Corporation
 	// experimental: false
 	// devices:
@@ -235,8 +235,8 @@ func Example_showEngineCommand_printHappyEngineManifestJson() {
 	// Output:
 	// {
 	//   "name": "intel-cpu",
-	//   "description": "Use Intel CPUs",
 	//   "summary": "Intel CPU engine",
+	//   "description": "Use Intel CPUs",
 	//   "vendor": "Intel Corporation",
 	//   "experimental": false,
 	//   "devices": {
