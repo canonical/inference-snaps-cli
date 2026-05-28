@@ -27,7 +27,7 @@ type Manifest struct {
 	Name         string `yaml:"name" json:"name"`
 	Description  string `yaml:"description" json:"description"`
 	Vendor       string `yaml:"vendor" json:"vendor"`
-	Experimental bool   `yaml:"experimental" json:"experimental"`
+	Experimental *bool  `yaml:"experimental,omitempty" json:"experimental,omitempty"`
 
 	Devices   Devices `yaml:"devices" json:"devices"`
 	Memory    *string `yaml:"memory,omitempty" json:"memory"`

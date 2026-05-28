@@ -110,7 +110,10 @@ func (cmd *listEnginesCommand) getEnginesTable(enginesList outputEngines) (strin
 	sort.Slice(enginesList.Engines, func(i, j int) bool {
 		// Stable engines with equal score should be listed first
 		if enginesList.Engines[i].Score == enginesList.Engines[j].Score {
-			return enginesList.Engines[i].Experimental == false
+			if enginesList.Engines[i].Experimental == nil {
+				return false
+			}
+			return *enginesList.Engines[i].Experimental == false
 		}
 		return enginesList.Engines[i].Score > enginesList.Engines[j].Score
 	})
@@ -130,7 +133,7 @@ func (cmd *listEnginesCommand) getEnginesTable(enginesList outputEngines) (strin
 		row := []string{engine.Name, engine.Vendor, engine.Description}
 
 		compatibleStr := ""
-		if engine.Compatible && !engine.Experimental {
+		if engine.Compatible && (engine.Experimental == nil || !*engine.Experimental) {
 			compatibleStr = "yes"
 		} else if engine.Compatible {
 			compatibleStr = "exptl"
