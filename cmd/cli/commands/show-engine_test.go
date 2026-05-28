@@ -91,7 +91,6 @@ func Example_showEngineCommand_printEngineManifestYaml() {
 	// name: cuda-generic
 	// description: Nvidia GPUs using CUDA. All major CUDA versions are targeted.
 	// vendor: Canonical Ltd
-	// experimental: false
 	// devices:
 	//     allof:
 	//         - type: cpu
@@ -142,7 +141,6 @@ func Example_showEngineCommand_printEngineManifestJson() {
 	//   "name": "cuda-generic",
 	//   "description": "Nvidia GPUs using CUDA. All major CUDA versions are targeted.",
 	//   "vendor": "Canonical Ltd",
-	//   "experimental": false,
 	//   "devices": {
 	//     "anyof": null,
 	//     "allof": [

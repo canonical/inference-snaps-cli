@@ -14,7 +14,7 @@ func templateManifest() Manifest {
 		Name:         "test",
 		Description:  "test",
 		Vendor:       "test",
-		Experimental: false,
+		Experimental: nil,
 		Devices:      Devices{},
 		Memory:       &memDisk,
 		DiskSpace:    &memDisk,
@@ -109,7 +109,8 @@ func TestExperimentalValid(t *testing.T) {
 	manifest := templateManifest()
 
 	t.Run("experimental false", func(t *testing.T) {
-		manifest.Experimental = false
+		value := false
+		manifest.Experimental = &value
 
 		err := manifest.validate("test")
 		if err != nil {
@@ -117,7 +118,8 @@ func TestExperimentalValid(t *testing.T) {
 		}
 	})
 	t.Run("experimental true", func(t *testing.T) {
-		manifest.Experimental = true
+		value := true
+		manifest.Experimental = &value
 
 		err := manifest.validate("test")
 		if err != nil {

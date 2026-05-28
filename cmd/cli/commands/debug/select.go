@@ -76,7 +76,7 @@ func (cmd *selectCommand) run(_ *cobra.Command, args []string) error {
 
 		if engine.Score == 0 {
 			fmt.Fprintf(os.Stderr, "❌ %s - not compatible: %s\n", engine.Name, strings.Join(engineDetails.CompatibilityIssues, ", "))
-		} else if engine.Experimental {
+		} else if engine.Experimental != nil && *engine.Experimental {
 			fmt.Fprintf(os.Stderr, "🟠 %s - score = %d, experimental\n", engine.Name, engine.Score)
 		} else {
 			fmt.Fprintf(os.Stderr, "✅ %s - compatible, score = %d\n", engine.Name, engine.Score)
