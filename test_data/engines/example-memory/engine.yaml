@@ -1,5 +1,6 @@
 name: example-memory
 description: Legacy CPUs, offering full accuracy but very high memory usage
+summary: High-memory CPU engine
 vendor: Canonical Ltd
 experimental: false
 devices:

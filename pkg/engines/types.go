@@ -26,6 +26,7 @@ type ScoredManifest struct {
 type Manifest struct {
 	Name         string `yaml:"name" json:"name"`
 	Description  string `yaml:"description" json:"description"`
+	Summary      string `yaml:"summary" json:"summary"`
 	Vendor       string `yaml:"vendor" json:"vendor"`
 	Experimental *bool  `yaml:"experimental,omitempty" json:"experimental,omitempty"`
 

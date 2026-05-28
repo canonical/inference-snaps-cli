@@ -130,7 +130,7 @@ func (cmd *listEnginesCommand) getEnginesTable(enginesList outputEngines) (strin
 		engineNameMaxLen = max(engineNameMaxLen, len(engine.Name), len(headerRow[0]))
 		engineVendorMaxLen = max(engineVendorMaxLen, len(engine.Vendor), len(headerRow[1]))
 
-		row := []string{engine.Name, engine.Vendor, engine.Description}
+		row := []string{engine.Name, engine.Vendor, engine.Summary}
 
 		compatibleStr := ""
 		if engine.Compatible && (engine.Experimental == nil || !*engine.Experimental) {

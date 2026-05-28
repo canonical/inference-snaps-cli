@@ -1,5 +1,7 @@
 name: amd-gpu
-description: AMD specific engine targeting only one microarchitecture.
+description: AMD specific engine targeting 
+  only one microarchitecture.
+summary: AMD GPU engine
 vendor: Canonical Ltd
 experimental: false
 devices:
