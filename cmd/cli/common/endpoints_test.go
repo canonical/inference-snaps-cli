@@ -40,7 +40,7 @@ func TestServerEndpoints(t *testing.T) {
 			want: map[string]string{
 				"openai": "http://localhost:8080/v1",
 				"kserve": "https://localhost:8080/v2",
-				"webui":  "http://localhost:8080/",
+				"webui":  "http://192.168.1.156:8080/",
 			},
 		},
 		{
@@ -69,8 +69,13 @@ func TestServerEndpoints(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Setenv("ADDITIONAL_FEATURES", "webui")
+
 			config := storage.NewMockConfig()
 			config.Set("http.port", "8080", storage.UserConfig)
+			config.Set("http.host", "0.0.0.0", storage.UserConfig)
+			config.Set("webui.http.port", "8080", storage.UserConfig)
+			config.Set("webui.http.host", "192.168.1.156", storage.UserConfig)
 			ctx := &Context{
 				Config: config,
 			}
@@ -142,6 +147,7 @@ func TestServerHttpUrl(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			config := storage.NewMockConfig()
 			config.Set("http.port", "8080", storage.UserConfig)
+			config.Set("http.host", "0.0.0.0", storage.UserConfig)
 			ctx := &Context{
 				Config: config,
 			}
