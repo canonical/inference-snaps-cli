@@ -79,8 +79,8 @@ func (manifest Manifest) validate(expectedEngineName string) error {
 
 	if manifest.Summary == "" {
 		return fmt.Errorf("required field is not set: summary")
-	} else if len(manifest.Summary) > 27 {
-		return fmt.Errorf("summary field should be at most 27 characters: %d", len(manifest.Summary))
+	} else if len(manifest.Summary) > 56 {
+		return fmt.Errorf("summary field should be at most 56 characters: %d", len(manifest.Summary))
 	}
 
 	if manifest.Vendor == "" {
