@@ -105,15 +105,15 @@ cpu                    Canonical Ltd      General CPU engine             yes
 cpu-devel              Canonical Ltd      Requires any CPU but it is e…  exptl 
 rocm-generic           Canonical Ltd      AMD GPUs using ROCm. All maj…  no    
 not-compatible-engine  Canonical Ltd      This test engine is designed…  no    
-intel-npu              Intel Corporation  Intel NPUs                     no    
 intel-gpu              Intel Corporation  Modern Intel GPUs (>=gen 13)   no    
-ampere                 Canonical Ltd      Test ampere selection          no    
 example-memory*        Canonical Ltd      Legacy CPUs, offering full a…  no    
-cuda-generic           Canonical Ltd      Nvidia GPUs using CUDA. All …  no    
 amd-gpu                Canonical Ltd      AMD specific engine targetin…  no    
 cpu-avx512             Canonical Ltd      CPUs with AVX512               no    
 ampere-altra           Canonical Ltd      Test ampere selection          no    
 arm-neon               Canonical Ltd      ARM CPUs with NEON instructi…  no    
+cuda-generic           Canonical Ltd      Nvidia GPUs using CUDA. All …  no    
+ampere                 Canonical Ltd      Test ampere selection          no    
+intel-npu              Intel Corporation  Intel NPUs                     no    
 `
 
 	if tableStr != expectedTable {
