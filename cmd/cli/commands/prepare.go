@@ -30,11 +30,12 @@ func Prepare(ctx *common.Context) *cobra.Command {
 	cmd.Context = ctx
 
 	cobraCmd := &cobra.Command{
-		Use:   "prepare",
-		Short: "Prepare snap internal configurations",
-		Long:  "Prepare internal configurations for the snap from a YAML file and perform necessary setup to run the snap.",
-		Args:  cobra.MaximumNArgs(1),
-		RunE:  cmd.run,
+		Use:    "prepare",
+		Short:  "Prepare snap internal configurations",
+		Long:   "Prepare internal configurations for the snap from a YAML file and perform necessary setup to run the snap.",
+		Hidden: true,
+		Args:   cobra.MaximumNArgs(1),
+		RunE:   cmd.run,
 	}
 
 	cobraCmd.Flags().BoolVar(&cmd.postRefresh, "post-refresh", false, "triggered on post-refresh hook")
