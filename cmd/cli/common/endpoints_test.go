@@ -40,7 +40,7 @@ func TestServerEndpoints(t *testing.T) {
 			want: map[string]string{
 				"openai": "http://localhost:8080/v1",
 				"kserve": "https://localhost:8080/v2",
-				"webui":  "http://192.168.1.156:8080/",
+				"webui":  "http://192.0.2.1:8080/",
 			},
 		},
 		{
@@ -73,9 +73,9 @@ func TestServerEndpoints(t *testing.T) {
 
 			config := storage.NewMockConfig()
 			config.Set("http.port", "8080", storage.UserConfig)
-			config.Set("http.host", "0.0.0.0", storage.UserConfig)
+			config.Set("http.host", "127.0.0.1", storage.UserConfig)
 			config.Set("webui.http.port", "8080", storage.UserConfig)
-			config.Set("webui.http.host", "192.168.1.156", storage.UserConfig)
+			config.Set("webui.http.host", "192.0.2.1", storage.UserConfig)
 			ctx := &Context{
 				Config: config,
 			}
@@ -116,6 +116,8 @@ func TestServerHttpUrl(t *testing.T) {
 	testCases := []struct {
 		name         string
 		serverConfig map[string]string
+		host         string
+		setHost      bool
 		want         string
 	}{
 		{
@@ -123,7 +125,9 @@ func TestServerHttpUrl(t *testing.T) {
 			serverConfig: map[string]string{
 				"protocol": "http",
 			},
-			want: "http://localhost:8080/",
+			host:    "0.0.0.0",
+			setHost: true,
+			want:    "http://localhost:8080/",
 		},
 		{
 			name: "custom base path",
@@ -131,7 +135,9 @@ func TestServerHttpUrl(t *testing.T) {
 				"protocol":  "http",
 				"base-path": "/v1",
 			},
-			want: "http://localhost:8080/v1",
+			host:    "127.0.0.1",
+			setHost: true,
+			want:    "http://localhost:8080/v1",
 		},
 		{
 			name: "https protocol",
@@ -139,7 +145,27 @@ func TestServerHttpUrl(t *testing.T) {
 				"protocol":  "https",
 				"base-path": "/v3",
 			},
-			want: "https://localhost:8080/v3",
+			host:    "0.0.0.0",
+			setHost: true,
+			want:    "https://localhost:8080/v3",
+		},
+		{
+			name: "host unset defaults to localhost",
+			serverConfig: map[string]string{
+				"protocol": "http",
+			},
+			host:    "",
+			setHost: false,
+			want:    "http://localhost:8080/",
+		},
+		{
+			name: "loopback host is reported as localhost",
+			serverConfig: map[string]string{
+				"protocol": "http",
+			},
+			host:    "127.0.0.1",
+			setHost: true,
+			want:    "http://localhost:8080/",
 		},
 	}
 
@@ -147,7 +173,9 @@ func TestServerHttpUrl(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			config := storage.NewMockConfig()
 			config.Set("http.port", "8080", storage.UserConfig)
-			config.Set("http.host", "0.0.0.0", storage.UserConfig)
+			if testCase.setHost {
+				config.Set("http.host", testCase.host, storage.UserConfig)
+			}
 			ctx := &Context{
 				Config: config,
 			}
