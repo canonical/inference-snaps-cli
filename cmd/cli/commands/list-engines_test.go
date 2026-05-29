@@ -102,7 +102,7 @@ intel-cpu              Intel Corporation  Intel CPU engine               yes
 cpu-avx2               Canonical Ltd      CPU AVX2 engine                yes   
 cpu-avx1               Canonical Ltd      CPU AVX1 engine                yes   
 cpu                    Canonical Ltd      General CPU engine             yes   
-cpu-devel              Canonical Ltd      CPU development engine         exptl 
+cpu-exptl              Canonical Ltd      CPU development engine         exptl 
 rocm-generic           Canonical Ltd      ROCm generic engine            no    
 not-compatible-engine  Canonical Ltd      This summary is too long and…  no    
 intel-gpu              Intel Corporation  Intel GPU engine               no    

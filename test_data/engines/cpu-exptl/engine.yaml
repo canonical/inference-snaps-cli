@@ -1,4 +1,4 @@
-name: cpu-devel
+name: cpu-exptl
 description: Requires any CPU but it is experimental
 summary: CPU development engine
 vendor: Canonical Ltd
