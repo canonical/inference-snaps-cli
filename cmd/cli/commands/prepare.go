@@ -46,7 +46,17 @@ func Prepare(ctx *common.Context) *cobra.Command {
 	return cobraCmd
 }
 
-func (cmd *prepareCommand) run(_ *cobra.Command, args []string) error {
+func (cmd *prepareCommand) run(cobraCmd *cobra.Command, args []string) error {
+	if !cobraCmd.Flags().Changed("verbose") {
+		cmd.Verbose = true
+	}
+
+	if cmd.Verbose {
+		if err := os.Setenv("VERBOSE", "true"); err != nil {
+			return fmt.Errorf("setting VERBOSE environment variable: %w", err)
+		}
+	}
+
 	if !utils.IsRootUser() {
 		return common.ErrPermissionDenied
 	}
