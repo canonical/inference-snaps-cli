@@ -7,4 +7,4 @@ exec 1> >(tee >(logger --tag=$tag))
 # Redirect stderr to stderr+syslog
 exec 2> >(logger --stderr --priority error --tag=$tag)
 
-modelctl prepare --post-refresh --assume-yes
+modelctl prepare --post-refresh

@@ -41,7 +41,7 @@ func Prepare(ctx *common.Context) *cobra.Command {
 	cobraCmd.Flags().BoolVar(&cmd.postRefresh, "post-refresh", false, "triggered on post-refresh hook")
 	cobraCmd.Flags().BoolVar(&cmd.install, "install", false, "triggered on install hook")
 	cobraCmd.Flags().BoolVar(&cmd.noRestart, "no-restart", false, "do not restart the snap after setting the configuration")
-	cobraCmd.Flags().BoolVar(&cmd.assumeYes, "assume-yes", false, "assume yes for any prompt")
+	cobraCmd.Flags().BoolVar(&cmd.assumeYes, "assume-yes", true, "assume yes for any prompt")
 
 	return cobraCmd
 }
@@ -64,7 +64,7 @@ func (cmd *prepareCommand) run(_ *cobra.Command, args []string) error {
 	}
 
 	// no restart set to true to avoid double prompting. Prompting is handled in the caller function
-	useEngineCmd := useEngineCommand{Context: cmd.Context, noRestart: true}
+	useEngineCmd := useEngineCommand{Context: cmd.Context, noRestart: true, assumeYes: true}
 
 	var scoredEngines []engines.ScoredManifest
 	connected, err := snapctl.IsConnected("hardware-observe").Run()
