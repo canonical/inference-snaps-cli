@@ -135,7 +135,8 @@ func endpointHost(ctx *Context, hostConfigKey string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("getting config %q: %v", hostConfigKey, err)
 	}
-	host, _ := hostMap[hostConfigKey].(string)
+	host := fmt.Sprint(hostMap[hostConfigKey])
+
 	host = strings.TrimSpace(host)
 
 	return host, nil
