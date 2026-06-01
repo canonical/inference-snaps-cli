@@ -110,9 +110,6 @@ func (cmd *listEnginesCommand) getEnginesTable(enginesList outputEngines) (strin
 	sort.Slice(enginesList.Engines, func(i, j int) bool {
 		// Stable engines with equal score should be listed first
 		if enginesList.Engines[i].Score == enginesList.Engines[j].Score {
-			if !enginesList.Engines[i].IsExperimental() {
-				return false
-			}
 			return !enginesList.Engines[i].IsExperimental()
 		}
 		return enginesList.Engines[i].Score > enginesList.Engines[j].Score
