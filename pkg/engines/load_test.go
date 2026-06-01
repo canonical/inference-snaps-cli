@@ -24,7 +24,7 @@ func TestLoadManifest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected no error for cpu-exptl, got %v", err)
 	}
-	if experimentalManifest.Experimental == nil || !*experimentalManifest.Experimental {
+	if !experimentalManifest.IsExperimental() {
 		t.Fatalf("expected cpu-exptl experimental to be true")
 	}
 
@@ -61,7 +61,7 @@ func TestLoadManifestsExperimentalFalse(t *testing.T) {
 			}
 		case "cpu-exptl":
 			foundCPUExptl = true
-			if manifest.Experimental == nil || !*manifest.Experimental {
+			if !manifest.IsExperimental() {
 				t.Fatalf("expected cpu-exptl experimental to be true")
 			}
 		}
