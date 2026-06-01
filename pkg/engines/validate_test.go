@@ -51,7 +51,7 @@ func TestManifestFiles(t *testing.T) {
 				t.Run(engine, func(t *testing.T) {
 					err = Validate(manifestPath)
 					if err == nil {
-						t.Fatalf("%s should be invalid because too summary exceeds length", engine)
+						t.Fatalf("%s should be invalid because the summary exceeds the maximum allowed characters", engine)
 					}
 				})
 			}

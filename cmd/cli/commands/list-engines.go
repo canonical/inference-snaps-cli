@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
+	"github.com/canonical/inference-snaps-cli/pkg/engines"
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
 	"github.com/olekukonko/tablewriter/renderer"
@@ -148,6 +149,9 @@ func (cmd *listEnginesCommand) getEnginesTable(enginesList outputEngines) (strin
 	engineVendorMaxLen += 2
 	// Description column fills the remaining space
 	engineDescriptionMaxLen := tableMaxWidth - (engineNameMaxLen + engineVendorMaxLen)
+	if engineDescriptionMaxLen > engines.SummaryMaxLength {
+		fmt.Printf("Warning: description column max length %d is greater than summary max length %d, setting it to summary max length\n", engineDescriptionMaxLen, engines.SummaryMaxLength)
+	}
 	// Reserve space for Compatible column
 	engineDescriptionMaxLen -= len(headerRow[3]) + 1
 	options := []tablewriter.Option{

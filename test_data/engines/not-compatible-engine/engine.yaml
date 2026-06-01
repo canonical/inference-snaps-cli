@@ -1,5 +1,5 @@
 name: not-compatible-engine
-summary: This summary is too long and should trigger a validation error because it exceeds 56 characters.
+summary: This summary is too long and should trigger a validation error because it exceeds the maximum allowed characters.
 vendor: Canonical Ltd
 experimental: false
 devices:
