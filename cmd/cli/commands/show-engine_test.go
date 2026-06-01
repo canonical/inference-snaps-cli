@@ -203,7 +203,6 @@ func Example_showEngineCommand_printHappyEngineManifestYaml() {
 	// name: intel-cpu
 	// description: Use Intel CPUs
 	// vendor: Intel Corporation
-	// experimental: false
 	// devices:
 	//     allof:
 	//         - type: cpu
@@ -234,7 +233,6 @@ func Example_showEngineCommand_printHappyEngineManifestJson() {
 	//   "name": "intel-cpu",
 	//   "description": "Use Intel CPUs",
 	//   "vendor": "Intel Corporation",
-	//   "experimental": false,
 	//   "devices": {
 	//     "anyof": null,
 	//     "allof": [
