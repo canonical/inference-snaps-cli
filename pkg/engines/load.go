@@ -38,6 +38,10 @@ func LoadManifests(manifestsDir string) ([]Manifest, error) {
 			return nil, fmt.Errorf("%s: %s", manifestsDir, err)
 		}
 
+		// Keep only explicit true; treat false as unset for consistent user-facing output.
+		if !manifest.IsExperimental() {
+			manifest.Experimental = nil
+		}
 		manifests = append(manifests, manifest)
 	}
 	return manifests, nil
@@ -61,6 +65,8 @@ func LoadManifest(manifestsDir, engineName string) (*Manifest, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", manifestsDir, err)
 	}
+
+	normalizeManifest(&manifest)
 
 	return &manifest, nil
 }
