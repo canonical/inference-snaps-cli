@@ -167,6 +167,15 @@ func TestServerHttpUrl(t *testing.T) {
 			setHost: true,
 			want:    "http://localhost:8080/",
 		},
+		{
+			name: "ipv4 loopback subnet host is reported as localhost",
+			serverConfig: map[string]string{
+				"protocol": "http",
+			},
+			host:    "127.10.20.30",
+			setHost: true,
+			want:    "http://localhost:8080/",
+		},
 	}
 
 	for _, testCase := range testCases {
