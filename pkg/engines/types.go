@@ -81,6 +81,10 @@ type Device struct {
 
 type Configurations map[string]interface{}
 
+func (m Manifest) IsExperimental() bool {
+	return m.Experimental != nil && *m.Experimental
+}
+
 func (c CompatibilityReport) EngineCompatible() bool {
 	return c.CompatibleMemory && c.CompatibleDisk && c.CompatibleDevices
 }

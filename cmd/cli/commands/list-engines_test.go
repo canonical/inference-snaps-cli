@@ -102,18 +102,18 @@ intel-cpu              Intel Corporation  Intel CPU engine               yes
 cpu-avx2               Canonical Ltd      CPU AVX2 engine                yes   
 cpu-avx1               Canonical Ltd      CPU AVX1 engine                yes   
 cpu                    Canonical Ltd      General CPU engine             yes   
-cpu-exptl              Canonical Ltd      CPU development engine         exptl 
-rocm-generic           Canonical Ltd      ROCm generic engine            no    
-not-compatible-engine  Canonical Ltd      This summary is too long and…  no    
-intel-gpu              Intel Corporation  Intel GPU engine               no    
-example-memory*        Canonical Ltd      High-memory CPU engine         no    
-amd-gpu                Canonical Ltd      AMD GPU engine                 no    
-cpu-avx512             Canonical Ltd      CPU AVX512 engine              no    
-ampere-altra           Canonical Ltd      Ampere Altra engine            no    
-arm-neon               Canonical Ltd      ARM NEON engine                no    
-cuda-generic           Canonical Ltd      CUDA generic engine            no    
-ampere                 Canonical Ltd      Ampere ARM64 engine            no    
-intel-npu              Intel Corporation  Intel NPU engine               no    
+cpu-exptl              Canonical Ltd      Requires any CPU but it is e…  exptl 
+rocm-generic           Canonical Ltd      AMD GPUs using ROCm. All maj…  no    
+not-compatible-engine  Canonical Ltd      This test engine is designed…  no    
+intel-gpu              Intel Corporation  Modern Intel GPUs (>=gen 13)   no    
+example-memory*        Canonical Ltd      Legacy CPUs, offering full a…  no    
+amd-gpu                Canonical Ltd      AMD specific engine targetin…  no    
+cpu-avx512             Canonical Ltd      CPUs with AVX512               no    
+ampere-altra           Canonical Ltd      Test ampere selection          no    
+arm-neon               Canonical Ltd      ARM CPUs with NEON instructi…  no    
+cuda-generic           Canonical Ltd      Nvidia GPUs using CUDA. All …  no    
+ampere                 Canonical Ltd      Test ampere selection          no    
+intel-npu              Intel Corporation  Intel NPUs                     no    
 `
 
 	if tableStr != expectedTable {
