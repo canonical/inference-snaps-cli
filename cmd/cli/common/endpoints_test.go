@@ -38,8 +38,8 @@ func TestServerEndpoints(t *testing.T) {
 				},
 			},
 			want: map[string]string{
-				"openai": "http://localhost:8080/v1",
-				"kserve": "https://localhost:8080/v2",
+				"openai": "http://127.0.0.1:8080/v1",
+				"kserve": "https://127.0.0.1:8080/v2",
 				"webui":  "http://192.0.2.1:8080/",
 			},
 		},
@@ -127,7 +127,7 @@ func TestServerHttpUrl(t *testing.T) {
 			},
 			host:    "0.0.0.0",
 			setHost: true,
-			want:    "http://localhost:8080/",
+			want:    "http://0.0.0.0:8080/",
 		},
 		{
 			name: "custom base path",
@@ -137,7 +137,7 @@ func TestServerHttpUrl(t *testing.T) {
 			},
 			host:    "127.0.0.1",
 			setHost: true,
-			want:    "http://localhost:8080/v1",
+			want:    "http://127.0.0.1:8080/v1",
 		},
 		{
 			name: "https protocol",
@@ -147,34 +147,7 @@ func TestServerHttpUrl(t *testing.T) {
 			},
 			host:    "0.0.0.0",
 			setHost: true,
-			want:    "https://localhost:8080/v3",
-		},
-		{
-			name: "host unset defaults to localhost",
-			serverConfig: map[string]string{
-				"protocol": "http",
-			},
-			host:    "",
-			setHost: false,
-			want:    "http://localhost:8080/",
-		},
-		{
-			name: "loopback host is reported as localhost",
-			serverConfig: map[string]string{
-				"protocol": "http",
-			},
-			host:    "127.0.0.1",
-			setHost: true,
-			want:    "http://localhost:8080/",
-		},
-		{
-			name: "ipv4 loopback subnet host is reported as localhost",
-			serverConfig: map[string]string{
-				"protocol": "http",
-			},
-			host:    "127.10.20.30",
-			setHost: true,
-			want:    "http://localhost:8080/",
+			want:    "https://0.0.0.0:8080/v3",
 		},
 	}
 

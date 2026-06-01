@@ -137,18 +137,6 @@ func endpointHost(ctx *Context, hostConfigKey string) (string, error) {
 	}
 	host, _ := hostMap[hostConfigKey].(string)
 	host = strings.TrimSpace(host)
-	if host == "" {
-		return "localhost", nil
-	}
-	if host == "0.0.0.0" {
-		return "localhost", nil
-	}
-
-	if ip := net.ParseIP(host); ip != nil {
-		if ip4 := ip.To4(); ip4 != nil && ip4[0] == 127 {
-			return "localhost", nil
-		}
-	}
 
 	return host, nil
 }
