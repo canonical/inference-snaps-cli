@@ -65,6 +65,7 @@ func ExampleUseEngine_autoSelectEngine() {
 		Context: &common.Context{
 			EnginesDir:  "../../../test_data/engines",
 			RuntimesDir: "../../../test_data/runtimes",
+			ModelsDir:   "../../../test_data/models",
 			Cache:       cache,
 			Config:      config,
 			Snap:        snap.Mock(),
@@ -78,6 +79,12 @@ func ExampleUseEngine_autoSelectEngine() {
 	}
 	defer os.RemoveAll(snapComponents)
 	if err := os.Mkdir(snapComponents+"/runtime-llama-cpp-cpu", 0755); err != nil {
+		panic(err)
+	}
+	if err := os.Mkdir(snapComponents+"/model-26b-a4b-q4-k-m-gguf", 0755); err != nil {
+		panic(err)
+	}
+	if err := os.Mkdir(snapComponents+"/mmproj-26b-bf16-gguf", 0755); err != nil {
 		panic(err)
 	}
 	if err := os.Setenv("SNAP_COMPONENTS", snapComponents); err != nil {

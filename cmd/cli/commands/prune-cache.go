@@ -121,10 +121,10 @@ func (cmd *pruneCacheCommand) unusedComponentsEngine(engineName string) ([]strin
 
 	engineComponents = append(engineComponents, runtimeManifest.Components...)
 
-	for _, model := range engineManifest.Model.Options {
-		modelManifest, err := models.LoadManifest(cmd.ModelsDir, model)
+	for _, modelId := range engineManifest.Model.Options {
+		modelManifest, err := models.LoadManifest(cmd.ModelsDir, modelId)
 		if err != nil {
-			return nil, fmt.Errorf("loading model manifest for model %q: %w", model, err)
+			return nil, fmt.Errorf("loading model manifest for model %q: %w", modelId, err)
 		}
 		engineComponents = append(engineComponents, modelManifest.Components...)
 	}

@@ -80,15 +80,31 @@ func (cmd *useModelCommand) run(_ *cobra.Command, args []string) error {
 	}
 }
 
-func (cmd *useModelCommand) switchModel(modelName string) error {
+func (cmd *useModelCommand) switchModel(modelId string) error {
 
-	availableModels, err := models.AvailableModelNames(cmd.ModelsDir)
+	availableModels, err := models.LoadManifests(cmd.ModelsDir)
 	if err != nil {
 		return fmt.Errorf("%s: %w", "loading available models", err)
 	}
-	if !slices.Contains(availableModels, modelName) {
-		return fmt.Errorf("model %s does not exist", modelName)
+
+	var newModelManifest *models.Manifest
+	// The provided model name is checked against both the available models' names and IDs
+	for _, manifest := range availableModels {
+		if manifest.Name == modelId {
+			newModelManifest = &manifest
+			break
+		}
+		if manifest.ID == modelId {
+			newModelManifest = &manifest
+			break
+		}
 	}
+	if newModelManifest == nil {
+		return fmt.Errorf("model %s does not exist", modelId)
+	}
+
+	// From now on use the real Model ID
+	modelId = newModelManifest.ID
 
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
@@ -101,11 +117,11 @@ func (cmd *useModelCommand) switchModel(modelName string) error {
 	}
 	supportedModels := engineManifest.Model.Options
 
-	if !slices.Contains(supportedModels, modelName) {
-		return fmt.Errorf("model %s not supported by engine %s", modelName, activeEngine)
+	if !slices.Contains(supportedModels, modelId) {
+		return fmt.Errorf("model %s not supported by engine %s", modelId, activeEngine)
 	}
 
-	cancelledByUser, err := common.InstallMissingComponents(cmd.Context, cmd.assumeYes, engineManifest, modelName)
+	cancelledByUser, err := common.InstallMissingComponents(cmd.Context, cmd.assumeYes, engineManifest, newModelManifest)
 	if err != nil {
 		return fmt.Errorf("installing missing components: %v", err)
 	}
@@ -114,21 +130,21 @@ func (cmd *useModelCommand) switchModel(modelName string) error {
 		return nil
 	}
 
-	activeModelName, err := cmd.Cache.GetActiveModel()
+	activeModelId, err := cmd.Cache.GetActiveModel()
 	if err != nil {
 		return fmt.Errorf("%s: %w", "looking up active model", err)
 	}
 
-	if activeModelName == modelName {
+	if activeModelId == modelId {
 		// Engine not changed, nothing left to do
 		return nil
 	}
 
-	if err = cmd.Cache.SetActiveModel(modelName); err != nil {
+	if err = cmd.Cache.SetActiveModel(modelId); err != nil {
 		return fmt.Errorf("setting active model: %v", err)
 	}
 
-	fmt.Printf("Model changed to %q.\n", modelName)
+	fmt.Printf("Model changed to %q.\n", modelId)
 
 	// Ask if the user wants to restart
 	if !cmd.noRestart {
@@ -147,11 +163,6 @@ func (cmd *useModelCommand) autoSelectModel() error {
 	engineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngine)
 	if err != nil {
 		return fmt.Errorf("%s: %w", common.LoadingEngineManifest, err)
-	}
-
-	err = cmd.Cache.SetActiveModel(engineManifest.Model.Default)
-	if err != nil {
-		return fmt.Errorf("setting active model: %v", err)
 	}
 
 	// TODO check if the default model size will fit, otherwise check the next smaller one, iteratively

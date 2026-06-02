@@ -40,8 +40,6 @@ func ComponentInstalled(component string) (bool, error) {
 	}
 }
 
-
-
 func WaitForComponents(ctx *Context) error {
 	const maxWait = 1 * time.Hour
 	const interval = 10 * time.Second
@@ -101,29 +99,13 @@ func ComponentsRequiredByCurrentSelection(ctx *Context) ([]string, error) {
 	requiredComponents = append(requiredComponents, runtimeRequiredComponents...)
 
 	// Components required by active model
-	activeModelName, err := ctx.Cache.GetActiveModel()
+	activeModelId, err := ctx.Cache.GetActiveModel()
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", LookingUpActiveModel, err)
 	}
-	modelRequiredComponents, err := ComponentsRequiredByModel(ctx, activeModelName)
+	modelManifest, err := models.LoadManifest(ctx.ModelsDir, activeModelId)
 	if err != nil {
-		return nil, fmt.Errorf("getting components required by model: %v", err)
-	}
-	requiredComponents = append(requiredComponents, modelRequiredComponents...)
-
-	return requiredComponents, nil
-}
-
-func ComponentsRequiredByModel(ctx *Context, modelName string) ([]string, error) {
-	if modelName == "" {
-		return nil, nil
-	}
-
-	var requiredComponents []string
-
-	modelManifest, err := models.LoadManifest(ctx.ModelsDir, modelName)
-	if err != nil {
-		return nil, fmt.Errorf("loading active model manifest: %v", err)
+		return nil, fmt.Errorf("loading model manifest: %v", err)
 	}
 	requiredComponents = append(requiredComponents, modelManifest.Components...)
 
@@ -194,18 +176,16 @@ func MissingComponents(requiredComponents []string) ([]string, error) {
 // InstallMissingComponents determines which components are required by the given engine and model,
 // prompts the user if needed, and installs any that are missing.
 // It returns cancelledByUser=true if the user declined the installation prompt.
-func InstallMissingComponents(ctx *Context, assumeYes bool, engine *engines.Manifest, modelName string) (cancelledByUser bool, err error) {
-	runtimeRequiredComponents, err := ComponentsRequiredByRuntime(ctx, engine.Runtime)
+func InstallMissingComponents(ctx *Context, assumeYes bool, engineManifest *engines.Manifest, modelManifest *models.Manifest) (cancelledByUser bool, err error) {
+	requiredComponents, err := ComponentsRequiredByRuntime(ctx, engineManifest.Runtime)
 	if err != nil {
 		return false, fmt.Errorf("getting components required by runtime: %v", err)
 	}
 
-	modelRequiredComponents, err := ComponentsRequiredByModel(ctx, modelName)
-	if err != nil {
-		return false, fmt.Errorf("getting components required by model: %v", err)
+	if modelManifest != nil {
+		requiredComponents = append(requiredComponents, modelManifest.Components...)
 	}
 
-	requiredComponents := append(runtimeRequiredComponents, modelRequiredComponents...)
 	missingComponents, err := MissingComponents(requiredComponents)
 	if err != nil {
 		return false, fmt.Errorf("checking installed components: %v", err)

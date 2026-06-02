@@ -45,15 +45,15 @@ func EngineSettings(ctx *Context) (*ComponentSettings, error) {
 	}
 
 	// Load active model settings
-	activeModelName, err := ctx.Cache.GetActiveModel()
+	activeModelId, err := ctx.Cache.GetActiveModel()
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", LookingUpActiveModel, err)
 	}
-	if activeModelName == "" {
+	if activeModelId == "" {
 		return nil, ErrNoActiveModel
 	}
 
-	modelManifest, err := models.LoadManifest(ctx.ModelsDir, activeModelName)
+	modelManifest, err := models.LoadManifest(ctx.ModelsDir, activeModelId)
 	if err != nil {
 		return nil, fmt.Errorf("loading model manifest: %w", err)
 	}

@@ -64,16 +64,3 @@ func LoadManifest(manifestsDir, engineName string) (*Manifest, error) {
 
 	return &manifest, nil
 }
-
-func AvailableModelNames(manifestsDir string) ([]string, error) {
-	manifests, err := LoadManifests(manifestsDir)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %s", "loading manifests", err)
-	}
-
-	var names []string
-	for _, manifest := range manifests {
-		names = append(names, manifest.Name)
-	}
-	return names, nil
-}

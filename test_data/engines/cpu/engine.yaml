@@ -16,3 +16,7 @@ model:
   options:
   - 26b-q4-k-m-gguf
   - 30b-a3b-q4-k-m-gguf
+
+configurations:
+  option-a: value-a
+  option-b: value-b

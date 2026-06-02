@@ -251,30 +251,6 @@ func TestComponentsRequiredByRuntime(t *testing.T) {
 	})
 }
 
-func TestComponentsRequiredByModel(t *testing.T) {
-	dirs := setupComponentTestDirs(t)
-
-	t.Run("returns components listed in model manifest", func(t *testing.T) {
-		ctx := makeTestCtx(t, dirs, "test-engine", "test-model")
-		got, err := ComponentsRequiredByModel(ctx, "test-model")
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		want := []string{"test-model-component"}
-		if len(got) != len(want) || got[0] != want[0] {
-			t.Errorf("expected %v, got %v", want, got)
-		}
-	})
-
-	t.Run("non-existent model returns error", func(t *testing.T) {
-		ctx := makeTestCtx(t, dirs, "test-engine", "test-model")
-		_, err := ComponentsRequiredByModel(ctx, "non-existent-model")
-		if err == nil {
-			t.Fatal("expected error for non-existent model, got nil")
-		}
-	})
-}
-
 func TestComponentsRequiredByCurrentSelection(t *testing.T) {
 	dirs := setupComponentTestDirs(t)
 

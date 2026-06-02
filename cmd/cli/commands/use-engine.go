@@ -6,6 +6,7 @@ import (
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
 	"github.com/canonical/inference-snaps-cli/pkg/engines"
+	"github.com/canonical/inference-snaps-cli/pkg/models"
 	"github.com/canonical/inference-snaps-cli/pkg/selector"
 	"github.com/canonical/inference-snaps-cli/pkg/utils"
 	"github.com/spf13/cobra"
@@ -174,12 +175,20 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 		return fmt.Errorf("setting new engine configurations: %v", err)
 	}
 
-	activeModel, err := common.FixActiveModel(cmd.Context)
+	activeModelId, err := common.FixActiveModel(cmd.Context)
 	if err != nil {
 		return err
 	}
+	// If an engine does not specify a default model or model options, the activeModel value will be an empty string
+	var modelManifest *models.Manifest
+	if activeModelId != "" {
+		modelManifest, err = models.LoadManifest(cmd.ModelsDir, activeModelId)
+		if err != nil {
+			return fmt.Errorf("loading active model manifest: %v", err)
+		}
+	}
 
-	cancelledByUser, err := common.InstallMissingComponents(cmd.Context, cmd.assumeYes, engine, activeModel)
+	cancelledByUser, err := common.InstallMissingComponents(cmd.Context, cmd.assumeYes, engine, modelManifest)
 	if err != nil {
 		return fmt.Errorf("installing missing components: %v", err)
 	}
@@ -211,7 +220,7 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 	}
 
 	// If active engine no longer exist, auto select another one
-	engine, err := engines.LoadManifest(cmd.EnginesDir, activeEngineName)
+	engineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngineName)
 	if errors.Is(err, engines.ErrManifestNotFound) {
 		fmt.Printf("Active engine %q not found, performing auto selection instead.\n", activeEngineName)
 		return cmd.autoSelectEngine()
@@ -220,20 +229,28 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 	}
 
 	// Verify active model is supported or switch to default
-	activeModel, err := common.FixActiveModel(cmd.Context)
+	activeModelId, err := common.FixActiveModel(cmd.Context)
 	if err != nil {
 		return err
 	}
+	// If an engine does not specify a default model or model options, the activeModel value will be an empty string
+	var modelManifest *models.Manifest
+	if activeModelId != "" {
+		modelManifest, err = models.LoadManifest(cmd.ModelsDir, activeModelId)
+		if err != nil {
+			return fmt.Errorf("loading active model manifest: %v", err)
+		}
+	}
 
 	// Make sure all components are correctly installed and engine is configured
-	if _, err = common.InstallMissingComponents(cmd.Context, cmd.assumeYes, engine, activeModel); err != nil {
+	if _, err = common.InstallMissingComponents(cmd.Context, cmd.assumeYes, engineManifest, modelManifest); err != nil {
 		return fmt.Errorf("installing missing components: %v", err)
 	}
 
 	if err = common.UnsetEngineConfig(activeEngineName, false, cmd.Context); err != nil {
 		return fmt.Errorf("un-setting engine configurations: %v", err)
 	}
-	if err = common.SetEngineConfig(engine, cmd.Context); err != nil {
+	if err = common.SetEngineConfig(engineManifest, cmd.Context); err != nil {
 		return fmt.Errorf("setting engine configurations: %v", err)
 	}
 

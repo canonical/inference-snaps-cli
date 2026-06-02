@@ -8,12 +8,12 @@ import (
 )
 
 func ModelStatus(ctx *Context) (map[string]string, error) {
-	activeModel, err := ctx.Cache.GetActiveModel()
+	activeModelId, err := ctx.Cache.GetActiveModel()
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", LookingUpActiveModel, err)
 	}
 
-	activeModelManifest, err := models.LoadManifest(ctx.ModelsDir, activeModel)
+	activeModelManifest, err := models.LoadManifest(ctx.ModelsDir, activeModelId)
 	if err != nil {
 		return nil, fmt.Errorf("loading model manifest: %v", err)
 	}
