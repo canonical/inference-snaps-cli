@@ -148,20 +148,6 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 		return fmt.Errorf("loading engine manifest: %v", err)
 	}
 
-	activeModel, err := common.FixActiveModel(cmd.Context)
-	if err != nil {
-		return err
-	}
-
-	cancelledByUser, err := common.InstallMissingComponents(cmd.Context, cmd.assumeYes, engine, activeModel)
-	if err != nil {
-		return fmt.Errorf("installing missing components: %v", err)
-	}
-
-	if cancelledByUser {
-		return nil
-	}
-
 	activeEngineName, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
 		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
@@ -186,6 +172,20 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 
 	if err = common.SetEngineConfig(engine, cmd.Context); err != nil {
 		return fmt.Errorf("setting new engine configurations: %v", err)
+	}
+
+	activeModel, err := common.FixActiveModel(cmd.Context)
+	if err != nil {
+		return err
+	}
+
+	cancelledByUser, err := common.InstallMissingComponents(cmd.Context, cmd.assumeYes, engine, activeModel)
+	if err != nil {
+		return fmt.Errorf("installing missing components: %v", err)
+	}
+
+	if cancelledByUser {
+		return nil
 	}
 
 	fmt.Printf("Engine changed to %q.\n", engineName)
