@@ -36,7 +36,7 @@ func TestParseManifest(t *testing.T) {
 				t.Fatalf("failed to unmarshal %s: %v", engineFile, err)
 			}
 
-			t.Logf("parsed engine manifest: name=%q vendor=%q grade=%q", manifest.Name, manifest.Vendor, manifest.Grade)
+			t.Logf("parsed engine manifest: name=%q vendor=%q experimental=%b", manifest.Name, manifest.Vendor, manifest.Experimental)
 		})
 	}
 }

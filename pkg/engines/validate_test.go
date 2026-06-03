@@ -14,7 +14,6 @@ func templateManifest() Manifest {
 		Description:  "test",
 		Vendor:       "test",
 		Experimental: nil,
-		Components:   nil,
 		Model: Model{
 			Default: "26b-q4-k-m-gguf",
 			Options: []string{"26b-q4-k-m-gguf", "30b-a3b-q4-k-m-gguf "},

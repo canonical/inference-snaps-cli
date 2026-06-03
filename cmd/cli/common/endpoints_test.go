@@ -22,37 +22,40 @@ func writeRuntimeYAML(t *testing.T, runtimesDir, name, content string) {
 	}
 }
 
+// writeEngineYAML writes an engine.yaml for the named engine inside the given enginesDir.
+func writeEngineYAML(t *testing.T, enginesDir, name, content string) {
+	t.Helper()
+	dir := filepath.Join(enginesDir, name)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		t.Fatalf("MkdirAll %s: %v", dir, err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "engine.yaml"), []byte(content), 0644); err != nil {
+		t.Fatalf("WriteFile engine.yaml: %v", err)
+	}
+}
+
 func TestServerEndpoints(t *testing.T) {
 	testCases := []struct {
 		name            string
+		engineYAML      string
 		runtimeYAML     string
 		wantEndpoints   map[string]string
 		wantErrContains string
 	}{
 		{
-			name: "multiple components and servers",
-			componentConfigs: []ComponentSettings{
-				{
-					Servers: map[string]map[string]string{
-						"openai": {
-							"protocol":  "http",
-							"base-path": "/v1",
-						},
-					},
-				},
-				{
-					Servers: map[string]map[string]string{
-						"kserve": {
-							"protocol":  "https",
-							"base-path": "/v2",
-						},
-						"webui": {
-							"protocol": "http",
-						},
-					},
-				},
-			},
-			want: map[string]string{
+			name: "multiple servers",
+			engineYAML: `name: test-engine
+runtime: test-runtime
+`,
+			runtimeYAML: `servers:
+  openai:
+    protocol: http
+    base-path: /v1
+  kserve:
+    protocol: https
+    base-path: /v2
+`,
+			wantEndpoints: map[string]string{
 				"openai": "http://127.0.0.1:8080/v1",
 				"kserve": "https://127.0.0.1:8080/v2",
 				"webui":  "http://192.0.2.1:8080/",
@@ -60,6 +63,9 @@ func TestServerEndpoints(t *testing.T) {
 		},
 		{
 			name: "unsupported protocol",
+			engineYAML: `name: test-engine
+runtime: test-runtime
+`,
 			runtimeYAML: `servers:
   openai:
     protocol: ftp
@@ -68,18 +74,35 @@ func TestServerEndpoints(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Setenv("ADDITIONAL_FEATURES", "webui")
+
+			enginesDir := t.TempDir()
+			runtimesDir := t.TempDir()
+
+			const (
+				engineName  = "test-engine"
+				runtimeName = "test-runtime"
+			)
+
+			writeEngineYAML(t, enginesDir, engineName, tc.engineYAML)
+			writeRuntimeYAML(t, runtimesDir, runtimeName, tc.runtimeYAML)
+
+			cache := storage.NewMockCache()
+			if err := cache.SetActiveEngine(engineName); err != nil {
+				t.Fatalf("SetActiveEngine: %v", err)
+			}
 
 			config := storage.NewMockConfig()
 			config.Set("http.port", "8080", storage.UserConfig)
 			config.Set("http.host", "127.0.0.1", storage.UserConfig)
 			config.Set("webui.http.port", "8080", storage.UserConfig)
 			config.Set("webui.http.host", "192.0.2.1", storage.UserConfig)
+
 			ctx := &Context{
-				EnginesDir:  dirs.enginesDir,
-				RuntimesDir: dirs.runtimesDir,
+				EnginesDir:  enginesDir,
+				RuntimesDir: runtimesDir,
 				Config:      config,
 				Cache:       cache,
 			}
@@ -112,16 +135,16 @@ func TestServerEndpoints(t *testing.T) {
 
 func TestServerHttpUrl(t *testing.T) {
 	testCases := []struct {
-		name         string
-		serverConfig map[string]string
-		host         string
-		setHost      bool
-		want         string
+		name    string
+		server  runtimes.Server
+		host    string
+		setHost bool
+		want    string
 	}{
 		{
 			name: "default base path",
-			serverConfig: map[string]string{
-				"protocol": "http",
+			server: runtimes.Server{
+				Protocol: "http",
 			},
 			host:    "0.0.0.0",
 			setHost: true,
@@ -129,9 +152,9 @@ func TestServerHttpUrl(t *testing.T) {
 		},
 		{
 			name: "custom base path",
-			serverConfig: map[string]string{
-				"protocol":  "http",
-				"base-path": "/v1",
+			server: runtimes.Server{
+				Protocol: "http",
+				BasePath: "/v1",
 			},
 			host:    "127.0.0.1",
 			setHost: true,
@@ -139,9 +162,9 @@ func TestServerHttpUrl(t *testing.T) {
 		},
 		{
 			name: "https protocol",
-			serverConfig: map[string]string{
-				"protocol":  "https",
-				"base-path": "/v3",
+			server: runtimes.Server{
+				Protocol: "https",
+				BasePath: "/v3",
 			},
 			host:    "0.0.0.0",
 			setHost: true,
@@ -153,8 +176,8 @@ func TestServerHttpUrl(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			config := storage.NewMockConfig()
 			config.Set("http.port", "8080", storage.UserConfig)
-			if testCase.setHost {
-				config.Set("http.host", testCase.host, storage.UserConfig)
+			if tc.setHost {
+				config.Set("http.host", tc.host, storage.UserConfig)
 			}
 			ctx := &Context{
 				Config: config,
