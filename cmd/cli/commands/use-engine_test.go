@@ -94,7 +94,7 @@ func ExampleUseEngine_autoSelectEngine() {
 	cmd.Cache.SetActiveEngine("")
 	cmd.Verbose = true
 	var allEngines []engines.Manifest
-	for _, name := range []string{"not-compatible-engine", "cpu-devel", "cpu"} {
+	for _, name := range []string{"not-compatible-engine", "cpu-exptl", "cpu"} {
 		e, err := engines.LoadManifest(cmd.Context.EnginesDir, name)
 		if err != nil {
 			panic(err)
@@ -118,8 +118,8 @@ func ExampleUseEngine_autoSelectEngine() {
 	// Evaluating engines for optimal hardware compatibility:
 	// ✘ not-compatible-engine: not compatible
 	//   - required device not found
-	// • cpu-devel: devel, score=10
-	// ✔ cpu: compatible, score=10
+	// • cpu-exptl: experimental, score=12
+	// ✔ cpu: compatible, score=12
 	// Selected engine: cpu
 	// Engine changed to "cpu".
 	// [mock] Restarting all services
