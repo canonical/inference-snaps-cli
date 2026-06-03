@@ -11,7 +11,6 @@ import (
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
 	"github.com/canonical/inference-snaps-cli/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/pkg/selector"
-	"github.com/canonical/inference-snaps-cli/pkg/selector/pci"
 	"github.com/canonical/inference-snaps-cli/pkg/snap_store"
 	"github.com/canonical/inference-snaps-cli/pkg/utils"
 	"github.com/spf13/cobra"
@@ -28,8 +27,13 @@ type useEngineCommand struct {
 	noRestart bool
 }
 
-func canAccessHardwareInfo() bool {
-	_, err := os.ReadDir("/sys/bus/pci")
+
+var isHardwareObserveConnected = func() (bool, error) {
+	return snapctl.IsConnected("hardware-observe").Run()
+}
+
+var canAccessHardwareInfo = func() bool {
+	_, err := os.ReadDir("/sys/bus/pci/devices")
 	return err == nil
 }
 
@@ -108,11 +112,10 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 
 func (cmd *useEngineCommand) autoSelectEngine() error {
 	if cmd.fallback != "" {
-		connected, err := pci.CheckSnapConnection("hardware-observe")
+		connected, err := isHardwareObserveConnected()
 		if err != nil {
 			return fmt.Errorf("checking hardware-observe connection: %v", err)
 		}
-
 		if !connected && !canAccessHardwareInfo() {
 			fmt.Printf("Hardware information is unavailable; falling back to engine %q.\n", cmd.fallback)
 			return cmd.switchEngine(cmd.fallback)

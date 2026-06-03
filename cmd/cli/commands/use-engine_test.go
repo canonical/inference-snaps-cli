@@ -117,13 +117,38 @@ func TestFixActiveEngine_noActiveEngine(t *testing.T) {
 	}
 }
 
-func TestUseEngineRun_fallbackRequiresAuto(t *testing.T) {
-	cmd := useEngineCommand{fallback: "cpu"}
-	err := cmd.run(nil, nil)
-	if err == nil {
-		t.Fatal("expected an error")
+func TestAutoSelectEngine_fallbackToCpu(t *testing.T) {
+	originalIsConnected := isHardwareObserveConnected
+	originalCanAccess := canAccessHardwareInfo
+	t.Cleanup(func() {
+		isHardwareObserveConnected = originalIsConnected
+		canAccessHardwareInfo = originalCanAccess
+	})
+
+	isHardwareObserveConnected = func() (bool, error) { return false, nil }
+	canAccessHardwareInfo = func() bool { return false }
+
+	cache := storage.NewMockCache()
+	cmd := useEngineCommand{
+		Context: &common.Context{
+			EnginesDir: "../../../test_data/engines",
+			Cache:      cache,
+			Snap:       snap.Mock(),
+		},
+		fallback:  "cpu",
+		auto:      true,
+		assumeYes: true,
 	}
-	if err.Error() != "--fallback requires --auto" {
-		t.Fatalf("unexpected error: %v", err)
+	err := cmd.autoSelectEngine()
+	if err != nil {
+		t.Fatalf("unexpected error auto selecting engine: %v", err)
+	}
+
+	activeEngine, err := cmd.Cache.GetActiveEngine()
+	if err != nil {
+		t.Fatalf("unexpected error getting active engine: %v", err)
+	}
+	if activeEngine != "cpu" {
+		t.Errorf("expected active engine to be 'cpu', got %q", activeEngine)
 	}
 }
