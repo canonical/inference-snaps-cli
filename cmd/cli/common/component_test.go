@@ -165,7 +165,7 @@ func makeTestCtx(t *testing.T, dirs testDirs, engine, model string) *Context {
 	}
 }
 
-func TestWaitForComponentsWithTimeoutAndInterval(t *testing.T) {
+func TestwaitForComponentsWithTimeoutAndInterval(t *testing.T) {
 	dirs := setupComponentTestDirs(t)
 
 	t.Run("all components installed returns nil immediately", func(t *testing.T) {
@@ -178,7 +178,7 @@ func TestWaitForComponentsWithTimeoutAndInterval(t *testing.T) {
 		}
 
 		ctx := makeTestCtx(t, dirs, "test-engine", "test-model")
-		err := WaitForComponentsWithTimeoutAndInterval(ctx, 5*time.Second, 100*time.Millisecond)
+		err := waitForComponentsWithTimeoutAndInterval(ctx, 5*time.Second, 100*time.Millisecond)
 		if err != nil {
 			t.Errorf("expected nil error when all components are installed, got: %v", err)
 		}
@@ -190,7 +190,7 @@ func TestWaitForComponentsWithTimeoutAndInterval(t *testing.T) {
 		// No component directories created.
 
 		ctx := makeTestCtx(t, dirs, "test-engine", "test-model")
-		err := WaitForComponentsWithTimeoutAndInterval(ctx, 1*time.Millisecond, 1*time.Millisecond)
+		err := waitForComponentsWithTimeoutAndInterval(ctx, 1*time.Millisecond, 1*time.Millisecond)
 		if err == nil {
 			t.Fatal("expected timeout error, got nil")
 		}
@@ -203,7 +203,7 @@ func TestWaitForComponentsWithTimeoutAndInterval(t *testing.T) {
 		unsetenvForTest(t, "SNAP_COMPONENTS")
 
 		ctx := makeTestCtx(t, dirs, "test-engine", "test-model")
-		err := WaitForComponentsWithTimeoutAndInterval(ctx, 5*time.Second, 100*time.Millisecond)
+		err := waitForComponentsWithTimeoutAndInterval(ctx, 5*time.Second, 100*time.Millisecond)
 		if err == nil {
 			t.Fatal("expected error when SNAP_COMPONENTS is not set, got nil")
 		}
@@ -217,7 +217,7 @@ func TestWaitForComponentsWithTimeoutAndInterval(t *testing.T) {
 		t.Setenv("SNAP_COMPONENTS", tmpDir)
 
 		ctx := makeTestCtx(t, dirs, "non-existent-engine", "test-model")
-		err := WaitForComponentsWithTimeoutAndInterval(ctx, 5*time.Second, 100*time.Millisecond)
+		err := waitForComponentsWithTimeoutAndInterval(ctx, 5*time.Second, 100*time.Millisecond)
 		if err == nil {
 			t.Fatal("expected error for non-existent engine, got nil")
 		}

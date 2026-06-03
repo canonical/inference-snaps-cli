@@ -122,7 +122,7 @@ func setupEngineContext(t *testing.T, runtimeEnv, modelEnv []string, runtimeLayo
 
 func TestLoadEngineEnvironmentFromSettings(t *testing.T) {
 	symlinkPath := setupTestComponent(t)
-	settings := &ComponentSettings{
+	settings := &Settings{
 		Layout: map[string]types.Layout{
 			symlinkPath: {Symlink: "$SNAP_COMPONENTS/dummy-component-2/test_file.txt"},
 		},
@@ -161,7 +161,7 @@ func TestLoadEngineEnvironmentFromSettings(t *testing.T) {
 
 func TestLoadEngineEnvironmentEnvVarExpansion(t *testing.T) {
 	t.Setenv("BASE_VAR", "/some/base")
-	settings := &ComponentSettings{
+	settings := &Settings{
 		Environment: []string{"DERIVED_VAR=$BASE_VAR/sub"},
 	}
 	t.Cleanup(func() { os.Unsetenv("DERIVED_VAR") })
@@ -177,7 +177,7 @@ func TestLoadEngineEnvironmentEnvVarExpansion(t *testing.T) {
 func TestLoadEngineEnvironmentSkipsEmptySymlink(t *testing.T) {
 	// A layout entry with an empty Symlink value should not create any file
 	linkPath := filepath.Join(t.TempDir(), "should-not-exist")
-	settings := &ComponentSettings{
+	settings := &Settings{
 		Layout: map[string]types.Layout{
 			linkPath: {Symlink: ""},
 		},
@@ -192,7 +192,7 @@ func TestLoadEngineEnvironmentSkipsEmptySymlink(t *testing.T) {
 }
 
 func TestInvalidEnvVarFormat(t *testing.T) {
-	settings := &ComponentSettings{
+	settings := &Settings{
 		Environment: []string{"INVALID_NO_EQUALS"},
 	}
 	err := loadEngineEnvironmentFromSettings(settings)
@@ -203,7 +203,7 @@ func TestInvalidEnvVarFormat(t *testing.T) {
 
 func TestRejectsLayoutOutsideTmp(t *testing.T) {
 	setupTestComponent(t)
-	settings := &ComponentSettings{
+	settings := &Settings{
 		Layout: map[string]types.Layout{
 			"/not/tmp": {Symlink: "$SNAP_COMPONENTS/dummy-component-2/non_existent_file.txt"},
 		},
@@ -222,7 +222,7 @@ func TestRejectsLayoutOutsideTmp(t *testing.T) {
 
 func TestUnloadEngineEnvironmentFromSettings(t *testing.T) {
 	symlinkPath := setupTestComponent(t)
-	settings := &ComponentSettings{
+	settings := &Settings{
 		Layout: map[string]types.Layout{
 			symlinkPath: {Symlink: "$SNAP_COMPONENTS/dummy-component-2/test_file.txt"},
 		},
@@ -250,7 +250,7 @@ func TestUnloadEngineEnvironmentFromSettings(t *testing.T) {
 
 func TestUnloadEngineEnvironmentEmptyLayout(t *testing.T) {
 	// Unloading with no expandedLayout should be a no-op
-	if err := unloadEngineEnvironmentFromSettings(&ComponentSettings{}); err != nil {
+	if err := unloadEngineEnvironmentFromSettings(&Settings{}); err != nil {
 		t.Fatalf("expected no error for empty layout, got: %v", err)
 	}
 }
@@ -624,7 +624,7 @@ func TestUnloadEngineEnvironmentErrorPath(t *testing.T) {
 	}
 
 	// Set expandedLayout directly (same package access)
-	settings := &ComponentSettings{
+	settings := &Settings{
 		expandedLayout: map[string]types.Layout{
 			regularFile: {Symlink: "/some/target"},
 		},
@@ -839,4 +839,3 @@ func TestScoreEnginesWithSpinnerVerboseWarnings(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
-

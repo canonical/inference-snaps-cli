@@ -17,13 +17,13 @@ import (
 	"github.com/canonical/inference-snaps-cli/pkg/utils"
 )
 
-type ComponentSettings struct {
+type Settings struct {
 	Environment    []string                `yaml:"environment"`
 	Layout         map[string]types.Layout `yaml:"layout"`
 	expandedLayout map[string]types.Layout
 }
 
-func EngineSettings(ctx *Context) (*ComponentSettings, error) {
+func EngineSettings(ctx *Context) (*Settings, error) {
 	activeEngineName, err := ctx.Cache.GetActiveEngine()
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", LookingUpActiveEngine, err)
@@ -58,7 +58,7 @@ func EngineSettings(ctx *Context) (*ComponentSettings, error) {
 		return nil, fmt.Errorf("loading model manifest: %w", err)
 	}
 
-	var engineSettings ComponentSettings
+	var engineSettings Settings
 	engineSettings.Environment = append(engineSettings.Environment, runtimeManifest.Environment...)
 	engineSettings.Environment = append(engineSettings.Environment, modelManifest.Environment...)
 	engineSettings.Layout = make(map[string]types.Layout)
@@ -68,7 +68,7 @@ func EngineSettings(ctx *Context) (*ComponentSettings, error) {
 	return &engineSettings, nil
 }
 
-func loadEngineEnvironmentFromSettings(settings *ComponentSettings) error {
+func loadEngineEnvironmentFromSettings(settings *Settings) error {
 
 	for _, kv := range settings.Environment {
 		// Split into key/value
@@ -106,7 +106,7 @@ func loadEngineEnvironmentFromSettings(settings *ComponentSettings) error {
 	return nil
 }
 
-func unloadEngineEnvironmentFromSettings(settings *ComponentSettings) error {
+func unloadEngineEnvironmentFromSettings(settings *Settings) error {
 	// remove the symlinks created for the engine components
 	var errs []error
 	for layoutPath := range settings.expandedLayout {

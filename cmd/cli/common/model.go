@@ -9,8 +9,8 @@ import (
 )
 
 // FixActiveModel checks if the currently selected model is supported by the currently selected engine
-// If it is not supported, the model is changed to the default one specified by the engine
-// TODO if switching from llamacpp to ovms, and we have an e4b-gguf model selected, change to the ovms e4b-int4 model, base don the name field in the model manifest
+// If it is not supported, or unset, the model is changed to the default one specified by the engine
+// TODO if switching from llamacpp to ovms, and we have an e4b-gguf model selected, change to the ovms e4b-int4 model, based on the name field in the model manifest
 // Returns the ID of the newly selected model
 func FixActiveModel(ctx *Context) (string, error) {
 	activeEngineName, err := ctx.Cache.GetActiveEngine()

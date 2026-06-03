@@ -136,16 +136,8 @@ parts:
     plugin: dump
     source: test_data/components
     organize:
-      "runtime-llama-cpp-cpu/*": (component/runtime-llama-cpp-cpu)
-      "runtime-llama-cpp-rocm/*": (component/runtime-llama-cpp-rocm)
-      "runtime-openvino/*": (component/runtime-openvino)
-
-      "mmproj-f16-4b-gguf/*": (component/mmproj-f16-4b-gguf)
-      "model-270m-q4-0-gguf/*": (component/model-270m-q4-0-gguf)
-      "model-4b-it-int4-fq-ov/*": (component/model-4b-it-int4-fq-ov)
-      "model-4b-it-q4-0-gguf/*": (component/model-4b-it-q4-0-gguf)
-      "model-7b-it-q4-0-gguf/*": (component/model-7b-it-q4-0-gguf)
-      # Add other components here
+      # Copy any local component files into components
+      # "component-name/*": (component/component-name)
     prime:
       # Exclude everything not explicitly organized
       - -*

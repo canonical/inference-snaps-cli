@@ -132,11 +132,11 @@ func (cmd *useModelCommand) switchModel(modelId string) error {
 
 	activeModelId, err := cmd.Cache.GetActiveModel()
 	if err != nil {
-		return fmt.Errorf("%s: %w", "looking up active model", err)
+		return fmt.Errorf("%s: %w", common.LookingUpActiveModel, err)
 	}
 
 	if activeModelId == modelId {
-		// Engine not changed, nothing left to do
+		// Model not changed, nothing left to do
 		return nil
 	}
 
@@ -165,7 +165,8 @@ func (cmd *useModelCommand) autoSelectModel() error {
 		return fmt.Errorf("%s: %w", common.LoadingEngineManifest, err)
 	}
 
-	// TODO check if the default model size will fit, otherwise check the next smaller one, iteratively
+	// TODO IENG-2402: check if the default model size will fit, otherwise check the next smaller one, iteratively
+	// Also needs to be done in common.FixActiveModel()
 
 	fmt.Println("Switching to default model", engineManifest.Model.Default, "for engine", activeEngine)
 

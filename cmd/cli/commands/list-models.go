@@ -52,6 +52,8 @@ func (cmd *listModelsCommand) run(_ *cobra.Command, _ []string) error {
 	}
 
 	for _, model := range engineManifest.Model.Options {
+		// TODO in IENG-2398: handle json and table formats, including model metadata
+		// For now just print a list of model IDs
 		fmt.Println(model)
 	}
 

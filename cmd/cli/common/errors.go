@@ -14,4 +14,5 @@ const (
 	LookingUpActiveEngine = "looking up active engine"
 	LookingUpActiveModel  = "looking up active model"
 	LoadingEngineManifest = "loading engine manifest"
+	LoadingModelManifest  = "loading model manifest"
 )

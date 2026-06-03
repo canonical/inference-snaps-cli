@@ -175,11 +175,10 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 		return fmt.Errorf("setting new engine configurations: %v", err)
 	}
 
-	activeModelId, err := common.FixActiveModel(cmd.Context)
+	activeModelId, err := common.FixActiveModel(cmd.Context) // returns empty string if engine does not define a default model
 	if err != nil {
 		return err
 	}
-	// If an engine does not specify a default model or model options, the activeModel value will be an empty string
 	var modelManifest *models.Manifest
 	if activeModelId != "" {
 		modelManifest, err = models.LoadManifest(cmd.ModelsDir, activeModelId)

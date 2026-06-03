@@ -44,10 +44,10 @@ func WaitForComponents(ctx *Context) error {
 	const maxWait = 1 * time.Hour
 	const interval = 10 * time.Second
 
-	return WaitForComponentsWithTimeoutAndInterval(ctx, maxWait, interval)
+	return waitForComponentsWithTimeoutAndInterval(ctx, maxWait, interval)
 }
 
-func WaitForComponentsWithTimeoutAndInterval(ctx *Context, timeout time.Duration, interval time.Duration) error {
+func waitForComponentsWithTimeoutAndInterval(ctx *Context, timeout time.Duration, interval time.Duration) error {
 	required, err := ComponentsRequiredByCurrentSelection(ctx)
 	if err != nil {
 		return fmt.Errorf("determining required components: %v", err)
