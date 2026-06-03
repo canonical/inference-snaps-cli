@@ -104,7 +104,7 @@ func (cmd *listEnginesCommand) getEnginesTable(enginesList outputEngines) (strin
 		return "", fmt.Errorf("No engines found.")
 	}
 
-	var headerRow = []string{"engine", "vendor", "description", "compat"}
+	var headerRow = []string{"engine", "vendor", "summary", "compat"}
 	tableRows := [][]string{headerRow}
 
 	// Sort by Score in descending order
@@ -147,13 +147,13 @@ func (cmd *listEnginesCommand) getEnginesTable(enginesList outputEngines) (strin
 	// Increase column widths to account for paddings
 	engineNameMaxLen += 1
 	engineVendorMaxLen += 2
-	// Description column fills the remaining space
-	engineDescriptionMaxLen := tableMaxWidth - (engineNameMaxLen + engineVendorMaxLen)
-	if engineDescriptionMaxLen > engines.SummaryMaxLength {
-		fmt.Printf("Warning: description column max length %d is greater than summary max length %d, setting it to summary max length\n", engineDescriptionMaxLen, engines.SummaryMaxLength)
+	// Summary column fills the remaining space
+	engineSummaryMaxLen := tableMaxWidth - (engineNameMaxLen + engineVendorMaxLen)
+	if engineSummaryMaxLen > engines.SummaryMaxLength {
+		fmt.Printf("Warning: summary column max length %d is greater than summary max length %d, setting it to summary max length\n", engineSummaryMaxLen, engines.SummaryMaxLength)
 	}
 	// Reserve space for Compatible column
-	engineDescriptionMaxLen -= len(headerRow[3]) + 1
+	engineSummaryMaxLen -= len(headerRow[3]) + 1
 	options := []tablewriter.Option{
 		tablewriter.WithRenderer(renderer.NewColorized(renderer.ColorizedConfig{
 			Header: renderer.Tint{
@@ -179,9 +179,9 @@ func (cmd *listEnginesCommand) getEnginesTable(enginesList outputEngines) (strin
 			MaxWidth: tableMaxWidth,
 			Widths: tw.CellWidth{
 				PerColumn: tw.Mapper[int, int]{
-					0: engineNameMaxLen,        // Engine name
-					1: engineVendorMaxLen,      // Vendor
-					2: engineDescriptionMaxLen, // Description
+					0: engineNameMaxLen,    // Engine name
+					1: engineVendorMaxLen,  // Vendor
+					2: engineSummaryMaxLen, // Summary
 					// 3:  0, // Compatible, not set because cell value is shorter than min width
 				},
 			},

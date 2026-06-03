@@ -97,7 +97,7 @@ func TestGetEnginesTable(t *testing.T) {
 		t.Fatalf("Error getting engines table: %v", err)
 	}
 
-	expectedTable := `ENGINE                 VENDOR             DESCRIPTION                    COMPAT
+	expectedTable := `ENGINE                 VENDOR             SUMMARY                        COMPAT
 intel-cpu              Intel Corporation  Intel CPU engine               yes   
 cpu-avx2               Canonical Ltd      CPU AVX2 engine                yes   
 cpu-avx1               Canonical Ltd      CPU AVX1 engine                yes   
