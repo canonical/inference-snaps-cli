@@ -1,7 +1,9 @@
 package storage
 
 import (
+	"fmt"
 	"maps"
+	"os"
 	"strings"
 )
 
@@ -26,20 +28,22 @@ func NewConfig() Config {
 const configKeyPrefix = "config"
 
 type configType string
+type envType string
 
 // config precedence, from lowest to highest
-var confPrecedence = []configType{
-	PackageConfig, // values set by the package
-	EngineConfig,  // values set by the active engine, overriding package values
-	UserConfig,    // values set by the user, overriding all others
+var confPrecedence = []string{
+	string(Environment),  // values set via environment variables, overriding all others
+	string(EngineConfig), // values set by the active engine, overriding package values
+	string(UserConfig),   // values set by the user, overriding all others
 }
 
 // config types
 const (
-	PackageConfig configType = "package"
-	EngineConfig  configType = "engine"
-	UserConfig    configType = "user"
+	EngineConfig configType = "engine"
+	UserConfig   configType = "user"
 )
+
+const Environment envType = "env"
 
 // Set sets a configuration value
 func (c *config) Set(key, value string, confType configType) error {
@@ -83,21 +87,30 @@ func (c *config) Unset(key string, confType configType) error {
 // loadConfigs loads all configurations as a flattened map, after applying precedence rules
 func (c *config) loadConfigs() (map[string]any, error) {
 	values, err := c.storage.Get(configKeyPrefix)
+	if err == ErrorNotFound {
+		values = map[string]any{}
+	} else if err != nil {
+		return nil, err
+	}
+	fmt.Println("Loaded values from storage:", values)
+	envValues, err := getDefaultEnvVars()
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Println("Loaded values from environment variables:", envValues)
+	// Merge env values with storage values, giving env values precedence
+	maps.Copy(values, envValues)
+	fmt.Println("Merged values with environment variables taking precedence:", values)
 	// Load configurations in the order of precedence
 	var finalMap = make(map[string]any)
 	for _, k := range confPrecedence {
-		if v, found := values[string(k)]; found {
+		if v, found := values[k]; found {
 			maps.Copy(
 				finalMap,
 				c.flattenMap(v.(map[string]any)),
 			)
 		}
 	}
-
 	return finalMap, nil
 }
 
@@ -132,4 +145,31 @@ func (c *config) nestKeys(confType configType, key string) string {
 	} else {
 		return strings.Join([]string{configKeyPrefix, string(confType), key}, ".")
 	}
+}
+
+func getDefaultEnvVars() (map[string]any, error) {
+	envConfig := make(map[string]any)
+
+	for _, entry := range os.Environ() {
+		envKey, envValue, found := strings.Cut(entry, "=")
+		if !found {
+			continue
+		}
+
+		if !strings.HasPrefix(envKey, "DEFAULT_") {
+			continue
+		}
+
+		normalizedKey := strings.TrimPrefix(envKey, "DEFAULT_")
+		normalizedKey = strings.ToLower(strings.ReplaceAll(normalizedKey, "_", "-"))
+		envConfig[normalizedKey] = envValue
+	}
+
+	if len(envConfig) == 0 {
+		return map[string]any{}, nil
+	}
+
+	return map[string]any{
+		string(Environment): envConfig,
+	}, nil
 }

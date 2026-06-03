@@ -13,10 +13,9 @@ type unsetCommand struct {
 	*common.Context
 
 	// flags
-	packageConfig bool
-	engineConfig  bool
-	assumeYes     bool
-	noRestart     bool
+	engineConfig bool
+	assumeYes    bool
+	noRestart    bool
 }
 
 func Unset(ctx *common.Context) *cobra.Command {

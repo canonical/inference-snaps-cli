@@ -31,6 +31,12 @@ layout:
 environment:
   # Path to access current revision of components
   SNAP_COMPONENTS: /snap/$SNAP_INSTANCE_NAME/components/$SNAP_REVISION
+  DEFAULT_HTTP_PORT: "8080"
+  DEFAULT_HTTP_HOST: "localhost"
+  DEFAULT_VERBOSE: "false"
+  DEFAULT_WEBUI_HTTP_PORT: "8081"
+  DEFAULT_WEBUI_HTTP_HOST: "localhost"
+
 
 parts:
   scripts:

@@ -281,17 +281,7 @@ func TestSet(t *testing.T) {
 		}
 	})
 
-	t.Run("package", func(t *testing.T) {
-		cmd.packageConfig = true
-		cmd.engineConfig = false
-		err := cmd.set([]string{"model=llama"})
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
-
 	t.Run("engine", func(t *testing.T) {
-		cmd.packageConfig = false
 		cmd.engineConfig = true
 		err := cmd.set([]string{"model=llama"})
 		if err != nil {

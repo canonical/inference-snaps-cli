@@ -38,7 +38,6 @@ func TestUnsetKeyToDefaultValue(t *testing.T) {
 	config := storage.NewMockConfig()
 	config.Set("test-key", "user-value", storage.UserConfig)
 	config.Set("test-key", "engine-value", storage.EngineConfig)
-	config.Set("test-key", "package-value", storage.PackageConfig)
 	cmd := unsetCommand{
 		noRestart: true,
 		assumeYes: true,
@@ -92,7 +91,7 @@ func TestUnsetNonexistentKey(t *testing.T) {
 
 func ExampleUnset_noRestartWhenFinalValueUnchanged() {
 	config := storage.NewMockConfig()
-	config.Set("api.port", "8080", storage.PackageConfig)
+	config.Set("api.port", "8080", storage.EngineConfig)
 	config.Set("api.port", "8080", storage.UserConfig) // same as package value
 	cmd := unsetCommand{
 		assumeYes: true,
@@ -111,7 +110,7 @@ func ExampleUnset_noRestartWhenFinalValueUnchanged() {
 
 func ExampleUnset_restartWhenFinalValueChanged() {
 	config := storage.NewMockConfig()
-	config.Set("api.port", "8080", storage.PackageConfig)
+	config.Set("api.port", "8080", storage.EngineConfig)
 	config.Set("api.port", "9999", storage.UserConfig)
 	cmd := unsetCommand{
 		assumeYes: true,

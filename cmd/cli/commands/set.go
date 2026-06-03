@@ -14,10 +14,9 @@ type setCommand struct {
 	*common.Context
 
 	// flags
-	packageConfig bool
-	engineConfig  bool
-	assumeYes     bool
-	noRestart     bool
+	engineConfig bool
+	assumeYes    bool
+	noRestart    bool
 }
 
 func Set(ctx *common.Context) *cobra.Command {
@@ -34,10 +33,6 @@ func Set(ctx *common.Context) *cobra.Command {
 	}
 
 	// flags
-	cobraCmd.Flags().BoolVar(&cmd.packageConfig, "package", false, "set package configurations")
-	if err := cobraCmd.Flags().MarkHidden("package"); err != nil {
-		panic(err)
-	}
 	cobraCmd.Flags().BoolVar(&cmd.engineConfig, "engine", false, "set engine configuration")
 	if err := cobraCmd.Flags().MarkHidden("engine"); err != nil {
 		panic(err)
@@ -63,22 +58,11 @@ func (cmd *setCommand) set(keyValuePairs []string) error {
 	}
 
 	switch {
-	case cmd.packageConfig:
-		return cmd.setPackageConfigs(keyValues)
 	case cmd.engineConfig:
 		return cmd.setEngineConfigs(keyValues)
 	default:
 		return cmd.setUserConfigs(keyValues)
 	}
-}
-
-func (cmd *setCommand) setPackageConfigs(keyValues map[string]string) error {
-	for k, v := range keyValues {
-		if err := cmd.Config.Set(k, v, storage.PackageConfig); err != nil {
-			return fmt.Errorf("setting %q to %q: %v", k, v, err)
-		}
-	}
-	return nil
 }
 
 func (cmd *setCommand) setEngineConfigs(keyValues map[string]string) error {
