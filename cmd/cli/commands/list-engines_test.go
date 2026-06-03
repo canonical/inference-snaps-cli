@@ -98,22 +98,22 @@ func TestGetEnginesTable(t *testing.T) {
 	}
 
 	expectedTable := `ENGINE                 VENDOR             DESCRIPTION                    COMPAT
-intel-cpu              Intel Corporation  Use Intel CPUs                 yes   
-cpu-avx2               Canonical Ltd      CPUs with AVX2                 yes   
-cpu-avx1               Canonical Ltd      Legacy CPUs with only SSE4.2…  yes   
+intel-cpu              Intel Corporation  Intel CPU engine               yes   
+cpu-avx2               Canonical Ltd      CPU AVX2 engine                yes   
+cpu-avx1               Canonical Ltd      CPU AVX1 engine                yes   
 cpu                    Canonical Ltd      General CPU engine             yes   
-cpu-exptl              Canonical Ltd      Requires any CPU but it is e…  exptl 
-rocm-generic           Canonical Ltd      AMD GPUs using ROCm. All maj…  no    
-not-compatible-engine  Canonical Ltd      This test engine is designed…  no    
-intel-npu              Intel Corporation  Intel NPUs                     no    
-intel-gpu              Intel Corporation  Modern Intel GPUs (>=gen 13)   no    
-ampere                 Canonical Ltd      Test ampere selection          no    
-example-memory*        Canonical Ltd      Legacy CPUs, offering full a…  no    
-cuda-generic           Canonical Ltd      Nvidia GPUs using CUDA. All …  no    
-amd-gpu                Canonical Ltd      AMD specific engine targetin…  no    
-cpu-avx512             Canonical Ltd      CPUs with AVX512               no    
-ampere-altra           Canonical Ltd      Test ampere selection          no    
-arm-neon               Canonical Ltd      ARM CPUs with NEON instructi…  no    
+cpu-exptl              Canonical Ltd      CPU development engine         exptl 
+rocm-generic           Canonical Ltd      ROCm generic engine            no    
+not-compatible-engine  Canonical Ltd      This summary is too long and…  no    
+intel-npu              Intel Corporation  Intel NPU engine               no    
+intel-gpu              Intel Corporation  Intel GPU engine               no    
+ampere                 Canonical Ltd      Ampere ARM64 engine            no    
+example-memory*        Canonical Ltd      High-memory CPU engine         no    
+cuda-generic           Canonical Ltd      CUDA generic engine            no    
+amd-gpu                Canonical Ltd      AMD GPU engine                 no    
+cpu-avx512             Canonical Ltd      CPU AVX512 engine              no    
+ampere-altra           Canonical Ltd      Ampere Altra engine            no    
+arm-neon               Canonical Ltd      ARM NEON engine                no    
 `
 
 	if tableStr != expectedTable {
@@ -143,7 +143,7 @@ func Example_printEnginesJson() {
 	//     {
 	//       "name": "amd-gpu",
 	//       "summary": "AMD GPU engine",
-	//       "description": "AMD specific engine targeting only one microarchitecture.",
+	//       "description": "AMD specific engine targeting one microarchitecture:\n  - gfx1032\n",
 	//       "vendor": "Canonical Ltd",
 	//       "devices": {
 	//         "anyof": null,
