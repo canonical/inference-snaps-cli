@@ -132,16 +132,6 @@ parts:
     organize:
       "*": webui/
 
-  local-component-files:
-    plugin: dump
-    source: test_data/components
-    organize:
-      # Copy any local component files into components
-      # "component-name/*": (component/component-name)
-    prime:
-      # Exclude everything not explicitly organized
-      - -*
-
   mock-openai-server:
     plugin: dump
     source: test_data/mock-openai-server
