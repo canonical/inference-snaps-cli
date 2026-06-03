@@ -144,7 +144,7 @@ func scorePciDevice(manifestDevice engines.Device, hostPciDevice types.PciDevice
 
 	// Check drivers
 	for _, connection := range manifestDevice.SnapConnections {
-		connected, err := checkSnapConnection(connection)
+		connected, err := CheckSnapConnection(connection)
 		if err != nil {
 			deviceScore = 0
 			issues = append(issues, fmt.Sprintf("checking snap connection %q: %v", connection, err))
@@ -193,7 +193,7 @@ func checkType(requiredType string, pciDevice types.PciDevice) bool {
 	return false
 }
 
-func checkSnapConnection(connection string) (bool, error) {
+func CheckSnapConnection(connection string) (bool, error) {
 	if testing.Testing() {
 		// Tests do not necessarily run inside a snap
 		// Stub out and always return true for all connections

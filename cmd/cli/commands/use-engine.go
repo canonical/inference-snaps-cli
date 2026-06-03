@@ -11,6 +11,7 @@ import (
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
 	"github.com/canonical/inference-snaps-cli/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/pkg/selector"
+	"github.com/canonical/inference-snaps-cli/pkg/selector/pci"
 	"github.com/canonical/inference-snaps-cli/pkg/snap_store"
 	"github.com/canonical/inference-snaps-cli/pkg/utils"
 	"github.com/spf13/cobra"
@@ -22,8 +23,14 @@ type useEngineCommand struct {
 	// flags
 	auto      bool
 	fix       bool
+	fallback  string
 	assumeYes bool
 	noRestart bool
+}
+
+func canAccessHardwareInfo() bool {
+	_, err := os.ReadDir("/sys/bus/pci")
+	return err == nil
 }
 
 func UseEngine(ctx *common.Context) *cobra.Command {
@@ -44,6 +51,7 @@ func UseEngine(ctx *common.Context) *cobra.Command {
 	// flags
 	cobraCmd.Flags().BoolVar(&cmd.auto, "auto", false, "automatically select a compatible engine")
 	cobraCmd.Flags().BoolVar(&cmd.fix, "fix", false, "fix issues with the currently active engine")
+	cobraCmd.Flags().StringVar(&cmd.fallback, "fallback", "", "fallback engine to use when hardware information is unavailable (requires --auto)")
 	cobraCmd.Flags().BoolVar(&cmd.assumeYes, "assume-yes", false, "assume yes for all prompts")
 	cobraCmd.Flags().BoolVar(&cmd.noRestart, "no-restart", false, "do not restart the snap after changing engine")
 
@@ -68,6 +76,10 @@ func (cmd *useEngineCommand) validateArgs(_ *cobra.Command, args []string, toCom
 func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 	if !utils.IsRootUser() {
 		return common.ErrPermissionDenied
+	}
+
+	if cmd.fallback != "" && !cmd.auto {
+		return fmt.Errorf("--fallback requires --auto")
 	}
 
 	if cmd.auto {
@@ -95,6 +107,18 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 }
 
 func (cmd *useEngineCommand) autoSelectEngine() error {
+	if cmd.fallback != "" {
+		connected, err := pci.CheckSnapConnection("hardware-observe")
+		if err != nil {
+			return fmt.Errorf("checking hardware-observe connection: %v", err)
+		}
+
+		if !connected && !canAccessHardwareInfo() {
+			fmt.Printf("Hardware information is unavailable; falling back to engine %q.\n", cmd.fallback)
+			return cmd.switchEngine(cmd.fallback)
+		}
+	}
+
 	scoredEngines, err := common.ScoreEnginesWithSpinner(cmd.Context)
 	if err != nil {
 		return fmt.Errorf("scoring engines: %v", err)

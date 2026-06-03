@@ -116,3 +116,14 @@ func TestFixActiveEngine_noActiveEngine(t *testing.T) {
 		t.Errorf("expected no active engine error, got %v", err)
 	}
 }
+
+func TestUseEngineRun_fallbackRequiresAuto(t *testing.T) {
+	cmd := useEngineCommand{fallback: "cpu"}
+	err := cmd.run(nil, nil)
+	if err == nil {
+		t.Fatal("expected an error")
+	}
+	if err.Error() != "--fallback requires --auto" {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
