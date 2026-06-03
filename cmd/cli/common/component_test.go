@@ -20,9 +20,9 @@ type testDirs struct {
 	requiredComponents []string
 }
 
-// unsetenvForTest unsets the named environment variable for the duration of the
+// unSetEnvForTest unsets the named environment variable for the duration of the
 // test and restores its original value (or absence) on cleanup.
-func unsetenvForTest(t *testing.T, key string) {
+func unSetEnvForTest(t *testing.T, key string) {
 	t.Helper()
 	prev, wasSet := os.LookupEnv(key)
 	if err := os.Unsetenv(key); err != nil {
@@ -88,7 +88,7 @@ model:
 
 func TestComponentInstalled(t *testing.T) {
 	t.Run("SNAP_COMPONENTS not set returns error", func(t *testing.T) {
-		unsetenvForTest(t, "SNAP_COMPONENTS")
+		unSetEnvForTest(t, "SNAP_COMPONENTS")
 
 		installed, err := ComponentInstalled("my-component")
 		if err == nil {
@@ -165,7 +165,7 @@ func makeTestCtx(t *testing.T, dirs testDirs, engine, model string) *Context {
 	}
 }
 
-func TestwaitForComponentsWithTimeoutAndInterval(t *testing.T) {
+func TestWaitForComponentsWithTimeoutAndInterval(t *testing.T) {
 	dirs := setupComponentTestDirs(t)
 
 	t.Run("all components installed returns nil immediately", func(t *testing.T) {
@@ -200,7 +200,7 @@ func TestwaitForComponentsWithTimeoutAndInterval(t *testing.T) {
 	})
 
 	t.Run("SNAP_COMPONENTS not set returns error", func(t *testing.T) {
-		unsetenvForTest(t, "SNAP_COMPONENTS")
+		unSetEnvForTest(t, "SNAP_COMPONENTS")
 
 		ctx := makeTestCtx(t, dirs, "test-engine", "test-model")
 		err := waitForComponentsWithTimeoutAndInterval(ctx, 5*time.Second, 100*time.Millisecond)
@@ -291,7 +291,7 @@ func TestComponentsRequiredByCurrentSelection(t *testing.T) {
 
 func TestInstalledComponents(t *testing.T) {
 	t.Run("SNAP_COMPONENTS not set returns error", func(t *testing.T) {
-		unsetenvForTest(t, "SNAP_COMPONENTS")
+		unSetEnvForTest(t, "SNAP_COMPONENTS")
 
 		_, err := InstalledComponents()
 		if err == nil {
@@ -370,7 +370,7 @@ func TestInstalledComponents(t *testing.T) {
 
 func TestMissingComponents(t *testing.T) {
 	t.Run("SNAP_COMPONENTS not set returns error", func(t *testing.T) {
-		unsetenvForTest(t, "SNAP_COMPONENTS")
+		unSetEnvForTest(t, "SNAP_COMPONENTS")
 
 		_, err := MissingComponents([]string{"any-component"})
 		if err == nil {
@@ -495,7 +495,7 @@ func TestInstallComponents(t *testing.T) {
 	})
 
 	t.Run("multiple components all install successfully", func(t *testing.T) {
-		installed := []string{}
+		var installed []string
 		ctx := makeInstallCtx(snap.MockWithInstall(func(name string) error {
 			installed = append(installed, name)
 			return nil

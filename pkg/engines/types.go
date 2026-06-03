@@ -85,8 +85,8 @@ type Model struct {
 	Options []string `yaml:"options" json:"options"`
 }
 
-func (m Manifest) IsExperimental() bool {
-	return m.Experimental != nil && *m.Experimental
+func (manifest Manifest) IsExperimental() bool {
+	return manifest.Experimental != nil && *manifest.Experimental
 }
 
 func (c CompatibilityReport) EngineCompatible() bool {
