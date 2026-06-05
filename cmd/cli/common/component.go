@@ -184,9 +184,14 @@ func MissingComponents(requiredComponents []string) ([]string, error) {
 // prompts the user if needed, and installs any that are missing.
 // It returns cancelledByUser=true if the user declined the installation prompt.
 func InstallMissingComponents(ctx *Context, assumeYes bool, engineManifest *engines.Manifest, modelManifest *models.Manifest) (cancelledByUser bool, err error) {
-	requiredComponents, err := ComponentsRequiredByRuntime(ctx, engineManifest.Runtime)
-	if err != nil {
-		return false, fmt.Errorf("getting components required by runtime: %v", err)
+	var requiredComponents []string
+
+	if engineManifest.Runtime != "" {
+		runtimeComponents, err := ComponentsRequiredByRuntime(ctx, engineManifest.Runtime)
+		if err != nil {
+			return false, fmt.Errorf("getting components required by runtime: %v", err)
+		}
+		requiredComponents = append(requiredComponents, runtimeComponents...)
 	}
 
 	if modelManifest != nil {
