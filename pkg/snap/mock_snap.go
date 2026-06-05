@@ -1,6 +1,8 @@
 package snap
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type mockSnap struct{}
 
@@ -19,4 +21,9 @@ func (c *mockSnap) Restart(service ...string) error {
 
 func (c *mockSnap) InstanceName() string {
 	return "mock-snap"
+}
+
+func (c *mockSnap) HardwareObservable() bool {
+	fmt.Println("[mock] Checking hardware observability")
+	return false
 }

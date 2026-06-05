@@ -1,6 +1,8 @@
 package snap
 
 import (
+	"os"
+
 	"github.com/canonical/go-snapctl"
 	"github.com/canonical/go-snapctl/env"
 )
@@ -8,6 +10,7 @@ import (
 type Snap interface {
 	Restart(service ...string) error
 	InstanceName() string
+	HardwareObservable() bool
 }
 
 func New() Snap {
@@ -28,4 +31,16 @@ func (*snap) Restart(service ...string) error {
 // InstanceName returns the snap instance name.
 func (*snap) InstanceName() string {
 	return env.SnapInstanceName()
+}
+
+func (*snap) HardwareObservable() bool {
+	connected, err := snapctl.IsConnected("hardware-observe").Run()
+	if err != nil {
+		return false
+	}
+	_, err = os.ReadDir("/sys/bus/pci/devices")
+	if err != nil {
+		return false
+	}
+	return (connected && (err == nil))
 }

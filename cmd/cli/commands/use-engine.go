@@ -27,16 +27,6 @@ type useEngineCommand struct {
 	noRestart bool
 }
 
-
-var isHardwareObserveConnected = func() (bool, error) {
-	return snapctl.IsConnected("hardware-observe").Run()
-}
-
-var canAccessHardwareInfo = func() bool {
-	_, err := os.ReadDir("/sys/bus/pci/devices")
-	return err == nil
-}
-
 func UseEngine(ctx *common.Context) *cobra.Command {
 	var cmd useEngineCommand
 	cmd.Context = ctx
@@ -111,15 +101,9 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 }
 
 func (cmd *useEngineCommand) autoSelectEngine() error {
-	if cmd.fallback != "" {
-		connected, err := isHardwareObserveConnected()
-		if err != nil {
-			return fmt.Errorf("checking hardware-observe connection: %v", err)
-		}
-		if !connected && !canAccessHardwareInfo() {
-			fmt.Printf("Hardware information is unavailable; falling back to engine %q.\n", cmd.fallback)
-			return cmd.switchEngine(cmd.fallback)
-		}
+	if !cmd.Context.Snap.HardwareObservable() && cmd.fallback != "" {
+		fmt.Printf("Hardware information is unavailable; falling back to engine %q.\n", cmd.fallback)
+		return cmd.switchEngine(cmd.fallback)
 	}
 
 	scoredEngines, err := common.ScoreEnginesWithSpinner(cmd.Context)

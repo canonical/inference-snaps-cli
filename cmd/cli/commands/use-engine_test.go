@@ -118,15 +118,6 @@ func TestFixActiveEngine_noActiveEngine(t *testing.T) {
 }
 
 func TestAutoSelectEngine_fallbackToCpu(t *testing.T) {
-	originalIsConnected := isHardwareObserveConnected
-	originalCanAccess := canAccessHardwareInfo
-	t.Cleanup(func() {
-		isHardwareObserveConnected = originalIsConnected
-		canAccessHardwareInfo = originalCanAccess
-	})
-
-	isHardwareObserveConnected = func() (bool, error) { return false, nil }
-	canAccessHardwareInfo = func() bool { return false }
 
 	cache := storage.NewMockCache()
 	cmd := useEngineCommand{
