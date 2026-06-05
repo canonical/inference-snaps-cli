@@ -14,15 +14,45 @@ import (
 	"github.com/canonical/inference-snaps-cli/pkg/utils"
 )
 
+// InstalledComponents returns the names of all currently installed components
+// by listing subdirectories inside the SNAP_COMPONENTS directory.
+func InstalledComponents() ([]string, error) {
+	componentsDir, found := os.LookupEnv("SNAP_COMPONENTS")
+	if !found {
+		return nil, fmt.Errorf("SNAP_COMPONENTS env var not set")
+	}
+
+	entries, err := os.ReadDir(componentsDir)
+	if err != nil {
+		return nil, fmt.Errorf("reading components directory %q: %v", componentsDir, err)
+	}
+
+	var installed []string
+	for _, entry := range entries {
+		// Use os.Stat() as DirEntry.IsDir() does not resolve symlinks
+		info, err := os.Stat(filepath.Join(componentsDir, entry.Name()))
+		if err != nil {
+			return nil, fmt.Errorf("getting file info for component %q: %v", entry.Name(), err)
+		}
+		if info.IsDir() {
+			installed = append(installed, entry.Name())
+		}
+	}
+
+	return installed, nil
+}
+
+// ComponentInstalled checks if a specific component is installed
 func ComponentInstalled(component string) (bool, error) {
 	componentsDir, found := os.LookupEnv("SNAP_COMPONENTS")
 	if !found {
 		return false, fmt.Errorf("SNAP_COMPONENTS env var not set")
 	}
 
-	// Check in /snap/$SNAP_INSTANCE_NAME/components/$SNAP_REVISION if component is mounted
+	// Check in $SNAP_COMPONENTS/ if component is mounted
 	directoryPath := fmt.Sprintf("%s/%s", componentsDir, component)
 
+	// os.Stat() resolves symlinks, so IsDir() will report true if target is a directory
 	info, err := os.Stat(directoryPath)
 
 	if err != nil {
@@ -127,29 +157,6 @@ func ComponentsRequiredByRuntime(ctx *Context, runtimeName string) ([]string, er
 	requiredComponents = append(requiredComponents, runtimeManifest.Components...)
 
 	return requiredComponents, nil
-}
-
-// InstalledComponents returns the names of all currently installed components
-// by listing subdirectories inside the SNAP_COMPONENTS directory.
-func InstalledComponents() ([]string, error) {
-	componentsDir, found := os.LookupEnv("SNAP_COMPONENTS")
-	if !found {
-		return nil, fmt.Errorf("SNAP_COMPONENTS env var not set")
-	}
-
-	entries, err := os.ReadDir(componentsDir)
-	if err != nil {
-		return nil, fmt.Errorf("reading components directory %q: %v", componentsDir, err)
-	}
-
-	var installed []string
-	for _, entry := range entries {
-		if entry.IsDir() {
-			installed = append(installed, entry.Name())
-		}
-	}
-
-	return installed, nil
 }
 
 func MissingComponents(requiredComponents []string) ([]string, error) {
