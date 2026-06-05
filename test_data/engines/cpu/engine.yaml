@@ -18,5 +18,4 @@ model:
   - 30b-a3b-q4-k-m-gguf
 
 configurations:
-  option-a: value-a
-  option-b: value-b
+  sleep-idle-seconds: 600

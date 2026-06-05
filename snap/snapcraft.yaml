@@ -147,6 +147,8 @@ components:
     type: standard
     summary: Just a test component
     description: Component for testing purposes
+  runtime-llama-cpp-cuda:
+    <<: *test-component
   runtime-llama-cpp-rocm:
     <<: *test-component
   runtime-openvino:
@@ -155,17 +157,23 @@ components:
   #
   # Models
   #
-  model-270m-q4-0-gguf:
+  model-26b-a4b-q4-k-m-gguf:
     <<: *test-component
-  model-4b-it-int4-fq-ov:
+  mmproj-26b-bf16-gguf:
     <<: *test-component
-  model-4b-it-q4-0-gguf:
+  model-30b-a3b-q4-k-m-gguf-1-of-6:
     <<: *test-component
-  model-7b-it-q4-0-gguf:
+  model-30b-a3b-q4-k-m-gguf-2-of-6:
     <<: *test-component
-  mmproj-f16-4b-gguf:
+  model-30b-a3b-q4-k-m-gguf-3-of-6:
     <<: *test-component
-      
+  model-30b-a3b-q4-k-m-gguf-4-of-6:
+    <<: *test-component
+  model-30b-a3b-q4-k-m-gguf-5-of-6:
+    <<: *test-component
+  model-30b-a3b-q4-k-m-gguf-6-of-6:
+    <<: *test-component
+
 apps:
   stack-utils:
     command: bin/modelctl
