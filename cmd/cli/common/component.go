@@ -91,32 +91,32 @@ func ComponentsRequiredByCurrentSelection(ctx *Context) ([]string, error) {
 		return nil, fmt.Errorf("loading engine manifest: %v", err)
 	}
 
-	// Components required by active runtime
-	runtimeRequiredComponents, err := ComponentsRequiredByRuntime(ctx, engineManifest.Runtime)
-	if err != nil {
-		return nil, fmt.Errorf("getting components required by runtime: %v", err)
+	// Components required by active engine's runtime
+	if engineManifest.Runtime != "" {
+		runtimeRequiredComponents, err := ComponentsRequiredByRuntime(ctx, engineManifest.Runtime)
+		if err != nil {
+			return nil, fmt.Errorf("getting components required by runtime: %v", err)
+		}
+		requiredComponents = append(requiredComponents, runtimeRequiredComponents...)
 	}
-	requiredComponents = append(requiredComponents, runtimeRequiredComponents...)
 
 	// Components required by active model
 	activeModelId, err := ctx.Cache.GetActiveModel()
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", LookingUpActiveModel, err)
 	}
-	modelManifest, err := models.LoadManifest(ctx.ModelsDir, activeModelId)
-	if err != nil {
-		return nil, fmt.Errorf("loading model manifest: %v", err)
+	if activeModelId == "" {
+		modelManifest, err := models.LoadManifest(ctx.ModelsDir, activeModelId)
+		if err != nil {
+			return nil, fmt.Errorf("loading model manifest: %v", err)
+		}
+		requiredComponents = append(requiredComponents, modelManifest.Components...)
 	}
-	requiredComponents = append(requiredComponents, modelManifest.Components...)
 
 	return requiredComponents, nil
 }
 
 func ComponentsRequiredByRuntime(ctx *Context, runtimeName string) ([]string, error) {
-	if runtimeName == "" {
-		return nil, nil
-	}
-
 	var requiredComponents []string
 
 	// Components required by runtime

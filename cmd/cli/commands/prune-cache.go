@@ -114,13 +114,17 @@ func (cmd *pruneCacheCommand) unusedComponentsEngine(engineName string) ([]strin
 	if err != nil {
 		return nil, fmt.Errorf("loading engine manifest: %w", err)
 	}
-	runtimeManifest, err := runtimes.LoadManifest(cmd.RuntimesDir, engineManifest.Runtime)
-	if err != nil {
-		return nil, fmt.Errorf("loading runtimes manifest: %w", err)
+
+	// Include runtime components if engine has a runtime
+	if engineManifest.Runtime != "" {
+		runtimeManifest, err := runtimes.LoadManifest(cmd.RuntimesDir, engineManifest.Runtime)
+		if err != nil {
+			return nil, fmt.Errorf("loading runtimes manifest: %w", err)
+		}
+		engineComponents = append(engineComponents, runtimeManifest.Components...)
 	}
 
-	engineComponents = append(engineComponents, runtimeManifest.Components...)
-
+	// Include model components of all models compatible with this engine
 	for _, modelId := range engineManifest.Model.Options {
 		modelManifest, err := models.LoadManifest(cmd.ModelsDir, modelId)
 		if err != nil {
