@@ -3,6 +3,7 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
 	"github.com/canonical/inference-snaps-cli/pkg/engines"
@@ -138,7 +139,7 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 // switchEngine changes the engine that is used by the snap
 func (cmd *useEngineCommand) switchEngine(engineName string) error {
 
-	engine, err := engines.LoadManifest(cmd.EnginesDir, engineName)
+	newEngineManifest, err := engines.LoadManifest(cmd.EnginesDir, engineName)
 	if err != nil {
 		if errors.Is(err, engines.ErrManifestNotFound) {
 			if cmd.Verbose {
@@ -147,6 +148,43 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 			return fmt.Errorf("%q not found", engineName)
 		}
 		return fmt.Errorf("loading engine manifest: %v", err)
+	}
+
+	// We need to check which components are required for the switch.
+	// If the current model is supported by the new engine, we use the active model's components.
+	// If the model is not supported, we need to use the components of the new engine's default model.
+
+	activeModelName, err := cmd.Cache.GetActiveModel()
+	if err != nil {
+		return fmt.Errorf("getting active model name: %v", err)
+	}
+
+	// If the current active model is not supported by the new engine, switch to the engine's default model
+	newModelName := activeModelName
+	if !slices.Contains(newEngineManifest.Model.Options, activeModelName) {
+		newModelName = newEngineManifest.Model.Default
+	}
+
+	var newModelManifest *models.Manifest
+	if newModelName != "" {
+		newModelManifest, err = models.LoadManifest(cmd.ModelsDir, newModelName)
+		if err != nil {
+			return fmt.Errorf("loading model manifest: %v", err)
+		}
+	}
+
+	// Check for missing components
+	cancelledByUser, err := common.InstallMissingComponents(cmd.Context, cmd.assumeYes, newEngineManifest, newModelManifest)
+	if err != nil {
+		return fmt.Errorf("installing missing components: %v", err)
+	}
+	if cancelledByUser {
+		return nil
+	}
+
+	err = cmd.Cache.SetActiveModel(newModelName)
+	if err != nil {
+		return fmt.Errorf("setting active model: %v", err)
 	}
 
 	activeEngineName, err := cmd.Cache.GetActiveEngine()
@@ -167,40 +205,16 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 		}
 	}
 
-	if err = cmd.Cache.SetActiveEngine(engine.Name); err != nil {
+	if err = cmd.Cache.SetActiveEngine(newEngineManifest.Name); err != nil {
 		return fmt.Errorf("setting active engine: %v", err)
 	}
 
-	if err = common.SetEngineConfig(engine, cmd.Context); err != nil {
+	if err = common.SetEngineConfig(newEngineManifest, cmd.Context); err != nil {
 		return fmt.Errorf("setting new engine configurations: %v", err)
-	}
-
-	activeModelId, err := common.FixActiveModel(cmd.Context) // returns empty string if engine does not define a default model
-	if err != nil {
-		return err
-	}
-	var modelManifest *models.Manifest
-	if activeModelId != "" {
-		modelManifest, err = models.LoadManifest(cmd.ModelsDir, activeModelId)
-		if err != nil {
-			return fmt.Errorf("loading active model manifest: %v", err)
-		}
-	}
-
-	cancelledByUser, err := common.InstallMissingComponents(cmd.Context, cmd.assumeYes, engine, modelManifest)
-	if err != nil {
-		return fmt.Errorf("installing missing components: %v", err)
-	}
-
-	if cancelledByUser {
-		return nil
 	}
 
 	fmt.Printf("Engine changed to %q.\n", engineName)
 
-	// Currently we cannot reliably determine if the service is active to automatically restart it
-	// See https://bugs.launchpad.net/snapd/+bug/2137543
-	//
 	// Ask if the user wants to restart
 	if !cmd.noRestart {
 		return common.PromptRestartToApplyChanges(cmd.Context, cmd.assumeYes)
@@ -209,6 +223,10 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 	return nil
 }
 
+// fixActiveEngine does the following:
+// 1. auto selects an engine if the active engine no longer exists
+// 2. verify that the active model is supported by the active engine, otherwise switches to the default model
+// 2. if engine exists, make sure it is correctly installed and configured
 func (cmd *useEngineCommand) fixActiveEngine() error {
 	activeEngineName, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
@@ -218,7 +236,7 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 		return common.ErrNoActiveEngine
 	}
 
-	// If active engine no longer exist, auto select another one
+	// If active engine no longer exists, auto select another one
 	engineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngineName)
 	if errors.Is(err, engines.ErrManifestNotFound) {
 		fmt.Printf("Active engine %q not found, performing auto selection instead.\n", activeEngineName)
@@ -227,12 +245,19 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 		return fmt.Errorf("loading active engine manifest: %v", err)
 	}
 
-	// Verify active model is supported or switch to default
-	activeModelId, err := common.FixActiveModel(cmd.Context)
+	// Check if the model is supported, otherwise switch to the default
+	activeModelId, err := cmd.Cache.GetActiveModel()
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", common.LookingUpActiveModel, err)
 	}
-	// If an engine does not specify a default model or model options, the activeModel value will be an empty string
+	if !slices.Contains(engineManifest.Model.Options, activeModelId) {
+		activeModelId = engineManifest.Model.Default
+	}
+	err = cmd.Cache.SetActiveModel(activeModelId)
+	if err != nil {
+		return fmt.Errorf("setting active model: %v", err)
+	}
+
 	var modelManifest *models.Manifest
 	if activeModelId != "" {
 		modelManifest, err = models.LoadManifest(cmd.ModelsDir, activeModelId)
