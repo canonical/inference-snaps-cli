@@ -8,6 +8,8 @@ devices:
       architecture: amd64
     - type: cpu
       architecture: arm64
+    - type: cpu
+      architecture: riscv64
 memory: 4G
 disk-space: 8G
 
