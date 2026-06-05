@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"errors"
 	"fmt"
 	"slices"
 
@@ -16,8 +15,6 @@ type useModelCommand struct {
 	*common.Context
 
 	// flags
-	auto      bool
-	fix       bool
 	assumeYes bool
 	noRestart bool
 }
@@ -30,16 +27,13 @@ func UseModel(ctx *common.Context) *cobra.Command {
 		Use:   "use-model [<model>]",
 		Short: "Select a model",
 		// Args
-		// cli use-engine <engine> requires 1 argument
-		// cli use-engine --auto does not support any arguments
+		// cli use-model <model> requires 1 argument
 		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: cmd.validateArgs,
 		RunE:              cmd.run,
 	}
 
 	// flags
-	cobraCmd.Flags().BoolVar(&cmd.auto, "auto", false, "automatically select the default model")
-	cobraCmd.Flags().BoolVar(&cmd.fix, "fix", false, "fix issues with the currently active model")
 	cobraCmd.Flags().BoolVar(&cmd.assumeYes, "assume-yes", false, "assume yes for all prompts")
 	cobraCmd.Flags().BoolVar(&cmd.noRestart, "no-restart", false, "do not restart the snap after changing model")
 
@@ -47,7 +41,7 @@ func UseModel(ctx *common.Context) *cobra.Command {
 }
 
 func (cmd *useModelCommand) validateArgs(_ *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
-	// TODO
+	// TODO implement auto completion
 	return nil, cobra.ShellCompDirectiveNoFileComp
 }
 
@@ -56,27 +50,10 @@ func (cmd *useModelCommand) run(_ *cobra.Command, args []string) error {
 		return common.ErrPermissionDenied
 	}
 
-	if cmd.auto {
-		if len(args) != 0 {
-			return fmt.Errorf("cannot specify both model name and --auto flag")
-		}
-		return cmd.autoSelectModel()
-	} else if cmd.fix {
-		if len(args) != 0 {
-			return fmt.Errorf("cannot specify both model name and --fix flag")
-		}
-		// If no model is active, there's nothing to fix.
-		_, err := common.FixActiveModel(cmd.Context)
-		if errors.Is(err, common.ErrNoActiveModel) {
-			return nil
-		}
-		return err
+	if len(args) == 1 {
+		return cmd.switchModel(args[0])
 	} else {
-		if len(args) == 1 {
-			return cmd.switchModel(args[0])
-		} else {
-			return fmt.Errorf("model name not specified")
-		}
+		return fmt.Errorf("model name not specified")
 	}
 }
 
@@ -152,23 +129,4 @@ func (cmd *useModelCommand) switchModel(modelId string) error {
 	}
 
 	return nil
-}
-
-func (cmd *useModelCommand) autoSelectModel() error {
-	activeEngine, err := cmd.Cache.GetActiveEngine()
-	if err != nil {
-		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
-	}
-
-	engineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngine)
-	if err != nil {
-		return fmt.Errorf("%s: %w", common.LoadingEngineManifest, err)
-	}
-
-	// TODO IENG-2402: check if the default model size will fit, otherwise check the next smaller one, iteratively
-	// Also needs to be done in common.FixActiveModel()
-
-	fmt.Println("Switching to default model", engineManifest.Model.Default, "for engine", activeEngine)
-
-	return cmd.switchModel(engineManifest.Model.Default)
 }
