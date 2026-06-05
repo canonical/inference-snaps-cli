@@ -151,12 +151,14 @@ components:
     <<: *test-component
   runtime-llama-cpp-rocm:
     <<: *test-component
-  runtime-openvino:
+  runtime-openvino-model-server:
     <<: *test-component
 
   #
   # Models
   #
+  model-4b-it-int4-fq-ov:
+    <<: *test-component
   model-26b-a4b-q4-k-m-gguf:
     <<: *test-component
   mmproj-26b-bf16-gguf:

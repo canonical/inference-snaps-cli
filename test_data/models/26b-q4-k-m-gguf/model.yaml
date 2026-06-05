@@ -23,9 +23,6 @@ environment:
   - MODEL_FILE=$SHARDS_DIR/gemma-4-26B-A4B-it-UD-Q4_K_M-00001-of-00004.gguf
   - MODEL_NAME=gemma4-26b-a4b-q4-k-m
   - MMPROJ_FILE=$SNAP_COMPONENTS/mmproj-26b-bf16-gguf/mmproj-BF16.gguf
-  # ovms
-  - MODEL_NAME=gemma-4-e4b-it-ov-int4-fq
-  - MODEL_PATH=$SNAP_COMPONENTS/model-4b-it-int4-fq-ov
 
 layout:
   $SHARDS_DIR/gemma-4-26B-A4B-it-UD-Q4_K_M-00001-of-00004.gguf:

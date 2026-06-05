@@ -7,3 +7,13 @@ devices:
     - type: cpu
       architecture: amd64
       manufacturer-id: GenuineIntel
+
+runtime: openvino-model-server
+
+model:
+  default: 4b-it-int4-fq-ov
+  options:
+    - 4b-it-int4-fq-ov
+
+configurations:
+  target-device: CPU
