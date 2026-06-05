@@ -18,6 +18,8 @@ func (device Device) validateCpu() error {
 		return device.validateAmd64()
 	case constants.Arm64:
 		return device.validateArm64()
+	case constants.Riscv64:
+		return device.validateRiscv64()
 	default:
 		return fmt.Errorf("invalid architecture: %v", *device.Architecture)
 	}
@@ -67,6 +69,30 @@ func (device Device) validateArm64() error {
 		if fieldValue.IsValid() && !fieldValue.IsZero() {
 			if !slices.Contains(validFields, fieldName) {
 				return fmt.Errorf("arm64: invalid field: %s", fieldName)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (device Device) validateRiscv64() error {
+	validFields := []string{
+		"Type",
+		"Architecture",
+		"Isa",
+	}
+
+	t := reflect.TypeOf(device)
+	v := reflect.ValueOf(device)
+
+	// Check fields with values against allow list
+	for i := 0; i < t.NumField(); i++ {
+		fieldName := t.Field(i).Name
+		fieldValue := v.FieldByName(fieldName)
+		if fieldValue.IsValid() && !fieldValue.IsZero() {
+			if !slices.Contains(validFields, fieldName) {
+				return fmt.Errorf("riscv64: invalid field: %s", fieldName)
 			}
 		}
 	}
