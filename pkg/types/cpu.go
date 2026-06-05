@@ -11,4 +11,7 @@ type CpuInfo struct {
 	ImplementerId HexInt   `json:"implementer-id,omitempty" yaml:"implementer-id,omitempty"`
 	PartNumber    HexInt   `json:"part-number,omitempty" yaml:"part-number,omitempty"`
 	Features      []string `json:"features,omitempty" yaml:"features,omitempty"`
+
+	// riscv64
+	Isa           []string `json:"isa,omitempty" yaml:"isa,omitempty"`
 }

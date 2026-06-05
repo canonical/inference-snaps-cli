@@ -34,6 +34,13 @@ func parseProcCpuInfo(cpuInfoString string, architecture string) ([]ProcCpuInfo,
 			return nil, fmt.Errorf("arm64: %v", err)
 		}
 		return cpuInfo, nil
+	
+	case constants.Riscv64:
+		cpuInfo, err := parseProcCpuInfoRiscv64(cpuInfoString)
+		if err != nil {
+			return nil, fmt.Errorf("riscv64: %v", err)
+		}
+		return cpuInfo, nil
 
 	default:
 		return nil, fmt.Errorf("unsupported architecture: %s", architecture)
@@ -177,6 +184,55 @@ func parseProcCpuInfoArm64(cpuInfoString string) ([]ProcCpuInfo, error) {
 				return nil, err
 			}
 			parsedCpus[cpuIndex].Revision = revision
+		}
+	}
+
+	return parsedCpus, nil
+}
+
+func parseProcCpuInfoRiscv64(cpuInfoString string) ([]ProcCpuInfo, error) {
+	var parsedCpus []ProcCpuInfo
+
+	lines := strings.Split(cpuInfoString, "\n")
+	cpuIndex := 0
+
+	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+
+		fields := strings.SplitN(line, ":", 2)
+		key := strings.TrimSpace(fields[0]) // remove \t between key and colon
+		value := strings.TrimSpace(fields[1])
+
+		// New cpu block
+		if key == "processor" {
+			newCpu := ProcCpuInfo{}
+			newCpu.Architecture = constants.Riscv64
+			parsedCpus = append(parsedCpus, newCpu)
+			cpuIndex = len(parsedCpus) - 1
+		}
+
+		switch key {
+
+		// "processor\t: %d\n"
+		case "processor":
+			processorIndex, err := strconv.ParseInt(value, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			parsedCpus[cpuIndex].Processor = processorIndex
+
+		// "model name\t: %s\n"
+		case "model name":
+			modelName := strings.TrimSpace(value)
+			parsedCpus[cpuIndex].ModelName = &modelName
+
+		// "isa\t:"+" %s"
+		case "isa":
+			flags := strings.Split(value, "_")
+			parsedCpus[cpuIndex].Isa = append(parsedCpus[cpuIndex].Isa, flags...)
+
 		}
 	}
 
