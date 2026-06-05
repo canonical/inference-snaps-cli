@@ -45,9 +45,9 @@ func LoadManifests(manifestsDir string) ([]Manifest, error) {
 	return manifests, nil
 }
 
-func LoadManifest(manifestsDir, engineName string) (*Manifest, error) {
+func LoadManifest(manifestsDir, modelName string) (*Manifest, error) {
 
-	fileName := filepath.Join(manifestsDir, engineName, ManifestFilename)
+	fileName := filepath.Join(manifestsDir, modelName, ManifestFilename)
 	data, err := os.ReadFile(fileName)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
