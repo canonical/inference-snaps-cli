@@ -17,7 +17,7 @@ var procCpuInfoTestFiles = map[string]string{
 	"../../../test_data/machines/i7-2600k+arc-a580/cpuinfo.txt":                 constants.Amd64,
 	"../../../test_data/machines/i7-10510U/cpuinfo.txt":                         constants.Amd64,
 	"../../../test_data/machines/mustang/cpuinfo.txt":                           constants.Amd64,
-	//"../../../test_data/machines/orange-pi-rv2/cpuinfo.txt":                     constants.Riscv64,
+	"../../../test_data/machines/orange-pi-rv2/cpuinfo.txt":                     constants.Riscv64,
 	"../../../test_data/machines/raspberry-pi-5/cpuinfo.txt":         constants.Arm64,
 	"../../../test_data/machines/raspberry-pi-5+hailo-8/cpuinfo.txt": constants.Arm64,
 	"../../../test_data/machines/xps13-7390/cpuinfo.txt":             constants.Amd64,
