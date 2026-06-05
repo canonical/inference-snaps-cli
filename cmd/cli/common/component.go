@@ -135,7 +135,7 @@ func ComponentsRequiredByCurrentSelection(ctx *Context) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", LookingUpActiveModel, err)
 	}
-	if activeModelId == "" {
+	if activeModelId != "" {
 		modelManifest, err := models.LoadManifest(ctx.ModelsDir, activeModelId)
 		if err != nil {
 			return nil, fmt.Errorf("loading model manifest: %v", err)
