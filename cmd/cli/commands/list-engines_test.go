@@ -186,12 +186,16 @@ func Example_printEnginesJson() {
 	//           }
 	//         ]
 	//       },
-	//       "runtime": "",
+	//       "runtime": "openvino-model-server",
 	//       "model": {
-	//         "default": "",
-	//         "options": null
+	//         "default": "4b-it-int4-fq-ov",
+	//         "options": [
+	//           "4b-it-int4-fq-ov"
+	//         ]
 	//       },
-	//       "configurations": null,
+	//       "configurations": {
+	//         "target-device": "CPU"
+	//       },
 	//       "score": 16,
 	//       "compatible": true
 	//     }

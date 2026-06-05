@@ -202,7 +202,13 @@ func Example_showEngineCommand_printHappyEngineManifestYaml() {
 	//         - type: cpu
 	//           architecture: amd64
 	//           manufacturer-id: GenuineIntel
-	// configurations: {}
+	// runtime: openvino-model-server
+	// model:
+	//     default: 4b-it-int4-fq-ov
+	//     options:
+	//         - 4b-it-int4-fq-ov
+	// configurations:
+	//     target-device: CPU
 	// score: 16
 	// compatible: true
 }
@@ -233,12 +239,16 @@ func Example_showEngineCommand_printHappyEngineManifestJson() {
 	//       }
 	//     ]
 	//   },
-	//   "runtime": "",
+	//   "runtime": "openvino-model-server",
 	//   "model": {
-	//     "default": "",
-	//     "options": null
+	//     "default": "4b-it-int4-fq-ov",
+	//     "options": [
+	//       "4b-it-int4-fq-ov"
+	//     ]
 	//   },
-	//   "configurations": null,
+	//   "configurations": {
+	//     "target-device": "CPU"
+	//   },
 	//   "score": 16,
 	//   "compatible": true
 	// }

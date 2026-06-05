@@ -14,16 +14,35 @@ import (
 )
 
 func ExampleUseEngine_noRestartWhenEngineUnchanged() {
+	// intel-gpu now requires runtime and model components, so we need SNAP_COMPONENTS
+	// to be set with those component directories so InstallMissingComponents is a no-op.
+	snapComponents, err := os.MkdirTemp("", "snap-components-*")
+	if err != nil {
+		panic(err)
+	}
+	defer os.RemoveAll(snapComponents)
+	for _, comp := range []string{"runtime-openvino-model-server", "model-4b-it-int4-fq-ov"} {
+		if err := os.Mkdir(snapComponents+"/"+comp, 0755); err != nil {
+			panic(err)
+		}
+	}
+	if err := os.Setenv("SNAP_COMPONENTS", snapComponents); err != nil {
+		panic(err)
+	}
+	defer os.Unsetenv("SNAP_COMPONENTS")
+
 	cache := storage.NewMockCache()
 	cache.SetActiveEngine("intel-gpu")
 	config := storage.NewMockConfig()
 	cmd := useEngineCommand{
 		assumeYes: true,
 		Context: &common.Context{
-			EnginesDir: "../../../test_data/engines",
-			Cache:      cache,
-			Config:     config,
-			Snap:       snap.Mock(),
+			EnginesDir:  "../../../test_data/engines",
+			RuntimesDir: "../../../test_data/runtimes",
+			ModelsDir:   "../../../test_data/models",
+			Cache:       cache,
+			Config:      config,
+			Snap:        snap.Mock(),
 		},
 	}
 
