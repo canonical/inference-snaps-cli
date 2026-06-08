@@ -51,9 +51,10 @@ func (c *cache) GetActiveEngine() (string, error) {
 }
 
 func (c *cache) SetActiveModel(model string) error {
-	if model == "" {
-		return fmt.Errorf("model name cannot be empty")
-	}
+	// An empty string is a valid model name for an engine that does not define a (default) model
+	//if model == "" {
+	//	return fmt.Errorf("model name cannot be empty")
+	//}
 
 	return c.storage.Set(activeModelKey, model)
 }
