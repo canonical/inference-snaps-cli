@@ -11,6 +11,7 @@ type Snap interface {
 	Restart(service ...string) error
 	InstanceName() string
 	HardwareObservable() bool
+	InstallComponent(name string) error
 }
 
 func New() Snap {
@@ -43,4 +44,9 @@ func (*snap) HardwareObservable() bool {
 		return false
 	}
 	return (connected && (err == nil))
+}
+
+// InstallComponent installs a single snap component.
+func (*snap) InstallComponent(name string) error {
+	return snapctl.InstallComponents(name).Run()
 }
