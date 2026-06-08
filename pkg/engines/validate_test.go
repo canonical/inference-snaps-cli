@@ -93,7 +93,7 @@ func TestNameRequired(t *testing.T) {
 func TestSummaryRequired(t *testing.T) {
 	manifest := templateManifest()
 	manifest.Summary = ""
-
+	manifest.Description = ""
 	err := manifest.validate("test")
 	if err == nil {
 		t.Fatal("summary is required")
