@@ -285,11 +285,6 @@ func Example_showEngineCommand_printEngineManifestWithLineBreaksInDescriptionYam
 	//           microarchitecture: gfx1032
 	//           compatibility-issues:
 	//             - device not found
-	// memory: 2G
-	// disk-space: 5G
-	// components:
-	//     - dummy-component-1
-	//     - dummy-component-2
 	// configurations: {}
 	// score: 0
 	// compatible: false
@@ -331,12 +326,11 @@ func Example_showEngineCommand_printEngineManifestWithLineBreaksInDescriptionJso
 	//       }
 	//     ]
 	//   },
-	//   "memory": "2G",
-	//   "disk-space": "5G",
-	//   "components": [
-	//     "dummy-component-1",
-	//     "dummy-component-2"
-	//   ],
+	//   "runtime": "",
+	//   "model": {
+	//     "default": "",
+	//     "options": null
+	//   },
 	//   "configurations": null,
 	//   "score": 0,
 	//   "compatible": false,
