@@ -114,11 +114,6 @@ func Example_showEngineCommand_printEngineManifestYaml() {
 	//           vram: 5G
 	//           compatibility-issues:
 	//             - device not found
-	// memory: 2G
-	// disk-space: 5G
-	// components:
-	//     - dummy-component-1
-	//     - dummy-component-2
 	// configurations: {}
 	// score: 0
 	// compatible: false
@@ -175,12 +170,11 @@ func Example_showEngineCommand_printEngineManifestJson() {
 	//       }
 	//     ]
 	//   },
-	//   "memory": "2G",
-	//   "disk-space": "5G",
-	//   "components": [
-	//     "dummy-component-1",
-	//     "dummy-component-2"
-	//   ],
+	//   "runtime": "",
+	//   "model": {
+	//     "default": "",
+	//     "options": null
+	//   },
 	//   "configurations": null,
 	//   "score": 0,
 	//   "compatible": false,
@@ -211,12 +205,14 @@ func Example_showEngineCommand_printHappyEngineManifestYaml() {
 	//         - type: cpu
 	//           architecture: amd64
 	//           manufacturer-id: GenuineIntel
-	// memory: 5G
-	// disk-space: 10G
-	// components:
-	//     - dummy-component-1
-	// configurations: {}
-	// score: 18
+	// runtime: openvino-model-server
+	// model:
+	//     default: 4b-it-int4-fq-ov
+	//     options:
+	//         - 4b-it-int4-fq-ov
+	// configurations:
+	//     target-device: CPU
+	// score: 16
 	// compatible: true
 }
 
@@ -247,13 +243,17 @@ func Example_showEngineCommand_printHappyEngineManifestJson() {
 	//       }
 	//     ]
 	//   },
-	//   "memory": "5G",
-	//   "disk-space": "10G",
-	//   "components": [
-	//     "dummy-component-1"
-	//   ],
-	//   "configurations": null,
-	//   "score": 18,
+	//   "runtime": "openvino-model-server",
+	//   "model": {
+	//     "default": "4b-it-int4-fq-ov",
+	//     "options": [
+	//       "4b-it-int4-fq-ov"
+	//     ]
+	//   },
+	//   "configurations": {
+	//     "target-device": "CPU"
+	//   },
+	//   "score": 16,
 	//   "compatible": true
 	// }
 }

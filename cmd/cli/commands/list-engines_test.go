@@ -14,7 +14,7 @@ import (
 
 func prepareTestData() (*listEnginesCommand, *outputEngines, error) {
 	cache := storage.NewMockCache()
-	err := cache.SetActiveEngine("example-memory")
+	err := cache.SetActiveEngine("intel-cpu")
 	if err != nil {
 		return nil, nil, fmt.Errorf("Error setting active engine name: %v", err)
 	}
@@ -128,7 +128,7 @@ func Example_printEnginesJson() {
 	}
 
 	// Reduce available engines to make the output more concise for this example test
-	var engineWhitelist = []string{"amd-gpu", "example-memory"}
+	var engineWhitelist = []string{"amd-gpu", "intel-cpu"}
 	filterEnginesByName(enginesList, engineWhitelist)
 
 	err = cmd.printEnginesJson(*enginesList)
@@ -138,7 +138,7 @@ func Example_printEnginesJson() {
 
 	// Output:
 	// {
-	//   "active-engine": "example-memory",
+	//   "active-engine": "intel-cpu",
 	//   "engines": [
 	//     {
 	//       "name": "amd-gpu",
@@ -162,12 +162,11 @@ func Example_printEnginesJson() {
 	//           }
 	//         ]
 	//       },
-	//       "memory": "2G",
-	//       "disk-space": "5G",
-	//       "components": [
-	//         "dummy-component-1",
-	//         "dummy-component-2"
-	//       ],
+	//       "runtime": "",
+	//       "model": {
+	//         "default": "",
+	//         "options": null
+	//       },
 	//       "configurations": null,
 	//       "score": 0,
 	//       "compatible": false,
@@ -181,34 +180,27 @@ func Example_printEnginesJson() {
 	//       "description": "Legacy CPUs, offering full accuracy but very high memory usage",
 	//       "vendor": "Canonical Ltd",
 	//       "devices": {
-	//         "anyof": [
-	//           {
-	//             "type": "cpu",
-	//             "architecture": "amd64",
-	//             "manufacturer-id": "AuthenticAMD",
-	//             "compatibility-issues": [
-	//               "manufacturer id mismatch: GenuineIntel"
-	//             ]
-	//           },
+	//         "anyof": null,
+	//         "allof": [
 	//           {
 	//             "type": "cpu",
 	//             "architecture": "amd64",
 	//             "manufacturer-id": "GenuineIntel"
 	//           }
-	//         ],
-	//         "allof": null
+	//         ]
 	//       },
-	//       "memory": "35G",
-	//       "disk-space": "29G",
-	//       "components": [
-	//         "dummy-component-3"
-	//       ],
-	//       "configurations": null,
-	//       "score": 0,
-	//       "compatible": false,
-	//       "compatibility-issues": [
-	//         "insufficient memory"
-	//       ]
+	//       "runtime": "openvino-model-server",
+	//       "model": {
+	//         "default": "4b-it-int4-fq-ov",
+	//         "options": [
+	//           "4b-it-int4-fq-ov"
+	//         ]
+	//       },
+	//       "configurations": {
+	//         "target-device": "CPU"
+	//       },
+	//       "score": 16,
+	//       "compatible": true
 	//     }
 	//   ]
 	// }
