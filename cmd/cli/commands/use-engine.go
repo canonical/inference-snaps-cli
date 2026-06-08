@@ -42,7 +42,7 @@ func UseEngine(ctx *common.Context) *cobra.Command {
 	// flags
 	cobraCmd.Flags().BoolVar(&cmd.auto, "auto", false, "automatically select a compatible engine")
 	cobraCmd.Flags().BoolVar(&cmd.fix, "fix", false, "fix issues with the currently active engine")
-	cobraCmd.Flags().StringVar(&cmd.fallback, "fallback", "", "fallback engine to use when hardware information is unavailable (requires --auto)")
+	cobraCmd.Flags().StringVar(&cmd.fallback, "fallback", "", "fallback engine to use when hardware information is unavailable (requires --auto or --fix)")
 	cobraCmd.Flags().BoolVar(&cmd.assumeYes, "assume-yes", false, "assume yes for all prompts")
 	cobraCmd.Flags().BoolVar(&cmd.noRestart, "no-restart", false, "do not restart the snap after changing engine")
 
@@ -69,8 +69,8 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 		return common.ErrPermissionDenied
 	}
 
-	if cmd.fallback != "" && !cmd.auto {
-		return fmt.Errorf("--fallback requires --auto")
+	if cmd.fallback != "" && !cmd.auto && !cmd.fix {
+		return fmt.Errorf("--fallback must be used together with --auto or --fix")
 	}
 
 	if cmd.auto {
@@ -98,7 +98,12 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 }
 
 func (cmd *useEngineCommand) autoSelectEngine() error {
-	if !cmd.Context.Snap.HardwareObservable() && cmd.fallback != "" {
+	observable, err := cmd.Snap.HardwareObservable()
+	if err != nil {
+		return fmt.Errorf("checking hardware observability: %v", err)
+	}
+
+	if !observable && cmd.fallback != "" {
 		fmt.Printf("Hardware information is unavailable; falling back to engine %q.\n", cmd.fallback)
 		return cmd.switchEngine(cmd.fallback)
 	}

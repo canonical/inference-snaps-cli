@@ -32,9 +32,8 @@ func (c *mockSnap) InstanceName() string {
 	return "mock-snap"
 }
 
-func (c *mockSnap) HardwareObservable() bool {
-	fmt.Println("[mock] Checking hardware observability")
-	return false
+func (c *mockSnap) HardwareObservable() (bool, error) {
+	return false, nil
 }
 
 func (c *mockSnap) InstallComponent(name string) error {
