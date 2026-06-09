@@ -40,9 +40,24 @@ func UseModel(ctx *common.Context) *cobra.Command {
 	return cobraCmd
 }
 
+// validateArgs returns a list of model names supported by the currently active engine
 func (cmd *useModelCommand) validateArgs(_ *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
-	// TODO implement auto completion
-	return nil, cobra.ShellCompDirectiveNoFileComp
+	activeEngine, err := cmd.Cache.GetActiveEngine()
+	if err != nil || activeEngine == "" {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+
+	engineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngine)
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+	supportedModels := engineManifest.Model.Options
+
+	var completions []cobra.Completion
+	for _, model := range supportedModels {
+		completions = append(completions, model)
+	}
+	return completions, cobra.ShellCompDirectiveNoFileComp
 }
 
 func (cmd *useModelCommand) run(_ *cobra.Command, args []string) error {

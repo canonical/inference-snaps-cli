@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
+	"github.com/canonical/inference-snaps-cli/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/pkg/models"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -55,9 +56,24 @@ func (cmd *showModelCommand) run(_ *cobra.Command, args []string) error {
 	}
 }
 
+// validateArgs returns a list of model names supported by the currently active engine
 func (cmd *showModelCommand) validateArgs(_ *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
-	// TODO implement auto completion
-	return nil, cobra.ShellCompDirectiveNoFileComp
+	activeEngine, err := cmd.Cache.GetActiveEngine()
+	if err != nil || activeEngine == "" {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+
+	engineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngine)
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+	supportedModels := engineManifest.Model.Options
+
+	var completions []cobra.Completion
+	for _, model := range supportedModels {
+		completions = append(completions, model)
+	}
+	return completions, cobra.ShellCompDirectiveNoFileComp
 }
 
 func (cmd *showModelCommand) showCurrentModel() error {
