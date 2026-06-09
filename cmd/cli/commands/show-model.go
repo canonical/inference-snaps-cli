@@ -3,6 +3,7 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
@@ -69,9 +70,16 @@ func (cmd *showModelCommand) validateArgs(_ *cobra.Command, args []string, toCom
 	}
 	supportedModels := engineManifest.Model.Options
 
+	modelManifests, err := models.LoadManifests(cmd.ModelsDir)
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+
 	var completions []cobra.Completion
-	for _, model := range supportedModels {
-		completions = append(completions, model)
+	for _, manifest := range modelManifests {
+		if slices.Contains(supportedModels, manifest.ID) {
+			completions = append(completions, manifest.Name)
+		}
 	}
 	return completions, cobra.ShellCompDirectiveNoFileComp
 }

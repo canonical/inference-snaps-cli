@@ -53,9 +53,16 @@ func (cmd *useModelCommand) validateArgs(_ *cobra.Command, args []string, toComp
 	}
 	supportedModels := engineManifest.Model.Options
 
+	modelManifests, err := models.LoadManifests(cmd.ModelsDir)
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+
 	var completions []cobra.Completion
-	for _, model := range supportedModels {
-		completions = append(completions, model)
+	for _, manifest := range modelManifests {
+		if slices.Contains(supportedModels, manifest.ID) {
+			completions = append(completions, manifest.Name)
+		}
 	}
 	return completions, cobra.ShellCompDirectiveNoFileComp
 }
@@ -110,7 +117,7 @@ func (cmd *useModelCommand) switchModel(modelId string) error {
 	supportedModels := engineManifest.Model.Options
 
 	if !slices.Contains(supportedModels, modelId) {
-		return fmt.Errorf("model %s not supported by engine %s", modelId, activeEngine)
+		return fmt.Errorf("model %s not supported by engine %s", newModelManifest.Name, activeEngine)
 	}
 
 	cancelledByUser, err := common.InstallMissingComponents(cmd.Context, cmd.assumeYes, engineManifest, newModelManifest)
@@ -136,7 +143,7 @@ func (cmd *useModelCommand) switchModel(modelId string) error {
 		return fmt.Errorf("setting active model: %v", err)
 	}
 
-	fmt.Printf("Model changed to %q.\n", modelId)
+	fmt.Printf("Model changed to %q.\n", newModelManifest.Name)
 
 	// Ask if the user wants to restart
 	if !cmd.noRestart {
