@@ -1,10 +1,13 @@
-module github.com/canonical/inference-snaps-cli
+module github.com/canonical/inference-snaps-cli/v2
+
+replace github.com/canonical/inference-snaps-cli => ./
 
 go 1.26.1
 
 require (
 	github.com/briandowns/spinner v1.23.2
 	github.com/canonical/go-snapctl v1.0.0-beta.6
+	github.com/canonical/inference-snaps-cli v0.0.0-00010101000000-000000000000
 	github.com/chzyer/readline v1.5.1
 	github.com/creack/pty v1.1.24
 	github.com/fatih/color v1.19.0
