@@ -80,16 +80,16 @@ func (cmd *listModelsCommand) run(_ *cobra.Command, _ []string) error {
 	modelsList.ActiveModel = activeModel
 
 	switch cmd.format {
-	case "table":
-		err = cmd.printModelsTable(modelsList)
-		if err != nil {
+	case "table", "":
+		if err := cmd.printModelsTable(modelsList); err != nil {
 			return fmt.Errorf("table: %w", err)
 		}
 	case "json":
-		err := cmd.printModelsJson(modelsList)
-		if err != nil {
+		if err := cmd.printModelsJson(modelsList); err != nil {
 			return fmt.Errorf("json: %w", err)
 		}
+	default:
+		return fmt.Errorf("unknown format %q", cmd.format)
 	}
 
 	return nil
