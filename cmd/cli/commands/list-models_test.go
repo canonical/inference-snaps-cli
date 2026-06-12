@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
-	"github.com/canonical/inference-snaps-cli/pkg/models"
-	"github.com/canonical/inference-snaps-cli/pkg/storage"
+	"github.com/canonical/inference-snaps-cli/v2/cmd/cli/common"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
 )
 
 func prepareModelsTestData() (*listModelsCommand, *outputModels, error) {

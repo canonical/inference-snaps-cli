@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/canonical/inference-snaps-cli/pkg/models"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
 )
 
 func TestShowModelUnsupportedFormatResultsInError(t *testing.T) {
@@ -79,4 +79,3 @@ func Example_showModelCommand_printModelManifestJson() {
 	//   ]
 	// }
 }
-

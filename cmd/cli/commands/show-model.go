@@ -6,9 +6,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/canonical/inference-snaps-cli/cmd/cli/common"
-	"github.com/canonical/inference-snaps-cli/pkg/engines"
-	"github.com/canonical/inference-snaps-cli/pkg/models"
+	"github.com/canonical/inference-snaps-cli/v2/cmd/cli/common"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
