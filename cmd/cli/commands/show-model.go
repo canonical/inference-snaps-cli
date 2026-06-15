@@ -120,15 +120,20 @@ func (cmd *showModelCommand) showModel(modelName string) error {
 }
 
 func (cmd *showModelCommand) printModelManifest(manifest *models.Manifest) error {
+	output, err := common.NewModelDetails(manifest)
+	if err != nil {
+		return fmt.Errorf("creating model details: %v", err)
+	}
+
 	switch cmd.format {
 	case "json":
-		jsonString, err := json.MarshalIndent(manifest, "", "  ")
+		jsonString, err := json.MarshalIndent(output, "", "  ")
 		if err != nil {
 			return fmt.Errorf("json: %s", err)
 		}
 		fmt.Printf("%s\n", jsonString)
 	case "yaml", "":
-		modelYaml, err := yaml.Marshal(manifest)
+		modelYaml, err := yaml.Marshal(output)
 		if err != nil {
 			return fmt.Errorf("yaml: %s", err)
 		}

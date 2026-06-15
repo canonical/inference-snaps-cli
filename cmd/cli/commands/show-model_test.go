@@ -43,9 +43,6 @@ func Example_showModelCommand_printModelManifestYaml() {
 	// disk-size: 6G
 	// components:
 	//     - model-4b-it-int4-fq-ov
-	// environment:
-	//     - MODEL_NAME=gemma-4-4b-it-int4-fq-ov
-	//     - MODEL_PATH=$SNAP_COMPONENTS/model-4b-it-int4-fq-ov
 }
 
 func Example_showModelCommand_printModelManifestJson() {
@@ -72,10 +69,6 @@ func Example_showModelCommand_printModelManifestJson() {
 	//   "disk-size": "6G",
 	//   "components": [
 	//     "model-4b-it-int4-fq-ov"
-	//   ],
-	//   "environment": [
-	//     "MODEL_NAME=gemma-4-4b-it-int4-fq-ov",
-	//     "MODEL_PATH=$SNAP_COMPONENTS/model-4b-it-int4-fq-ov"
 	//   ]
 	// }
 }
