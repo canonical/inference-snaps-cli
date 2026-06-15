@@ -65,6 +65,28 @@ func TestListModelsTable(t *testing.T) {
 	}
 }
 
+func TestGetModelsTable(t *testing.T) {
+	cmd, modelsList, err := prepareModelsTestData()
+	if err != nil {
+		t.Fatalf("Error preparing test data: %v", err)
+	}
+
+	tableStr, err := cmd.getModelsTable(*modelsList)
+	if err != nil {
+		t.Fatalf("Error getting models table: %v", err)
+	}
+
+	expectedTable := `NAME     CAPABILITIES               DISK SIZE                                   
+26b      text                       6G                                          
+30b-a3b  text, vision, audio, tool  6G                                          
+4b*      text                       6G                                          
+`
+
+	if tableStr != expectedTable {
+		t.Errorf("Models table not as expected.\n\nGot:\n\n%s\n\nWant:\n\n%s", tableStr, expectedTable)
+	}
+}
+
 func Example_printModelsJson() {
 	cmd, modelsList, err := prepareModelsTestData()
 	if err != nil {
