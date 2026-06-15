@@ -60,19 +60,22 @@ func (cmd *showModelCommand) run(_ *cobra.Command, args []string) error {
 // validateArgs returns a list of model names supported by the currently active engine
 func (cmd *showModelCommand) validateArgs(_ *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
 	activeEngine, err := cmd.Cache.GetActiveEngine()
-	if err != nil || activeEngine == "" {
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveError
+	}
+	if activeEngine == "" {
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
 
 	engineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngine)
 	if err != nil {
-		return nil, cobra.ShellCompDirectiveNoFileComp
+		return nil, cobra.ShellCompDirectiveError
 	}
 	supportedModels := engineManifest.Model.Options
 
 	modelManifests, err := models.LoadManifests(cmd.ModelsDir)
 	if err != nil {
-		return nil, cobra.ShellCompDirectiveNoFileComp
+		return nil, cobra.ShellCompDirectiveError
 	}
 
 	var completions []cobra.Completion
