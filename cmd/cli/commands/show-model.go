@@ -109,7 +109,7 @@ func (cmd *showModelCommand) showModel(modelName string) error {
 		}
 	}
 	if manifest == nil {
-		return fmt.Errorf(`model "%s" does not exist`, modelName)
+		return fmt.Errorf("model %q does not exist", modelName)
 	}
 
 	err = cmd.printModelManifest(manifest)
