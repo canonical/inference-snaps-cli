@@ -16,9 +16,18 @@ func prepareModelsTestData() (*listModelsCommand, *outputModels, error) {
 		return nil, nil, fmt.Errorf("error setting active model name: %v", err)
 	}
 
-	allModels, err := models.LoadManifests("../../../test_data/models")
+	manifests, err := models.LoadManifests("../../../test_data/models")
 	if err != nil {
 		return nil, nil, fmt.Errorf("error loading models: %v", err)
+	}
+
+	var allModels []common.ModelDetails
+	for _, manifest := range manifests {
+		details, err := common.NewModelDetails(&manifest)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error creating model details for %s: %v", manifest.ID, err)
+		}
+		allModels = append(allModels, details)
 	}
 
 	ctx := &common.Context{
@@ -94,7 +103,7 @@ func Example_printModelsJson() {
 	}
 
 	// Use only the 4b-it-int4-fq-ov model to keep output concise
-	var filtered []models.Manifest
+	var filtered []common.ModelDetails
 	for _, m := range modelsList.Models {
 		if m.ID == "4b-it-int4-fq-ov" {
 			filtered = append(filtered, m)
@@ -123,10 +132,6 @@ func Example_printModelsJson() {
 	//       "disk-size": "6G",
 	//       "components": [
 	//         "model-4b-it-int4-fq-ov"
-	//       ],
-	//       "environment": [
-	//         "MODEL_NAME=gemma-4-4b-it-int4-fq-ov",
-	//         "MODEL_PATH=$SNAP_COMPONENTS/model-4b-it-int4-fq-ov"
 	//       ]
 	//     }
 	//   ]

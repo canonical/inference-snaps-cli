@@ -25,8 +25,8 @@ type listModelsCommand struct {
 }
 
 type outputModels struct {
-	ActiveModel string            `json:"active-model"`
-	Models      []models.Manifest `json:"models"`
+	ActiveModel string                `json:"active-model"`
+	Models      []common.ModelDetails `json:"models"`
 }
 
 func ListModels(ctx *common.Context) *cobra.Command {
@@ -70,7 +70,11 @@ func (cmd *listModelsCommand) run(_ *cobra.Command, _ []string) error {
 		if err != nil {
 			return fmt.Errorf("loading model manifest for model %s: %v", model, err)
 		}
-		modelsList.Models = append(modelsList.Models, *modelManifest)
+		outputModel, err := common.NewModelDetails(modelManifest)
+		if err != nil {
+			return fmt.Errorf("creating model details for model %s: %v", model, err)
+		}
+		modelsList.Models = append(modelsList.Models, outputModel)
 	}
 
 	activeModel, err := cmd.Cache.GetActiveModel()
