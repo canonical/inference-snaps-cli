@@ -41,13 +41,18 @@ parts:
     override-pull: |
       craftctl set version="$(git -C $SNAPCRAFT_PROJECT_DIR describe --always --dirty)"
 
-  scripts:
+  local-scripts:
     source: snap/local
     plugin: dump
     organize:
-      "completion.bash": bin/
       "server.sh": bin/
       "server-webui.sh": bin/
+
+  scripts:
+    source: scripts
+    plugin: dump
+    organize:
+      "snap-completion.bash": bin/completion.bash
 
   engines:
     plugin: dump
