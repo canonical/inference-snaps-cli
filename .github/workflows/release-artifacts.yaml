@@ -49,11 +49,11 @@ jobs:
 
       - name: Generate artifact
         run: |
-          tar -Jcvf ${{ env.ARTIFACT_NAME }} ./cli ./LICENSE
+          tar -Jcvf ${{ env.ARTIFACT_NAME }} ./cli ./LICENSE ./scripts/snap-completion.bash
 
       - name: Upload release asset
         run: |
-          # --clobber overwrite existing assets of the same name
+          # --clobber overwrites existing assets of the same name
           gh release upload ${{ github.event.release.tag_name }} ${{ env.ARTIFACT_NAME }} --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
