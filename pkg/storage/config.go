@@ -81,6 +81,10 @@ func (c *config) Unset(key string, confType configType) error {
 	return c.storage.Unset(c.nestKeys(confType, key))
 }
 
+func (c *config) Migrate() error {
+	return migrateConfig(c)
+}
+
 // loadConfigs loads all configurations as a flattened map, after applying precedence rules
 func (c *config) loadConfigs() (map[string]any, error) {
 	values, err := c.storage.Get(configKeyPrefix)

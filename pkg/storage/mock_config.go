@@ -31,6 +31,7 @@ func (c *mockConfig) Get(key string) (map[string]any, error) {
 		return map[string]any{key: value}, nil
 	}
 
+	// Process primitive types
 	for _, confType := range []configType{UserConfig, EngineConfig, PackageConfig} {
 		scopedKey := string(confType) + "." + key
 		if value, found := c.values[scopedKey]; found {
@@ -38,6 +39,7 @@ func (c *mockConfig) Get(key string) (map[string]any, error) {
 		}
 	}
 
+	// Process objects
 	result := make(map[string]any)
 	for _, confType := range []configType{UserConfig, EngineConfig, PackageConfig} {
 		prefix := string(confType) + "." + key + "."
@@ -80,11 +82,24 @@ func (c *mockConfig) GetAll() (map[string]any, error) {
 
 func (c *mockConfig) Unset(key string, confType configType) error {
 	scopedKey := string(confType) + "." + key
+
+	// Remove the specific key
 	delete(c.values, scopedKey)
+
+	// Remove any keys that are prefixed with the scopedKey (for objects)
+	prefix := scopedKey + "."
+	for fullKey := range c.values {
+		if strings.HasPrefix(fullKey, prefix) {
+			delete(c.values, fullKey)
+		}
+	}
+
 	return nil
 }
 
-func (c *mockConfig) Migrate() error { return nil }
+func (c *mockConfig) Migrate() error {
+	return migrateConfig(c)
+}
 
 // failConfig is a Config implementation whose mutating methods always return err.
 type failConfig struct {
