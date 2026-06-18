@@ -11,6 +11,7 @@ type Config interface {
 	Get(key string) (map[string]any, error)
 	GetAll() (map[string]any, error)
 	Unset(key string, confType configType) error
+	Migrate() error
 }
 
 type config struct {
