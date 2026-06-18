@@ -84,7 +84,7 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 		}
 
 		if err := cmd.migrateConfig(); err != nil {
-			return nil
+			return err
 		}
 
 		err := cmd.fixActiveEngine()
