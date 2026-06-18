@@ -48,11 +48,11 @@ parts:
       "server.sh": bin/
       "server-webui.sh": bin/
 
-  scripts:
-    source: scripts
+  completer:
+    source: completer
     plugin: dump
     organize:
-      "snap-completion.bash": bin/completion.bash
+      "snap.bash": bin/completion.bash
 
   engines:
     plugin: dump
