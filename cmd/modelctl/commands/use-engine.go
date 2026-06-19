@@ -8,6 +8,7 @@ import (
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/runtimes"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/selector"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
 	"github.com/spf13/cobra"
@@ -17,11 +18,12 @@ type useEngineCommand struct {
 	*common.Context
 
 	// flags
-	auto      bool
-	fix       bool
-	fallback  string
-	assumeYes bool
-	noRestart bool
+	auto               bool
+	fix                bool
+	fallback           string
+	assumeYes          bool
+	noRestart          bool
+	considerComponents bool
 }
 
 func UseEngine(ctx *common.Context) *cobra.Command {
@@ -45,6 +47,7 @@ func UseEngine(ctx *common.Context) *cobra.Command {
 	cobraCmd.Flags().StringVar(&cmd.fallback, "fallback", "", "fallback engine to use when hardware information is unavailable (requires --auto or --fix)")
 	cobraCmd.Flags().BoolVar(&cmd.assumeYes, "assume-yes", false, "assume yes for all prompts")
 	cobraCmd.Flags().BoolVar(&cmd.noRestart, "no-restart", false, "do not restart the snap after changing engine")
+	cobraCmd.Flags().BoolVar(&cmd.considerComponents, "components", false, "consider pre-installed components")
 
 	return cobraCmd
 }
@@ -139,6 +142,20 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 		} else {
 			fmt.Printf("✔ %s: compatible, score=%d\n", engine.Name, engine.Score)
 		}
+	}
+
+	if cmd.considerComponents {
+		// Look at components that are currently installed
+		// Try and match this to an engine and model that are compatible
+		switched, err := switchToPreinstalledEngineAndModel(cmd, scoredEngines)
+		if err != nil {
+			return err
+		}
+		if switched {
+			// switched, so return success
+			return nil
+		}
+		// otherwise continue with standard auto selection
 	}
 
 	selectedEngine, err := selector.TopEngine(scoredEngines)
@@ -320,4 +337,130 @@ func (cmd *useEngineCommand) migrateConfig() error {
 		return fmt.Errorf("migrating config: %v", err)
 	}
 	return nil
+}
+
+func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []engines.ScoredManifest) (bool, error) {
+	allEngines, err := engines.LoadManifests(cmd.EnginesDir)
+	if err != nil {
+		return false, err
+	}
+	allRuntimes, err := runtimes.LoadManifests(cmd.RuntimesDir)
+	if err != nil {
+		return false, err
+	}
+	allModels, err := models.LoadManifests(cmd.ModelsDir)
+	if err != nil {
+		return false, err
+	}
+
+	installedComponents, err := common.InstalledComponents()
+	if err != nil {
+		return false, err
+	}
+
+	var seededRuntimes []string
+	var seededModels []string
+
+	for _, runtime := range allRuntimes {
+		// check if all the runtime.Components are included in installedComponents. If it is, add the runtime name to seededRuntimes
+		allInstalled := true
+		for _, component := range runtime.Components {
+			if !slices.Contains(installedComponents, component) {
+				allInstalled = false
+				break
+			}
+		}
+		if allInstalled {
+			seededRuntimes = append(seededRuntimes, runtime.ID)
+		}
+	}
+
+	for _, model := range allModels {
+		// check if all the model.Components are included in installedComponents. If it is, add the model ID to seededModels
+		allInstalled := true
+		for _, component := range model.Components {
+			if !slices.Contains(installedComponents, component) {
+				allInstalled = false
+				break
+			}
+		}
+		if allInstalled {
+			seededModels = append(seededModels, model.ID)
+		}
+	}
+
+	// iterate all engines and make a list of ones for which the runtime is in seededRuntimes, or at least one of its model options is in seededModels.
+	// Engines where both conditions are true are preferred over engines where only one condition is true.
+	var fullySeededEngines []engines.Manifest
+	var partiallySeededEngines []engines.Manifest
+	for _, engine := range allEngines {
+		hasSeededRuntime := slices.Contains(seededRuntimes, engine.Runtime)
+		hasSeededModel := false
+		for _, option := range engine.Model.Options {
+			if slices.Contains(seededModels, option) {
+				hasSeededModel = true
+				break
+			}
+		}
+		if hasSeededRuntime && hasSeededModel {
+			fullySeededEngines = append(fullySeededEngines, engine)
+		} else if hasSeededRuntime || hasSeededModel {
+			partiallySeededEngines = append(partiallySeededEngines, engine)
+		}
+	}
+
+	// filterCompatible returns the subset of the given engines that have a score >0 in scoredEngines.
+	filterCompatible := func(candidates []engines.Manifest) []engines.ScoredManifest {
+		var compatible []engines.ScoredManifest
+		for _, candidate := range candidates {
+			for _, scoredEngine := range scoredEngines {
+				if scoredEngine.Name == candidate.Name && scoredEngine.Score > 0 {
+					compatible = append(compatible, scoredEngine)
+					break
+				}
+			}
+		}
+		return compatible
+	}
+
+	// Prefer engines with both a seeded runtime and a seeded model; fall back to partially seeded engines.
+	compatibleSeededEngines := filterCompatible(fullySeededEngines)
+	if len(compatibleSeededEngines) == 0 {
+		compatibleSeededEngines = filterCompatible(partiallySeededEngines)
+	}
+
+	// Seeded components do not target any compatible engine
+	if len(compatibleSeededEngines) == 0 {
+		return false, nil
+	}
+
+	// If multiple seeded engines, find the top one
+	topEngine, err := selector.TopEngine(compatibleSeededEngines)
+	if err != nil {
+		return false, fmt.Errorf("finding top engine: %v", err)
+	}
+
+	// at this point we need to also know which one of the seeded models is the one from model.options of the topEngine
+	// If there are multiple matches, prefer the default model
+	seededModelForEngine := ""
+	for _, option := range topEngine.Model.Options {
+		if slices.Contains(seededModels, option) {
+			seededModelForEngine = option
+			if option == topEngine.Model.Default {
+				break
+			}
+		}
+	}
+
+	err = cmd.Cache.SetActiveModel(seededModelForEngine)
+	if err != nil {
+		return false, fmt.Errorf("setting active model: %v", err)
+	}
+
+	err = cmd.switchEngine(topEngine.Name)
+	if err != nil {
+		return false, fmt.Errorf("switching engine: %v", err)
+	}
+
+	return true, nil
 }
