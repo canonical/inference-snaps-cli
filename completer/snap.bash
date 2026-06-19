@@ -15,10 +15,10 @@
 #       # For tab completion
 #       ln --symbolic ./modelctl bin/mymodel
 #       craftctl default
-#     apps:
-#       mymodel: # command named after the snap
-#         command: bin/modelctl
-#         completer: bin/snap-completer.bash
+# apps:
+#   mymodel: # command named after the snap
+#     command: bin/modelctl
+#     completer: bin/snap-completer.bash
 #
 
 # Unset the _init_completion function from the bash-completion package to force
