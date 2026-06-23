@@ -122,11 +122,11 @@ func (cmd *showModelCommand) showModel(modelName string) error {
 	}
 
 	// If the provided name is not one of the active engine's models, check all models
+	// but warn the user it is not compatible
 	if manifest == nil {
 		for _, modelManifest := range allModelManifests {
 			if modelManifest.Name == modelName || modelManifest.ID == modelName {
-				manifest = &modelManifest
-				break
+				return fmt.Errorf("model %q is not compatible with active engine", modelName)
 			}
 		}
 	}
