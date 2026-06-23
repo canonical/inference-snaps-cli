@@ -375,16 +375,12 @@ func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []e
 	var seededModels []string
 
 	for _, runtime := range allRuntimes {
-		// check if all the runtime.Components are included in installedComponents. If it is, add the runtime name to seededRuntimes
-		allInstalled := true
+		// check if at least one of the runtime.Components is included in installedComponents. If it is, add the runtime name to seededRuntimes
 		for _, component := range runtime.Components {
-			if !slices.Contains(installedComponents, component) {
-				allInstalled = false
+			if slices.Contains(installedComponents, component) {
+				seededRuntimes = append(seededRuntimes, runtime.ID)
 				break
 			}
-		}
-		if allInstalled {
-			seededRuntimes = append(seededRuntimes, runtime.ID)
 		}
 	}
 	fmt.Printf("Seeded runtimes: %v\n", seededRuntimes)
