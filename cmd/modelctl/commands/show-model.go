@@ -99,18 +99,38 @@ func (cmd *showModelCommand) showCurrentModel() error {
 }
 
 func (cmd *showModelCommand) showModel(modelName string) error {
-	manifests, err := models.LoadManifests(cmd.ModelsDir)
+	allModelManifests, err := models.LoadManifests(cmd.ModelsDir)
 	if err != nil {
 		return fmt.Errorf("loading models: %v", err)
 	}
 
+	// Consider the active engine's models first
 	var manifest *models.Manifest
-	for i := range manifests {
-		if manifests[i].Name == modelName || manifests[i].ID == modelName {
-			manifest = &manifests[i]
-			break
+	activeEngine, err := cmd.Cache.GetActiveEngine()
+	if err == nil && activeEngine != "" {
+		engineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngine)
+		if err == nil {
+			supportedModels := engineManifest.Model.Options
+			for _, modelManifest := range allModelManifests {
+				if slices.Contains(supportedModels, modelManifest.ID) &&
+					(modelManifest.Name == modelName || modelManifest.ID == modelName) {
+					manifest = &modelManifest
+					break
+				}
+			}
 		}
 	}
+
+	// If the provided name is not one of the active engine's models, check all models
+	if manifest == nil {
+		for _, modelManifest := range allModelManifests {
+			if modelManifest.Name == modelName || modelManifest.ID == modelName {
+				manifest = &modelManifest
+				break
+			}
+		}
+	}
+
 	if manifest == nil {
 		return fmt.Errorf("model %q does not exist", modelName)
 	}
