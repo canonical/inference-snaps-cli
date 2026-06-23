@@ -471,10 +471,10 @@ func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []e
 			}
 		}
 	}
-	fmt.Printf("Seeded model for engine: %v\n", seededModelForEngine)
 	// If one of the components defined a supported model, set it as the active model.
 	// Otherwise leave the active model unset so that the default can be set by switchEngine()
 	if seededModelForEngine != "" {
+		fmt.Printf("Seeded model for engine: %v\n", seededModelForEngine)
 		err = cmd.Cache.SetActiveModel(seededModelForEngine)
 		if err != nil {
 			return false, fmt.Errorf("setting active model: %v", err)
