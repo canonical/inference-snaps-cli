@@ -374,8 +374,9 @@ func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []e
 	var seededRuntimes []string
 	var seededModels []string
 
+	// A runtime or model is considered seeded if any one required component for the respective runtime or model is currently installed.
+
 	for _, runtime := range allRuntimes {
-		// check if at least one of the runtime.Components is included in installedComponents. If it is, add the runtime name to seededRuntimes
 		for _, component := range runtime.Components {
 			if slices.Contains(installedComponents, component) {
 				seededRuntimes = append(seededRuntimes, runtime.ID)
@@ -386,7 +387,6 @@ func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []e
 	fmt.Printf("Seeded runtimes: %v\n", seededRuntimes)
 
 	for _, model := range allModels {
-		// check if at least one of the model.Components is included in installedComponents. If it is, add the model ID to seededModels
 		for _, component := range model.Components {
 			if slices.Contains(installedComponents, component) {
 				seededModels = append(seededModels, model.ID)
