@@ -339,7 +339,18 @@ func (cmd *useEngineCommand) migrateConfig() error {
 	return nil
 }
 
+// engineNames extracts the Name field from a slice of engine manifests using the provided accessor.
+func engineNames[T any](items []T, getName func(T) string) []string {
+	names := make([]string, len(items))
+	for i, item := range items {
+		names[i] = getName(item)
+	}
+	return names
+}
+
 func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []engines.ScoredManifest) (bool, error) {
+	fmt.Println("Checking preinstalled components to influence engine and model selection")
+
 	allEngines, err := engines.LoadManifests(cmd.EnginesDir)
 	if err != nil {
 		return false, err
@@ -358,6 +369,8 @@ func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []e
 		return false, err
 	}
 
+	fmt.Printf("Installed components: %v\n", installedComponents)
+
 	var seededRuntimes []string
 	var seededModels []string
 
@@ -374,6 +387,7 @@ func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []e
 			seededRuntimes = append(seededRuntimes, runtime.ID)
 		}
 	}
+	fmt.Printf("Seeded runtimes: %v\n", seededRuntimes)
 
 	for _, model := range allModels {
 		// check if all the model.Components are included in installedComponents. If it is, add the model ID to seededModels
@@ -388,6 +402,7 @@ func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []e
 			seededModels = append(seededModels, model.ID)
 		}
 	}
+	fmt.Printf("Seeded models: %v\n", seededModels)
 
 	// iterate all engines and make a list of ones for which the runtime is in seededRuntimes, or at least one of its model options is in seededModels.
 	// Engines where both conditions are true are preferred over engines where only one condition is true.
@@ -408,6 +423,8 @@ func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []e
 			partiallySeededEngines = append(partiallySeededEngines, engine)
 		}
 	}
+	fmt.Printf("Partially seeded engines: %v\n", engineNames(partiallySeededEngines, func(e engines.Manifest) string { return e.Name }))
+	fmt.Printf("Fully seeded engines: %v\n", engineNames(fullySeededEngines, func(e engines.Manifest) string { return e.Name }))
 
 	// filterCompatible returns the subset of the given engines that have a score >0 in scoredEngines.
 	filterCompatible := func(candidates []engines.Manifest) []engines.ScoredManifest {
@@ -428,9 +445,11 @@ func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []e
 	if len(compatibleSeededEngines) == 0 {
 		compatibleSeededEngines = filterCompatible(partiallySeededEngines)
 	}
+	fmt.Printf("Compatible seeded engines: %v\n", engineNames(compatibleSeededEngines, func(e engines.ScoredManifest) string { return e.Name }))
 
 	// Seeded components do not target any compatible engine
 	if len(compatibleSeededEngines) == 0 {
+		fmt.Printf("No compatible seeded engines found; falling back to standard auto selection.\n")
 		return false, nil
 	}
 
@@ -439,6 +458,7 @@ func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []e
 	if err != nil {
 		return false, fmt.Errorf("finding top engine: %v", err)
 	}
+	fmt.Printf("Top engine: %v\n", topEngine.Name)
 
 	// at this point we need to also know which one of the seeded models is the one from model.options of the topEngine
 	// If there are multiple matches, prefer the default model
@@ -451,10 +471,14 @@ func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []e
 			}
 		}
 	}
-
-	err = cmd.Cache.SetActiveModel(seededModelForEngine)
-	if err != nil {
-		return false, fmt.Errorf("setting active model: %v", err)
+	fmt.Printf("Seeded model for engine: %v\n", seededModelForEngine)
+	// If one of the components defined a supported model, set it as the active model.
+	// Otherwise leave the active model unset so that the default can be set by switchEngine()
+	if seededModelForEngine != "" {
+		err = cmd.Cache.SetActiveModel(seededModelForEngine)
+		if err != nil {
+			return false, fmt.Errorf("setting active model: %v", err)
+		}
 	}
 
 	err = cmd.switchEngine(topEngine.Name)
