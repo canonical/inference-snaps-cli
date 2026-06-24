@@ -56,12 +56,12 @@ func GetModelByNameOrId(ctx *Context, modelName string) (*models.Manifest, error
 
 	engineManifest, err := engines.LoadManifest(ctx.EnginesDir, activeEngine)
 	if err != nil {
-		return nil, fmt.Errorf("loading engine manifest: %w", err)
+		return nil, fmt.Errorf("%s: %w", LoadingEngineManifest, err)
 	}
 
 	allModelManifests, err := models.LoadManifests(ctx.ModelsDir)
 	if err != nil {
-		return nil, fmt.Errorf("loading model manifests: %w", err)
+		return nil, fmt.Errorf("%s: %w", LoadingModelManifests, err)
 	}
 
 	// Consider the active engine's models first
