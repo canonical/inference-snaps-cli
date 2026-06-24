@@ -237,7 +237,7 @@ func (cmd *useEngineCommand) switchEngine(engineName string, modelID string) err
 		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
 
-	if activeEngineName == engineName {
+	if activeEngineName == engineName && activeModelID == newModelID {
 		// Engine not changed, nothing left to do
 		return nil
 	}
