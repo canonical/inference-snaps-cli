@@ -60,9 +60,7 @@ func loadScoredEngine(t *testing.T, name string, score int) engines.ScoredManife
 	return engines.ScoredManifest{Manifest: *m, Score: score}
 }
 
-func ExampleUseEngine_noRestartWhenEngineUnchanged() {
-	// intel-gpu now requires runtime and model components, so we need SNAP_COMPONENTS
-	// to be set with those component directories so InstallMissingComponents is a no-op.
+func ExampleUseEngine_noRestartWhenEngineAndModelUnchanged() {
 	snapComponents, err := os.MkdirTemp("", "snap-components-*")
 	if err != nil {
 		panic(err)
@@ -80,6 +78,7 @@ func ExampleUseEngine_noRestartWhenEngineUnchanged() {
 
 	cache := storage.NewMockCache()
 	cache.SetActiveEngine("intel-gpu")
+	cache.SetActiveModel("4b-it-int4-fq-ov")
 	config := storage.NewMockConfig()
 	cmd := useEngineCommand{
 		assumeYes: true,
