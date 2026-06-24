@@ -196,7 +196,7 @@ func (cmd *useEngineCommand) switchEngine(engineName string, modelID string) err
 		return fmt.Errorf("getting active model: %v", err)
 	}
 
-	// If the current active model is not supported by the new engine, switch to the engine's default model
+	// If the current active model is not supported by the new engine, switch to the new engine's default model
 	newModelID := activeModelID
 	if !slices.Contains(newEngineManifest.Model.Options, activeModelID) {
 		newModelID = newEngineManifest.Model.Default
@@ -238,7 +238,7 @@ func (cmd *useEngineCommand) switchEngine(engineName string, modelID string) err
 	}
 
 	if activeEngineName == engineName && activeModelID == newModelID {
-		// Engine not changed, nothing left to do
+		// Neither engine nor model changed. Nothing left to do.
 		return nil
 	}
 
