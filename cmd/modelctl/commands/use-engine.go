@@ -177,7 +177,7 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 // switchEngine changes the engine that is used by the snap
 // By default the previous model will be used if it is compatible.
 // If it is not compatible, the engine's default model will be selected.
-// And optional modelID can be provided to override which model is switched to.
+// An optional modelID can be provided to override the model used for the switch.
 func (cmd *useEngineCommand) switchEngine(engineName string, modelID string) error {
 
 	newEngineManifest, err := engines.LoadManifest(cmd.EnginesDir, engineName)
