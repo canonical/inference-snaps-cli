@@ -104,25 +104,30 @@ func (cmd *showModelCommand) showModel(modelName string) error {
 		return fmt.Errorf("loading models: %v", err)
 	}
 
+	activeEngine, err := cmd.Cache.GetActiveEngine()
+	if err != nil {
+		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
+	}
+	if activeEngine == "" {
+		return common.ErrNoActiveEngine
+	}
+
+	engineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngine)
+	if err != nil {
+		return fmt.Errorf("loading manifest: %v", err)
+	}
+
 	// Consider the active engine's models first
 	var manifest *models.Manifest
-	activeEngine, err := cmd.Cache.GetActiveEngine()
-	if err == nil && activeEngine != "" {
-		engineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngine)
-		if err == nil {
-			supportedModels := engineManifest.Model.Options
-			for _, modelManifest := range allModelManifests {
-				if slices.Contains(supportedModels, modelManifest.ID) &&
-					(modelManifest.Name == modelName || modelManifest.ID == modelName) {
-					manifest = &modelManifest
-					break
-				}
-			}
+	for _, modelManifest := range allModelManifests {
+		if slices.Contains(engineManifest.Model.Options, modelManifest.ID) &&
+			(modelManifest.Name == modelName || modelManifest.ID == modelName) {
+			manifest = &modelManifest
+			break
 		}
 	}
 
-	// If the provided name is not one of the active engine's models, check all models
-	// but warn the user it is not compatible
+	// If the provided name is not one of the active engine's models, warn the user it is not compatible
 	if manifest == nil {
 		for _, modelManifest := range allModelManifests {
 			if modelManifest.Name == modelName || modelManifest.ID == modelName {
