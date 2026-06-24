@@ -148,6 +148,10 @@ func TestValidateEnvKeys(t *testing.T) {
 			input:       map[string]string{"env.var.": "value"},
 			errContains: "dots are not allowed",
 		},
+		"env key with empty name is rejected": {
+			input:       map[string]string{"env.": "value"},
+			errContains: "must not be empty",
+		},
 	}
 
 	for testName, testCase := range tests {

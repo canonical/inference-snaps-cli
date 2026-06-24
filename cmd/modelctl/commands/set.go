@@ -142,6 +142,9 @@ func validateEnvKeys(keyValues map[string]string) error {
 		if !ok {
 			continue
 		}
+		if name == "" {
+			return fmt.Errorf("invalid key %q: environment variable name must not be empty", key)
+		}
 		if strings.Contains(name, ".") {
 			return fmt.Errorf("invalid key %q: dots are not allowed in environment variable names", key)
 		}
