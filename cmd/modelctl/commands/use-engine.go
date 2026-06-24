@@ -206,8 +206,11 @@ func (cmd *useEngineCommand) switchEngine(engineName string, modelName string) e
 		newModelName = newEngineManifest.Model.Default
 	}
 
-	// If a model name is provided, use that one instead
-	if modelName != "" && slices.Contains(newEngineManifest.Model.Options, modelName) {
+	// If a model name is provided, it must be supported by the new engine.
+	if modelName != "" {
+		if !slices.Contains(newEngineManifest.Model.Options, modelName) {
+			return fmt.Errorf("model %q is not supported by engine %q", modelName, engineName)
+		}
 		newModelName = modelName
 	}
 
