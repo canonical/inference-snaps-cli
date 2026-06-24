@@ -77,7 +77,7 @@ func GetModelByNameOrId(ctx *Context, modelName string) (*models.Manifest, error
 	if manifest == nil {
 		for _, modelManifest := range allModelManifests {
 			if modelManifest.Name == modelName || modelManifest.ID == modelName {
-				return nil, fmt.Errorf("model %q is not compatible with active engine", modelName)
+				return nil, fmt.Errorf("model %q is not compatible with the active engine", modelName)
 			}
 		}
 	}
