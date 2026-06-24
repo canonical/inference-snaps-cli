@@ -45,7 +45,6 @@ func NewModelDetails(manifest *models.Manifest) (ModelDetails, error) {
 }
 
 func GetModelByNameOrId(ctx *Context, modelName string) (*models.Manifest, error) {
-
 	activeEngine, err := ctx.Cache.GetActiveEngine()
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", LookingUpActiveEngine, err)
