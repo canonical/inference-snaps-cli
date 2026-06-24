@@ -46,11 +46,6 @@ func NewModelDetails(manifest *models.Manifest) (ModelDetails, error) {
 
 func GetModelByNameOrId(ctx *Context, modelName string) (*models.Manifest, error) {
 
-	allModelManifests, err := models.LoadManifests(ctx.ModelsDir)
-	if err != nil {
-		return nil, fmt.Errorf("loading models: %v", err)
-	}
-
 	activeEngine, err := ctx.Cache.GetActiveEngine()
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", LookingUpActiveEngine, err)
@@ -61,7 +56,12 @@ func GetModelByNameOrId(ctx *Context, modelName string) (*models.Manifest, error
 
 	engineManifest, err := engines.LoadManifest(ctx.EnginesDir, activeEngine)
 	if err != nil {
-		return nil, fmt.Errorf("loading manifest: %v", err)
+		return nil, fmt.Errorf("loading engine manifest: %w", err)
+	}
+
+	allModelManifests, err := models.LoadManifests(ctx.ModelsDir)
+	if err != nil {
+		return nil, fmt.Errorf("loading model manifests: %w", err)
 	}
 
 	// Consider the active engine's models first
