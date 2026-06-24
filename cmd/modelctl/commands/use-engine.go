@@ -47,7 +47,7 @@ func UseEngine(ctx *common.Context) *cobra.Command {
 	cobraCmd.Flags().StringVar(&cmd.fallback, "fallback", "", "fallback engine to use when hardware information is unavailable (requires --auto or --fix)")
 	cobraCmd.Flags().BoolVar(&cmd.assumeYes, "assume-yes", false, "assume yes for all prompts")
 	cobraCmd.Flags().BoolVar(&cmd.noRestart, "no-restart", false, "do not restart the snap after changing engine")
-	cobraCmd.Flags().BoolVar(&cmd.considerComponents, "components", false, "consider pre-installed components")
+	cobraCmd.Flags().BoolVar(&cmd.considerComponents, "components", false, "consider pre-installed components (requires --auto)")
 
 	return cobraCmd
 }
@@ -74,6 +74,10 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 
 	if cmd.fallback != "" && !cmd.auto && !cmd.fix {
 		return fmt.Errorf("--fallback must be used together with --auto or --fix")
+	}
+
+	if cmd.considerComponents && !cmd.auto {
+		return fmt.Errorf("--components must be used together with --auto")
 	}
 
 	if cmd.auto {
@@ -145,14 +149,11 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 	}
 
 	if cmd.considerComponents {
-		// Look at components that are currently installed
-		// Try and match this to an engine and model that are compatible
-		switched, err := switchToPreinstalledEngineAndModel(cmd, scoredEngines)
+		ok, err := selectEngineForSeededComponents(cmd, scoredEngines)
 		if err != nil {
 			return err
 		}
-		if switched {
-			// switched, so return success
+		if ok {
 			return nil
 		}
 		// otherwise continue with standard auto selection
@@ -348,7 +349,9 @@ func engineNames[T any](items []T, getName func(T) string) []string {
 	return names
 }
 
-func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []engines.ScoredManifest) (bool, error) {
+// selectEngineForSeededComponents looks at components that are currently installed,
+// tries to match these to an engine and model that are compatible, and switches to it.
+func selectEngineForSeededComponents(cmd *useEngineCommand, scoredEngines []engines.ScoredManifest) (bool, error) {
 	fmt.Println("Checking preinstalled components to influence engine and model selection")
 
 	allEngines, err := engines.LoadManifests(cmd.EnginesDir)
@@ -374,12 +377,12 @@ func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []e
 	var seededRuntimes []string
 	var seededModels []string
 
-	// A runtime or model is considered seeded if any one required component for the respective runtime or model is currently installed.
+	// A runtime or model is considered seeded if any of its components are currently installed
 
 	for _, runtime := range allRuntimes {
 		for _, component := range runtime.Components {
 			if slices.Contains(installedComponents, component) {
-				seededRuntimes = append(seededRuntimes, runtime.ID)
+				seededRuntimes = append(seededRuntimes, runtime.Name)
 				break
 			}
 		}
@@ -396,8 +399,7 @@ func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []e
 	}
 	fmt.Printf("Seeded models: %v\n", seededModels)
 
-	// iterate all engines and make a list of ones for which the runtime is in seededRuntimes, or at least one of its model options is in seededModels.
-	// Engines where both conditions are true are preferred over engines where only one condition is true.
+	// Check which engines have a seeded runtime and/or a seeded model
 	var fullySeededEngines []engines.Manifest
 	var partiallySeededEngines []engines.Manifest
 	for _, engine := range allEngines {
@@ -415,10 +417,24 @@ func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []e
 			partiallySeededEngines = append(partiallySeededEngines, engine)
 		}
 	}
-	fmt.Printf("Partially seeded engines: %v\n", engineNames(partiallySeededEngines, func(e engines.Manifest) string { return e.Name }))
-	fmt.Printf("Fully seeded engines: %v\n", engineNames(fullySeededEngines, func(e engines.Manifest) string { return e.Name }))
 
-	// filterCompatible returns the subset of the given engines that have a score >0 in scoredEngines.
+	fmt.Printf("Partially seeded engines: %v\n",
+		engineNames(partiallySeededEngines,
+			func(e engines.Manifest) string {
+				return e.Name
+			},
+		),
+	)
+
+	fmt.Printf("Fully seeded engines: %v\n",
+		engineNames(fullySeededEngines,
+			func(e engines.Manifest) string {
+				return e.Name
+			},
+		),
+	)
+
+	// filterCompatible returns the subset of engines that are compatible
 	filterCompatible := func(candidates []engines.Manifest) []engines.ScoredManifest {
 		var compatible []engines.ScoredManifest
 		for _, candidate := range candidates {
@@ -432,7 +448,7 @@ func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []e
 		return compatible
 	}
 
-	// Prefer engines with both a seeded runtime and a seeded model; fall back to partially seeded engines.
+	// Prefer engines with both a seeded runtime and a seeded model
 	compatibleSeededEngines := filterCompatible(fullySeededEngines)
 	if len(compatibleSeededEngines) == 0 {
 		compatibleSeededEngines = filterCompatible(partiallySeededEngines)
@@ -452,8 +468,7 @@ func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []e
 	}
 	fmt.Printf("Top engine: %v\n", topEngine.Name)
 
-	// at this point we need to also know which one of the seeded models is the one from model.options of the topEngine
-	// If there are multiple matches, prefer the default model
+	// If multiple models were seeded, prefer the engine's default
 	seededModelForEngine := ""
 	for _, option := range topEngine.Model.Options {
 		if slices.Contains(seededModels, option) {
@@ -463,8 +478,8 @@ func switchToPreinstalledEngineAndModel(cmd *useEngineCommand, scoredEngines []e
 			}
 		}
 	}
-	// If one of the components defined a supported model, set it as the active model.
-	// Otherwise leave the active model unset so that the default can be set by switchEngine()
+
+	// If a model was seeded, switch to it. Otherwise, switchEngine() will use the default model.
 	if seededModelForEngine != "" {
 		fmt.Printf("Seeded model for engine: %v\n", seededModelForEngine)
 		err = cmd.Cache.SetActiveModel(seededModelForEngine)

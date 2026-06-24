@@ -265,23 +265,6 @@ func TestFixActiveEngine_fallbackWhenActiveEngineMissing(t *testing.T) {
 
 // TestSwitchToPreinstalledEngineAndModel covers the component-aware engine
 // selection logic introduced in switchToPreinstalledEngineAndModel.
-//
-// Each sub-test mocks the scored-engine list (so no real hardware is needed)
-// and populates a temporary SNAP_COMPONENTS directory with the components that
-// should appear "installed".  After the call the test verifies which engine
-// and model landed in the cache.
-//
-// The scenarios mirror the manual tests performed on a laptop with an Intel
-// CPU + Intel GPU (where intel-gpu normally wins on score alone):
-//
-//	installed component               expected engine   expected model
-//	──────────────────────────────────────────────────────────────────
-//	model-26b-a4b-q4-k-m-gguf         cpu               26b-q4-k-m-gguf
-//	mmproj-26b-bf16-gguf               cpu               26b-q4-k-m-gguf
-//	model-4b-it-int4-fq-ov             intel-gpu         4b-it-int4-fq-ov
-//	runtime-llama-cpp-cpu              cpu               26b-q4-k-m-gguf (default)
-//	model-30b-a3b-q4-k-m-gguf-3-of-6  cpu               30b-a3b-q4-k-m-gguf
-//	runtime-llama-cpp-cuda (incompat.) –                 – (falls back, returns false)
 func TestSwitchToPreinstalledEngineAndModel(t *testing.T) {
 	// All required components for cpu + 26b-q4-k-m-gguf (runtime + model shards).
 	// Pre-installing them makes InstallMissingComponents a no-op so the test
@@ -344,8 +327,8 @@ func TestSwitchToPreinstalledEngineAndModel(t *testing.T) {
 			// when switchEngine runs InstallMissingComponents.
 			name: "mmproj component alone seeds cpu engine via 26b model",
 			installedComponents: []string{
-				"mmproj-26b-bf16-gguf",   // seed: one component of 26b-q4-k-m-gguf model
-				"runtime-llama-cpp-cpu",  // required by cpu runtime; avoids runtime-install noise
+				"mmproj-26b-bf16-gguf",  // seed: one component of 26b-q4-k-m-gguf model
+				"runtime-llama-cpp-cpu", // required by cpu runtime; avoids runtime-install noise
 			},
 			engineScores: []struct {
 				name  string
@@ -436,7 +419,7 @@ func TestSwitchToPreinstalledEngineAndModel(t *testing.T) {
 			}
 
 			cmd := newUseEngineCmd()
-			switched, err := switchToPreinstalledEngineAndModel(cmd, scored)
+			switched, err := selectEngineForSeededComponents(cmd, scored)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -467,4 +450,3 @@ func TestSwitchToPreinstalledEngineAndModel(t *testing.T) {
 		})
 	}
 }
-
