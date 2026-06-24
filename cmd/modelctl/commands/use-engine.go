@@ -177,8 +177,8 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 // switchEngine changes the engine that is used by the snap
 // By default the previous model will be used if it is compatible.
 // If it is not compatible, the engine's default model will be selected.
-// An optional modelName can be provided to override the model used for the switch.
-func (cmd *useEngineCommand) switchEngine(engineName string, modelName string) error {
+// And optional modelID can be provided to override which model is switched to.
+func (cmd *useEngineCommand) switchEngine(engineName string, modelID string) error {
 
 	newEngineManifest, err := engines.LoadManifest(cmd.EnginesDir, engineName)
 	if err != nil {
@@ -191,32 +191,28 @@ func (cmd *useEngineCommand) switchEngine(engineName string, modelName string) e
 		return fmt.Errorf("loading engine manifest: %v", err)
 	}
 
-	// We need to check which components are required for the switch.
-	// If the current model is supported by the new engine, we use the active model's components.
-	// If the model is not supported, we need to use the components of the new engine's default model.
-
-	activeModelName, err := cmd.Cache.GetActiveModel()
+	activeModelID, err := cmd.Cache.GetActiveModel()
 	if err != nil {
-		return fmt.Errorf("getting active model name: %v", err)
+		return fmt.Errorf("getting active model: %v", err)
 	}
 
 	// If the current active model is not supported by the new engine, switch to the engine's default model
-	newModelName := activeModelName
-	if !slices.Contains(newEngineManifest.Model.Options, activeModelName) {
-		newModelName = newEngineManifest.Model.Default
+	newModelID := activeModelID
+	if !slices.Contains(newEngineManifest.Model.Options, activeModelID) {
+		newModelID = newEngineManifest.Model.Default
 	}
 
-	// If a model name is provided, it must be supported by the new engine.
-	if modelName != "" {
-		if !slices.Contains(newEngineManifest.Model.Options, modelName) {
-			return fmt.Errorf("model %q is not supported by engine %q", modelName, engineName)
+	// If a model ID is provided, use that instead
+	if modelID != "" {
+		if !slices.Contains(newEngineManifest.Model.Options, modelID) {
+			return fmt.Errorf("model %q is not supported by engine %q", modelID, engineName)
 		}
-		newModelName = modelName
+		newModelID = modelID
 	}
 
 	var newModelManifest *models.Manifest
-	if newModelName != "" {
-		newModelManifest, err = models.LoadManifest(cmd.ModelsDir, newModelName)
+	if newModelID != "" {
+		newModelManifest, err = models.LoadManifest(cmd.ModelsDir, newModelID)
 		if err != nil {
 			return fmt.Errorf("loading model manifest: %v", err)
 		}
@@ -231,7 +227,7 @@ func (cmd *useEngineCommand) switchEngine(engineName string, modelName string) e
 		return nil
 	}
 
-	err = cmd.Cache.SetActiveModel(newModelName)
+	err = cmd.Cache.SetActiveModel(newModelID)
 	if err != nil {
 		return fmt.Errorf("setting active model: %v", err)
 	}
