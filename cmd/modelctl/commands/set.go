@@ -133,9 +133,10 @@ func (cmd *setCommand) setUserConfigs(keyValues map[string]string) error {
 	return nil
 }
 
-// validateEnvKeys rejects env keys that would result in environment variable
-// names that are not POSIX-compliant. Dots are not allowed because they are
-// not valid characters in environment variable names.
+// validateEnvKeys rejects env keys that would result in invalid environment
+// variable names. The name (the part after the env prefix) must not be empty
+// and must not contain dots, since dots are not valid characters in
+// environment variable names.
 func validateEnvKeys(keyValues map[string]string) error {
 	for key := range keyValues {
 		name, ok := strings.CutPrefix(key, storage.EnvKeyPrefix)

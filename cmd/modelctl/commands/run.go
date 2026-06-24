@@ -86,7 +86,10 @@ func (cmd *runCommand) processEnvConfigs() error {
 	envVars := make(map[string]any, len(envConfigs))
 	for k, v := range envConfigs {
 		// Convert env keys (my-key) to environment variable names (MY_KEY)
-		name := strings.TrimPrefix(k, storage.EnvKeyPrefix)
+		name, ok := strings.CutPrefix(k, storage.EnvKeyPrefix)
+		if !ok {
+			return fmt.Errorf("unexpected config key %q: expected prefix %q", k, storage.EnvKeyPrefix)
+		}
 		name = strings.ToUpper(strings.ReplaceAll(name, "-", "_"))
 		envVars[name] = fmt.Sprintf("%v", v)
 	}
