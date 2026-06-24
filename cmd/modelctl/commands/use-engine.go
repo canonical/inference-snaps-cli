@@ -101,7 +101,7 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 		return err
 	} else {
 		if len(args) == 1 {
-			return cmd.switchEngine(args[0])
+			return cmd.switchEngine(args[0], "")
 		} else {
 			return fmt.Errorf("engine name not specified")
 		}
@@ -116,7 +116,7 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 
 	if !observable && cmd.fallback != "" {
 		fmt.Printf("Hardware information is unavailable; falling back to engine %q.\n", cmd.fallback)
-		return cmd.switchEngine(cmd.fallback)
+		return cmd.switchEngine(cmd.fallback, "")
 	}
 
 	scoredEngines, err := common.ScoreEnginesWithSpinner(cmd.Context)
@@ -166,7 +166,7 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 
 	fmt.Printf("Selected engine: %s\n", selectedEngine.Name)
 
-	err = cmd.switchEngine(selectedEngine.Name)
+	err = cmd.switchEngine(selectedEngine.Name, "")
 	if err != nil {
 		return fmt.Errorf("use engine: %s", err)
 	}
@@ -175,7 +175,10 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 }
 
 // switchEngine changes the engine that is used by the snap
-func (cmd *useEngineCommand) switchEngine(engineName string) error {
+// By default the previous model will be used if it is compatible.
+// If it is not compatible, the engine's default model will be selected.
+// And optional modelName can be provided to override which model is switched to.
+func (cmd *useEngineCommand) switchEngine(engineName string, modelName string) error {
 
 	newEngineManifest, err := engines.LoadManifest(cmd.EnginesDir, engineName)
 	if err != nil {
@@ -201,6 +204,11 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 	newModelName := activeModelName
 	if !slices.Contains(newEngineManifest.Model.Options, activeModelName) {
 		newModelName = newEngineManifest.Model.Default
+	}
+
+	// If a model name is provided, use that one instead
+	if modelName != "" && slices.Contains(newEngineManifest.Model.Options, modelName) {
+		newModelName = modelName
 	}
 
 	var newModelManifest *models.Manifest
@@ -466,7 +474,7 @@ func selectEngineForSeededComponents(cmd *useEngineCommand, scoredEngines []engi
 	if err != nil {
 		return false, fmt.Errorf("finding top engine: %v", err)
 	}
-	fmt.Printf("Top engine: %v\n", topEngine.Name)
+	fmt.Printf("Using seeded engine: %v\n", topEngine.Name)
 
 	// If multiple models were seeded, prefer the engine's default
 	seededModelForEngine := ""
@@ -479,16 +487,11 @@ func selectEngineForSeededComponents(cmd *useEngineCommand, scoredEngines []engi
 		}
 	}
 
-	// If a model was seeded, switch to it. Otherwise, switchEngine() will use the default model.
 	if seededModelForEngine != "" {
-		fmt.Printf("Seeded model for engine: %v\n", seededModelForEngine)
-		err = cmd.Cache.SetActiveModel(seededModelForEngine)
-		if err != nil {
-			return false, fmt.Errorf("setting active model: %v", err)
-		}
+		fmt.Printf("Using seeded model: %v\n", seededModelForEngine)
 	}
 
-	err = cmd.switchEngine(topEngine.Name)
+	err = cmd.switchEngine(topEngine.Name, seededModelForEngine)
 	if err != nil {
 		return false, fmt.Errorf("switching engine: %v", err)
 	}

@@ -93,7 +93,7 @@ func ExampleUseEngine_noRestartWhenEngineUnchanged() {
 		},
 	}
 
-	if err := cmd.switchEngine("intel-gpu"); err != nil {
+	if err := cmd.switchEngine("intel-gpu", ""); err != nil {
 		panic(err)
 	}
 
@@ -114,7 +114,7 @@ func ExampleUseEngine_restartWhenEngineChanged() {
 		},
 	}
 
-	if err := cmd.switchEngine("cpu-avx1"); err != nil {
+	if err := cmd.switchEngine("cpu-avx1", ""); err != nil {
 		panic(err)
 	}
 
