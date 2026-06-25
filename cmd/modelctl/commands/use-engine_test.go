@@ -191,7 +191,7 @@ func ExampleUseEngine_autoSelectEngine() {
 	// [mock] Restarting all services
 }
 
-// TestSwitchEngine_withModelID verifies that switchEngine respects an
+// TestSwitchEngine_withModelID verifies that switchEngineAndModel respects an
 // explicitly supplied modelID:
 //   - a valid model supported by the engine is persisted as the active model
 //   - an unsupported model returns an error and leaves state unchanged
