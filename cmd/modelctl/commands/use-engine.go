@@ -101,7 +101,7 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 		return err
 	} else {
 		if len(args) == 1 {
-			return cmd.switchEngine(args[0], "")
+			return cmd.switchEngine(args[0])
 		} else {
 			return fmt.Errorf("engine name not specified")
 		}
@@ -116,7 +116,7 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 
 	if !observable && cmd.fallback != "" {
 		fmt.Printf("Hardware information is unavailable; falling back to engine %q.\n", cmd.fallback)
-		return cmd.switchEngine(cmd.fallback, "")
+		return cmd.switchEngine(cmd.fallback)
 	}
 
 	scoredEngines, err := common.ScoreEnginesWithSpinner(cmd.Context)
@@ -166,7 +166,7 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 
 	fmt.Printf("Selected engine: %s\n", selectedEngine.Name)
 
-	err = cmd.switchEngine(selectedEngine.Name, "")
+	err = cmd.switchEngine(selectedEngine.Name)
 	if err != nil {
 		return fmt.Errorf("use engine: %s", err)
 	}
@@ -174,12 +174,10 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 	return nil
 }
 
-// switchEngine changes the engine that is used by the snap
-// By default the previous model will be used if it is compatible.
+// switchEngine changes the engine and model used by the snap
+// By default, the previous model will be used if it is compatible.
 // If it is not compatible, the engine's default model will be selected.
-// An optional modelID can be provided to override the model used for the switch.
-func (cmd *useEngineCommand) switchEngine(engineName string, modelID string) error {
-
+func (cmd *useEngineCommand) switchEngine(engineName string) error {
 	newEngineManifest, err := engines.LoadManifest(cmd.EnginesDir, engineName)
 	if err != nil {
 		if errors.Is(err, engines.ErrManifestNotFound) {
@@ -196,22 +194,50 @@ func (cmd *useEngineCommand) switchEngine(engineName string, modelID string) err
 		return fmt.Errorf("getting active model: %v", err)
 	}
 
-	// If the current active model is not supported by the new engine, switch to the new engine's default model
-	newModelID := activeModelID
-	if !slices.Contains(newEngineManifest.Model.Options, activeModelID) {
+	newModelID := ""
+	if slices.Contains(newEngineManifest.Model.Options, activeModelID) {
+		newModelID = activeModelID
+	} else {
 		newModelID = newEngineManifest.Model.Default
 	}
 
-	// If a model ID is provided, use that instead
-	if modelID != "" {
-		if !slices.Contains(newEngineManifest.Model.Options, modelID) {
-			return fmt.Errorf("model %q is not supported by engine %q", modelID, engineName)
+	return cmd.switchEngineAndModel(engineName, newModelID)
+}
+
+// switchEngineAndModel changes the engine and model used by the snap
+// An error is returned if the model is not supported by the engine
+func (cmd *useEngineCommand) switchEngineAndModel(newEngineName string, newModelID string) error {
+
+	activeEngineName, err := cmd.Cache.GetActiveEngine()
+	if err != nil {
+		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
+	}
+
+	activeModelID, err := cmd.Cache.GetActiveModel()
+	if err != nil {
+		return fmt.Errorf("getting active model: %v", err)
+	}
+
+	newEngineManifest, err := engines.LoadManifest(cmd.EnginesDir, newEngineName)
+	if err != nil {
+		if errors.Is(err, engines.ErrManifestNotFound) {
+			if cmd.Verbose {
+				fmt.Println(err)
+			}
+			return fmt.Errorf("%q not found", newEngineName)
 		}
-		newModelID = modelID
+		return fmt.Errorf("loading engine manifest: %v", err)
 	}
 
 	var newModelManifest *models.Manifest
+
+	// It is optional for engines to define a model
+	// The options slice can therefore be empty, and the default model ID can be an empty string
 	if newModelID != "" {
+		if !slices.Contains(newEngineManifest.Model.Options, newModelID) {
+			return fmt.Errorf("model %q is not supported by engine %q", newModelID, newEngineName)
+		}
+
 		newModelManifest, err = models.LoadManifest(cmd.ModelsDir, newModelID)
 		if err != nil {
 			return fmt.Errorf("loading model manifest: %v", err)
@@ -227,17 +253,7 @@ func (cmd *useEngineCommand) switchEngine(engineName string, modelID string) err
 		return nil
 	}
 
-	err = cmd.Cache.SetActiveModel(newModelID)
-	if err != nil {
-		return fmt.Errorf("setting active model: %v", err)
-	}
-
-	activeEngineName, err := cmd.Cache.GetActiveEngine()
-	if err != nil {
-		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
-	}
-
-	if activeEngineName == engineName && activeModelID == newModelID {
+	if activeEngineName == newEngineName && activeModelID == newModelID {
 		// Neither engine nor model changed. Nothing left to do.
 		return nil
 	}
@@ -258,7 +274,15 @@ func (cmd *useEngineCommand) switchEngine(engineName string, modelID string) err
 		return fmt.Errorf("setting new engine configurations: %v", err)
 	}
 
-	fmt.Printf("Engine changed to %q.\n", engineName)
+	err = cmd.Cache.SetActiveModel(newModelID)
+	if err != nil {
+		return fmt.Errorf("setting active model: %v", err)
+	}
+
+	fmt.Printf("Engine changed to %q.\n", newEngineName)
+	if newModelID != "" && activeModelID != newModelID {
+		fmt.Printf("Model changed to %q.\n", newModelID)
+	}
 
 	// Ask if the user wants to restart
 	if !cmd.noRestart {
@@ -490,7 +514,7 @@ func selectEngineForSeededComponents(cmd *useEngineCommand, scoredEngines []engi
 		fmt.Printf("Using seeded model: %v\n", seededModelForEngine)
 	}
 
-	err = cmd.switchEngine(topEngine.Name, seededModelForEngine)
+	err = cmd.switchEngineAndModel(topEngine.Name, seededModelForEngine)
 	if err != nil {
 		return false, fmt.Errorf("switching engine: %v", err)
 	}

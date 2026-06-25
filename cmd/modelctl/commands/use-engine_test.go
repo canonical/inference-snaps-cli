@@ -92,7 +92,7 @@ func ExampleUseEngine_noRestartWhenEngineAndModelUnchanged() {
 		},
 	}
 
-	if err := cmd.switchEngine("intel-gpu", ""); err != nil {
+	if err := cmd.switchEngine("intel-gpu"); err != nil {
 		panic(err)
 	}
 
@@ -113,7 +113,7 @@ func ExampleUseEngine_restartWhenEngineChanged() {
 		},
 	}
 
-	if err := cmd.switchEngine("cpu-avx1", ""); err != nil {
+	if err := cmd.switchEngine("cpu-avx1"); err != nil {
 		panic(err)
 	}
 
@@ -187,6 +187,7 @@ func ExampleUseEngine_autoSelectEngine() {
 	// ✔ cpu: compatible, score=10
 	// Selected engine: cpu
 	// Engine changed to "cpu".
+	// Model changed to "26b-q4-k-m-gguf".
 	// [mock] Restarting all services
 }
 
@@ -258,7 +259,7 @@ func TestSwitchEngine_withModelID(t *testing.T) {
 			setupSnapComponents(t, tt.installedComponents...)
 
 			cmd := newUseEngineCmd()
-			err := cmd.switchEngine(tt.engineName, tt.modelID)
+			err := cmd.switchEngineAndModel(tt.engineName, tt.modelID)
 
 			if tt.wantErr {
 				if err == nil {
