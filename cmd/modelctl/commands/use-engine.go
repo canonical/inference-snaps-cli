@@ -510,13 +510,17 @@ func selectEngineForSeededComponents(cmd *useEngineCommand, scoredEngines []engi
 		}
 	}
 
-	if seededModelForEngine != "" {
+	if seededModelForEngine == "" {
+		err = cmd.switchEngine(topEngine.Name)
+		if err != nil {
+			return false, fmt.Errorf("switching engine: %v", err)
+		}
+	} else {
 		fmt.Printf("Using seeded model: %v\n", seededModelForEngine)
-	}
-
-	err = cmd.switchEngineAndModel(topEngine.Name, seededModelForEngine)
-	if err != nil {
-		return false, fmt.Errorf("switching engine: %v", err)
+		err = cmd.switchEngineAndModel(topEngine.Name, seededModelForEngine)
+		if err != nil {
+			return false, fmt.Errorf("switching engine and model: %v", err)
+		}
 	}
 
 	return true, nil
