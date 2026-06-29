@@ -8,13 +8,14 @@ import (
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
-	"github.com/canonical/inference-snaps-cli/v2/pkg/hardware_info"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/runtimes"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/selector"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/types"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
+	"github.com/canonical/lscompute/pkg/machine"
+	"github.com/canonical/lscompute/pkg/machine/host"
 )
 
 type Settings struct {
@@ -189,7 +190,7 @@ func UnsetEngineConfig(engineName string, unsetUserOverrides bool, ctx *Context)
 // hardwareInfoGet and engineScorer are package-level variables so tests can
 // inject fakes without changing any production behaviour.
 var (
-	hardwareInfoGet = hardware_info.Get
+	hardwareInfoGet = machine.Get
 	engineScorer    = selector.ScoreEngines
 )
 
@@ -205,7 +206,7 @@ func ScoreEngines(ctx *Context) ([]engines.ScoredManifest, []string, error) {
 		return nil, nil, fmt.Errorf("loading engines: %w", err)
 	}
 
-	machineInfo, warnings, err := hardwareInfoGet(false)
+	machineInfo, warnings, err := hardwareInfoGet(host.Real(), false)
 	if err != nil {
 		return nil, nil, fmt.Errorf("getting machine info: %w", err)
 	}

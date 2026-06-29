@@ -7,7 +7,6 @@ import (
 
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
-	"github.com/canonical/inference-snaps-cli/v2/pkg/hardware_info"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/selector"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
 )
@@ -24,7 +23,7 @@ func prepareTestData() (*listEnginesCommand, *outputEngines, error) {
 		return nil, nil, fmt.Errorf("error loading engines: %v", err)
 	}
 
-	hardwareInfo, err := hardware_info.GetFromRawData("xps13-7390", true, "../../../test_data")
+	hardwareInfo, err := machineInfo("xps13-7390")
 	if err != nil {
 		return nil, nil, fmt.Errorf("error getting hardware info: %v", err)
 	}

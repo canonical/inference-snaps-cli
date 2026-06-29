@@ -3,13 +3,12 @@ package commands
 import (
 	"testing"
 
-	"github.com/canonical/inference-snaps-cli/v2/pkg/hardware_info"
-	"github.com/canonical/inference-snaps-cli/v2/pkg/types"
+	"github.com/canonical/lscompute/pkg/machine"
 )
 
 func Example_showMachineCommand_printMachineInfoJson() {
 	cmd := showMachineCommand{format: "json"}
-	info, err := hardware_info.GetFromRawData("dummy-machine", true, "../../../test_data")
+	info, err := machineInfo("dummy-machine")
 	if err != nil {
 		panic(err)
 	}
@@ -41,8 +40,9 @@ func Example_showMachineCommand_printMachineInfoJson() {
 	//       "avail": 943543738368
 	//     }
 	//   },
-	//   "pci": [
+	//   "devices": [
 	//     {
+	//       "bus": "pci",
 	//       "slot": "0000:00:00.0",
 	//       "bus-number": "0x0",
 	//       "device-class": "0x600",
@@ -61,7 +61,7 @@ func Example_showMachineCommand_printMachineInfoJson() {
 
 func Example_showMachineCommand_printMachineInfoYaml() {
 	cmd := showMachineCommand{format: "yaml"}
-	info, err := hardware_info.GetFromRawData("dummy-machine", true, "../../../test_data")
+	info, err := machineInfo("dummy-machine")
 	if err != nil {
 		panic(err)
 	}
@@ -85,22 +85,23 @@ func Example_showMachineCommand_printMachineInfoYaml() {
 	//     /var/lib/snapd/snaps:
 	//         total: 1006451294208
 	//         avail: 943543738368
-	// pci:
-	//     - slot: "0000:00:00.0"
-	//       bus-number: "0x0"
-	//       device-class: "0x600"
-	//       programming-interface: 0
-	//       vendor-id: "0x8086"
-	//       device-id: "0x4637"
-	//       subvendor-id: "0x103C"
-	//       subdevice-id: "0x89C6"
-	//       vendor-name: Intel Corporation
-	//       subvendor-name: Hewlett-Packard Company
+	// devices:
+	//     - bus: pci
+	//       slot: "0000:00:00.0"
+	//       busnumber: "0x0"
+	//       deviceclass: "0x600"
+	//       programminginterface: 0
+	//       vendorid: "0x8086"
+	//       deviceid: "0x4637"
+	//       subvendorid: "0x103C"
+	//       subdeviceid: "0x89C6"
+	//       vendorname: Intel Corporation
+	//       subvendorname: Hewlett-Packard Company
 }
 
 func Test_printMachineInfo_unknownFormat(t *testing.T) {
 	cmd := showMachineCommand{format: "xml"}
-	info := &types.HwInfo{}
+	info := &machine.MachineInfo{}
 
 	err := cmd.printMachineInfo(info)
 	if err == nil || err.Error() != `unknown format "xml"` {
