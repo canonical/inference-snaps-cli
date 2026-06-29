@@ -10,7 +10,7 @@ import (
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
-	"github.com/canonical/inference-snaps-cli/v2/pkg/types"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
 	"github.com/canonical/lscompute/pkg/machine"
 	"github.com/canonical/lscompute/pkg/machine/host"
 )
@@ -125,7 +125,7 @@ func setupEngineContext(t *testing.T, runtimeEnv, modelEnv []string, runtimeLayo
 func TestLoadEngineEnvironmentFromSettings(t *testing.T) {
 	symlinkPath := setupTestComponent(t)
 	settings := &Settings{
-		Layout: map[string]types.Layout{
+		Layout: map[string]utils.Layout{
 			symlinkPath: {Symlink: "$SNAP_COMPONENTS/dummy-component-2/test_file.txt"},
 		},
 		Environment: []string{"TEST_ENV_VAR=test"},
@@ -180,7 +180,7 @@ func TestLoadEngineEnvironmentSkipsEmptySymlink(t *testing.T) {
 	// A layout entry with an empty Symlink value should not create any file
 	linkPath := filepath.Join(t.TempDir(), "should-not-exist")
 	settings := &Settings{
-		Layout: map[string]types.Layout{
+		Layout: map[string]utils.Layout{
 			linkPath: {Symlink: ""},
 		},
 	}
@@ -206,7 +206,7 @@ func TestInvalidEnvVarFormat(t *testing.T) {
 func TestRejectsLayoutOutsideTmp(t *testing.T) {
 	setupTestComponent(t)
 	settings := &Settings{
-		Layout: map[string]types.Layout{
+		Layout: map[string]utils.Layout{
 			"/not/tmp": {Symlink: "$SNAP_COMPONENTS/dummy-component-2/non_existent_file.txt"},
 		},
 	}
@@ -225,7 +225,7 @@ func TestRejectsLayoutOutsideTmp(t *testing.T) {
 func TestUnloadEngineEnvironmentFromSettings(t *testing.T) {
 	symlinkPath := setupTestComponent(t)
 	settings := &Settings{
-		Layout: map[string]types.Layout{
+		Layout: map[string]utils.Layout{
 			symlinkPath: {Symlink: "$SNAP_COMPONENTS/dummy-component-2/test_file.txt"},
 		},
 		Environment: []string{"TEST_ENV_VAR=test"},
@@ -627,7 +627,7 @@ func TestUnloadEngineEnvironmentErrorPath(t *testing.T) {
 
 	// Set expandedLayout directly (same package access)
 	settings := &Settings{
-		expandedLayout: map[string]types.Layout{
+		expandedLayout: map[string]utils.Layout{
 			regularFile: {Symlink: "/some/target"},
 		},
 	}

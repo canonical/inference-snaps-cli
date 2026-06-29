@@ -12,7 +12,6 @@ import (
 	"github.com/canonical/inference-snaps-cli/v2/pkg/runtimes"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/selector"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
-	"github.com/canonical/inference-snaps-cli/v2/pkg/types"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
 	"github.com/canonical/lscompute/pkg/machine"
 	"github.com/canonical/lscompute/pkg/machine/host"
@@ -20,8 +19,8 @@ import (
 
 type Settings struct {
 	Environment    []string                `yaml:"environment"`
-	Layout         map[string]types.Layout `yaml:"layout"`
-	expandedLayout map[string]types.Layout
+	Layout         map[string]utils.Layout `yaml:"layout"`
+	expandedLayout map[string]utils.Layout
 }
 
 func EngineSettings(ctx *Context) (*Settings, error) {
@@ -62,7 +61,7 @@ func EngineSettings(ctx *Context) (*Settings, error) {
 	var engineSettings Settings
 	engineSettings.Environment = append(engineSettings.Environment, runtimeManifest.Environment...)
 	engineSettings.Environment = append(engineSettings.Environment, modelManifest.Environment...)
-	engineSettings.Layout = make(map[string]types.Layout)
+	engineSettings.Layout = make(map[string]utils.Layout)
 	maps.Copy(engineSettings.Layout, runtimeManifest.Layout)
 	maps.Copy(engineSettings.Layout, modelManifest.Layout)
 
@@ -88,9 +87,9 @@ func loadEngineEnvironmentFromSettings(settings *Settings) error {
 		}
 	}
 
-	settings.expandedLayout = make(map[string]types.Layout, len(settings.Layout))
+	settings.expandedLayout = make(map[string]utils.Layout, len(settings.Layout))
 	for k, v := range settings.Layout {
-		engineLayout := types.Layout{
+		engineLayout := utils.Layout{
 			Symlink: os.ExpandEnv(v.Symlink),
 		}
 		settings.expandedLayout[os.ExpandEnv(k)] = engineLayout
