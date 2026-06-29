@@ -19,6 +19,7 @@ require (
 )
 
 require (
+	github.com/canonical/lscompute v0.0.0-20260629110258-98efaf1c6eb4 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/clipperhouse/displaywidth v0.10.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.6.0 // indirect
