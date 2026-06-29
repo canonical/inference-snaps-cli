@@ -42,10 +42,6 @@ type sharedOpenai struct {
 	BaseUrl string `json:"base_url"`
 }
 
-// run exports the inference snap status to a file where the content sharing interface can share it
-// By default the status is written to $SNAP_COMMON/share/status.json
-// and the openai configuration for open-webui is written to $SNAP_COMMON/share/openai.json
-// The directory where these two files are written can be overridden by the $STATUS_SHARE_DIR environment variable
 func (cmd *exportConfigCommand) run(_ *cobra.Command, _ []string) error {
 
 	statusStr, err := common.StatusStruct(cmd.Context)
@@ -61,14 +57,20 @@ func (cmd *exportConfigCommand) run(_ *cobra.Command, _ []string) error {
 		Model:     statusStr.Model,
 	}
 
-	statusJson, err := json.Marshal(sharedStatusStr)
-	if err != nil {
-		return fmt.Errorf("json: %v", err)
-	}
-
+	// Default to $SNAP_COMMON/share unless it is overridden by $STATUS_SHARE_DIR
 	shareDir := os.Getenv("STATUS_SHARE_DIR")
 	if shareDir == "" {
 		shareDir = filepath.Join(os.Getenv("SNAP_COMMON"), "share")
+	}
+
+	return writeShareFiles(sharedStatusStr, shareDir)
+}
+
+// writeShareFiles writes status.json (and optionally openai.json) to shareDir.
+func writeShareFiles(status *sharedStatus, shareDir string) error {
+	statusJson, err := json.Marshal(status)
+	if err != nil {
+		return fmt.Errorf("json: %v", err)
 	}
 
 	if err := os.MkdirAll(shareDir, 0o755); err != nil {
@@ -80,7 +82,8 @@ func (cmd *exportConfigCommand) run(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("writing status.json: %v", err)
 	}
 
-	if endpoint, ok := statusStr.Endpoints["openai"]; ok {
+	openaiFilePath := filepath.Join(shareDir, "openai.json")
+	if endpoint, ok := status.Endpoints["openai"]; ok {
 		myOpenaiConfig := &sharedOpenai{
 			BaseUrl: endpoint,
 		}
@@ -88,10 +91,11 @@ func (cmd *exportConfigCommand) run(_ *cobra.Command, _ []string) error {
 		if err != nil {
 			return fmt.Errorf("json: %v", err)
 		}
-		openaiFilePath := filepath.Join(shareDir, "openai.json")
 		if err := os.WriteFile(openaiFilePath, openaiJson, 0o644); err != nil {
 			return fmt.Errorf("writing openai.json: %v", err)
 		}
+	} else if err := os.Remove(openaiFilePath); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("removing openai.json: %v", err)
 	}
 
 	return nil
