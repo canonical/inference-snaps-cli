@@ -21,6 +21,7 @@ func ExportConfig(ctx *common.Context) *cobra.Command {
 	cobraCmd := &cobra.Command{
 		Use:               "export-config",
 		Short:             "Export the current configuration",
+		Hidden:            true,
 		Args:              cobra.NoArgs,
 		ValidArgsFunction: cobra.NoFileCompletions,
 		RunE:              cmd.run,
@@ -78,8 +79,12 @@ func writeShareFiles(status *sharedStatus, shareDir string) error {
 	}
 
 	statusFilePath := filepath.Join(shareDir, "status.json")
-	if err := os.WriteFile(statusFilePath, statusJson, 0o644); err != nil {
+	tmpStatusFilePath := statusFilePath + ".tmp"
+	if err := os.WriteFile(tmpStatusFilePath, statusJson, 0o644); err != nil {
 		return fmt.Errorf("writing status.json: %v", err)
+	}
+	if err := os.Rename(tmpStatusFilePath, statusFilePath); err != nil {
+		return fmt.Errorf("renaming status.json: %v", err)
 	}
 
 	openaiFilePath := filepath.Join(shareDir, "openai.json")
@@ -91,9 +96,13 @@ func writeShareFiles(status *sharedStatus, shareDir string) error {
 		if err != nil {
 			return fmt.Errorf("json: %v", err)
 		}
-		if err := os.WriteFile(openaiFilePath, openaiJson, 0o644); err != nil {
-			return fmt.Errorf("writing openai.json: %v", err)
-		}
+			tmpOpenaiFilePath := openaiFilePath + ".tmp"
+			if err := os.WriteFile(tmpOpenaiFilePath, openaiJson, 0o644); err != nil {
+				return fmt.Errorf("writing openai.json: %v", err)
+			}
+			if err := os.Rename(tmpOpenaiFilePath, openaiFilePath); err != nil {
+				return fmt.Errorf("renaming openai.json: %v", err)
+			}
 	} else if err := os.Remove(openaiFilePath); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("removing openai.json: %v", err)
 	}
