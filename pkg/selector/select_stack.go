@@ -99,7 +99,7 @@ func scoreDevicesAll(hardwareInfo *machine.MachineInfo, devices []engines.Device
 	for i, _ := range devices {
 
 		if devices[i].Type == "cpu" {
-			cpuScore, deviceIssues := cpu.Match(devices[i], hardwareInfo.Cpus)
+			cpuScore, deviceIssues := cpu.Match(devices[i], hardwareInfo)
 			if len(deviceIssues) > 0 {
 				compatible = false
 				devices[i].CompatibilityIssues = append(devices[i].CompatibilityIssues, deviceIssues...)
@@ -114,7 +114,7 @@ func scoreDevicesAll(hardwareInfo *machine.MachineInfo, devices []engines.Device
 
 		} else if devices[i].Bus == "" || devices[i].Bus == "pci" {
 			// Fallback to PCI as default bus
-			pciScore, pciIssues := pci.Match(devices[i], hardwareInfo.PciDevices)
+			pciScore, pciIssues := pci.Match(devices[i], hardwareInfo)
 			if len(pciIssues) > 0 {
 				compatible = false
 				devices[i].CompatibilityIssues = append(devices[i].CompatibilityIssues, pciIssues...)
@@ -131,7 +131,7 @@ func scoreDevicesAll(hardwareInfo *machine.MachineInfo, devices []engines.Device
 	return compatibilityScore
 }
 
-func scoreDevicesAny(hardwareInfo *machine.MachineInfo, devices []engines.Device) int {
+func scoreDevicesAny(machineInfo *machine.MachineInfo, devices []engines.Device) int {
 	compatible := true
 	compatibilityScore := 0
 	devicesFound := 0
@@ -139,9 +139,9 @@ func scoreDevicesAny(hardwareInfo *machine.MachineInfo, devices []engines.Device
 	for i, device := range devices {
 
 		if device.Type == "cpu" {
-			cpuScore, deviceIssues := cpu.Match(device, hardwareInfo.Cpus)
+			cpuScore, deviceIssues := cpu.Match(device, machineInfo)
 			if len(deviceIssues) > 0 {
-				devices[i].CompatibilityIssues = append(device.CompatibilityIssues, deviceIssues...)
+				devices[i].CompatibilityIssues = append(devices[i].CompatibilityIssues, deviceIssues...)
 			} else {
 				devicesFound++
 				compatibilityScore += cpuScore
@@ -153,9 +153,9 @@ func scoreDevicesAny(hardwareInfo *machine.MachineInfo, devices []engines.Device
 
 		} else if device.Bus == "" || device.Bus == "pci" {
 			// Fallback to PCI as default bus
-			pciScore, pciIssues := pci.Match(device, hardwareInfo.PciDevices)
+			pciScore, pciIssues := pci.Match(device, machineInfo)
 			if len(pciIssues) > 0 {
-				devices[i].CompatibilityIssues = append(device.CompatibilityIssues, pciIssues...)
+				devices[i].CompatibilityIssues = append(devices[i].CompatibilityIssues, pciIssues...)
 			} else {
 				devicesFound++
 				compatibilityScore += pciScore

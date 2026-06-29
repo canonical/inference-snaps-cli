@@ -7,12 +7,20 @@ import (
 	"github.com/canonical/go-snapctl"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/selector/weights"
+	"github.com/canonical/lscompute/pkg/machine"
 	"github.com/canonical/lscompute/pkg/machine/device/pci"
-	lstypes "github.com/canonical/lscompute/pkg/machine/types"
+	"github.com/canonical/lscompute/pkg/machine/types"
 )
 
-func Match(manifestDevice engines.Device, hostPciDevices []pci.Device) (maxDeviceScore int, deviceIssues []string) {
+type pciDevice struct {
+	pci.Device
+	Score int
+}
+
+func Match(manifestDevice engines.Device, hostDevices *machine.MachineInfo) (maxDeviceScore int, deviceIssues []string) {
 	maxDeviceScore = 0
+
+	hostPciDevices := pciDevices(hostDevices)
 
 	if len(hostPciDevices) == 0 {
 		deviceIssues = append(deviceIssues, "no pci devices on host system")
@@ -22,9 +30,9 @@ func Match(manifestDevice engines.Device, hostPciDevices []pci.Device) (maxDevic
 	availableDevices := filterPciDevices(hostPciDevices, manifestDevice.VendorId, manifestDevice.DeviceId)
 	scoredDevices, scoreIssues := scorePciDevices(manifestDevice, availableDevices)
 
-	for _, pci := range scoredDevices {
-		if pci.Score > maxDeviceScore {
-			maxDeviceScore = pci.Score
+	for _, scored := range scoredDevices {
+		if scored.Score > maxDeviceScore {
+			maxDeviceScore = scored.Score
 		}
 	}
 	if maxDeviceScore == 0 {
@@ -35,13 +43,25 @@ func Match(manifestDevice engines.Device, hostPciDevices []pci.Device) (maxDevic
 	return
 }
 
+// pciDevices returns the PCI devices from a machine's device list, skipping
+// any non-PCI devices.
+func pciDevices(info *machine.MachineInfo) []pciDevice {
+	var devices []pciDevice
+	for _, device := range info.Devices {
+		if d, ok := device.(pci.Device); ok {
+			devices = append(devices, pciDevice{Device: d})
+		}
+	}
+	return devices
+}
+
 // filterPciDevices returns all PCI devices from the provided list, where the Vendor ID and the Device ID match.
 //
 // Filtering does not return compatibility issues. If we did, an engine with N device on a machine with M pci devices,
 // would print NxM issues. These will all read "vendor id mismatch" or "device id mismatch" for each NxM combination.
 // In the end the reason is just "device not found".
-func filterPciDevices(pciDevices []pci.Device, vendorId *lstypes.HexInt, deviceId *lstypes.HexInt) []pci.Device {
-	var foundDevices []pci.Device
+func filterPciDevices(pciDevices []pciDevice, vendorId *types.HexInt, deviceId *types.HexInt) []pciDevice {
+	var foundDevices []pciDevice
 	for _, pciDevice := range pciDevices {
 		include := true
 
@@ -67,19 +87,19 @@ func filterPciDevices(pciDevices []pci.Device, vendorId *lstypes.HexInt, deviceI
 
 // scorePciDevices takes a list of host pci devices, which should already be filtered based on Vendor ID and Device ID,
 // performs scoring on all the devices, and returns a list of scored devices
-func scorePciDevices(manifestDevice engines.Device, hostPciDevices []pci.Device) ([]pci.Device, []string) {
+func scorePciDevices(manifestDevice engines.Device, hostPciDevices []pciDevice) ([]pciDevice, []string) {
 	var issues []string
 
 	if len(hostPciDevices) == 0 {
 		issues = append(issues, "device not found")
 	}
 
-	for i, pciDevice := range hostPciDevices {
-		deviceScore, deviceIssues := scorePciDevice(manifestDevice, pciDevice)
+	for i, d := range hostPciDevices {
+		deviceScore, deviceIssues := scorePciDevice(manifestDevice, d.Device)
 
 		hostPciDevices[i].Score = deviceScore
 		for _, issue := range deviceIssues {
-			issues = append(issues, fmt.Sprintf("pci %s: %s", pciDevice.Slot, issue))
+			issues = append(issues, fmt.Sprintf("pci %s: %s", d.Slot, issue))
 		}
 	}
 	return hostPciDevices, issues
