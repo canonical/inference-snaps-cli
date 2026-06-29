@@ -1,5 +1,7 @@
 #!/bin/bash -eu
 
+modelctl export-config
+
 port="$(modelctl get http.port)"
 host="$(modelctl get http.host)"
 
