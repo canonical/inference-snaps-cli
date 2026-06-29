@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/constants"
-	"github.com/canonical/inference-snaps-cli/v2/pkg/types"
+	lstypes "github.com/canonical/lscompute/pkg/machine/types"
 )
 
 func TestCpuArchitecture(t *testing.T) {
@@ -71,7 +71,7 @@ func TestCpuAmd64Fields(t *testing.T) {
 func TestCpuArm64Fields(t *testing.T) {
 	architecture := constants.Arm64
 	device := Device{Type: "cpu", Architecture: &architecture}
-	implementer := types.HexInt(0x41)
+	implementer := lstypes.HexInt(0x41)
 	device.ImplementerId = &implementer
 
 	t.Run("cpu arm64 valid fields", func(t *testing.T) {

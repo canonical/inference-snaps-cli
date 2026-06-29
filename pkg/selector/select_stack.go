@@ -7,7 +7,7 @@ import (
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/selector/cpu"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/selector/pci"
-	"github.com/canonical/inference-snaps-cli/v2/pkg/types"
+	"github.com/canonical/lscompute/pkg/machine"
 )
 
 var ErrorNoCompatibleEngine = errors.New("no compatible engines found")
@@ -34,7 +34,7 @@ func TopEngine(scoredEngines []engines.ScoredManifest) (*engines.ScoredManifest,
 	return &compatibleEngines[0], nil
 }
 
-func ScoreEngines(hardwareInfo *types.HwInfo, manifests []engines.Manifest) ([]engines.ScoredManifest, error) {
+func ScoreEngines(hardwareInfo *machine.MachineInfo, manifests []engines.Manifest) ([]engines.ScoredManifest, error) {
 	var scoredEngines []engines.ScoredManifest
 
 	for _, currentManifest := range manifests {
@@ -55,7 +55,7 @@ func ScoreEngines(hardwareInfo *types.HwInfo, manifests []engines.Manifest) ([]e
 	return scoredEngines, nil
 }
 
-func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, engines.CompatibilityReport, error) {
+func checkEngine(hardwareInfo *machine.MachineInfo, manifest engines.Manifest) (int, engines.CompatibilityReport, error) {
 	engineScore := 0
 	compatibilityReport := engines.CompatibilityReport{
 		CompatibleMemory:  true,
@@ -92,7 +92,7 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, en
 	return engineScore, compatibilityReport, nil
 }
 
-func scoreDevicesAll(hardwareInfo *types.HwInfo, devices []engines.Device) int {
+func scoreDevicesAll(hardwareInfo *machine.MachineInfo, devices []engines.Device) int {
 	compatible := true
 	compatibilityScore := 0
 
@@ -131,7 +131,7 @@ func scoreDevicesAll(hardwareInfo *types.HwInfo, devices []engines.Device) int {
 	return compatibilityScore
 }
 
-func scoreDevicesAny(hardwareInfo *types.HwInfo, devices []engines.Device) int {
+func scoreDevicesAny(hardwareInfo *machine.MachineInfo, devices []engines.Device) int {
 	compatible := true
 	compatibilityScore := 0
 	devicesFound := 0

@@ -6,8 +6,7 @@ import (
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
-	"github.com/canonical/inference-snaps-cli/v2/pkg/hardware_info"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 type testValidInvalid struct {
@@ -324,7 +323,7 @@ func TestEngine(t *testing.T) {
 func testValidHw(t *testing.T, engineName string, hwName string) {
 	manifestFile := fmt.Sprintf("../../test_data/engines/%s/%s", engineName, engines.ManifestFilename)
 
-	hardwareInfo, err := hardware_info.GetFromRawData(hwName, true, "../../test_data")
+	hardwareInfo, err := machineInfo(hwName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -357,7 +356,7 @@ func testValidHw(t *testing.T, engineName string, hwName string) {
 func testInvalidHw(t *testing.T, engineName string, hwName string) {
 	manifestFile := fmt.Sprintf("../../test_data/engines/%s/%s", engineName, engines.ManifestFilename)
 
-	hardwareInfo, err := hardware_info.GetFromRawData(hwName, true, "../../test_data")
+	hardwareInfo, err := machineInfo(hwName)
 	if err != nil {
 		t.Fatal(err)
 	}

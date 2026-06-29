@@ -5,21 +5,19 @@ go 1.26.1
 require (
 	github.com/briandowns/spinner v1.23.2
 	github.com/canonical/go-snapctl v1.0.0-beta.6
+	github.com/canonical/lscompute v0.0.0-20260629110258-98efaf1c6eb4
 	github.com/chzyer/readline v1.5.1
 	github.com/creack/pty v1.1.24
 	github.com/fatih/color v1.19.0
-	github.com/go-test/deep v1.1.1
-	github.com/jaypipes/pcidb v1.1.1
 	github.com/olekukonko/tablewriter v1.1.4
 	github.com/openai/openai-go/v3 v3.40.0
 	github.com/spf13/cobra v1.10.2
-	golang.org/x/sys v0.46.0
+	go.yaml.in/yaml/v4 v4.0.0-rc.6
 	golang.org/x/term v0.44.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	github.com/canonical/lscompute v0.0.0-20260629110258-98efaf1c6eb4 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/clipperhouse/displaywidth v0.10.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.6.0 // indirect
@@ -35,4 +33,5 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
+	golang.org/x/sys v0.46.0 // indirect
 )

@@ -1,7 +1,7 @@
 package engines
 
 import (
-	"github.com/canonical/inference-snaps-cli/v2/pkg/types"
+	lstypes "github.com/canonical/lscompute/pkg/machine/types"
 )
 
 type CompatibilityReport struct {
@@ -56,13 +56,13 @@ type Device struct {
 	Flags          []string `yaml:"flags,omitempty" json:"flags,omitempty"`
 
 	// CPU arm64
-	ImplementerId *types.HexInt `yaml:"implementer-id,omitempty" json:"implementer-id,omitempty"`
-	PartNumber    *types.HexInt `yaml:"part-number,omitempty" json:"part-number,omitempty"`
-	Features      []string      `yaml:"features,omitempty" json:"features,omitempty"`
+	ImplementerId *lstypes.HexInt `yaml:"implementer-id,omitempty" json:"implementer-id,omitempty"`
+	PartNumber    *lstypes.HexInt `yaml:"part-number,omitempty" json:"part-number,omitempty"`
+	Features      []string        `yaml:"features,omitempty" json:"features,omitempty"`
 
 	// PCI
-	VendorId *types.HexInt `yaml:"vendor-id,omitempty" json:"vendor-id,omitempty"`
-	DeviceId *types.HexInt `yaml:"device-id,omitempty" json:"device-id,omitempty"`
+	VendorId *lstypes.HexInt `yaml:"vendor-id,omitempty" json:"vendor-id,omitempty"`
+	DeviceId *lstypes.HexInt `yaml:"device-id,omitempty" json:"device-id,omitempty"`
 
 	// GPU additional properties
 	VRam              *string `yaml:"vram,omitempty" json:"vram,omitempty"`

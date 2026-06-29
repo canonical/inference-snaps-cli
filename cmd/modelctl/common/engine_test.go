@@ -11,6 +11,8 @@ import (
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/types"
+	"github.com/canonical/lscompute/pkg/machine"
+	"github.com/canonical/lscompute/pkg/machine/host"
 )
 
 // errCache is a storage.Cache that returns errors from the specified methods.
@@ -711,7 +713,7 @@ func TestScoreEnginesHardwareInfoError(t *testing.T) {
 	// Set up an engines dir so LoadManifests succeeds (returns empty slice)
 	orig := hardwareInfoGet
 	t.Cleanup(func() { hardwareInfoGet = orig })
-	hardwareInfoGet = func(bool) (*types.HwInfo, []string, error) {
+	hardwareInfoGet = func(host.Host, bool) (*machine.MachineInfo, []string, error) {
 		return nil, nil, errors.New("hw error")
 	}
 
@@ -733,10 +735,10 @@ func TestScoreEnginesScorerError(t *testing.T) {
 		hardwareInfoGet = origGet
 		engineScorer = origScorer
 	})
-	hardwareInfoGet = func(bool) (*types.HwInfo, []string, error) {
-		return &types.HwInfo{}, nil, nil
+	hardwareInfoGet = func(host.Host, bool) (*machine.MachineInfo, []string, error) {
+		return &machine.MachineInfo{}, nil, nil
 	}
-	engineScorer = func(*types.HwInfo, []engines.Manifest) ([]engines.ScoredManifest, error) {
+	engineScorer = func(*machine.MachineInfo, []engines.Manifest) ([]engines.ScoredManifest, error) {
 		return nil, errors.New("scorer error")
 	}
 
@@ -758,11 +760,11 @@ func TestScoreEnginesSuccess(t *testing.T) {
 		hardwareInfoGet = origGet
 		engineScorer = origScorer
 	})
-	hardwareInfoGet = func(bool) (*types.HwInfo, []string, error) {
-		return &types.HwInfo{}, []string{"a warning"}, nil
+	hardwareInfoGet = func(host.Host, bool) (*machine.MachineInfo, []string, error) {
+		return &machine.MachineInfo{}, []string{"a warning"}, nil
 	}
 	want := []engines.ScoredManifest{{Manifest: engines.Manifest{Name: "mock-engine"}}}
-	engineScorer = func(*types.HwInfo, []engines.Manifest) ([]engines.ScoredManifest, error) {
+	engineScorer = func(*machine.MachineInfo, []engines.Manifest) ([]engines.ScoredManifest, error) {
 		return want, nil
 	}
 
@@ -796,10 +798,10 @@ func TestScoreEnginesWithSpinnerSuccess(t *testing.T) {
 		hardwareInfoGet = origGet
 		engineScorer = origScorer
 	})
-	hardwareInfoGet = func(bool) (*types.HwInfo, []string, error) {
-		return &types.HwInfo{}, nil, nil
+	hardwareInfoGet = func(host.Host, bool) (*machine.MachineInfo, []string, error) {
+		return &machine.MachineInfo{}, nil, nil
 	}
-	engineScorer = func(*types.HwInfo, []engines.Manifest) ([]engines.ScoredManifest, error) {
+	engineScorer = func(*machine.MachineInfo, []engines.Manifest) ([]engines.ScoredManifest, error) {
 		return []engines.ScoredManifest{}, nil
 	}
 
@@ -821,10 +823,10 @@ func TestScoreEnginesWithSpinnerVerboseWarnings(t *testing.T) {
 		hardwareInfoGet = origGet
 		engineScorer = origScorer
 	})
-	hardwareInfoGet = func(bool) (*types.HwInfo, []string, error) {
-		return &types.HwInfo{}, []string{"warning1", "warning2"}, nil
+	hardwareInfoGet = func(host.Host, bool) (*machine.MachineInfo, []string, error) {
+		return &machine.MachineInfo{}, []string{"warning1", "warning2"}, nil
 	}
-	engineScorer = func(*types.HwInfo, []engines.Manifest) ([]engines.ScoredManifest, error) {
+	engineScorer = func(*machine.MachineInfo, []engines.Manifest) ([]engines.ScoredManifest, error) {
 		return []engines.ScoredManifest{}, nil
 	}
 

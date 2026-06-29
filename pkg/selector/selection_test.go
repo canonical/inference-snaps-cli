@@ -6,8 +6,7 @@ import (
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
-	"github.com/canonical/inference-snaps-cli/v2/pkg/hardware_info"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 // Test that the expected engine is chosen from a list of engines
@@ -84,7 +83,7 @@ func TestTopEngine(t *testing.T) {
 				manifests = append(manifests, manifest)
 			}
 
-			hardwareInfo, err := hardware_info.GetFromRawData(testSet.machine, true, "../../test_data")
+			hardwareInfo, err := machineInfo(testSet.machine)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -122,7 +121,7 @@ func TestMatchReasonsCpu(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	hardwareInfo, err := hardware_info.GetFromRawData("xps13-9350", true, "../../test_data")
+	hardwareInfo, err := machineInfo("xps13-9350")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +157,7 @@ func TestMatchReasonsPci(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	hardwareInfo, err := hardware_info.GetFromRawData("xps13-9350", true, "../../test_data")
+	hardwareInfo, err := machineInfo("xps13-9350")
 	if err != nil {
 		t.Fatal(err)
 	}

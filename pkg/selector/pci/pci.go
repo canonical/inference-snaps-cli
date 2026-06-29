@@ -7,10 +7,11 @@ import (
 	"github.com/canonical/go-snapctl"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/selector/weights"
-	"github.com/canonical/inference-snaps-cli/v2/pkg/types"
+	"github.com/canonical/lscompute/pkg/machine/device/pci"
+	lstypes "github.com/canonical/lscompute/pkg/machine/types"
 )
 
-func Match(manifestDevice engines.Device, hostPciDevices []types.PciDevice) (maxDeviceScore int, deviceIssues []string) {
+func Match(manifestDevice engines.Device, hostPciDevices []pci.Device) (maxDeviceScore int, deviceIssues []string) {
 	maxDeviceScore = 0
 
 	if len(hostPciDevices) == 0 {
@@ -39,8 +40,8 @@ func Match(manifestDevice engines.Device, hostPciDevices []types.PciDevice) (max
 // Filtering does not return compatibility issues. If we did, an engine with N device on a machine with M pci devices,
 // would print NxM issues. These will all read "vendor id mismatch" or "device id mismatch" for each NxM combination.
 // In the end the reason is just "device not found".
-func filterPciDevices(pciDevices []types.PciDevice, vendorId *types.HexInt, deviceId *types.HexInt) []types.PciDevice {
-	var foundDevices []types.PciDevice
+func filterPciDevices(pciDevices []pci.Device, vendorId *lstypes.HexInt, deviceId *lstypes.HexInt) []pci.Device {
+	var foundDevices []pci.Device
 	for _, pciDevice := range pciDevices {
 		include := true
 
@@ -66,7 +67,7 @@ func filterPciDevices(pciDevices []types.PciDevice, vendorId *types.HexInt, devi
 
 // scorePciDevices takes a list of host pci devices, which should already be filtered based on Vendor ID and Device ID,
 // performs scoring on all the devices, and returns a list of scored devices
-func scorePciDevices(manifestDevice engines.Device, hostPciDevices []types.PciDevice) ([]types.PciDevice, []string) {
+func scorePciDevices(manifestDevice engines.Device, hostPciDevices []pci.Device) ([]pci.Device, []string) {
 	var issues []string
 
 	if len(hostPciDevices) == 0 {
@@ -84,7 +85,7 @@ func scorePciDevices(manifestDevice engines.Device, hostPciDevices []types.PciDe
 	return hostPciDevices, issues
 }
 
-func scorePciDevice(manifestDevice engines.Device, hostPciDevice types.PciDevice) (deviceScore int, issues []string) {
+func scorePciDevice(manifestDevice engines.Device, hostPciDevice pci.Device) (deviceScore int, issues []string) {
 	deviceScore = 0
 
 	// Check if a specific device vendor or id is specified and adjust the score
@@ -166,7 +167,7 @@ func scorePciDevice(manifestDevice engines.Device, hostPciDevice types.PciDevice
 	return deviceScore, nil
 }
 
-func checkType(requiredType string, pciDevice types.PciDevice) bool {
+func checkType(requiredType string, pciDevice pci.Device) bool {
 	if requiredType == "gpu" {
 		// 00 01 - legacy VGA devices
 		// 03 xx - display controllers
