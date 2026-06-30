@@ -43,20 +43,20 @@ func SelectCommand(ctx *common.Context) *cobra.Command {
 	}
 
 	// flags
-	cobraCmd.Flags().StringVar(&cmd.format, "format", "yaml", "engine selection results format")
+	cobraCmd.Flags().StringVar(&cmd.format, "format", "json", "engine selection results format")
 	cobraCmd.Flags().StringVar(&cmd.enginesDir, "engines", ctx.EnginesDir, "engine manifests directory")
 
 	return cobraCmd
 }
 
 func (cmd *selectCommand) run(_ *cobra.Command, args []string) error {
-	// Read the machine info YAML (or JSON) piped in from the lscompute / show-machine app
+	// Read the machine info JSON piped in from the lscompute / show-machine app
 	data, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		return fmt.Errorf("reading machine info from stdin: %s", err)
 	}
 
-	machineInfo, err := machine.DecodeYAML(data)
+	machineInfo, err := machine.Decode(data)
 	if err != nil {
 		return fmt.Errorf("decoding machine info: %s", err)
 	}

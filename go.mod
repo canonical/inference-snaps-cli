@@ -5,7 +5,7 @@ go 1.26.1
 require (
 	github.com/briandowns/spinner v1.23.2
 	github.com/canonical/go-snapctl v1.0.0-beta.6
-	github.com/canonical/lscompute v0.0.0-20260630083737-51c245362a73
+	github.com/canonical/lscompute v0.0.0-20260630075916-b93452492a73
 	github.com/chzyer/readline v1.5.1
 	github.com/creack/pty v1.1.24
 	github.com/fatih/color v1.19.0
