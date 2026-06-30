@@ -20,8 +20,12 @@ type pciDevice struct {
 func Match(manifestDevice engines.Device, machineInfo *machine.MachineInfo) (maxDeviceScore int, deviceIssues []string) {
 	maxDeviceScore = 0
 
-	hostPciDevices := pciDevices(machineInfo)
+	if machineInfo == nil {
+		deviceIssues = append(deviceIssues, "no machine info provided")
+		return
+	}
 
+	hostPciDevices := pciDevices(machineInfo)
 	if len(hostPciDevices) == 0 {
 		deviceIssues = append(deviceIssues, "no pci devices on host system")
 		return

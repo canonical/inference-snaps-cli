@@ -19,8 +19,12 @@ If no CPU is found, the score will be zero and there will be one or more reasons
 func Match(manifestDevice engines.Device, machineInfo *machine.MachineInfo) (maxCpuScore int, deviceIssues []string) {
 	maxCpuScore = 0
 
-	hostCpus := machineInfo.Cpus
+	if machineInfo == nil {
+		deviceIssues = append(deviceIssues, "no machine info provided")
+		return
+	}
 
+	hostCpus := machineInfo.Cpus
 	if hostCpus == nil {
 		deviceIssues = append(deviceIssues, "no cpu found on host system")
 	}
