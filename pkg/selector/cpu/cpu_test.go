@@ -56,15 +56,15 @@ func TestCheckCpuFlags(t *testing.T) {
 		Flags:          []string{"avx2"},
 	}}
 
-	result, err := Match(device, &machine.MachineInfo{Cpus: hwInfoCpus})
-	if err != nil {
-		t.Fatalf("CPU flags should match: %v", err)
+	score, issues := Match(device, &machine.MachineInfo{Cpus: hwInfoCpus})
+	if len(issues) != 0 {
+		t.Fatalf("CPU flags should match: %v", strings.Join(issues, ","))
 	}
 
 	device.Flags = []string{"avx512"}
 
-	result, err = Match(device, &machine.MachineInfo{Cpus: hwInfoCpus})
-	if err == nil || result > 0 {
+	score, issues = Match(device, &machine.MachineInfo{Cpus: hwInfoCpus})
+	if len(issues) == 0 || score > 0 {
 		t.Fatal("CPU flags should NOT match")
 	}
 
