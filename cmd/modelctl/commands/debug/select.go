@@ -36,7 +36,7 @@ func SelectCommand(ctx *common.Context) *cobra.Command {
 	cobraCmd := &cobra.Command{
 		Use:               "select-engine",
 		Short:             "Test which engine will be chosen",
-		Long:              "Test which engine will be chosen from a directory of engines, given the machine information JSON piped in via stdin",
+		Long:              "Test which engine will be chosen from a directory of engines, given the machine information piped in via stdin",
 		Args:              cobra.NoArgs,
 		ValidArgsFunction: cobra.NoFileCompletions,
 		RunE:              cmd.run,
@@ -50,13 +50,13 @@ func SelectCommand(ctx *common.Context) *cobra.Command {
 }
 
 func (cmd *selectCommand) run(_ *cobra.Command, args []string) error {
-	// Read the machine info JSON piped in from the lscompute / show-machine app
+	// Read the machine info YAML (or JSON) piped in from the lscompute / show-machine app
 	data, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		return fmt.Errorf("reading machine info from stdin: %s", err)
 	}
 
-	hardwareInfo, err := machine.Decode(data)
+	hardwareInfo, err := machine.DecodeYAML(data)
 	if err != nil {
 		return fmt.Errorf("decoding machine info: %s", err)
 	}
