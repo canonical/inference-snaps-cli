@@ -56,7 +56,7 @@ func (cmd *selectCommand) run(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("reading machine info from stdin: %s", err)
 	}
 
-	hardwareInfo, err := machine.DecodeYAML(data)
+	machineInfo, err := machine.DecodeYAML(data)
 	if err != nil {
 		return fmt.Errorf("decoding machine info: %s", err)
 	}
@@ -66,7 +66,7 @@ func (cmd *selectCommand) run(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("loading engines from directory: %s", err)
 	}
 
-	scoredEngines, err := selector.ScoreEngines(hardwareInfo, allEngines)
+	scoredEngines, err := selector.ScoreEngines(machineInfo, allEngines)
 	if err != nil {
 		return fmt.Errorf("checking engines: %s", err)
 	}

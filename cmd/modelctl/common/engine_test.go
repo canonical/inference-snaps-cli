@@ -709,11 +709,11 @@ func TestScoreEnginesLoadManifestsError(t *testing.T) {
 	}
 }
 
-func TestScoreEnginesHardwareInfoError(t *testing.T) {
+func TestScoreEnginesMachineInfoError(t *testing.T) {
 	// Set up an engines dir so LoadManifests succeeds (returns empty slice)
-	orig := hardwareInfoGet
-	t.Cleanup(func() { hardwareInfoGet = orig })
-	hardwareInfoGet = func(host.Host, bool) (*machine.MachineInfo, []string, error) {
+	orig := machineInfoGet
+	t.Cleanup(func() { machineInfoGet = orig })
+	machineInfoGet = func(host.Host, bool) (*machine.MachineInfo, []string, error) {
 		return nil, nil, errors.New("hw error")
 	}
 
@@ -729,13 +729,13 @@ func TestScoreEnginesHardwareInfoError(t *testing.T) {
 }
 
 func TestScoreEnginesScorerError(t *testing.T) {
-	origGet := hardwareInfoGet
+	origGet := machineInfoGet
 	origScorer := engineScorer
 	t.Cleanup(func() {
-		hardwareInfoGet = origGet
+		machineInfoGet = origGet
 		engineScorer = origScorer
 	})
-	hardwareInfoGet = func(host.Host, bool) (*machine.MachineInfo, []string, error) {
+	machineInfoGet = func(host.Host, bool) (*machine.MachineInfo, []string, error) {
 		return &machine.MachineInfo{}, nil, nil
 	}
 	engineScorer = func(*machine.MachineInfo, []engines.Manifest) ([]engines.ScoredManifest, error) {
@@ -754,13 +754,13 @@ func TestScoreEnginesScorerError(t *testing.T) {
 }
 
 func TestScoreEnginesSuccess(t *testing.T) {
-	origGet := hardwareInfoGet
+	origGet := machineInfoGet
 	origScorer := engineScorer
 	t.Cleanup(func() {
-		hardwareInfoGet = origGet
+		machineInfoGet = origGet
 		engineScorer = origScorer
 	})
-	hardwareInfoGet = func(host.Host, bool) (*machine.MachineInfo, []string, error) {
+	machineInfoGet = func(host.Host, bool) (*machine.MachineInfo, []string, error) {
 		return &machine.MachineInfo{}, []string{"a warning"}, nil
 	}
 	want := []engines.ScoredManifest{{Manifest: engines.Manifest{Name: "mock-engine"}}}
@@ -792,13 +792,13 @@ func TestScoreEnginesSuccess(t *testing.T) {
 // ---- ScoreEnginesWithSpinner ----
 
 func TestScoreEnginesWithSpinnerSuccess(t *testing.T) {
-	origGet := hardwareInfoGet
+	origGet := machineInfoGet
 	origScorer := engineScorer
 	t.Cleanup(func() {
-		hardwareInfoGet = origGet
+		machineInfoGet = origGet
 		engineScorer = origScorer
 	})
-	hardwareInfoGet = func(host.Host, bool) (*machine.MachineInfo, []string, error) {
+	machineInfoGet = func(host.Host, bool) (*machine.MachineInfo, []string, error) {
 		return &machine.MachineInfo{}, nil, nil
 	}
 	engineScorer = func(*machine.MachineInfo, []engines.Manifest) ([]engines.ScoredManifest, error) {
@@ -817,13 +817,13 @@ func TestScoreEnginesWithSpinnerSuccess(t *testing.T) {
 }
 
 func TestScoreEnginesWithSpinnerVerboseWarnings(t *testing.T) {
-	origGet := hardwareInfoGet
+	origGet := machineInfoGet
 	origScorer := engineScorer
 	t.Cleanup(func() {
-		hardwareInfoGet = origGet
+		machineInfoGet = origGet
 		engineScorer = origScorer
 	})
-	hardwareInfoGet = func(host.Host, bool) (*machine.MachineInfo, []string, error) {
+	machineInfoGet = func(host.Host, bool) (*machine.MachineInfo, []string, error) {
 		return &machine.MachineInfo{}, []string{"warning1", "warning2"}, nil
 	}
 	engineScorer = func(*machine.MachineInfo, []engines.Manifest) ([]engines.ScoredManifest, error) {

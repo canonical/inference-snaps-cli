@@ -83,12 +83,12 @@ func TestTopEngine(t *testing.T) {
 				manifests = append(manifests, manifest)
 			}
 
-			hardwareInfo, err := machineInfoFixture(testSet.machine)
+			machineInfo, err := machineInfoFixture(testSet.machine)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			scoredEngines, err := ScoreEngines(hardwareInfo, manifests)
+			scoredEngines, err := ScoreEngines(machineInfo, manifests)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -121,12 +121,12 @@ func TestMatchReasonsCpu(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	hardwareInfo, err := machineInfoFixture("xps13-9350")
+	machineInfo, err := machineInfoFixture("xps13-9350")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	scoredEngines, err := ScoreEngines(hardwareInfo, []engines.Manifest{manifest})
+	scoredEngines, err := ScoreEngines(machineInfo, []engines.Manifest{manifest})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -157,12 +157,12 @@ func TestMatchReasonsPci(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	hardwareInfo, err := machineInfoFixture("xps13-9350")
+	machineInfo, err := machineInfoFixture("xps13-9350")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	scoredEngines, err := ScoreEngines(hardwareInfo, []engines.Manifest{manifest})
+	scoredEngines, err := ScoreEngines(machineInfo, []engines.Manifest{manifest})
 	if err != nil {
 		t.Fatal(err)
 	}

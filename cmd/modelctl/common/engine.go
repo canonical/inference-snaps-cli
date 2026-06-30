@@ -186,11 +186,11 @@ func UnsetEngineConfig(engineName string, unsetUserOverrides bool, ctx *Context)
 	return nil
 }
 
-// hardwareInfoGet and engineScorer are package-level variables so tests can
+// machineInfoGet and engineScorer are package-level variables so tests can
 // inject fakes without changing any production behaviour.
 var (
-	hardwareInfoGet = machine.Get
-	engineScorer    = selector.ScoreEngines
+	machineInfoGet = machine.Get
+	engineScorer   = selector.ScoreEngines
 )
 
 /*
@@ -205,7 +205,7 @@ func ScoreEngines(ctx *Context) ([]engines.ScoredManifest, []string, error) {
 		return nil, nil, fmt.Errorf("loading engines: %w", err)
 	}
 
-	machineInfo, warnings, err := hardwareInfoGet(host.Real(), false)
+	machineInfo, warnings, err := machineInfoGet(host.Real(), false)
 	if err != nil {
 		return nil, nil, fmt.Errorf("getting machine info: %w", err)
 	}
