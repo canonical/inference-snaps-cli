@@ -165,7 +165,7 @@ func ExampleUseEngine_autoSelectEngine() {
 		}
 		allEngines = append(allEngines, *e)
 	}
-	machine, err := machineInfo("mustang")
+	machine, err := machineInfoFixture("mustang")
 	if err != nil {
 		panic(err)
 	}

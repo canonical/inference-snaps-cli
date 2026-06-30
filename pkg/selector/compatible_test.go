@@ -171,7 +171,6 @@ var validInvalidSets = map[string]testValidInvalid{
 		},
 	},
 
-
 	"cuda-generic": {
 		ValidMachines: []string{
 			"system76-addw4",
@@ -323,7 +322,7 @@ func TestEngine(t *testing.T) {
 func testValidHw(t *testing.T, engineName string, hwName string) {
 	manifestFile := fmt.Sprintf("../../test_data/engines/%s/%s", engineName, engines.ManifestFilename)
 
-	hardwareInfo, err := machineInfo(hwName)
+	hardwareInfo, err := machineInfoFixture(hwName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -356,7 +355,7 @@ func testValidHw(t *testing.T, engineName string, hwName string) {
 func testInvalidHw(t *testing.T, engineName string, hwName string) {
 	manifestFile := fmt.Sprintf("../../test_data/engines/%s/%s", engineName, engines.ManifestFilename)
 
-	hardwareInfo, err := machineInfo(hwName)
+	hardwareInfo, err := machineInfoFixture(hwName)
 	if err != nil {
 		t.Fatal(err)
 	}

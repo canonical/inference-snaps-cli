@@ -11,10 +11,10 @@ import (
 	"github.com/canonical/lscompute/pkg/machine/types"
 )
 
-// machineInfo returns an in-code MachineInfo fixture for the named machine.
+// machineInfoFixture returns an in-code MachineInfo fixture for the named machine.
 // PCI devices are trimmed to those relevant to engine matching (GPUs,
 // accelerators, or devices carrying additional properties).
-func machineInfo(name string) (*machine.MachineInfo, error) {
+func machineInfoFixture(name string) (*machine.MachineInfo, error) {
 	switch name {
 	case "ampere-one-m-banshee-12":
 		return &machine.MachineInfo{

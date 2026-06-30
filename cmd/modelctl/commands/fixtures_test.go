@@ -11,10 +11,8 @@ import (
 	"github.com/canonical/lscompute/pkg/machine/types"
 )
 
-// machineInfo returns a small, hand-built MachineInfo fixture for the named
-// machine. These replace the old hardware_info.GetFromRawData(test_data)
-// helper so the modelctl command tests no longer depend on captured fixtures.
-func machineInfo(name string) (*machine.MachineInfo, error) {
+// machineInfoFixture returns a small, hand-built MachineInfo fixture for the named machine.
+func machineInfoFixture(name string) (*machine.MachineInfo, error) {
 	switch name {
 	case "dummy-machine":
 		return &machine.MachineInfo{

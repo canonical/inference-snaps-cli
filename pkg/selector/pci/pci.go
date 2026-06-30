@@ -17,10 +17,10 @@ type pciDevice struct {
 	Score int
 }
 
-func Match(manifestDevice engines.Device, hostDevices *machine.MachineInfo) (maxDeviceScore int, deviceIssues []string) {
+func Match(manifestDevice engines.Device, machineInfo *machine.MachineInfo) (maxDeviceScore int, deviceIssues []string) {
 	maxDeviceScore = 0
 
-	hostPciDevices := pciDevices(hostDevices)
+	hostPciDevices := pciDevices(machineInfo)
 
 	if len(hostPciDevices) == 0 {
 		deviceIssues = append(deviceIssues, "no pci devices on host system")
@@ -43,8 +43,7 @@ func Match(manifestDevice engines.Device, hostDevices *machine.MachineInfo) (max
 	return
 }
 
-// pciDevices returns the PCI devices from a machine's device list, skipping
-// any non-PCI devices.
+// pciDevices returns the PCI devices from a machine's info, skipping any non-PCI devices.
 func pciDevices(info *machine.MachineInfo) []pciDevice {
 	var devices []pciDevice
 	for _, device := range info.Devices {

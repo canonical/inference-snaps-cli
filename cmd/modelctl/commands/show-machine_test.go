@@ -8,7 +8,7 @@ import (
 
 func Example_showMachineCommand_printMachineInfoJson() {
 	cmd := showMachineCommand{format: "json"}
-	info, err := machineInfo("dummy-machine")
+	info, err := machineInfoFixture("dummy-machine")
 	if err != nil {
 		panic(err)
 	}
@@ -61,7 +61,7 @@ func Example_showMachineCommand_printMachineInfoJson() {
 
 func Example_showMachineCommand_printMachineInfoYaml() {
 	cmd := showMachineCommand{format: "yaml"}
-	info, err := machineInfo("dummy-machine")
+	info, err := machineInfoFixture("dummy-machine")
 	if err != nil {
 		panic(err)
 	}

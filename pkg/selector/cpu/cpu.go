@@ -14,7 +14,7 @@ import (
 /*
 Match takes a Device with type CPU, and checks if it matches any of the CPU models reported for the system.
 A score, a string slice with reasons and an error are returned. If there is a matching CPU on the system, the score will be positive and the error will be nil.
-If no CPU is found, the score will be zero and there will be one or more reasons for the mismatch. In case of a runtime error, the error value will be non-nil.
+If no CPU is found, the score will be zero and there will be one or more reasons for the mismatch.
 */
 func Match(manifestDevice engines.Device, machineInfo *machine.MachineInfo) (maxCpuScore int, deviceIssues []string) {
 	maxCpuScore = 0

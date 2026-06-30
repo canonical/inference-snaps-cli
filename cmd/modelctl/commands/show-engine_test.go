@@ -45,7 +45,7 @@ func scoreEngineAgainstMachine(engineName string, machineName string) (*engines.
 	if err != nil {
 		return nil, fmt.Errorf("failed to load engine manifest: %v", err)
 	}
-	info, err := machineInfo(machineName)
+	info, err := machineInfoFixture(machineName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get hardware info: %v", err)
 	}

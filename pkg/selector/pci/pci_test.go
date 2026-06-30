@@ -24,13 +24,15 @@ func TestCheckGpuVendor(t *testing.T) {
 		},
 	}
 
+	testPciDevices := []pciDevice{{Device: hwInfoGpu}}
+
 	device := engines.Device{
 		Type:     "gpu",
 		Bus:      "pci",
 		VendorId: &gpuVendorId,
 	}
 
-	availableDevices := filterPciDevices([]pciDevice{{Device: hwInfoGpu}}, device.VendorId, device.DeviceId)
+	availableDevices := filterPciDevices(testPciDevices, device.VendorId, device.DeviceId)
 	_, scoreIssues := scorePciDevices(device, availableDevices)
 	if len(scoreIssues) != 0 {
 		t.Fatalf("GPU vendor should match: %s", strings.Join(scoreIssues, ", "))
@@ -38,14 +40,14 @@ func TestCheckGpuVendor(t *testing.T) {
 
 	// Same value, upper case string
 	gpuVendorId = types.HexInt(0xB33F)
-	availableDevices = filterPciDevices([]pciDevice{{Device: hwInfoGpu}}, device.VendorId, device.DeviceId)
+	availableDevices = filterPciDevices(testPciDevices, device.VendorId, device.DeviceId)
 	_, scoreIssues = scorePciDevices(device, availableDevices)
 	if len(scoreIssues) != 0 {
 		t.Fatalf("GPU vendor should match: %s", strings.Join(scoreIssues, ", "))
 	}
 
 	gpuVendorId = types.HexInt(0x1337)
-	availableDevices = filterPciDevices([]pciDevice{{Device: hwInfoGpu}}, device.VendorId, device.DeviceId)
+	availableDevices = filterPciDevices(testPciDevices, device.VendorId, device.DeviceId)
 	_, scoreIssues = scorePciDevices(device, availableDevices)
 	if len(scoreIssues) == 0 {
 		t.Fatalf("GPU vendor should NOT match")
@@ -65,6 +67,8 @@ func TestCheckGpuVram(t *testing.T) {
 		},
 	}
 
+	testPciDevices := []pciDevice{{Device: hwInfoGpu}}
+
 	requiredVram := "4G"
 	device := engines.Device{
 		Type:     "gpu",
@@ -73,14 +77,14 @@ func TestCheckGpuVram(t *testing.T) {
 		VRam:     &requiredVram,
 	}
 
-	availableDevices := filterPciDevices([]pciDevice{{Device: hwInfoGpu}}, device.VendorId, device.DeviceId)
+	availableDevices := filterPciDevices(testPciDevices, device.VendorId, device.DeviceId)
 	scoredDevices, scoreIssues := scorePciDevices(device, availableDevices)
 	if len(scoreIssues) != 0 {
 		t.Fatalf("GPU vram should be enough: %s", strings.Join(scoreIssues, ", "))
 	}
 
 	requiredVram = "24G"
-	availableDevices = filterPciDevices([]pciDevice{{Device: hwInfoGpu}}, device.VendorId, device.DeviceId)
+	availableDevices = filterPciDevices(testPciDevices, device.VendorId, device.DeviceId)
 	scoredDevices, scoreIssues = scorePciDevices(device, availableDevices)
 	if len(scoreIssues) == 0 || scoredDevices[0].Score != 0 {
 		t.Fatalf("GPU vram should NOT be enough")
@@ -99,6 +103,8 @@ func TestCheckNpuDriver(t *testing.T) {
 		SubdeviceId: nil,
 	}
 
+	testPciDevices := []pciDevice{{Device: hwInfo}}
+
 	device := engines.Device{
 		Bus:             "pci",
 		VendorId:        &npuVendorId,
@@ -106,7 +112,7 @@ func TestCheckNpuDriver(t *testing.T) {
 		SnapConnections: []string{"intel-npu", "npu-libs"},
 	}
 
-	availableDevices := filterPciDevices([]pciDevice{{Device: hwInfo}}, device.VendorId, device.DeviceId)
+	availableDevices := filterPciDevices(testPciDevices, device.VendorId, device.DeviceId)
 	_, scoreIssues := scorePciDevices(device, availableDevices)
 	if len(scoreIssues) != 0 {
 		t.Fatalf("NPU with driver should match: %s", strings.Join(scoreIssues, ", "))
@@ -124,6 +130,8 @@ func TestCheckMicroarchitecture(t *testing.T) {
 		},
 	}
 
+	testPciDevices := []pciDevice{{Device: hwInfoGpu}}
+
 	requiredMicroarchitecture := "gfx1152"
 	device := engines.Device{
 		Type:              "gpu",
@@ -132,14 +140,14 @@ func TestCheckMicroarchitecture(t *testing.T) {
 		Microarchitecture: &requiredMicroarchitecture,
 	}
 
-	availableDevices := filterPciDevices([]pciDevice{{Device: hwInfoGpu}}, device.VendorId, device.DeviceId)
+	availableDevices := filterPciDevices(testPciDevices, device.VendorId, device.DeviceId)
 	scoredDevices, scoreIssues := scorePciDevices(device, availableDevices)
 	if len(scoreIssues) != 0 {
 		t.Fatalf("GPU microarchitecture should match: %s", strings.Join(scoreIssues, ", "))
 	}
 
 	requiredMicroarchitecture = "gfx2200"
-	availableDevices = filterPciDevices([]pciDevice{{Device: hwInfoGpu}}, device.VendorId, device.DeviceId)
+	availableDevices = filterPciDevices(testPciDevices, device.VendorId, device.DeviceId)
 	scoredDevices, scoreIssues = scorePciDevices(device, availableDevices)
 	if len(scoreIssues) == 0 || scoredDevices[0].Score != 0 {
 		t.Fatalf("GPU microarchitecture should NOT match")

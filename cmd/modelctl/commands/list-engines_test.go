@@ -23,7 +23,7 @@ func prepareTestData() (*listEnginesCommand, *outputEngines, error) {
 		return nil, nil, fmt.Errorf("error loading engines: %v", err)
 	}
 
-	hardwareInfo, err := machineInfo("xps13-7390")
+	hardwareInfo, err := machineInfoFixture("xps13-7390")
 	if err != nil {
 		return nil, nil, fmt.Errorf("error getting hardware info: %v", err)
 	}
