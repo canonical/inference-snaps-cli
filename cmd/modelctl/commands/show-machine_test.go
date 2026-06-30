@@ -88,15 +88,15 @@ func Example_showMachineCommand_printMachineInfoYaml() {
 	// devices:
 	//     - bus: pci
 	//       slot: "0000:00:00.0"
-	//       busnumber: "0x0"
-	//       deviceclass: "0x600"
-	//       programminginterface: 0
-	//       vendorid: "0x8086"
-	//       deviceid: "0x4637"
-	//       subvendorid: "0x103C"
-	//       subdeviceid: "0x89C6"
-	//       vendorname: Intel Corporation
-	//       subvendorname: Hewlett-Packard Company
+	//       bus-number: "0x0"
+	//       device-class: "0x600"
+	//       programming-interface: 0
+	//       vendor-id: "0x8086"
+	//       device-id: "0x4637"
+	//       subvendor-id: "0x103C"
+	//       subdevice-id: "0x89C6"
+	//       vendor-name: Intel Corporation
+	//       subvendor-name: Hewlett-Packard Company
 }
 
 func Test_printMachineInfo_unknownFormat(t *testing.T) {
