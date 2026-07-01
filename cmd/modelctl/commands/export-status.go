@@ -20,7 +20,8 @@ func ExportStatus(ctx *common.Context) *cobra.Command {
 
 	cobraCmd := &cobra.Command{
 		Use:               "export-status",
-		Short:             "Export the current status to a share directory",
+		Short:             "Export the current status",
+		Long:              "Write the current status to status.json. It is stored in $SNAP_COMMON/share, unless a directory is passed as the first argument.",
 		Hidden:            true,
 		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: cobra.NoFileCompletions,
@@ -35,9 +36,9 @@ type exportedStatus struct {
 	Model     map[string]string `json:"model,omitempty" yaml:"model,omitempty"`
 }
 
-// Deprecated: sharedOpenai is to be deprecated in favor of exportedStatus.
+// Deprecated: exportedOpenai is to be deprecated in favor of exportedStatus.
 // The Open WebUI snap first needs to be updated to consume exportedStatus
-type sharedOpenai struct {
+type exportedOpenai struct {
 	BaseUrl string `json:"base_url"`
 }
 
@@ -54,7 +55,6 @@ func (cmd *exportStatusCommand) run(_ *cobra.Command, args []string) error {
 		Model:     statusStr.Model,
 	}
 
-	// Default to $SNAP_COMMON/share unless a directory is passed as the first argument
 	var shareDir string
 	if len(args) > 0 {
 		shareDir = args[0]
@@ -88,7 +88,7 @@ func writeShareFiles(status *exportedStatus, shareDir string) error {
 	// Deprecated: Write openai.json for backwards compatibility while Open WebUI snap is not updated
 	openaiFilePath := filepath.Join(shareDir, "openai.json")
 	if endpoint, ok := status.Endpoints["openai"]; ok {
-		myOpenaiConfig := &sharedOpenai{
+		myOpenaiConfig := &exportedOpenai{
 			BaseUrl: endpoint,
 		}
 		openaiJson, err := json.Marshal(myOpenaiConfig)

@@ -11,9 +11,11 @@ adopt-info: version
 slots:
   status:
     interface: content
+    content: inference-snap-status
     source:
       read:
         - $SNAP_COMMON/share
+  # Deprecated: remove when Open WebUI uses inference-snap-status
   open-webui:
     interface: content
     content: open-webui-config

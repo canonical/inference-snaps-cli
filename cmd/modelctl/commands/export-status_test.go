@@ -49,7 +49,7 @@ func TestWriteShareFiles_writesOpenaiJsonWhenEndpointPresent(t *testing.T) {
 		t.Fatalf("reading openai.json: %v", err)
 	}
 
-	var got sharedOpenai
+	var got exportedOpenai
 	if err := json.Unmarshal(data, &got); err != nil {
 		t.Fatalf("unmarshalling openai.json: %v", err)
 	}
