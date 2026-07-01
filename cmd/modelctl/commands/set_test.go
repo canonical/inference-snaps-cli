@@ -143,13 +143,16 @@ func TestValidateEnvKeys(t *testing.T) {
 		"valid env key with digits": {
 			input: map[string]string{"env.my-var-2": "value"},
 		},
+		"valid env key starting with a hyphen": {
+			input: map[string]string{"env.-var": "value"},
+		},
 		"env key with dot is rejected": {
 			input:       map[string]string{"env.a.b": "c"},
-			errContains: "must start with a lowercase letter",
+			errContains: "must not start with a digit",
 		},
 		"env key with trailing dot is rejected": {
 			input:       map[string]string{"env.var.": "value"},
-			errContains: "must start with a lowercase letter",
+			errContains: "must not start with a digit",
 		},
 		"env key with empty name is rejected": {
 			input:       map[string]string{"env.": "value"},
@@ -157,31 +160,27 @@ func TestValidateEnvKeys(t *testing.T) {
 		},
 		"env key with uppercase letters is rejected": {
 			input:       map[string]string{"env.AAA": "value"},
-			errContains: "must start with a lowercase letter",
+			errContains: "must not start with a digit",
 		},
 		"env key with mixed case is rejected": {
 			input:       map[string]string{"env.MyVar": "value"},
-			errContains: "must start with a lowercase letter",
+			errContains: "must not start with a digit",
 		},
 		"env key with underscore is rejected": {
 			input:       map[string]string{"env.x_y": "value"},
-			errContains: "must start with a lowercase letter",
+			errContains: "must not start with a digit",
 		},
 		"env key with plus is rejected": {
 			input:       map[string]string{"env.x+y": "value"},
-			errContains: "must start with a lowercase letter",
+			errContains: "must not start with a digit",
 		},
 		"env key with tilde is rejected": {
 			input:       map[string]string{"env.x~y": "value"},
-			errContains: "must start with a lowercase letter",
+			errContains: "must not start with a digit",
 		},
 		"env key starting with a digit is rejected": {
 			input:       map[string]string{"env.1var": "value"},
-			errContains: "must start with a lowercase letter",
-		},
-		"env key starting with a hyphen is rejected": {
-			input:       map[string]string{"env.-var": "value"},
-			errContains: "must start with a lowercase letter",
+			errContains: "must not start with a digit",
 		},
 	}
 

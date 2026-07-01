@@ -135,16 +135,16 @@ func (cmd *setCommand) setUserConfigs(keyValues map[string]string) error {
 }
 
 // envKeyNameRegex matches the allowed format for the name portion of an env key
-// (the part after the env prefix). The name must start with a lowercase letter
-// and may only contain lowercase letters, digits, and hyphens.
-var envKeyNameRegex = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
+// (the part after the env prefix). The name may only contain lowercase letters,
+// digits, and hyphens, and must not start with a digit.
+var envKeyNameRegex = regexp.MustCompile(`^[a-z-][a-z0-9-]*$`)
 
 // validateEnvKeys rejects env keys whose name (the part after the env prefix)
 // does not conform to the allowed format. Env keys are normalized when exported
 // as environment variables: lowercase letters are uppercased and hyphens are
-// replaced with underscores. Restricting the name to a lowercase letter
-// followed by lowercase letters, digits, and hyphens keeps the resulting
-// environment variable name valid and avoids ambiguous or colliding keys.
+// replaced with underscores. Restricting the name to lowercase letters, digits,
+// and hyphens (not starting with a digit) keeps the resulting environment
+// variable name valid and avoids ambiguous or colliding keys.
 func validateEnvKeys(keyValues map[string]string) error {
 	for key := range keyValues {
 		name, ok := strings.CutPrefix(key, storage.EnvKeyPrefix)
@@ -155,7 +155,7 @@ func validateEnvKeys(keyValues map[string]string) error {
 			return fmt.Errorf("invalid key %q: environment variable name must not be empty", key)
 		}
 		if !envKeyNameRegex.MatchString(name) {
-			return fmt.Errorf("invalid key %q: name must start with a lowercase letter and contain only lowercase letters, digits, and hyphens", key)
+			return fmt.Errorf("invalid key %q: name must contain only lowercase letters, digits, and hyphens, and must not start with a digit", key)
 		}
 	}
 	return nil
