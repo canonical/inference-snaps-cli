@@ -10,7 +10,7 @@ import (
 func TestWriteShareFiles_writesStatusJson(t *testing.T) {
 	dir := t.TempDir()
 
-	status := &sharedStatus{
+	status := &exportedStatus{
 		Engine:   "cpu",
 		Services: map[string]string{"inference": "active"},
 	}
@@ -24,7 +24,7 @@ func TestWriteShareFiles_writesStatusJson(t *testing.T) {
 		t.Fatalf("reading status.json: %v", err)
 	}
 
-	var got sharedStatus
+	var got exportedStatus
 	if err := json.Unmarshal(data, &got); err != nil {
 		t.Fatalf("unmarshalling status.json: %v", err)
 	}
@@ -40,7 +40,7 @@ func TestWriteShareFiles_writesStatusJson(t *testing.T) {
 func TestWriteShareFiles_writesOpenaiJsonWhenEndpointPresent(t *testing.T) {
 	dir := t.TempDir()
 
-	status := &sharedStatus{
+	status := &exportedStatus{
 		Engine:    "cpu",
 		Services:  map[string]string{},
 		Endpoints: map[string]string{"openai": "http://localhost:8080/v1"},
@@ -68,7 +68,7 @@ func TestWriteShareFiles_writesOpenaiJsonWhenEndpointPresent(t *testing.T) {
 func TestWriteShareFiles_noOpenaiJsonWhenEndpointAbsent(t *testing.T) {
 	dir := t.TempDir()
 
-	status := &sharedStatus{
+	status := &exportedStatus{
 		Engine:   "cpu",
 		Services: map[string]string{},
 	}
@@ -86,7 +86,7 @@ func TestWriteShareFiles_removesStaleOpenaiJsonWhenEndpointDropped(t *testing.T)
 	dir := t.TempDir()
 
 	// First call: endpoint present → openai.json is written.
-	withEndpoint := &sharedStatus{
+	withEndpoint := &exportedStatus{
 		Engine:    "cpu",
 		Services:  map[string]string{},
 		Endpoints: map[string]string{"openai": "http://localhost:8080/v1"},
@@ -99,7 +99,7 @@ func TestWriteShareFiles_removesStaleOpenaiJsonWhenEndpointDropped(t *testing.T)
 	}
 
 	// Second call: endpoint gone → openai.json should be removed.
-	withoutEndpoint := &sharedStatus{
+	withoutEndpoint := &exportedStatus{
 		Engine:   "cpu",
 		Services: map[string]string{},
 	}
@@ -110,4 +110,3 @@ func TestWriteShareFiles_removesStaleOpenaiJsonWhenEndpointDropped(t *testing.T)
 		t.Errorf("expected openai.json to be removed after second call, got: %v", err)
 	}
 }
-

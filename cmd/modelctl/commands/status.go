@@ -81,7 +81,7 @@ func (cmd *statusCommand) run(_ *cobra.Command, _ []string) error {
 }
 
 func (cmd *statusCommand) statusYaml() (string, error) {
-	statusStr, err := common.StatusStruct(cmd.Context)
+	statusStr, err := common.SnapStatus(cmd.Context)
 	if err != nil {
 		return "", fmt.Errorf("getting status: %v", err)
 	}
@@ -93,7 +93,7 @@ func (cmd *statusCommand) statusYaml() (string, error) {
 }
 
 func (cmd *statusCommand) statusJson() (string, error) {
-	statusStr, err := common.StatusStruct(cmd.Context)
+	statusStr, err := common.SnapStatus(cmd.Context)
 	if err != nil {
 		return "", fmt.Errorf("getting status: %v", err)
 	}

@@ -10,19 +10,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type exportConfigCommand struct {
+type exportStatusCommand struct {
 	*common.Context
 }
 
-func ExportConfig(ctx *common.Context) *cobra.Command {
-	var cmd exportConfigCommand
+func ExportStatus(ctx *common.Context) *cobra.Command {
+	var cmd exportStatusCommand
 	cmd.Context = ctx
 
 	cobraCmd := &cobra.Command{
-		Use:               "export-config",
-		Short:             "Export the current configuration",
+		Use:               "export-status",
+		Short:             "Export the current status to a share directory",
 		Hidden:            true,
-		Args:              cobra.NoArgs,
+		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: cobra.NoFileCompletions,
 		RunE:              cmd.run,
 	}
@@ -30,37 +30,35 @@ func ExportConfig(ctx *common.Context) *cobra.Command {
 	return cobraCmd
 }
 
-type sharedStatus struct {
-	Engine    string            `json:"engine" yaml:"engine"`
-	Services  map[string]string `json:"services" yaml:"services"`
+type exportedStatus struct {
 	Endpoints map[string]string `json:"endpoints,omitempty" yaml:"endpoints,omitempty"`
 	Model     map[string]string `json:"model,omitempty" yaml:"model,omitempty"`
 }
 
-// sharedOpenai is to be deprecated in favor of sharedStatus.
-// The Open WebUI snap first needs to be updated to consume sharedStatus
+// Deprecated: sharedOpenai is to be deprecated in favor of exportedStatus.
+// The Open WebUI snap first needs to be updated to consume exportedStatus
 type sharedOpenai struct {
 	BaseUrl string `json:"base_url"`
 }
 
-func (cmd *exportConfigCommand) run(_ *cobra.Command, _ []string) error {
+func (cmd *exportStatusCommand) run(_ *cobra.Command, args []string) error {
 
-	statusStr, err := common.StatusStruct(cmd.Context)
+	statusStr, err := common.SnapStatus(cmd.Context)
 	if err != nil {
 		return fmt.Errorf("getting status: %v", err)
 	}
 
 	// Decouple internal status definition from shared one
-	sharedStatusStr := &sharedStatus{
-		Engine:    statusStr.Engine,
-		Services:  statusStr.Services,
+	sharedStatusStr := &exportedStatus{
 		Endpoints: statusStr.Endpoints,
 		Model:     statusStr.Model,
 	}
 
-	// Default to $SNAP_COMMON/share unless it is overridden by $STATUS_SHARE_DIR
-	shareDir := os.Getenv("STATUS_SHARE_DIR")
-	if shareDir == "" {
+	// Default to $SNAP_COMMON/share unless a directory is passed as the first argument
+	var shareDir string
+	if len(args) > 0 {
+		shareDir = args[0]
+	} else {
 		shareDir = filepath.Join(os.Getenv("SNAP_COMMON"), "share")
 	}
 
@@ -68,7 +66,7 @@ func (cmd *exportConfigCommand) run(_ *cobra.Command, _ []string) error {
 }
 
 // writeShareFiles writes status.json (and optionally openai.json) to shareDir.
-func writeShareFiles(status *sharedStatus, shareDir string) error {
+func writeShareFiles(status *exportedStatus, shareDir string) error {
 	statusJson, err := json.Marshal(status)
 	if err != nil {
 		return fmt.Errorf("json: %v", err)
@@ -87,6 +85,7 @@ func writeShareFiles(status *sharedStatus, shareDir string) error {
 		return fmt.Errorf("renaming status.json: %v", err)
 	}
 
+	// Deprecated: Write openai.json for backwards compatibility while Open WebUI snap is not updated
 	openaiFilePath := filepath.Join(shareDir, "openai.json")
 	if endpoint, ok := status.Endpoints["openai"]; ok {
 		myOpenaiConfig := &sharedOpenai{
@@ -96,13 +95,13 @@ func writeShareFiles(status *sharedStatus, shareDir string) error {
 		if err != nil {
 			return fmt.Errorf("json: %v", err)
 		}
-			tmpOpenaiFilePath := openaiFilePath + ".tmp"
-			if err := os.WriteFile(tmpOpenaiFilePath, openaiJson, 0o644); err != nil {
-				return fmt.Errorf("writing openai.json: %v", err)
-			}
-			if err := os.Rename(tmpOpenaiFilePath, openaiFilePath); err != nil {
-				return fmt.Errorf("renaming openai.json: %v", err)
-			}
+		tmpOpenaiFilePath := openaiFilePath + ".tmp"
+		if err := os.WriteFile(tmpOpenaiFilePath, openaiJson, 0o644); err != nil {
+			return fmt.Errorf("writing openai.json: %v", err)
+		}
+		if err := os.Rename(tmpOpenaiFilePath, openaiFilePath); err != nil {
+			return fmt.Errorf("renaming openai.json: %v", err)
+		}
 	} else if err := os.Remove(openaiFilePath); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("removing openai.json: %v", err)
 	}

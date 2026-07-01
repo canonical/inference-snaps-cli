@@ -9,11 +9,7 @@ type Status struct {
 	Model     map[string]string `json:"model,omitempty" yaml:"model,omitempty"`
 }
 
-// serviceStatusesFn is the function used to retrieve service statuses.
-// It can be overridden in tests.
-var serviceStatusesFn = ServiceStatuses
-
-func StatusStruct(ctx *Context) (*Status, error) {
+func SnapStatus(ctx *Context) (*Status, error) {
 	var statusStr Status
 
 	activeEngineName, err := ctx.Cache.GetActiveEngine()
@@ -25,7 +21,7 @@ func StatusStruct(ctx *Context) (*Status, error) {
 	}
 	statusStr.Engine = activeEngineName
 
-	services, err := serviceStatusesFn()
+	services, err := ctx.Snap.ServiceStatuses()
 	if err != nil {
 		return nil, fmt.Errorf("getting service statuses: %v", err)
 	}

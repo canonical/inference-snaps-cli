@@ -4,17 +4,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/canonical/inference-snaps-cli/v2/pkg/snap"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
 )
 
 func TestStatusStruct(t *testing.T) {
-	// Stub out ServiceStatuses so the test never calls snapctl.
-	orig := serviceStatusesFn
-	defer func() { serviceStatusesFn = orig }()
-	serviceStatusesFn = func() (map[string]string, error) {
-		return map[string]string{"llama-server": "active"}, nil
-	}
-
 	enginesDir := t.TempDir()
 	runtimesDir := t.TempDir()
 	modelsDir := t.TempDir()
@@ -49,9 +43,10 @@ runtime: my-runtime
 		ModelsDir:   modelsDir,
 		Cache:       cache,
 		Config:      config,
+		Snap:        snap.MockWithServiceStatuses(map[string]string{"llama-server": "active"}),
 	}
 
-	status, err := StatusStruct(ctx)
+	status, err := SnapStatus(ctx)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -71,19 +66,14 @@ runtime: my-runtime
 }
 
 func TestStatusStruct_NoActiveEngine(t *testing.T) {
-	orig := serviceStatusesFn
-	defer func() { serviceStatusesFn = orig }()
-	serviceStatusesFn = func() (map[string]string, error) {
-		return map[string]string{}, nil
-	}
-
 	cache := storage.NewMockCache()
 	ctx := &Context{
 		Cache:  cache,
 		Config: storage.NewMockConfig(),
+		Snap:   snap.Mock(),
 	}
 
-	_, err := StatusStruct(ctx)
+	_, err := SnapStatus(ctx)
 	if err == nil {
 		t.Fatal("expected error for no active engine, got nil")
 	}
@@ -91,4 +81,3 @@ func TestStatusStruct_NoActiveEngine(t *testing.T) {
 		t.Errorf("unexpected error: %v", err)
 	}
 }
-
