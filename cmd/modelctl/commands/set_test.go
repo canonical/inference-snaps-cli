@@ -152,6 +152,14 @@ func TestValidateEnvKeys(t *testing.T) {
 			input:       map[string]string{"env.": "value"},
 			errContains: "must not be empty",
 		},
+		"env key with uppercase letters is rejected": {
+			input:       map[string]string{"env.AAA": "value"},
+			errContains: "uppercase letters are not allowed",
+		},
+		"env key with mixed case is rejected": {
+			input:       map[string]string{"env.MyVar": "value"},
+			errContains: "uppercase letters are not allowed",
+		},
 	}
 
 	for testName, testCase := range tests {

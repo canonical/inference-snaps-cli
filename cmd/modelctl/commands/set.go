@@ -134,9 +134,10 @@ func (cmd *setCommand) setUserConfigs(keyValues map[string]string) error {
 }
 
 // validateEnvKeys rejects env keys that would result in invalid environment
-// variable names. The name (the part after the env prefix) must not be empty
-// and must not contain dots, since dots are not valid characters in
-// environment variable names.
+// variable names. The name (the part after the env prefix) must not be empty,
+// must not contain dots, since dots are not valid characters in environment
+// variable names, and must not contain uppercase letters since they are
+// converted to uppercase when set as environment variables.
 func validateEnvKeys(keyValues map[string]string) error {
 	for key := range keyValues {
 		name, ok := strings.CutPrefix(key, storage.EnvKeyPrefix)
@@ -148,6 +149,9 @@ func validateEnvKeys(keyValues map[string]string) error {
 		}
 		if strings.Contains(name, ".") {
 			return fmt.Errorf("invalid key %q: dots are not allowed in environment variable names", key)
+		}
+		if strings.ToLower(name) != name {
+			return fmt.Errorf("invalid key %q: uppercase letters are not allowed in environment variable names", key)
 		}
 	}
 	return nil
