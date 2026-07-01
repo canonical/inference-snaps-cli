@@ -11,8 +11,7 @@ func TestWriteShareFiles_writesStatusJson(t *testing.T) {
 	dir := t.TempDir()
 
 	status := &exportedStatus{
-		Engine:   "cpu",
-		Services: map[string]string{"inference": "active"},
+		Endpoints: map[string]string{"openai": "http://localhost:8080/v1"},
 	}
 
 	if err := writeShareFiles(status, dir); err != nil {
@@ -29,11 +28,8 @@ func TestWriteShareFiles_writesStatusJson(t *testing.T) {
 		t.Fatalf("unmarshalling status.json: %v", err)
 	}
 
-	if got.Engine != "cpu" {
-		t.Errorf("engine = %q, want %q", got.Engine, "cpu")
-	}
-	if got.Services["inference"] != "active" {
-		t.Errorf("services[inference] = %q, want %q", got.Services["inference"], "active")
+	if got.Endpoints["openai"] != "http://localhost:8080/v1" {
+		t.Errorf("endpoints[openai] = %q, want %q", got.Endpoints["openai"], "http://localhost:8080/v1")
 	}
 }
 
@@ -41,8 +37,6 @@ func TestWriteShareFiles_writesOpenaiJsonWhenEndpointPresent(t *testing.T) {
 	dir := t.TempDir()
 
 	status := &exportedStatus{
-		Engine:    "cpu",
-		Services:  map[string]string{},
 		Endpoints: map[string]string{"openai": "http://localhost:8080/v1"},
 	}
 
@@ -68,10 +62,7 @@ func TestWriteShareFiles_writesOpenaiJsonWhenEndpointPresent(t *testing.T) {
 func TestWriteShareFiles_noOpenaiJsonWhenEndpointAbsent(t *testing.T) {
 	dir := t.TempDir()
 
-	status := &exportedStatus{
-		Engine:   "cpu",
-		Services: map[string]string{},
-	}
+	status := &exportedStatus{}
 
 	if err := writeShareFiles(status, dir); err != nil {
 		t.Fatalf("writeShareFiles returned error: %v", err)
@@ -87,8 +78,6 @@ func TestWriteShareFiles_removesStaleOpenaiJsonWhenEndpointDropped(t *testing.T)
 
 	// First call: endpoint present → openai.json is written.
 	withEndpoint := &exportedStatus{
-		Engine:    "cpu",
-		Services:  map[string]string{},
 		Endpoints: map[string]string{"openai": "http://localhost:8080/v1"},
 	}
 	if err := writeShareFiles(withEndpoint, dir); err != nil {
@@ -99,10 +88,7 @@ func TestWriteShareFiles_removesStaleOpenaiJsonWhenEndpointDropped(t *testing.T)
 	}
 
 	// Second call: endpoint gone → openai.json should be removed.
-	withoutEndpoint := &exportedStatus{
-		Engine:   "cpu",
-		Services: map[string]string{},
-	}
+	withoutEndpoint := &exportedStatus{}
 	if err := writeShareFiles(withoutEndpoint, dir); err != nil {
 		t.Fatalf("second writeShareFiles returned error: %v", err)
 	}
