@@ -19,7 +19,7 @@ func ExportStatus(ctx *common.Context) *cobra.Command {
 	cmd.Context = ctx
 
 	cobraCmd := &cobra.Command{
-		Use:               "export-status",
+		Use:               "export-status [<dir>]",
 		Short:             "Export the current status",
 		Long:              "Write the current status to status.json. It is stored in $SNAP_COMMON/share, unless a directory is passed as the first argument.",
 		Hidden:            true,
@@ -62,11 +62,11 @@ func (cmd *exportStatusCommand) run(_ *cobra.Command, args []string) error {
 		shareDir = filepath.Join(os.Getenv("SNAP_COMMON"), "share")
 	}
 
-	return writeShareFiles(sharedStatusStr, shareDir)
+	return cmd.writeShareFiles(sharedStatusStr, shareDir)
 }
 
 // writeShareFiles writes status.json (and optionally openai.json) to shareDir.
-func writeShareFiles(status *exportedStatus, shareDir string) error {
+func (cmd *exportStatusCommand) writeShareFiles(status *exportedStatus, shareDir string) error {
 	statusJson, err := json.Marshal(status)
 	if err != nil {
 		return fmt.Errorf("json: %v", err)
