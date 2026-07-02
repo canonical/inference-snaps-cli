@@ -18,9 +18,9 @@ import (
 )
 
 type Settings struct {
-	Environment    []string                `yaml:"environment"`
-	Layout         map[string]utils.Layout `yaml:"layout"`
-	expandedLayout map[string]utils.Layout
+	Environment    []string                  `yaml:"environment"`
+	Layout         map[string]engines.Layout `yaml:"layout"`
+	expandedLayout map[string]engines.Layout
 }
 
 func EngineSettings(ctx *Context) (*Settings, error) {
@@ -61,7 +61,7 @@ func EngineSettings(ctx *Context) (*Settings, error) {
 	var engineSettings Settings
 	engineSettings.Environment = append(engineSettings.Environment, runtimeManifest.Environment...)
 	engineSettings.Environment = append(engineSettings.Environment, modelManifest.Environment...)
-	engineSettings.Layout = make(map[string]utils.Layout)
+	engineSettings.Layout = make(map[string]engines.Layout)
 	maps.Copy(engineSettings.Layout, runtimeManifest.Layout)
 	maps.Copy(engineSettings.Layout, modelManifest.Layout)
 
@@ -87,9 +87,9 @@ func loadEngineEnvironmentFromSettings(settings *Settings) error {
 		}
 	}
 
-	settings.expandedLayout = make(map[string]utils.Layout, len(settings.Layout))
+	settings.expandedLayout = make(map[string]engines.Layout, len(settings.Layout))
 	for k, v := range settings.Layout {
-		engineLayout := utils.Layout{
+		engineLayout := engines.Layout{
 			Symlink: os.ExpandEnv(v.Symlink),
 		}
 		settings.expandedLayout[os.ExpandEnv(k)] = engineLayout
