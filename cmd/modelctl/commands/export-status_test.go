@@ -14,7 +14,8 @@ func TestWriteShareFiles_writesStatusJson(t *testing.T) {
 		Endpoints: map[string]string{"openai": "http://localhost:8080/v1"},
 	}
 
-	if err := writeShareFiles(status, dir); err != nil {
+	cmd := &exportStatusCommand{}
+	if err := cmd.writeShareFiles(status, dir); err != nil {
 		t.Fatalf("writeShareFiles returned error: %v", err)
 	}
 
@@ -40,7 +41,8 @@ func TestWriteShareFiles_writesOpenaiJsonWhenEndpointPresent(t *testing.T) {
 		Endpoints: map[string]string{"openai": "http://localhost:8080/v1"},
 	}
 
-	if err := writeShareFiles(status, dir); err != nil {
+	cmd := &exportStatusCommand{}
+	if err := cmd.writeShareFiles(status, dir); err != nil {
 		t.Fatalf("writeShareFiles returned error: %v", err)
 	}
 
@@ -64,7 +66,8 @@ func TestWriteShareFiles_noOpenaiJsonWhenEndpointAbsent(t *testing.T) {
 
 	status := &exportedStatus{}
 
-	if err := writeShareFiles(status, dir); err != nil {
+	cmd := &exportStatusCommand{}
+	if err := cmd.writeShareFiles(status, dir); err != nil {
 		t.Fatalf("writeShareFiles returned error: %v", err)
 	}
 
@@ -80,7 +83,8 @@ func TestWriteShareFiles_removesStaleOpenaiJsonWhenEndpointDropped(t *testing.T)
 	withEndpoint := &exportedStatus{
 		Endpoints: map[string]string{"openai": "http://localhost:8080/v1"},
 	}
-	if err := writeShareFiles(withEndpoint, dir); err != nil {
+	cmd := &exportStatusCommand{}
+	if err := cmd.writeShareFiles(withEndpoint, dir); err != nil {
 		t.Fatalf("first writeShareFiles returned error: %v", err)
 	}
 	if _, err := os.Stat(filepath.Join(dir, "openai.json")); err != nil {
@@ -89,7 +93,7 @@ func TestWriteShareFiles_removesStaleOpenaiJsonWhenEndpointDropped(t *testing.T)
 
 	// Second call: endpoint gone → openai.json should be removed.
 	withoutEndpoint := &exportedStatus{}
-	if err := writeShareFiles(withoutEndpoint, dir); err != nil {
+	if err := cmd.writeShareFiles(withoutEndpoint, dir); err != nil {
 		t.Fatalf("second writeShareFiles returned error: %v", err)
 	}
 	if _, err := os.Stat(filepath.Join(dir, "openai.json")); !os.IsNotExist(err) {
