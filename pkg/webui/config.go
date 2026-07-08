@@ -3,7 +3,6 @@ package webui
 import (
 	"fmt"
 	"net/url"
-	"slices"
 )
 
 type Config struct {
@@ -14,13 +13,14 @@ type Config struct {
 }
 
 const (
-	capabilityText         string = "text"
-	capabilityTextMarkdown string = "text:markdown"
-	capabilityVision       string = "vision"
+	capabilityText     string = "text"
+	capabilityVision   string = "vision"
+	capabilityTools    string = "tools"
+	capabilityThinking string = "thinking"
 )
 
 func SupportedCapabilities() []string {
-	return []string{capabilityText, capabilityTextMarkdown, capabilityVision}
+	return []string{capabilityText, capabilityVision, capabilityTools, capabilityThinking}
 }
 
 func (c Config) Validate() error {
@@ -30,12 +30,8 @@ func (c Config) Validate() error {
 		return fmt.Errorf("invalid OpenAI base URL: %w", err)
 	}
 
-	// Validate capabilities
-	for _, cap := range c.Capabilities {
-		if !slices.Contains(SupportedCapabilities(), cap) {
-			return fmt.Errorf("unsupported capability: %q", cap)
-		}
-	}
+	// Capabilities are forwarded as-is; the frontend ignores any it does not
+	// recognize, so unknown capabilities are not rejected here.
 
 	return nil
 }
