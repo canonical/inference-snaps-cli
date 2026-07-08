@@ -26,25 +26,36 @@ func templateManifest() Manifest {
 func TestManifestFiles(t *testing.T) {
 	modelsDir := "../../test_data/models"
 
-	entries, err := os.ReadDir(modelsDir)
+	_, err := os.ReadDir(modelsDir)
 	if err != nil {
 		t.Fatalf("Failed reading models directory: %v", err)
 	}
-
-	for _, entry := range entries {
-		if entry.IsDir() {
-			model := entry.Name()
-			manifestPath := filepath.Join(modelsDir, model, ManifestFilename)
-			t.Run(model, func(t *testing.T) {
-				err = Validate(manifestPath)
-				if err != nil {
-					t.Fatalf("%s: %v", model, err)
-				}
-			})
+	model := "26b-q4-k-m-gguf"
+	manifestPath := filepath.Join(modelsDir, model, ManifestFilename)
+	t.Run(model, func(t *testing.T) {
+		err = Validate(manifestPath)
+		if err != nil {
+			t.Fatalf("%s: %v", model, err)
 		}
-	}
+	})
 }
 
+func TestManifestYamlUnsupportedCapability(t *testing.T) {
+	modelsDir := "../../test_data/models"
+
+	_, err := os.ReadDir(modelsDir)
+	if err != nil {
+		t.Fatalf("Failed reading models directory: %v", err)
+	}
+	model := "30b-a3b-q4-k-m-gguf"
+	manifestPath := filepath.Join(modelsDir, model, ManifestFilename)
+	t.Run(model, func(t *testing.T) {
+		err = Validate(manifestPath)
+		if err == nil {
+			t.Fatalf("%s: expected an error for unsupported capability, got nil", model)
+		}
+	})
+}
 func TestManifestEmpty(t *testing.T) {
 	data := ""
 	err := validateManifestYaml("", []byte(data))
