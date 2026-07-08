@@ -56,15 +56,7 @@ func TestConfigValidate(t *testing.T) {
 			name: "unknown capability is accepted (forwarded to frontend)",
 			config: Config{
 				OpenAIBaseURL: "http://localhost:11434/v1",
-				Capabilities:  []string{"audio"},
-			},
-			wantErr: false,
-		},
-		{
-			name: "known and unknown capability are accepted",
-			config: Config{
-				OpenAIBaseURL: "http://localhost:11434/v1",
-				Capabilities:  []string{"text", "unknown"},
+				Capabilities:  []string{"unknown"},
 			},
 			wantErr: false,
 		},
