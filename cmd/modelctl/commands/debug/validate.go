@@ -21,7 +21,7 @@ func ValidateCommand(ctx *common.Context) *cobra.Command {
 
 	cobraCmd := &cobra.Command{
 		Use:               "lint-package",
-		Short:             "Validate engine, models and runtimes manifest files",
+		Short:             "Validate engines, models, and runtimes manifest files",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: cobra.NoFileCompletions,
 		RunE:              cmd.run,
@@ -35,16 +35,17 @@ func (cmd *validateCommand) run(_ *cobra.Command, args []string) error {
 	snapDir := args[0]
 
 	validators := []struct {
-		subdir   string
-		validate func(string) error
+		subdir           string
+		manifestFilename string
+		validate         func(string) error
 	}{
-		{"engines", engines.Validate},
-		{"models", models.Validate},
-		{"runtimes", runtimes.Validate},
+		{"engines", engines.ManifestFilename, engines.Validate},
+		{"models", models.ManifestFilename, models.Validate},
+		{"runtimes", runtimes.ManifestFilename, runtimes.Validate},
 	}
 
 	for _, v := range validators {
-		pattern := filepath.Join(snapDir, v.subdir, "*", "*.yaml")
+		pattern := filepath.Join(snapDir, v.subdir, "*", v.manifestFilename)
 		manifestPaths, err := filepath.Glob(pattern)
 		if err != nil {
 			return fmt.Errorf("invalid glob pattern %s: %w", pattern, err)

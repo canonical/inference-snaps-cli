@@ -65,6 +65,17 @@ func TestUnknownField(t *testing.T) {
 	t.Log(err)
 }
 
+func TestIdRequired(t *testing.T) {
+	manifest := templateManifest()
+	manifest.ID = ""
+
+	err := manifest.validate("test")
+	if err == nil {
+		t.Fatal("id field is required")
+	}
+	t.Log(err)
+}
+
 func TestNameRequired(t *testing.T) {
 	manifest := templateManifest()
 	manifest.Name = ""

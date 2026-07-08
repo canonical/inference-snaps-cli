@@ -66,13 +66,13 @@ func validateManifestYaml(expectedName string, yamlData []byte) error {
 }
 
 func (manifest Manifest) validate(expectedModelId string) error {
-	if manifest.Name == "" {
-		return fmt.Errorf("required field is not set: name")
+	if manifest.ID == "" {
+		return fmt.Errorf("required field is not set: id")
 	}
 
 	if expectedModelId != "" {
 		if manifest.ID != expectedModelId {
-			return fmt.Errorf("model directory name should match name in manifest: %s != %s", expectedModelId, manifest.Name)
+			return fmt.Errorf("model directory name should match id in manifest: %s != %s", expectedModelId, manifest.ID)
 		}
 	}
 
@@ -85,7 +85,7 @@ func (manifest Manifest) validate(expectedModelId string) error {
 	}
 
 	if manifest.ModelCardUrl == "" {
-		return fmt.Errorf("required field is not set: model_card_url")
+		return fmt.Errorf("required field is not set: model-card-url")
 	}
 
 	if manifest.Quantization == "" {
@@ -97,7 +97,7 @@ func (manifest Manifest) validate(expectedModelId string) error {
 	}
 
 	if manifest.DiskSize == "" {
-		return fmt.Errorf("required field is not set: disk_size")
+		return fmt.Errorf("required field is not set: disk-size")
 	}
 
 	if len(manifest.Components) == 0 {
