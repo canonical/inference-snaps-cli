@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/webui"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -94,6 +96,12 @@ func (manifest Manifest) validate(expectedModelId string) error {
 
 	if len(manifest.Capabilities) == 0 {
 		return fmt.Errorf("required field is not set: capabilities")
+	} else {
+		for _, cap := range manifest.Capabilities {
+			if !slices.Contains(webui.SupportedCapabilities(), cap) {
+				return fmt.Errorf("unsupported capability: %q", cap)
+			}
+		}
 	}
 
 	if manifest.DiskSize == "" {
