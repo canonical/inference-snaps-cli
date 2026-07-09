@@ -61,16 +61,20 @@ func (cmd *serveWebUiCommand) serveWebUi(_ *cobra.Command, args []string) error 
 
 	activeModelId, err := cmd.Cache.GetActiveModel()
 	if err != nil {
-		return fmt.Errorf("getting active model: %v", err)
+		return fmt.Errorf("getting active model: %w", err)
 	}
 
-	var capabilities []string
+	// Always send an array (possibly empty) so the /config response has a
+	// stable shape and never serializes capabilities as JSON null.
+	capabilities := []string{}
 	if activeModelId != "" {
 		modelManifest, err := models.LoadManifest(cmd.ModelsDir, activeModelId)
 		if err != nil {
-			return fmt.Errorf("loading model manifest: %v", err)
+			return fmt.Errorf("loading model manifest: %w", err)
 		}
-		capabilities = modelManifest.Capabilities
+		if modelManifest.Capabilities != nil {
+			capabilities = modelManifest.Capabilities
+		}
 	}
 
 	config := webui.Config{
