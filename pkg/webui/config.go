@@ -19,8 +19,5 @@ func (c Config) Validate() error {
 		return fmt.Errorf("invalid OpenAI base URL: %w", err)
 	}
 
-	// Capabilities are forwarded as-is; the frontend ignores any it does not
-	// recognize, so unknown capabilities are not rejected here.
-
 	return nil
 }
