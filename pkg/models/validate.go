@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -12,6 +14,9 @@ import (
 	"github.com/canonical/inference-snaps-cli/v2/pkg/webui"
 	"go.yaml.in/yaml/v4"
 )
+
+// diskSizePattern matches a human-readable size such as "6G" or "512M".
+var diskSizePattern = regexp.MustCompile(`^\d+(\.\d+)?(K|M|G|T)i?B?$`)
 
 func Validate(manifestFilePath string) error {
 
@@ -89,6 +94,9 @@ func (manifest Manifest) validate(expectedModelId string) error {
 	if manifest.ModelCardUrl == "" {
 		return fmt.Errorf("required field is not set: model-card-url")
 	}
+	if _, err := url.Parse(manifest.ModelCardUrl); err != nil {
+		return fmt.Errorf("invalid model-card-url: %w", err)
+	}
 
 	if manifest.Quantization == "" {
 		return fmt.Errorf("required field is not set: quantization")
@@ -96,16 +104,18 @@ func (manifest Manifest) validate(expectedModelId string) error {
 
 	if len(manifest.Capabilities) == 0 {
 		return fmt.Errorf("required field is not set: capabilities")
-	} else {
-		for _, cap := range manifest.Capabilities {
-			if !slices.Contains(webui.SupportedCapabilities(), cap) {
-				return fmt.Errorf("unsupported capability: %q", cap)
-			}
+	}
+	for _, cap := range manifest.Capabilities {
+		if !slices.Contains(webui.SupportedCapabilities(), cap) {
+			return fmt.Errorf("unsupported capability: %q", cap)
 		}
 	}
 
 	if manifest.DiskSize == "" {
 		return fmt.Errorf("required field is not set: disk-size")
+	}
+	if !diskSizePattern.MatchString(manifest.DiskSize) {
+		return fmt.Errorf("invalid disk-size format: %s", manifest.DiskSize)
 	}
 
 	if len(manifest.Components) == 0 {
@@ -114,6 +124,12 @@ func (manifest Manifest) validate(expectedModelId string) error {
 
 	if len(manifest.Environment) == 0 {
 		return fmt.Errorf("required field is not set: environment")
+	}
+
+	for target, layout := range manifest.Layout {
+		if layout.Symlink == "" {
+			return fmt.Errorf("layout %q: required field is not set: symlink", target)
+		}
 	}
 
 	return nil

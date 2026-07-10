@@ -68,7 +68,7 @@ func (cmd *validateCommand) run(_ *cobra.Command, args []string) error {
 	}
 
 	if !allManifestsValid {
-		return fmt.Errorf("not all manifests are valid")
+		return fmt.Errorf("some manifests are invalid")
 	}
 	return nil
 }

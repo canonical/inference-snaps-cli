@@ -62,7 +62,6 @@ func TestManifestEmpty(t *testing.T) {
 	if err == nil {
 		t.Fatal("Empty yaml should fail")
 	}
-	t.Log(err)
 }
 
 func TestUnknownField(t *testing.T) {
@@ -73,7 +72,6 @@ func TestUnknownField(t *testing.T) {
 	if err == nil {
 		t.Fatal("Unknown field should fail")
 	}
-	t.Log(err)
 }
 
 func TestIdRequired(t *testing.T) {
@@ -84,7 +82,6 @@ func TestIdRequired(t *testing.T) {
 	if err == nil {
 		t.Fatal("id field is required")
 	}
-	t.Log(err)
 }
 
 func TestNameRequired(t *testing.T) {
@@ -95,7 +92,6 @@ func TestNameRequired(t *testing.T) {
 	if err == nil {
 		t.Fatal("name field is required")
 	}
-	t.Log(err)
 }
 
 func TestDescriptionRequired(t *testing.T) {
@@ -106,7 +102,6 @@ func TestDescriptionRequired(t *testing.T) {
 	if err == nil {
 		t.Fatal("description field is required")
 	}
-	t.Log(err)
 }
 
 func TestModelCardUrlRequired(t *testing.T) {
@@ -117,7 +112,6 @@ func TestModelCardUrlRequired(t *testing.T) {
 	if err == nil {
 		t.Fatal("model-card-url field is required")
 	}
-	t.Log(err)
 }
 
 func TestQuantizationRequired(t *testing.T) {
@@ -128,7 +122,6 @@ func TestQuantizationRequired(t *testing.T) {
 	if err == nil {
 		t.Fatal("quantization field is required")
 	}
-	t.Log(err)
 }
 
 func TestCapabilitiesRequired(t *testing.T) {
@@ -139,7 +132,6 @@ func TestCapabilitiesRequired(t *testing.T) {
 	if err == nil {
 		t.Fatal("capabilities field is required")
 	}
-	t.Log(err)
 }
 
 func TestDiskSizeRequired(t *testing.T) {
@@ -150,7 +142,6 @@ func TestDiskSizeRequired(t *testing.T) {
 	if err == nil {
 		t.Fatal("disk-size field is required")
 	}
-	t.Log(err)
 }
 
 func TestComponentsRequired(t *testing.T) {
@@ -161,7 +152,6 @@ func TestComponentsRequired(t *testing.T) {
 	if err == nil {
 		t.Fatal("components field is required")
 	}
-	t.Log(err)
 }
 
 func TestEnvironmentRequired(t *testing.T) {
@@ -172,7 +162,6 @@ func TestEnvironmentRequired(t *testing.T) {
 	if err == nil {
 		t.Fatal("environment field is required")
 	}
-	t.Log(err)
 }
 
 func TestModelIdMatch(t *testing.T) {
@@ -183,5 +172,4 @@ func TestModelIdMatch(t *testing.T) {
 	if err == nil {
 		t.Fatal("model directory name should match id in manifest")
 	}
-	t.Log(err)
 }

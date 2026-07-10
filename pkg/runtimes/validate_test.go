@@ -51,7 +51,6 @@ func TestManifestEmpty(t *testing.T) {
 	if err == nil {
 		t.Fatal("Empty yaml should fail")
 	}
-	t.Log(err)
 }
 
 func TestUnknownField(t *testing.T) {
@@ -62,7 +61,6 @@ func TestUnknownField(t *testing.T) {
 	if err == nil {
 		t.Fatal("Unknown field should fail")
 	}
-	t.Log(err)
 }
 
 func TestNameRequired(t *testing.T) {
@@ -73,7 +71,6 @@ func TestNameRequired(t *testing.T) {
 	if err == nil {
 		t.Fatal("name field is required")
 	}
-	t.Log(err)
 }
 
 func TestNameMatch(t *testing.T) {
@@ -84,7 +81,6 @@ func TestNameMatch(t *testing.T) {
 	if err == nil {
 		t.Fatal("runtime directory name should match name in manifest")
 	}
-	t.Log(err)
 }
 
 func TestServersRequired(t *testing.T) {
@@ -95,7 +91,6 @@ func TestServersRequired(t *testing.T) {
 	if err == nil {
 		t.Fatal("servers field is required")
 	}
-	t.Log(err)
 }
 
 func TestServerProtocolRequired(t *testing.T) {
@@ -110,7 +105,6 @@ func TestServerProtocolRequired(t *testing.T) {
 	if err == nil {
 		t.Fatal("server protocol field is required")
 	}
-	t.Log(err)
 }
 
 func TestServerBasePathRequired(t *testing.T) {
@@ -125,7 +119,6 @@ func TestServerBasePathRequired(t *testing.T) {
 	if err == nil {
 		t.Fatal("server base-path field is required")
 	}
-	t.Log(err)
 }
 
 func TestEnvironmentRequired(t *testing.T) {
@@ -136,7 +129,6 @@ func TestEnvironmentRequired(t *testing.T) {
 	if err == nil {
 		t.Fatal("environment field is required")
 	}
-	t.Log(err)
 }
 
 func TestComponentsRequired(t *testing.T) {
@@ -147,5 +139,4 @@ func TestComponentsRequired(t *testing.T) {
 	if err == nil {
 		t.Fatal("components field is required")
 	}
-	t.Log(err)
 }
