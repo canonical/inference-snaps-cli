@@ -12,17 +12,6 @@ type Config struct {
 	EngineName    string   `json:"engineName"`
 }
 
-const (
-	capabilityText     string = "text"
-	capabilityVision   string = "vision"
-	capabilityTools    string = "tools"
-	capabilityThinking string = "thinking"
-)
-
-func SupportedCapabilities() []string {
-	return []string{capabilityText, capabilityVision, capabilityTools, capabilityThinking}
-}
-
 func (c Config) Validate() error {
 
 	// Validate OpenAI base URL
