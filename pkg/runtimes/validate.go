@@ -95,6 +95,12 @@ func (manifest Manifest) validate(expectedRuntimeName string) error {
 		return fmt.Errorf("required field is not set: components")
 	}
 
+	for target, layout := range manifest.Layout {
+		if layout.Symlink == "" {
+			return fmt.Errorf("layout %q: required field is not set: symlink", target)
+		}
+	}
+
 	return nil
 }
 
