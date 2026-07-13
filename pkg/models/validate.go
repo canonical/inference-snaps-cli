@@ -10,8 +10,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
-	"github.com/canonical/inference-snaps-cli/v2/pkg/webui"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -106,7 +106,7 @@ func (manifest Manifest) validate(expectedModelId string) error {
 		return fmt.Errorf("required field is not set: capabilities")
 	}
 	for _, cap := range manifest.Capabilities {
-		if !slices.Contains(webui.SupportedCapabilities(), cap) {
+		if !slices.Contains(common.SupportedCapabilities(), cap) {
 			return fmt.Errorf("unsupported capability: %q", cap)
 		}
 	}
