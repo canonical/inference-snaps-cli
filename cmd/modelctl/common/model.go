@@ -19,7 +19,7 @@ const (
 
 type ModelDetails struct {
 	Name  string `json:"name" yaml:"name"`
-	Alias string `json:"alias" yaml:"alias"`
+	Alias string `json:"alias,omitempty" yaml:"alias,omitempty"`
 
 	Description  string   `json:"description" yaml:"description"`
 	ModelCardUrl string   `json:"model-card-url" yaml:"model-card-url"`
@@ -56,6 +56,10 @@ func NewModelDetails(manifest *models.Manifest) (ModelDetails, error) {
 }
 
 func GetModelByNameOrAlias(ctx *Context, modelName string) (*models.Manifest, error) {
+	if modelName == "" {
+		return nil, fmt.Errorf("model name must not be empty")
+	}
+
 	activeEngine, err := ctx.Cache.GetActiveEngine()
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", LookingUpActiveEngine, err)

@@ -6,7 +6,7 @@ import (
 
 type Manifest struct {
 	Name  string `json:"name" yaml:"name"`
-	Alias string `json:"alias" yaml:"alias"`
+	Alias string `json:"alias,omitempty" yaml:"alias,omitempty"`
 
 	Description  string   `json:"description" yaml:"description"`
 	ModelCardUrl string   `json:"model-card-url" yaml:"model-card-url"`
