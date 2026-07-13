@@ -25,7 +25,7 @@ func prepareModelsTestData() (*listModelsCommand, *outputModels, error) {
 	for _, manifest := range manifests {
 		details, err := common.NewModelDetails(&manifest)
 		if err != nil {
-			return nil, nil, fmt.Errorf("error creating model details for %s: %v", manifest.ID, err)
+			return nil, nil, fmt.Errorf("error creating model details for %s: %v", manifest.Name, err)
 		}
 		allModels = append(allModels, details)
 	}
@@ -105,7 +105,7 @@ func Example_printModelsJson() {
 	// Use only the 4b-it-int4-fq-ov model to keep output concise
 	var filtered []common.ModelDetails
 	for _, m := range modelsList.Models {
-		if m.ID == "4b-it-int4-fq-ov" {
+		if m.Name == "4b-it-int4-fq-ov" {
 			filtered = append(filtered, m)
 		}
 	}
