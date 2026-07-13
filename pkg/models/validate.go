@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"slices"
-	"strings"
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
 	"go.yaml.in/yaml/v4"
@@ -19,7 +19,7 @@ var diskSizePattern = regexp.MustCompile(`^\d+(\.\d+)?(K|M|G|T)i?B?$`)
 
 func Validate(manifestFilePath string) error {
 
-	if !strings.HasSuffix(manifestFilePath, ManifestFilename) {
+	if filepath.Base(manifestFilePath) != ManifestFilename {
 		return fmt.Errorf("manifest file must be called %s: %s", ManifestFilename, manifestFilePath)
 	}
 
@@ -36,7 +36,7 @@ func Validate(manifestFilePath string) error {
 		return fmt.Errorf("reading file: %v", err)
 	}
 
-	// Get model name from path
+	// Get model ID from the directory name
 	modelId := modelIdFromPath(manifestFilePath)
 
 	return validateManifestYaml(modelId, yamlData)
@@ -93,8 +93,8 @@ func (manifest Manifest) validate(expectedModelId string) error {
 	if manifest.ModelCardUrl == "" {
 		return fmt.Errorf("required field is not set: model-card-url")
 	}
-	if _, err := url.Parse(manifest.ModelCardUrl); err != nil {
-		return fmt.Errorf("invalid model-card-url: %w", err)
+	if u, err := url.ParseRequestURI(manifest.ModelCardUrl); err != nil || u.Scheme == "" || u.Host == "" {
+		return fmt.Errorf("invalid model-card-url: %s", manifest.ModelCardUrl)
 	}
 
 	if manifest.Quantization == "" {

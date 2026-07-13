@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
+	"path/filepath"
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
 	"go.yaml.in/yaml/v4"
@@ -13,7 +13,7 @@ import (
 
 func Validate(manifestFilePath string) error {
 
-	if !strings.HasSuffix(manifestFilePath, ManifestFilename) {
+	if filepath.Base(manifestFilePath) != ManifestFilename {
 		return fmt.Errorf("manifest file must be called %s: %s", ManifestFilename, manifestFilePath)
 	}
 
