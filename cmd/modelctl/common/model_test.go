@@ -119,7 +119,7 @@ func TestGetModelByNameOrId(t *testing.T) {
 		{
 			name:         "found by name",
 			activeEngine: "my-engine",
-			modelYAML:    "id: my-model-id\nname: my-model\ndisk-size: 1G\n",
+			modelYAML:    "name: my-model-id\nalias: my-model\ndisk-size: 1G\n",
 			engineYAML:   "name: my-engine\nmodel:\n  options:\n    - my-model-id\n",
 			query:        "my-model",
 			wantName:     "my-model-id",
@@ -127,7 +127,7 @@ func TestGetModelByNameOrId(t *testing.T) {
 		{
 			name:         "found by id",
 			activeEngine: "my-engine",
-			modelYAML:    "id: my-model-id\nname: my-model\ndisk-size: 1G\n",
+			modelYAML:    "name: my-model-id\nalias: my-model\ndisk-size: 1G\n",
 			engineYAML:   "name: my-engine\nmodel:\n  options:\n    - my-model-id\n",
 			query:        "my-model-id",
 			wantAlias:    "my-model",
