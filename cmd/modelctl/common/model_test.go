@@ -105,7 +105,7 @@ func TestModelStatus_NonExistentModel(t *testing.T) {
 	}
 }
 
-func TestGetModelByNameOrId(t *testing.T) {
+func TestGetModelByNameOrAlias(t *testing.T) {
 	tests := []struct {
 		name         string
 		activeEngine string
@@ -117,7 +117,7 @@ func TestGetModelByNameOrId(t *testing.T) {
 		wantErr      bool   // true: expect any non-nil error
 	}{
 		{
-			name:         "found by name",
+			name:         "found by alias",
 			activeEngine: "my-engine",
 			modelYAML:    "name: my-model-id\nalias: my-model\ndisk-size: 1G\n",
 			engineYAML:   "name: my-engine\nmodel:\n  options:\n    - my-model-id\n",
@@ -125,7 +125,7 @@ func TestGetModelByNameOrId(t *testing.T) {
 			wantName:     "my-model-id",
 		},
 		{
-			name:         "found by id",
+			name:         "found by name",
 			activeEngine: "my-engine",
 			modelYAML:    "name: my-model-id\nalias: my-model\ndisk-size: 1G\n",
 			engineYAML:   "name: my-engine\nmodel:\n  options:\n    - my-model-id\n",
