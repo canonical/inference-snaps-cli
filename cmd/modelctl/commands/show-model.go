@@ -98,8 +98,8 @@ func (cmd *showModelCommand) showCurrentModel() error {
 	return cmd.showModel(currentModel)
 }
 
-func (cmd *showModelCommand) showModel(modelNameOrID string) error {
-	modelManifest, err := common.GetModelByNameOrAlias(cmd.Context, modelNameOrID)
+func (cmd *showModelCommand) showModel(modelNameOrAlias string) error {
+	modelManifest, err := common.GetModelByNameOrAlias(cmd.Context, modelNameOrAlias)
 	if err != nil {
 		return err
 	}

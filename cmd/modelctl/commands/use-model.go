@@ -82,9 +82,9 @@ func (cmd *useModelCommand) run(_ *cobra.Command, args []string) error {
 	}
 }
 
-func (cmd *useModelCommand) switchModel(modelNameOrID string) error {
+func (cmd *useModelCommand) switchModel(modelNameOrAlias string) error {
 
-	modelManifest, err := common.GetModelByNameOrAlias(cmd.Context, modelNameOrID)
+	modelManifest, err := common.GetModelByNameOrAlias(cmd.Context, modelNameOrAlias)
 	if err != nil {
 		return err
 	}
