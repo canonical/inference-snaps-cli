@@ -58,7 +58,7 @@ func TestManifestYamlUnsupportedCapability(t *testing.T) {
 }
 func TestManifestEmpty(t *testing.T) {
 	data := ""
-	err := validateManifestYaml("", []byte(data))
+	_, err := parseManifest([]byte(data))
 	if err == nil {
 		t.Fatal("Empty yaml should fail")
 	}
@@ -68,7 +68,7 @@ func TestUnknownField(t *testing.T) {
 	data, _ := yaml.Marshal(templateManifest())
 	data = append(data, []byte("unknown-field: test\n")...)
 
-	err := validateManifestYaml("test", data)
+	_, err := parseManifest(data)
 	if err == nil {
 		t.Fatal("Unknown field should fail")
 	}
@@ -154,23 +154,43 @@ func TestDiskSizeRequired(t *testing.T) {
 	}
 }
 
-func TestComponentsRequired(t *testing.T) {
+func TestComponentsOptional(t *testing.T) {
 	manifest := templateManifest()
 	manifest.Components = nil
 
 	err := manifest.validate("test")
-	if err == nil {
-		t.Fatal("components field is required")
+	if err != nil {
+		t.Fatalf("components field is optional, got error: %v", err)
 	}
 }
 
-func TestEnvironmentRequired(t *testing.T) {
+func TestComponentEmptyName(t *testing.T) {
+	manifest := templateManifest()
+	manifest.Components = []string{""}
+
+	err := manifest.validate("test")
+	if err == nil {
+		t.Fatal("empty component name should fail")
+	}
+}
+
+func TestEnvironmentOptional(t *testing.T) {
 	manifest := templateManifest()
 	manifest.Environment = nil
 
 	err := manifest.validate("test")
-	if err == nil {
-		t.Fatal("environment field is required")
+	if err != nil {
+		t.Fatalf("environment field is optional, got error: %v", err)
+	}
+}
+
+func TestEnvironmentInvalidSyntax(t *testing.T) {
+	manifest := templateManifest()
+	for _, env := range []string{"MODEL_FILE", "=value", "1BAD=value", "BAD NAME=value"} {
+		manifest.Environment = []string{env}
+		if err := manifest.validate("test"); err == nil {
+			t.Fatalf("environment entry %q should be invalid", env)
+		}
 	}
 }
 

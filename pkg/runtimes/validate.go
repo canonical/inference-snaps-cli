@@ -34,7 +34,24 @@ func Validate(manifestFilePath string) error {
 	// Get runtime name from path
 	runtimeName := runtimeNameFromPath(manifestFilePath)
 
-	return validateManifestYaml(runtimeName, yamlData)
+	manifest, err := parseManifest(yamlData)
+	if err != nil {
+		return err
+	}
+
+	if err := manifest.validate(runtimeName); err != nil {
+		return err
+	}
+
+	// Cross-check the referenced components against snapcraft.yaml when it can
+	// be located relative to the manifest. snapRoot is the package directory
+	// containing the runtimes/ folder: <snapRoot>/runtimes/<name>/runtime.yaml.
+	snapRoot := filepath.Dir(filepath.Dir(filepath.Dir(manifestFilePath)))
+	knownComponents, err := engines.SnapcraftComponents(snapRoot)
+	if err != nil {
+		return err
+	}
+	return engines.ValidateComponents(manifest.Components, knownComponents)
 }
 
 func runtimeNameFromPath(manifestFilePath string) string {
@@ -45,10 +62,10 @@ func runtimeNameFromPath(manifestFilePath string) string {
 	return parts[len(parts)-2] // second last part: runtime-name/runtime.yaml
 }
 
-func validateManifestYaml(expectedName string, yamlData []byte) error {
+func parseManifest(yamlData []byte) (Manifest, error) {
 	yamlData = bytes.TrimSpace(yamlData)
 	if len(yamlData) == 0 {
-		return errors.New("empty yaml data")
+		return Manifest{}, errors.New("empty yaml data")
 	}
 
 	var manifest Manifest
@@ -60,10 +77,10 @@ func validateManifestYaml(expectedName string, yamlData []byte) error {
 
 	// We depend on the yaml unmarshal to check field types
 	if err := yamlDecoder.Decode(&manifest); err != nil {
-		return fmt.Errorf("decoding manifest: %v", err)
+		return Manifest{}, fmt.Errorf("decoding manifest: %v", err)
 	}
 
-	return manifest.validate(expectedName)
+	return manifest, nil
 }
 
 func (manifest Manifest) validate(expectedRuntimeName string) error {
@@ -88,12 +105,15 @@ func (manifest Manifest) validate(expectedRuntimeName string) error {
 		}
 	}
 
-	if len(manifest.Environment) == 0 {
-		return fmt.Errorf("required field is not set: environment")
+	// environment is optional; when set, validate the NAME=value syntax.
+	if err := engines.ValidateEnvironment(manifest.Environment); err != nil {
+		return err
 	}
 
-	if len(manifest.Components) == 0 {
-		return fmt.Errorf("required field is not set: components")
+	// components are optional; when set, names must be non-empty. Cross-checking
+	// against snapcraft.yaml is done by Validate when the file is available.
+	if err := engines.ValidateComponents(manifest.Components, nil); err != nil {
+		return err
 	}
 
 	if err := engines.ValidateLayout(manifest.Layout); err != nil {
