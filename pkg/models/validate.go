@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"slices"
 
+	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
 	"go.yaml.in/yaml/v4"
 )
@@ -90,20 +91,12 @@ func (manifest Manifest) validate(expectedModelId string) error {
 		return fmt.Errorf("required field is not set: description")
 	}
 
-	if manifest.ModelCardUrl == "" {
-		return fmt.Errorf("required field is not set: model-card-url")
-	}
-	if u, err := url.ParseRequestURI(manifest.ModelCardUrl); err != nil || u.Scheme == "" || u.Host == "" {
-		return fmt.Errorf("invalid model-card-url: %s", manifest.ModelCardUrl)
-	}
-
-	if manifest.Quantization == "" {
-		return fmt.Errorf("required field is not set: quantization")
+	if manifest.ModelCardUrl != "" {
+		if u, err := url.ParseRequestURI(manifest.ModelCardUrl); err != nil || u.Scheme == "" || u.Host == "" {
+			return fmt.Errorf("invalid model-card-url: %s", manifest.ModelCardUrl)
+		}
 	}
 
-	if len(manifest.Capabilities) == 0 {
-		return fmt.Errorf("required field is not set: capabilities")
-	}
 	for _, cap := range manifest.Capabilities {
 		if !slices.Contains(SupportedCapabilities(), cap) {
 			return fmt.Errorf("unsupported capability: %q", cap)
@@ -125,10 +118,8 @@ func (manifest Manifest) validate(expectedModelId string) error {
 		return fmt.Errorf("required field is not set: environment")
 	}
 
-	for target, layout := range manifest.Layout {
-		if layout.Symlink == "" {
-			return fmt.Errorf("layout %q: required field is not set: symlink", target)
-		}
+	if err := engines.ValidateLayout(manifest.Layout); err != nil {
+		return err
 	}
 
 	return nil

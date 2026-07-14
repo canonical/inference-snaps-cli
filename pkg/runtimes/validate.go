@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
 	"go.yaml.in/yaml/v4"
 )
@@ -95,10 +96,8 @@ func (manifest Manifest) validate(expectedRuntimeName string) error {
 		return fmt.Errorf("required field is not set: components")
 	}
 
-	for target, layout := range manifest.Layout {
-		if layout.Symlink == "" {
-			return fmt.Errorf("layout %q: required field is not set: symlink", target)
-		}
+	if err := engines.ValidateLayout(manifest.Layout); err != nil {
+		return err
 	}
 
 	return nil
