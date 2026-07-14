@@ -37,21 +37,21 @@ func Validate(manifestFilePath string) error {
 		return fmt.Errorf("reading file: %v", err)
 	}
 
-	// Get model ID from the directory name
-	modelId := modelIdFromPath(manifestFilePath)
+	// Get model name from the directory name
+	modelName := modelNameFromPath(manifestFilePath)
 
 	manifest, err := parseManifest(yamlData)
 	if err != nil {
 		return err
 	}
 
-	if err := manifest.validate(modelId); err != nil {
+	if err := manifest.validate(modelName); err != nil {
 		return err
 	}
 
 	// Cross-check the referenced components against snapcraft.yaml when it can
 	// be located relative to the manifest. snapRoot is the package directory
-	// containing the models/ folder: <snapRoot>/models/<model-id>/model.yaml.
+	// containing the models/ folder: <snapRoot>/models/<model-name>/model.yaml.
 	snapRoot := filepath.Dir(filepath.Dir(filepath.Dir(manifestFilePath)))
 	knownComponents, err := engines.SnapcraftComponents(snapRoot)
 	if err != nil {
@@ -60,12 +60,12 @@ func Validate(manifestFilePath string) error {
 	return engines.ValidateComponents(manifest.Components, knownComponents)
 }
 
-func modelIdFromPath(manifestFilePath string) string {
+func modelNameFromPath(manifestFilePath string) string {
 	parts := utils.SplitPathIntoDirectories(manifestFilePath)
 	if len(parts) < 2 {
 		return ""
 	}
-	return parts[len(parts)-2] // second last part: model-id/model.yaml
+	return parts[len(parts)-2] // second last part: model-name/model.yaml
 }
 
 func parseManifest(yamlData []byte) (Manifest, error) {
@@ -89,19 +89,15 @@ func parseManifest(yamlData []byte) (Manifest, error) {
 	return manifest, nil
 }
 
-func (manifest Manifest) validate(expectedModelId string) error {
-	if manifest.ID == "" {
-		return fmt.Errorf("required field is not set: id")
-	}
-
-	if expectedModelId != "" {
-		if manifest.ID != expectedModelId {
-			return fmt.Errorf("model directory name should match id in manifest: %s != %s", expectedModelId, manifest.ID)
-		}
-	}
-
+func (manifest Manifest) validate(expectedModelName string) error {
 	if manifest.Name == "" {
 		return fmt.Errorf("required field is not set: name")
+	}
+
+	if expectedModelName != "" {
+		if manifest.Name != expectedModelName {
+			return fmt.Errorf("model directory name should match name in manifest: %s != %s", expectedModelName, manifest.Name)
+		}
 	}
 
 	if manifest.Description == "" {

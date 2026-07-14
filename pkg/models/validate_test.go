@@ -10,7 +10,6 @@ import (
 
 func templateManifest() Manifest {
 	manifest := Manifest{
-		ID:           "test",
 		Name:         "test",
 		Description:  "test",
 		ModelCardUrl: "https://example.com/model-card",
@@ -71,16 +70,6 @@ func TestUnknownField(t *testing.T) {
 	_, err := parseManifest(data)
 	if err == nil {
 		t.Fatal("Unknown field should fail")
-	}
-}
-
-func TestIdRequired(t *testing.T) {
-	manifest := templateManifest()
-	manifest.ID = ""
-
-	err := manifest.validate("test")
-	if err == nil {
-		t.Fatal("id field is required")
 	}
 }
 
@@ -194,12 +183,12 @@ func TestEnvironmentInvalidSyntax(t *testing.T) {
 	}
 }
 
-func TestModelIdMatch(t *testing.T) {
+func TestModelNameMatch(t *testing.T) {
 	manifest := templateManifest()
-	manifest.ID = "different-id"
+	manifest.Name = "different-name"
 
 	err := manifest.validate("test")
 	if err == nil {
-		t.Fatal("model directory name should match id in manifest")
+		t.Fatal("model directory name should match name in manifest")
 	}
 }
