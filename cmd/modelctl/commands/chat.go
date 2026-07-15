@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 
-	"github.com/canonical/go-snapctl/env"
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
 	"github.com/spf13/cobra"
 )
@@ -34,7 +33,7 @@ func (cmd *chatCommand) run(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("getting OpenAI base URL: %v", err)
 	}
 
-	if env.SnapInstanceName() != "" {
+	if cmd.Snap.InstanceName() != "" {
 		// TODO: get app name dynamically
 		services, err := cmd.Snap.ServiceStatuses()
 		if err != nil {

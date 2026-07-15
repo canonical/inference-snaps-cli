@@ -14,6 +14,8 @@ import (
 type Snap interface {
 	Restart(service ...string) error
 	InstanceName() string
+	Dir() string
+	Version() string
 	HardwareObservable() (bool, error)
 	InstallComponent(name string) error
 	RemoveComponents(name ...string) error
@@ -37,7 +39,37 @@ func (*snap) Restart(service ...string) error {
 
 // InstanceName returns the snap instance name.
 func (*snap) InstanceName() string {
+	return InstanceName()
+}
+
+// Dir returns the snap mount directory ($SNAP), or empty when not running as a snap.
+func (*snap) Dir() string {
+	return Dir()
+}
+
+// Version returns the snap version.
+func (*snap) Version() string {
+	return Version()
+}
+
+// InstanceName returns the snap instance name.
+func InstanceName() string {
 	return env.SnapInstanceName()
+}
+
+// Dir returns the snap mount directory ($SNAP), or empty when not running as a snap.
+func Dir() string {
+	return env.Snap()
+}
+
+// Version returns the snap version.
+func Version() string {
+	return env.SnapVersion()
+}
+
+// IsConnected reports whether the given snap plug/slot is connected.
+func IsConnected(name string) (bool, error) {
+	return snapctl.IsConnected(name).Run()
 }
 
 func (*snap) HardwareObservable() (bool, error) {

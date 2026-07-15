@@ -38,6 +38,14 @@ func (c *mockSnap) InstanceName() string {
 	return "mock-snap"
 }
 
+func (c *mockSnap) Dir() string {
+	return ""
+}
+
+func (c *mockSnap) Version() string {
+	return "mock-version"
+}
+
 func (c *mockSnap) HardwareObservable() (bool, error) {
 	return false, nil
 }
