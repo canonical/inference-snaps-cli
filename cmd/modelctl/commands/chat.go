@@ -39,7 +39,11 @@ func (cmd *chatCommand) run(_ *cobra.Command, _ []string) error {
 		if err != nil {
 			return fmt.Errorf("getting services: %v", err)
 		}
-		if services["server"] == "inactive" {
+		status, ok := services["server"]
+		if !ok {
+			return fmt.Errorf("server service not found")
+		}
+		if status == "inactive" {
 			return fmt.Errorf("server not active\n\n%s",
 				common.SuggestStartServer())
 		}

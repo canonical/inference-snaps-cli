@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/commands"
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/commands/debug"
@@ -15,10 +16,11 @@ import (
 
 func main() {
 	s := snap.New()
+	snapDir := s.Dir()
 	ctx := &common.Context{
-		EnginesDir:  s.Dir() + "/engines",
-		RuntimesDir: s.Dir() + "/runtimes",
-		ModelsDir:   s.Dir() + "/models",
+		EnginesDir:  filepath.Join(snapDir, "engines"),
+		RuntimesDir: filepath.Join(snapDir, "runtimes"),
+		ModelsDir:   filepath.Join(snapDir, "models"),
 		Cache:       storage.NewCache(),
 		Config:      storage.NewConfig(),
 		Snap:        s,
