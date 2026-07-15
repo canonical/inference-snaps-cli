@@ -16,6 +16,7 @@ type Snap interface {
 	InstanceName() string
 	HardwareObservable() (bool, error)
 	InstallComponent(name string) error
+	RemoveComponents(name ...string) error
 	ServiceStatuses() (map[string]string, error)
 }
 
@@ -63,6 +64,11 @@ func (*snap) HardwareObservable() (bool, error) {
 // InstallComponent installs a single snap component.
 func (*snap) InstallComponent(name string) error {
 	return snapctl.InstallComponents(name).Run()
+}
+
+// RemoveComponents removes one or more snap components.
+func (*snap) RemoveComponents(name ...string) error {
+	return snapctl.RemoveComponents(name...).Run()
 }
 
 // ServiceStatuses returns the current status of all snap services, keyed by service app name.

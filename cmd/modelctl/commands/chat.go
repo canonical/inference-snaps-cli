@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 
-	"github.com/canonical/go-snapctl"
 	"github.com/canonical/go-snapctl/env"
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
 	"github.com/spf13/cobra"
@@ -37,12 +36,11 @@ func (cmd *chatCommand) run(_ *cobra.Command, _ []string) error {
 
 	if env.SnapInstanceName() != "" {
 		// TODO: get app name dynamically
-		serviceName := env.SnapInstanceName() + ".server"
-		services, err := snapctl.Services(serviceName).Run()
+		services, err := cmd.Snap.ServiceStatuses()
 		if err != nil {
 			return fmt.Errorf("getting services: %v", err)
 		}
-		if services[serviceName].Current == "inactive" {
+		if services["server"] == "inactive" {
 			return fmt.Errorf("server not active\n\n%s",
 				common.SuggestStartServer())
 		}

@@ -49,6 +49,10 @@ func (c *mockSnap) InstallComponent(name string) error {
 	return nil
 }
 
+func (c *mockSnap) RemoveComponents(name ...string) error {
+	return nil
+}
+
 func (c *mockSnap) ServiceStatuses() (map[string]string, error) {
 	if c.serviceStatuses != nil {
 		return c.serviceStatuses, nil

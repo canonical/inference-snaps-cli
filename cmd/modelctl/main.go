@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/canonical/go-snapctl"
 	"github.com/canonical/go-snapctl/env"
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/commands"
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/commands/debug"
@@ -24,7 +23,6 @@ func main() {
 		Config:      storage.NewConfig(),
 		Snap:        snap.New(),
 	}
-
 	// Get snap name for dynamic commands
 	instanceName := env.SnapInstanceName()
 	if instanceName == "" {
@@ -44,7 +42,7 @@ func main() {
 
 	// Add custom text after the help message - only show service management for top-level help
 	if env.Snap() != "" {
-		services, err := snapctl.Services().Run()
+		services, err := ctx.Snap.ServiceStatuses()
 		if err != nil {
 			fmt.Printf("Error: retrieving snap services: %v\n", err)
 			return
