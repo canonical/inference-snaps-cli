@@ -19,7 +19,7 @@ func Example_showMachineCommand_printMachineInfoJson() {
 
 	// Output:
 	// {
-	//   "cpus": [
+	//   "CPUs": [
 	//     {
 	//       "architecture": "amd64",
 	//       "manufacturer-id": "GenuineIntel",
@@ -71,7 +71,7 @@ func Example_showMachineCommand_printMachineInfoYaml() {
 	}
 
 	// Output:
-	// cpus:
+	// CPUs:
 	//   - architecture: amd64
 	//     manufacturer-id: GenuineIntel
 	//     flags: [fpu, vme, de]
