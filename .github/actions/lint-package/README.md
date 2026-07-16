@@ -10,7 +10,7 @@ modelctl debug lint-package <package-dir>
 
 | Name | Required | Default | Description |
 | --- | --- | --- | --- |
-| `package-dir` | No | `.` | Path (relative to `${{ github.workspace }}`) to the snap package source that contains `snap/snapcraft.yaml` as well as `engines`, `models`, and `runtimes`directories |
+| `package-dir` | No | `.` | Path (relative to `${{ github.workspace }}`) to the snap package source that contains `snap/snapcraft.yaml` as well as `engines`, `models`, and `runtimes` directories |
 
 ## Usage
 
