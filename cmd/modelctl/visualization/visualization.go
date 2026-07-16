@@ -14,7 +14,7 @@ import (
 // core struct but uses visualization sub-types that carry the custom YAML
 // rendering.
 type MachineInfo struct {
-	Cpus    []CpuInfo          `json:"cpus,omitempty" yaml:"cpus,omitempty"`
+	Cpus    []CpuInfo          `json:"CPUs,omitempty" yaml:"CPUs,omitempty"`
 	Memory  MemoryInfo         `json:"memory,omitempty" yaml:"memory,omitempty"`
 	Disk    map[string]DirInfo `json:"disk,omitempty" yaml:"disk,omitempty"`
 	Devices []any              `json:"devices,omitempty" yaml:"devices,omitempty"`
