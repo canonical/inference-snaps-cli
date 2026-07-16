@@ -16,18 +16,14 @@ runs:
         go-version: '1.26.x'
 
     - name: Build modelctl
-      shell: bash
+      shell: bash --noprofile --norc -euo pipefail {0}
       working-directory: ${{ github.action_path }}/../../..
       run: |
-        set -euo pipefail
-
         go install ./cmd/modelctl
         echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
     - name: Lint package manifests
-      shell: bash
+      shell: bash --noprofile --norc -euo pipefail {0}
       working-directory: ${{ github.workspace }}/${{ inputs.package-dir }}
       run: |
-        set -euo pipefail
-
         modelctl debug lint-package .
