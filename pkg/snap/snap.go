@@ -39,7 +39,7 @@ func (*snap) Restart(service ...string) error {
 
 // InstanceName returns the snap instance name.
 func (*snap) InstanceName() string {
-	return env.SnapInstanceName()
+	return InstanceName()
 }
 
 // Dir returns the snap mount directory ($SNAP), or empty when not running as a snap.
@@ -50,6 +50,11 @@ func (*snap) Dir() string {
 // Version returns the snap version.
 func (*snap) Version() string {
 	return env.SnapVersion()
+}
+
+// InstanceName returns the snap instance name.
+func InstanceName() string {
+	return env.SnapInstanceName()
 }
 
 // IsConnected reports whether the given snap plug/slot is connected.
