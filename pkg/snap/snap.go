@@ -39,31 +39,16 @@ func (*snap) Restart(service ...string) error {
 
 // InstanceName returns the snap instance name.
 func (*snap) InstanceName() string {
-	return InstanceName()
-}
-
-// Dir returns the snap mount directory ($SNAP), or empty when not running as a snap.
-func (*snap) Dir() string {
-	return Dir()
-}
-
-// Version returns the snap version.
-func (*snap) Version() string {
-	return Version()
-}
-
-// InstanceName returns the snap instance name.
-func InstanceName() string {
 	return env.SnapInstanceName()
 }
 
 // Dir returns the snap mount directory ($SNAP), or empty when not running as a snap.
-func Dir() string {
+func (*snap) Dir() string {
 	return env.Snap()
 }
 
 // Version returns the snap version.
-func Version() string {
+func (*snap) Version() string {
 	return env.SnapVersion()
 }
 
