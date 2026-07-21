@@ -39,7 +39,7 @@ func (c *mockSnap) InstanceName() string {
 }
 
 func (c *mockSnap) Dir() string {
-	return ""
+	return "/tmp/mock-snap"
 }
 
 func (c *mockSnap) Version() string {
