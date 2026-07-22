@@ -57,8 +57,8 @@ runtime: my-runtime
 	if status.Services["llama-server"] != "active" {
 		t.Errorf("service status: got %q, want %q", status.Services["llama-server"], "active")
 	}
-	if status.Endpoints["openai"] != "http://127.0.0.1:8080/v1" {
-		t.Errorf("openai endpoint: got %q, want %q", status.Endpoints["openai"], "http://127.0.0.1:8080/v1")
+	if status.Listeners["openai"].Url != "http://127.0.0.1:8080/v1" {
+		t.Errorf("openai listener URL: got %q, want %q", status.Listeners["openai"].Url, "http://127.0.0.1:8080/v1")
 	}
 	if status.Model["name"] != "my-model" {
 		t.Errorf("model name: got %q, want %q", status.Model["name"], "my-model")

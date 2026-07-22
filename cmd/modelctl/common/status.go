@@ -5,7 +5,7 @@ import "fmt"
 type Status struct {
 	Engine    string            `json:"engine" yaml:"engine"`
 	Services  map[string]string `json:"services" yaml:"services"`
-	Endpoints map[string]string `json:"endpoints,omitempty" yaml:"endpoints,omitempty"`
+	Listeners Listeners         `json:"listeners,omitempty" yaml:"listeners,omitempty"`
 	Model     map[string]string `json:"model,omitempty" yaml:"model,omitempty"`
 }
 
@@ -27,11 +27,11 @@ func SnapStatus(ctx *Context) (*Status, error) {
 	}
 	statusStr.Services = services
 
-	endpoints, err := ServerEndpoints(ctx)
+	listeners, err := ServerListeners(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("getting server api endpoints: %v", err)
+		return nil, fmt.Errorf("getting server listeners: %v", err)
 	}
-	statusStr.Endpoints = endpoints
+	statusStr.Listeners = listeners
 
 	modelStatus, err := ModelStatus(ctx)
 	if err != nil {

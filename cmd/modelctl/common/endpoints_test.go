@@ -8,13 +8,13 @@ import (
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
 )
 
-func TestServerEndpoints(t *testing.T) {
+func TestServerListeners(t *testing.T) {
 	testCases := []struct {
-		name            string
-		engineYAML      string
-		runtimeYAML     string
-		wantEndpoints   map[string]string
-		wantErrContains string
+		name             string
+		engineYAML       string
+		runtimeYAML      string
+		wantListenerURLs map[string]string
+		wantErrContains  string
 	}{
 		{
 			name: "multiple servers",
@@ -29,7 +29,7 @@ runtime: test-runtime
     protocol: https
     base-path: /v2
 `,
-			wantEndpoints: map[string]string{
+			wantListenerURLs: map[string]string{
 				"openai": "http://127.0.0.1:8080/v1",
 				"kserve": "https://127.0.0.1:8080/v2",
 				"webui":  "http://192.0.2.1:8080/",
@@ -45,6 +45,24 @@ runtime: test-runtime
     protocol: ftp
 `,
 			wantErrContains: "unsupported protocol",
+		},
+		{
+			name: "websocket servers",
+			engineYAML: `name: test-engine
+runtime: test-runtime
+`,
+			runtimeYAML: `servers:
+  openai-ws:
+    protocol: ws
+    base-path: /v1
+  openai-unix:
+    protocol: ws+unix
+    base-path: /v1
+`,
+			wantListenerURLs: map[string]string{
+				"openai-ws":   "ws://127.0.0.1:8081/v1",
+				"openai-unix": "ws://127.0.0.1:8081/v1",
+			},
 		},
 	}
 
@@ -73,6 +91,9 @@ runtime: test-runtime
 			config.Set("http.host", "127.0.0.1", storage.UserConfig)
 			config.Set("webui.http.port", "8080", storage.UserConfig)
 			config.Set("webui.http.host", "192.0.2.1", storage.UserConfig)
+			config.Set("ws.port", "8081", storage.UserConfig)
+			config.Set("ws.host", "127.0.0.1", storage.UserConfig)
+			config.Set("ws.unix-socket", "/run/openai.sock", storage.UserConfig)
 
 			ctx := &Context{
 				EnginesDir:  enginesDir,
@@ -81,7 +102,7 @@ runtime: test-runtime
 				Cache:       cache,
 			}
 
-			got, err := ServerEndpoints(ctx)
+			got, err := ServerListeners(ctx)
 			if tc.wantErrContains != "" {
 				if err == nil {
 					t.Fatalf("expected error containing %q, got nil", tc.wantErrContains)
@@ -94,26 +115,27 @@ runtime: test-runtime
 			if err != nil {
 				t.Fatal(err)
 			}
-			for name, wantURL := range tc.wantEndpoints {
-				gotURL, found := got[name]
+			for name, wantURL := range tc.wantListenerURLs {
+				listener, found := got[name]
 				if !found {
-					t.Fatalf("missing endpoint %q", name)
+					t.Fatalf("missing listener %q", name)
 				}
-				if gotURL != wantURL {
-					t.Fatalf("endpoint %q: got %q, want %q", name, gotURL, wantURL)
+				if listener.Url != wantURL {
+					t.Fatalf("listener %q: got %q, want %q", name, listener.Url, wantURL)
 				}
 			}
 		})
 	}
 }
 
-func TestServerHttpUrl(t *testing.T) {
+func TestServerHTTPListener(t *testing.T) {
 	testCases := []struct {
 		name    string
 		server  runtimes.Server
 		host    string
 		setHost bool
 		want    string
+		wantErr bool
 	}{
 		{
 			name: "default base path",
@@ -157,12 +179,158 @@ func TestServerHttpUrl(t *testing.T) {
 				Config: config,
 			}
 
-			got, err := serverHttpUrl(ctx, tc.server)
+			got, err := serverHttpListener(ctx, tc.server)
+			if tc.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				return
+			}
 			if err != nil {
 				t.Fatal(err)
 			}
-			if got != tc.want {
-				t.Fatalf("got %q, want %q", got, tc.want)
+			if got == nil {
+				t.Fatal("expected non-nil listener")
+			}
+			if got.Url != tc.want {
+				t.Fatalf("got %q, want %q", got.Url, tc.want)
+			}
+		})
+	}
+}
+
+func TestServerWSListener(t *testing.T) {
+	testCases := []struct {
+		name    string
+		server  runtimes.Server
+		host    string
+		setHost bool
+		want    string
+	}{
+		{
+			name: "default base path",
+			server: runtimes.Server{
+				Protocol: "ws",
+			},
+			host:    "0.0.0.0",
+			setHost: true,
+			want:    "ws://0.0.0.0:8080/",
+		},
+		{
+			name: "custom base path",
+			server: runtimes.Server{
+				Protocol: "ws",
+				BasePath: "/v1",
+			},
+			host:    "127.0.0.1",
+			setHost: true,
+			want:    "ws://127.0.0.1:8080/v1",
+		},
+		{
+			name: "complex base path",
+			server: runtimes.Server{
+				Protocol: "ws",
+				BasePath: "/api/v2",
+			},
+			host:    "localhost",
+			setHost: true,
+			want:    "ws://localhost:8080/api/v2",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			config := storage.NewMockConfig()
+			config.Set("ws.port", "8080", storage.UserConfig)
+			if tc.setHost {
+				config.Set("ws.host", tc.host, storage.UserConfig)
+			}
+			ctx := &Context{
+				Config: config,
+			}
+
+			got, err := serverWsListener(ctx, "test-server", tc.server)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got == nil {
+				t.Fatal("expected non-nil listener")
+			}
+			if got.Url != tc.want {
+				t.Fatalf("got %q, want %q", got.Url, tc.want)
+			}
+		})
+	}
+}
+
+func TestServerWsUnixListener(t *testing.T) {
+	testCases := []struct {
+		name       string
+		server     runtimes.Server
+		host       string
+		setHost    bool
+		wantURL    string
+		wantSocket string
+	}{
+		{
+			name: "default base path",
+			server: runtimes.Server{
+				Protocol: "ws+unix",
+			},
+			host:       "0.0.0.0",
+			setHost:    true,
+			wantURL:    "ws://0.0.0.0:8080/",
+			wantSocket: "/run/socket.sock",
+		},
+		{
+			name: "custom base path",
+			server: runtimes.Server{
+				Protocol: "ws+unix",
+				BasePath: "/v1",
+			},
+			host:       "127.0.0.1",
+			setHost:    true,
+			wantURL:    "ws://127.0.0.1:8080/v1",
+			wantSocket: "/run/socket.sock",
+		},
+		{
+			name: "complex base path",
+			server: runtimes.Server{
+				Protocol: "ws+unix",
+				BasePath: "/api/stream",
+			},
+			host:       "localhost",
+			setHost:    true,
+			wantURL:    "ws://localhost:8080/api/stream",
+			wantSocket: "/run/snap.whisper/openai.sock",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			config := storage.NewMockConfig()
+			config.Set("ws.port", "8080", storage.UserConfig)
+			if tc.setHost {
+				config.Set("ws.host", tc.host, storage.UserConfig)
+			}
+			config.Set("ws.unix-socket", tc.wantSocket, storage.UserConfig)
+
+			ctx := &Context{
+				Config: config,
+			}
+
+			got, err := serverWsOverUnixListener(ctx, "test-server", tc.server)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got == nil {
+				t.Fatal("expected non-nil listener")
+			}
+			if got.Url != tc.wantURL {
+				t.Fatalf("URL: got %q, want %q", got.Url, tc.wantURL)
+			}
+			if got.UnixSocket != tc.wantSocket {
+				t.Fatalf("UnixSocket: got %q, want %q", got.UnixSocket, tc.wantSocket)
 			}
 		})
 	}

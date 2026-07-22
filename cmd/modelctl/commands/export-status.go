@@ -49,9 +49,15 @@ func (cmd *exportStatusCommand) run(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("getting status: %v", err)
 	}
 
+	// Convert Listeners to Endpoints (extract URLs) for backward compatibility
+	endpoints := make(map[string]string)
+	for name, listener := range statusStr.Listeners {
+		endpoints[name] = listener.Url
+	}
+
 	// Decouple internal status definition from shared one
 	sharedStatusStr := &exportedStatus{
-		Endpoints: statusStr.Endpoints,
+		Endpoints: endpoints,
 		Model:     statusStr.Model,
 	}
 
@@ -87,7 +93,7 @@ func (cmd *exportStatusCommand) writeShareFiles(status *exportedStatus, shareDir
 
 	// Deprecated: Write openai.json for backwards compatibility while Open WebUI snap is not updated
 	openaiFilePath := filepath.Join(shareDir, "openai.json")
-	if endpoint, ok := status.Endpoints["openai"]; ok {
+	if endpoint, ok := status.Endpoints["openai"]; ok && endpoint != "" {
 		myOpenaiConfig := &exportedOpenai{
 			BaseUrl: endpoint,
 		}
