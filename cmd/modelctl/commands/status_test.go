@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"fmt"
+	"log"
 	"path/filepath"
 
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
@@ -18,10 +18,10 @@ func createTestContextForStatus() *common.Context {
 
 	cache := storage.NewMockCache()
 	if err := cache.SetActiveEngine("cpu"); err != nil {
-		panic(fmt.Sprintf("failed to set active engine: %v", err))
+		log.Fatalf("failed to set active engine: %v", err)
 	}
 	if err := cache.SetActiveModel("4b-it-int4-fq-ov"); err != nil {
-		panic(fmt.Sprintf("failed to set active model: %v", err))
+		log.Fatalf("failed to set active model: %v", err)
 	}
 
 	configs := map[string]string{
@@ -36,7 +36,7 @@ func createTestContextForStatus() *common.Context {
 	config := storage.NewMockConfig()
 	for key, value := range configs {
 		if err := config.Set(key, value, storage.UserConfig); err != nil {
-			panic(fmt.Sprintf("failed to set %s: %v", key, err))
+			log.Fatalf("failed to set %s: %v", key, err)
 		}
 	}
 
@@ -58,7 +58,7 @@ func Example_statusCommand_printStatusYaml() {
 	}
 
 	if err := cmd.run(nil, nil); err != nil {
-		panic(fmt.Sprintf("failed to print status in yaml format: %v", err))
+		log.Fatalf("failed to print status in yaml format: %v", err)
 	}
 
 	// Output:
@@ -71,7 +71,7 @@ func Example_statusCommand_printStatusYaml() {
 	//     openai:
 	//         url: http://0.0.0.0:8080/v1
 	//     whisperlive:
-	//         unix-socket: '/run/whisper.sock (ws://unix/realtime)'
+	//         unix-socket: /run/whisper.sock (ws://unix/realtime)
 	// model:
 	//     name: gemma-4-4b-it-int4-fq-ov
 }
@@ -84,7 +84,7 @@ func Example_statusCommand_printStatusJson() {
 	}
 
 	if err := cmd.run(nil, nil); err != nil {
-		panic(fmt.Sprintf("failed to print status in json format: %v", err))
+		log.Fatalf("failed to print status in json format: %v", err)
 	}
 
 	// Output:

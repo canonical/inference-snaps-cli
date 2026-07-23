@@ -235,6 +235,13 @@ func TestServerHTTPEntrypoint(t *testing.T) {
 			host: "0.0.0.0",
 			want: "https://0.0.0.0:8080/v3",
 		},
+		{
+			name: "missing host",
+			server: runtimes.Server{
+				Protocol: "http",
+			},
+			wantErr: true,
+		},
 	}
 
 	for _, tc := range testCases {

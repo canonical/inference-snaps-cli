@@ -38,6 +38,9 @@ func ServerEntrypoints(ctx *Context) (Entrypoints, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s: %v", LookingUpActiveEngine, err)
 	}
+	if activeEngineName == "" {
+		return nil, ErrNoActiveEngine
+	}
 	activeEngineManifest, err := engines.LoadManifest(ctx.EnginesDir, activeEngineName)
 	if err != nil {
 		return nil, fmt.Errorf("loading active engine manifest: %v", err)
@@ -222,6 +225,10 @@ func getConfigString(ctx *Context, key string) (string, error) {
 	valueMap, err := ctx.Config.Get(key)
 	if err != nil {
 		return "", fmt.Errorf("getting config %q: %v", key, err)
+	}
+	value := fmt.Sprint(valueMap[key])
+	if value == "" || value == "<nil>" {
+		return "", fmt.Errorf("config %q is not set", key)
 	}
 	return fmt.Sprint(valueMap[key]), nil
 }
