@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"log"
 	"path/filepath"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
 )
 
-// createTestContextForStatusExample creates a test context for Example tests
+// createTestContextForStatus creates a test context for Example tests
 func createTestContextForStatus() *common.Context {
 	testDataDir := "../../../test_data"
 	enginesDir := filepath.Join(testDataDir, "engines")
@@ -52,14 +53,13 @@ func createTestContextForStatus() *common.Context {
 
 func Example_statusCommand_printStatusYaml() {
 	ctx := createTestContextForStatus()
-	cmd := statusCommand{
-		Context: ctx,
-		format:  "yaml",
-	}
+	cmd := statusCommand{Context: ctx}
 
-	if err := cmd.run(nil, nil); err != nil {
-		log.Fatalf("failed to print status in yaml format: %v", err)
+	statusText, err := cmd.statusYaml()
+	if err != nil {
+		log.Fatalf("failed to get status in yaml format: %v", err)
 	}
+	fmt.Print(statusText)
 
 	// Output:
 	// engine: cpu
@@ -78,14 +78,13 @@ func Example_statusCommand_printStatusYaml() {
 
 func Example_statusCommand_printStatusJson() {
 	ctx := createTestContextForStatus()
-	cmd := statusCommand{
-		Context: ctx,
-		format:  "json",
-	}
+	cmd := statusCommand{Context: ctx}
 
-	if err := cmd.run(nil, nil); err != nil {
-		log.Fatalf("failed to print status in json format: %v", err)
+	statusText, err := cmd.statusJson()
+	if err != nil {
+		log.Fatalf("failed to get status in yaml format: %v", err)
 	}
+	fmt.Print(statusText)
 
 	// Output:
 	// {

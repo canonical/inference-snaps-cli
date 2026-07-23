@@ -66,32 +66,31 @@ func ServerEntrypoints(ctx *Context) (Entrypoints, error) {
 		case "http", "https":
 			entrypoint, err = serverHttpEntrypoint(ctx, serverSettings)
 			if err != nil {
-				return nil, fmt.Errorf("constructing server HTTP entrypoint: %v", err)
+				return nil, fmt.Errorf("constructing HTTP entrypoint: %v", err)
 			}
 		case "http+unix", "https+unix":
 			entrypoint, err = serverHttpOverUnixSocketEntrypoint(ctx, serverSettings)
 			if err != nil {
-				return nil, fmt.Errorf("constructing server HTTP Unix entrypoint: %v", err)
+				return nil, fmt.Errorf("constructing HTTP Unix entrypoint: %v", err)
 			}
 		case "ws":
 			entrypoint, err = serverWsEntrypoint(ctx, serverSettings)
 			if err != nil {
-				return nil, fmt.Errorf("getting server WebSocket entrypoint: %v", err)
+				return nil, fmt.Errorf("constructing WebSocket entrypoint: %v", err)
 			}
 		case "ws+unix":
 			entrypoint, err = serverWsOverUnixSocketEntrypoint(ctx, serverSettings)
 			if err != nil {
-				return nil, fmt.Errorf("getting server WebSocket Unix entrypoint: %v", err)
+				return nil, fmt.Errorf("constructing WebSocket Unix entrypoint: %v", err)
 			}
 		default:
 			return nil, fmt.Errorf("unsupported protocol %q for server %q in runtime %q",
 				serverSettings.Protocol, serverName, activeEngineManifest.Runtime)
 		}
-
 		entrypoints[serverName] = *entrypoint
 	}
 
-	// If builtin webui is enabled, also list it as well
+	// If builtin webui is enabled, list it as well
 	if WebUiEnabled() {
 		webUiUrl, err := UiServerHttpUrl(ctx)
 		if err != nil {
@@ -117,7 +116,7 @@ func serverHttpEntrypoint(ctx *Context, server runtimes.Server) (*Entrypoint, er
 		return nil, err
 	}
 
-	httpHost, err := entrypointHost(ctx, fullConfKey(runtimes.HttpHostConfKey, server.Namespace))
+	httpHost, err := getConfigString(ctx, fullConfKey(runtimes.HttpHostConfKey, server.Namespace))
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +137,7 @@ func serverHttpOverUnixSocketEntrypoint(ctx *Context, server runtimes.Server) (*
 		return nil, err
 	}
 
-	protocol := strings.TrimRight(server.Protocol, "+unix")
+	protocol := strings.TrimSuffix(server.Protocol, "+unix")
 	unixSocketUrl := fmt.Sprintf("%s://unix%s", protocol, server.BasePath) // remove +unix suffix for URL scheme
 
 	return &Entrypoint{
@@ -148,12 +147,12 @@ func serverHttpOverUnixSocketEntrypoint(ctx *Context, server runtimes.Server) (*
 }
 
 func serverWsEntrypoint(ctx *Context, server runtimes.Server) (*Entrypoint, error) {
-	wsPort, err := getConfigString(ctx, runtimes.WebSocketPortConfKey)
+	wsPort, err := getConfigString(ctx, fullConfKey(runtimes.WebSocketPortConfKey, server.Namespace))
 	if err != nil {
 		return nil, err
 	}
 
-	wsHost, err := entrypointHost(ctx, runtimes.WebSocketHostConfKey)
+	wsHost, err := getConfigString(ctx, fullConfKey(runtimes.WebSocketHostConfKey, server.Namespace))
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +172,7 @@ func serverWsOverUnixSocketEntrypoint(ctx *Context, server runtimes.Server) (*En
 		return nil, err
 	}
 
-	protocol := strings.TrimRight(server.Protocol, "+unix") // remove +unix suffix for URL scheme
+	protocol := strings.TrimSuffix(server.Protocol, "+unix") // remove +unix suffix for URL scheme
 	unixSocketUrl := fmt.Sprintf("%s://unix%s", protocol, server.BasePath)
 
 	return &Entrypoint{
@@ -197,7 +196,6 @@ func OpenAiBaseUrl(ctx *Context) (string, error) {
 func UiServerHttpUrl(ctx *Context) (string, error) {
 	const (
 		confWebuiHttpPort = "webui.http.port"
-		defaultBasePath   = "/"
 		confWebuiHost     = "webui.http.host"
 	)
 
@@ -207,7 +205,7 @@ func UiServerHttpUrl(ctx *Context) (string, error) {
 	}
 	httpPort := httpPortMap[confWebuiHttpPort]
 
-	httpHost, err := entrypointHost(ctx, confWebuiHost)
+	httpHost, err := getConfigString(ctx, confWebuiHost)
 	if err != nil {
 		return "", err
 	}
@@ -215,7 +213,6 @@ func UiServerHttpUrl(ctx *Context) (string, error) {
 	entrypointUrl := url.URL{
 		Scheme: "http",
 		Host:   net.JoinHostPort(httpHost, fmt.Sprint(httpPort)),
-		Path:   defaultBasePath,
 	}
 
 	return entrypointUrl.String(), nil
@@ -227,16 +224,9 @@ func getConfigString(ctx *Context, key string) (string, error) {
 		return "", fmt.Errorf("getting config %q: %v", key, err)
 	}
 	value := fmt.Sprint(valueMap[key])
+	value = strings.TrimSpace(value)
 	if value == "" || value == "<nil>" {
 		return "", fmt.Errorf("config %q is not set", key)
 	}
-	return fmt.Sprint(valueMap[key]), nil
-}
-
-func entrypointHost(ctx *Context, hostConfigKey string) (string, error) {
-	host, err := getConfigString(ctx, hostConfigKey)
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(host), nil
+	return value, nil
 }

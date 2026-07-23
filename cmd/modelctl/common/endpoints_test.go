@@ -36,7 +36,7 @@ servers:
 			wantEntrypointURLs: map[string]string{
 				"openai": "http://127.0.0.1:8080/v1",
 				"kserve": "https://127.0.0.1:8080/v2",
-				"webui":  "http://192.0.2.1:8080/",
+				"webui":  "http://192.0.2.1:8080",
 			},
 		},
 		{
@@ -58,7 +58,7 @@ servers:
 			wantEntrypointURLs: map[string]string{
 				"openai-unix": "",
 				"kserve-unix": "",
-				"webui":       "http://192.0.2.1:8080/",
+				"webui":       "http://192.0.2.1:8080",
 			},
 			wantUnixSockets: map[string]string{
 				"openai-unix": "/run/openai.sock",
@@ -108,6 +108,24 @@ servers:
 				"openai-unix": "ws://unix/v1",
 			},
 		},
+		{
+			name: "websocket namespaced server",
+			engineYAML: `
+name: test-engine
+runtime: test-runtime
+`,
+			runtimeYAML: `
+servers:
+  logger:
+    protocol: ws
+    base-path: /stream
+    namespace: logger
+`,
+			wantEntrypointURLs: map[string]string{
+				"logger": "ws://localhost:9091/stream",
+				"webui":  "http://192.0.2.1:8080",
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -133,14 +151,17 @@ servers:
 			config := storage.NewMockConfig()
 
 			configs := map[string]string{
-				"http.port":               "8080",
-				"http.host":               "127.0.0.1",
+				"http.port":        "8080",
+				"http.host":        "127.0.0.1",
+				"http.unix-socket": "/run/openai.sock",
+				"ws.port":          "8081",
+				"ws.host":          "127.0.0.1",
+				"ws.unix-socket":   "/run/openai.sock",
+				// namespaced configurations
 				"webui.http.port":         "8080",
 				"webui.http.host":         "192.0.2.1",
-				"ws.port":                 "8081",
-				"ws.host":                 "127.0.0.1",
-				"ws.unix-socket":          "/run/openai.sock",
-				"http.unix-socket":        "/run/openai.sock",
+				"logger.ws.port":          "9091",
+				"logger.ws.host":          "localhost",
 				"kserve.http.unix-socket": "/run/kserve.sock",
 			}
 

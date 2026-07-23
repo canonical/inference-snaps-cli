@@ -52,7 +52,9 @@ func (cmd *exportStatusCommand) run(_ *cobra.Command, args []string) error {
 	// Convert Entrypoints to Endpoints (extract URLs) for backward compatibility
 	endpoints := make(map[string]string)
 	for name, entrypoint := range statusStr.Entrypoints {
-		endpoints[name] = entrypoint.Url
+		if entrypoint.Url != "" {
+			endpoints[name] = entrypoint.Url
+		}
 	}
 
 	// Decouple internal status definition from shared one
