@@ -131,15 +131,24 @@ servers:
 			}
 
 			config := storage.NewMockConfig()
-			config.Set("http.port", "8080", storage.UserConfig)
-			config.Set("http.host", "127.0.0.1", storage.UserConfig)
-			config.Set("webui.http.port", "8080", storage.UserConfig)
-			config.Set("webui.http.host", "192.0.2.1", storage.UserConfig)
-			config.Set("ws.port", "8081", storage.UserConfig)
-			config.Set("ws.host", "127.0.0.1", storage.UserConfig)
-			config.Set("ws.unix-socket", "/run/openai.sock", storage.UserConfig)
-			config.Set("http.unix-socket", "/run/openai.sock", storage.UserConfig)
-			config.Set("kserve.http.unix-socket", "/run/kserve.sock", storage.UserConfig)
+
+			configs := map[string]string{
+				"http.port":               "8080",
+				"http.host":               "127.0.0.1",
+				"webui.http.port":         "8080",
+				"webui.http.host":         "192.0.2.1",
+				"ws.port":                 "8081",
+				"ws.host":                 "127.0.0.1",
+				"ws.unix-socket":          "/run/openai.sock",
+				"http.unix-socket":        "/run/openai.sock",
+				"kserve.http.unix-socket": "/run/kserve.sock",
+			}
+
+			for key, value := range configs {
+				if err := config.Set(key, value, storage.UserConfig); err != nil {
+					t.Fatalf("Set(%q): %v", key, err)
+				}
+			}
 
 			ctx := &Context{
 				EnginesDir:  enginesDir,
@@ -197,7 +206,6 @@ func TestServerHTTPEntrypoint(t *testing.T) {
 		name    string
 		server  runtimes.Server
 		host    string
-		setHost bool
 		want    string
 		wantErr bool
 	}{
@@ -206,9 +214,8 @@ func TestServerHTTPEntrypoint(t *testing.T) {
 			server: runtimes.Server{
 				Protocol: "http",
 			},
-			host:    "0.0.0.0",
-			setHost: true,
-			want:    "http://0.0.0.0:8080",
+			host: "0.0.0.0",
+			want: "http://0.0.0.0:8080",
 		},
 		{
 			name: "custom base path",
@@ -216,9 +223,8 @@ func TestServerHTTPEntrypoint(t *testing.T) {
 				Protocol: "http",
 				BasePath: "/v1",
 			},
-			host:    "127.0.0.1",
-			setHost: true,
-			want:    "http://127.0.0.1:8080/v1",
+			host: "127.0.0.1",
+			want: "http://127.0.0.1:8080/v1",
 		},
 		{
 			name: "https protocol",
@@ -226,18 +232,22 @@ func TestServerHTTPEntrypoint(t *testing.T) {
 				Protocol: "https",
 				BasePath: "/v3",
 			},
-			host:    "0.0.0.0",
-			setHost: true,
-			want:    "https://0.0.0.0:8080/v3",
+			host: "0.0.0.0",
+			want: "https://0.0.0.0:8080/v3",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			config := storage.NewMockConfig()
-			config.Set("http.port", "8080", storage.UserConfig)
-			if tc.setHost {
-				config.Set("http.host", tc.host, storage.UserConfig)
+			configs := map[string]string{
+				"http.port": "8080",
+				"http.host": tc.host,
+			}
+			for key, value := range configs {
+				if err := config.Set(key, value, storage.UserConfig); err != nil {
+					t.Fatalf("Set(%q): %v", key, err)
+				}
 			}
 			ctx := &Context{
 				Config: config,
@@ -294,10 +304,16 @@ func TestServerHttpUnixSocketEntrypoint(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			config := storage.NewMockConfig()
+			configs := map[string]string{}
 			if tc.server.Namespace != "" {
-				config.Set(tc.server.Namespace+".http.unix-socket", tc.socketPath, storage.UserConfig)
+				configs[tc.server.Namespace+".http.unix-socket"] = tc.socketPath
 			} else {
-				config.Set("http.unix-socket", tc.socketPath, storage.UserConfig)
+				configs["http.unix-socket"] = tc.socketPath
+			}
+			for key, value := range configs {
+				if err := config.Set(key, value, storage.UserConfig); err != nil {
+					t.Fatalf("Set(%q): %v", key, err)
+				}
 			}
 			ctx := &Context{
 				Config: config,
@@ -366,8 +382,15 @@ func TestServerWSEntrypoint(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			config := storage.NewMockConfig()
-			config.Set("ws.port", tc.wsPort, storage.UserConfig)
-			config.Set("ws.host", tc.wsHost, storage.UserConfig)
+			configs := map[string]string{
+				"ws.port": tc.wsPort,
+				"ws.host": tc.wsHost,
+			}
+			for key, value := range configs {
+				if err := config.Set(key, value, storage.UserConfig); err != nil {
+					t.Fatalf("Set(%q): %v", key, err)
+				}
+			}
 			ctx := &Context{Config: config}
 
 			got, err := serverWsEntrypoint(ctx, tc.server)
@@ -421,10 +444,16 @@ func TestServerWsUnixSocketEntrypoint(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			config := storage.NewMockConfig()
+			configs := map[string]string{}
 			if tc.server.Namespace != "" {
-				config.Set(tc.server.Namespace+".ws.unix-socket", tc.socketPath, storage.UserConfig)
+				configs[tc.server.Namespace+".ws.unix-socket"] = tc.socketPath
 			} else {
-				config.Set("ws.unix-socket", tc.socketPath, storage.UserConfig)
+				configs["ws.unix-socket"] = tc.socketPath
+			}
+			for key, value := range configs {
+				if err := config.Set(key, value, storage.UserConfig); err != nil {
+					t.Fatalf("Set(%q): %v", key, err)
+				}
 			}
 			ctx := &Context{Config: config}
 

@@ -7,6 +7,10 @@ servers:
   whisperlive:
     protocol: ws+unix
     base-path: /realtime
+  logger:  
+    protocol: http
+    base-path: /
+    namespace: logger
 
 environment:
   # Add llama.cpp binaries

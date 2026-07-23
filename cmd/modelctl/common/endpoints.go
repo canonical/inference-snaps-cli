@@ -21,10 +21,10 @@ type Entrypoint struct {
 func (e Entrypoint) MarshalYAML() (any, error) {
 	type entrypointYAML Entrypoint
 
-	// Append UnixSocketUrl to UnixSocket
+	// Add UnixSocketUrl to UnixSocket as annotation
 	unixSocket := e.UnixSocket
 	if unixSocket != "" && e.UnixSocketUrl != "" {
-		unixSocket = fmt.Sprintf("%s (url: %s)", unixSocket, e.UnixSocketUrl)
+		unixSocket = fmt.Sprintf("%s (%s)", unixSocket, e.UnixSocketUrl)
 	}
 
 	return entrypointYAML{
