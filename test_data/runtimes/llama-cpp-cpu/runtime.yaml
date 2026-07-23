@@ -4,6 +4,9 @@ servers:
   openai:
     protocol: http
     base-path: /v1
+  whisperlive:
+    protocol: ws+unix
+    base-path: /realtime
 
 environment:
   # Add llama.cpp binaries

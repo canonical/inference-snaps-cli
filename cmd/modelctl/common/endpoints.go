@@ -10,16 +10,27 @@ import (
 	"github.com/canonical/inference-snaps-cli/v2/pkg/runtimes"
 )
 
-const (
-	openAiEntrypointKey = "openai"
-)
-
 type Entrypoints map[string]Entrypoint
 
 type Entrypoint struct {
-	Url        string `json:"url" yaml:"url"`
-	ApiSpec    string `json:"api-spec,omitempty" yaml:"api-spec,omitempty"`
-	UnixSocket string `json:"unix-socket,omitempty" yaml:"unix-socket,omitempty"`
+	Url           string `json:"url,omitempty" yaml:"url,omitempty"`
+	UnixSocket    string `json:"unix-socket,omitempty" yaml:"unix-socket,omitempty"`
+	UnixSocketUrl string `json:"unix-socket-url,omitempty" yaml:"-"`
+}
+
+func (e Entrypoint) MarshalYAML() (any, error) {
+	type entrypointYAML Entrypoint
+
+	// Append UnixSocketUrl to UnixSocket
+	unixSocket := e.UnixSocket
+	if unixSocket != "" && e.UnixSocketUrl != "" {
+		unixSocket = fmt.Sprintf("%s (url: %s)", unixSocket, e.UnixSocketUrl)
+	}
+
+	return entrypointYAML{
+		Url:        e.Url,
+		UnixSocket: unixSocket,
+	}, nil
 }
 
 func ServerEntrypoints(ctx *Context) (Entrypoints, error) {
@@ -52,15 +63,20 @@ func ServerEntrypoints(ctx *Context) (Entrypoints, error) {
 		case "http", "https":
 			entrypoint, err = serverHttpEntrypoint(ctx, serverSettings)
 			if err != nil {
-				return nil, fmt.Errorf("getting server HTTP entrypoint: %v", err)
+				return nil, fmt.Errorf("constructing server HTTP entrypoint: %v", err)
+			}
+		case "http+unix", "https+unix":
+			entrypoint, err = serverHttpOverUnixSocketEntrypoint(ctx, serverSettings)
+			if err != nil {
+				return nil, fmt.Errorf("constructing server HTTP Unix entrypoint: %v", err)
 			}
 		case "ws":
-			entrypoint, err = serverWsEntrypoint(ctx, serverName, serverSettings)
+			entrypoint, err = serverWsEntrypoint(ctx, serverSettings)
 			if err != nil {
 				return nil, fmt.Errorf("getting server WebSocket entrypoint: %v", err)
 			}
 		case "ws+unix":
-			entrypoint, err = serverWsOverUnixEntrypoint(ctx, serverName, serverSettings)
+			entrypoint, err = serverWsOverUnixSocketEntrypoint(ctx, serverSettings)
 			if err != nil {
 				return nil, fmt.Errorf("getting server WebSocket Unix entrypoint: %v", err)
 			}
@@ -84,56 +100,57 @@ func ServerEntrypoints(ctx *Context) (Entrypoints, error) {
 	return entrypoints, nil
 }
 
+// fullConfKey returns the full configuration key for a given key and namespace
+func fullConfKey(key string, namespace string) string {
+	if namespace != "" {
+		return fmt.Sprintf("%s.%s", namespace, key)
+	}
+	return key
+}
+
 func serverHttpEntrypoint(ctx *Context, server runtimes.Server) (*Entrypoint, error) {
-	const (
-		confHttpPort    = "http.port"
-		defaultBasePath = "/"
-		confHost        = "http.host"
-	)
-
-	httpPortMap, err := ctx.Config.Get(confHttpPort)
-	if err != nil {
-		return nil, fmt.Errorf("getting config %q: %v", confHttpPort, err)
-	}
-	httpPort := httpPortMap[confHttpPort]
-
-	basePath := server.BasePath
-	if basePath == "" {
-		basePath = defaultBasePath
-	}
-
-	httpHost, err := entrypointHost(ctx, confHost)
+	httpPort, err := getConfigString(ctx, fullConfKey(runtimes.HttpPortConfKey, server.Namespace))
 	if err != nil {
 		return nil, err
 	}
+
+	httpHost, err := entrypointHost(ctx, fullConfKey(runtimes.HttpHostConfKey, server.Namespace))
+	if err != nil {
+		return nil, err
+	}
+
 	entrypointUrl := url.URL{
 		Scheme: server.Protocol,
 		Host:   net.JoinHostPort(httpHost, fmt.Sprint(httpPort)),
-		Path:   basePath,
+		Path:   server.BasePath,
 	}
 
 	return &Entrypoint{Url: entrypointUrl.String()}, nil
 }
 
-func serverWsEntrypoint(ctx *Context, serverName string, server runtimes.Server) (*Entrypoint, error) {
-	const (
-		confWsPort      = "ws.port"
-		defaultBasePath = "/"
-		confWsHost      = "ws.host"
-	)
+func serverHttpOverUnixSocketEntrypoint(ctx *Context, server runtimes.Server) (*Entrypoint, error) {
 
-	wsPortMap, err := ctx.Config.Get(confWsPort)
+	unixSocket, err := getConfigString(ctx, fullConfKey(runtimes.HttpUnixSocketConfKey, server.Namespace))
 	if err != nil {
-		return nil, fmt.Errorf("getting config %q: %v", confWsPort, err)
-	}
-	wsPort := wsPortMap[confWsPort]
-
-	basePath := server.BasePath
-	if basePath == "" {
-		basePath = defaultBasePath
+		return nil, err
 	}
 
-	wsHost, err := entrypointHost(ctx, confWsHost)
+	protocol := strings.TrimRight(server.Protocol, "+unix")
+	unixSocketUrl := fmt.Sprintf("%s://unix%s", protocol, server.BasePath) // remove +unix suffix for URL scheme
+
+	return &Entrypoint{
+		UnixSocket:    unixSocket,
+		UnixSocketUrl: unixSocketUrl,
+	}, nil
+}
+
+func serverWsEntrypoint(ctx *Context, server runtimes.Server) (*Entrypoint, error) {
+	wsPort, err := getConfigString(ctx, runtimes.WebSocketPortConfKey)
+	if err != nil {
+		return nil, err
+	}
+
+	wsHost, err := entrypointHost(ctx, runtimes.WebSocketHostConfKey)
 	if err != nil {
 		return nil, err
 	}
@@ -141,26 +158,25 @@ func serverWsEntrypoint(ctx *Context, serverName string, server runtimes.Server)
 	entrypointUrl := url.URL{
 		Scheme: "ws",
 		Host:   net.JoinHostPort(wsHost, fmt.Sprint(wsPort)),
-		Path:   basePath,
+		Path:   server.BasePath,
 	}
 
 	return &Entrypoint{Url: entrypointUrl.String()}, nil
 }
 
-func serverWsOverUnixEntrypoint(ctx *Context, serverName string, server runtimes.Server) (*Entrypoint, error) {
-	// For ws+unix, use the same host/port configuration as regular ws
-	// but also populate the UnixSocket field
-	entrypoint, err := serverWsEntrypoint(ctx, serverName, server)
+func serverWsOverUnixSocketEntrypoint(ctx *Context, server runtimes.Server) (*Entrypoint, error) {
+	unixSocket, err := getConfigString(ctx, fullConfKey(runtimes.WebSocketUnixSocketConfKey, server.Namespace))
 	if err != nil {
 		return nil, err
 	}
 
-	socketMap, err := ctx.Config.Get("ws.unix-socket")
-	if err == nil {
-		entrypoint.UnixSocket = fmt.Sprint(socketMap["ws.unix-socket"])
-	}
+	protocol := strings.TrimRight(server.Protocol, "+unix") // remove +unix suffix for URL scheme
+	unixSocketUrl := fmt.Sprintf("%s://unix%s", protocol, server.BasePath)
 
-	return entrypoint, nil
+	return &Entrypoint{
+		UnixSocket:    unixSocket,
+		UnixSocketUrl: unixSocketUrl,
+	}, nil
 }
 
 func OpenAiBaseUrl(ctx *Context) (string, error) {
@@ -168,9 +184,9 @@ func OpenAiBaseUrl(ctx *Context) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("getting server entrypoints: %v", err)
 	}
-	entrypoint, found := entrypoints[openAiEntrypointKey]
+	entrypoint, found := entrypoints[runtimes.OpenAiServerType]
 	if !found {
-		return "", fmt.Errorf("%q not found in server entrypoints", openAiEntrypointKey)
+		return "", fmt.Errorf("%q not found in server entrypoints", runtimes.OpenAiServerType)
 	}
 	return entrypoint.Url, nil
 }
@@ -202,14 +218,18 @@ func UiServerHttpUrl(ctx *Context) (string, error) {
 	return entrypointUrl.String(), nil
 }
 
-func entrypointHost(ctx *Context, hostConfigKey string) (string, error) {
-	hostMap, err := ctx.Config.Get(hostConfigKey)
+func getConfigString(ctx *Context, key string) (string, error) {
+	valueMap, err := ctx.Config.Get(key)
 	if err != nil {
-		return "", fmt.Errorf("getting config %q: %v", hostConfigKey, err)
+		return "", fmt.Errorf("getting config %q: %v", key, err)
 	}
-	host := fmt.Sprint(hostMap[hostConfigKey])
+	return fmt.Sprint(valueMap[key]), nil
+}
 
-	host = strings.TrimSpace(host)
-
-	return host, nil
+func entrypointHost(ctx *Context, hostConfigKey string) (string, error) {
+	host, err := getConfigString(ctx, hostConfigKey)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(host), nil
 }
