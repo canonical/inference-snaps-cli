@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
@@ -128,8 +130,24 @@ func (server Server) validate(name string) error {
 		return fmt.Errorf("required field is not set for server %s: protocol", name)
 	}
 
-	if server.BasePath == "" {
-		return fmt.Errorf("required field is not set for server %s: base-path", name)
+	// base-path is optional
+	if server.BasePath != "" {
+		if !strings.HasPrefix(server.BasePath, "/") {
+			return fmt.Errorf("invalid base-path for server %s: must start with '/'", name)
+		}
+
+		parsed, err := url.Parse(server.BasePath)
+		if err != nil {
+			return fmt.Errorf("invalid base-path for server %s: %v", name, err)
+		}
+
+		if parsed.Scheme != "" || parsed.Host != "" || parsed.Opaque != "" {
+			return fmt.Errorf("invalid base-path for server %s: must be a URL path, not a full URL", name)
+		}
+
+		if parsed.RawQuery != "" || parsed.Fragment != "" {
+			return fmt.Errorf("invalid base-path for server %s: query and fragment are not allowed", name)
+		}
 	}
 
 	return nil

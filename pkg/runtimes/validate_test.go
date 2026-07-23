@@ -3,6 +3,7 @@ package runtimes
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -107,7 +108,7 @@ func TestServerProtocolRequired(t *testing.T) {
 	}
 }
 
-func TestServerBasePathRequired(t *testing.T) {
+func TestServerBasePathOptional(t *testing.T) {
 	manifest := templateManifest()
 	manifest.Servers = map[string]Server{
 		"openai": {
@@ -116,8 +117,75 @@ func TestServerBasePathRequired(t *testing.T) {
 	}
 
 	err := manifest.validate("test")
-	if err == nil {
-		t.Fatal("server base-path field is required")
+	if err != nil {
+		t.Fatalf("server base-path should be optional, got error: %v", err)
+	}
+}
+
+func TestServerBasePathValidUrlPath(t *testing.T) {
+	manifest := templateManifest()
+
+	validPaths := []string{"", "/", "/v1", "/api/v2/stream"}
+	for _, basePath := range validPaths {
+		manifest.Servers = map[string]Server{
+			"openai": {
+				Protocol: "http",
+				BasePath: basePath,
+			},
+		}
+
+		if err := manifest.validate("test"); err != nil {
+			t.Fatalf("base-path %q should be valid, got error: %v", basePath, err)
+		}
+	}
+}
+
+func TestServerBasePathRejectsNonPathURLForms(t *testing.T) {
+	testCases := []struct {
+		name            string
+		basePath        string
+		wantErrContains string
+	}{
+		{
+			name:            "missing leading slash",
+			basePath:        "v1",
+			wantErrContains: "must start with '/'",
+		},
+		{
+			name:            "full URL",
+			basePath:        "http://example.com/v1",
+			wantErrContains: "must start with '/'",
+		},
+		{
+			name:            "query string",
+			basePath:        "/v1?model=x",
+			wantErrContains: "query and fragment are not allowed",
+		},
+		{
+			name:            "fragment",
+			basePath:        "/v1#section",
+			wantErrContains: "query and fragment are not allowed",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			manifest := templateManifest()
+			manifest.Servers = map[string]Server{
+				"openai": {
+					Protocol: "http",
+					BasePath: tc.basePath,
+				},
+			}
+
+			err := manifest.validate("test")
+			if err == nil {
+				t.Fatalf("base-path %q should be invalid", tc.basePath)
+			}
+			if !strings.Contains(err.Error(), tc.wantErrContains) {
+				t.Fatalf("base-path %q error = %q, want it to contain %q", tc.basePath, err.Error(), tc.wantErrContains)
+			}
+		})
 	}
 }
 
