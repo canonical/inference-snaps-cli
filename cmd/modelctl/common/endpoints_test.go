@@ -8,13 +8,13 @@ import (
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
 )
 
-func TestServerListeners(t *testing.T) {
+func TestServerEntrypoints(t *testing.T) {
 	testCases := []struct {
-		name             string
-		engineYAML       string
-		runtimeYAML      string
-		wantListenerURLs map[string]string
-		wantErrContains  string
+		name              string
+		engineYAML        string
+		runtimeYAML       string
+		wantEntrypointURLs map[string]string
+		wantErrContains   string
 	}{
 		{
 			name: "multiple servers",
@@ -29,7 +29,7 @@ runtime: test-runtime
     protocol: https
     base-path: /v2
 `,
-			wantListenerURLs: map[string]string{
+			wantEntrypointURLs: map[string]string{
 				"openai": "http://127.0.0.1:8080/v1",
 				"kserve": "https://127.0.0.1:8080/v2",
 				"webui":  "http://192.0.2.1:8080/",
@@ -59,7 +59,7 @@ runtime: test-runtime
     protocol: ws+unix
     base-path: /v1
 `,
-			wantListenerURLs: map[string]string{
+			wantEntrypointURLs: map[string]string{
 				"openai-ws":   "ws://127.0.0.1:8081/v1",
 				"openai-unix": "ws://127.0.0.1:8081/v1",
 			},
@@ -102,7 +102,7 @@ runtime: test-runtime
 				Cache:       cache,
 			}
 
-			got, err := ServerListeners(ctx)
+			got, err := ServerEntrypoints(ctx)
 			if tc.wantErrContains != "" {
 				if err == nil {
 					t.Fatalf("expected error containing %q, got nil", tc.wantErrContains)
@@ -115,20 +115,20 @@ runtime: test-runtime
 			if err != nil {
 				t.Fatal(err)
 			}
-			for name, wantURL := range tc.wantListenerURLs {
-				listener, found := got[name]
+			for name, wantURL := range tc.wantEntrypointURLs {
+				entrypoint, found := got[name]
 				if !found {
-					t.Fatalf("missing listener %q", name)
+					t.Fatalf("missing entrypoint %q", name)
 				}
-				if listener.Url != wantURL {
-					t.Fatalf("listener %q: got %q, want %q", name, listener.Url, wantURL)
+				if entrypoint.Url != wantURL {
+					t.Fatalf("entrypoint %q: got %q, want %q", name, entrypoint.Url, wantURL)
 				}
 			}
 		})
 	}
 }
 
-func TestServerHTTPListener(t *testing.T) {
+func TestServerHTTPEntrypoint(t *testing.T) {
 	testCases := []struct {
 		name    string
 		server  runtimes.Server
@@ -179,7 +179,7 @@ func TestServerHTTPListener(t *testing.T) {
 				Config: config,
 			}
 
-			got, err := serverHttpListener(ctx, tc.server)
+			got, err := serverHttpEntrypoint(ctx, tc.server)
 			if tc.wantErr {
 				if err == nil {
 					t.Fatal("expected error, got nil")
@@ -190,7 +190,7 @@ func TestServerHTTPListener(t *testing.T) {
 				t.Fatal(err)
 			}
 			if got == nil {
-				t.Fatal("expected non-nil listener")
+				t.Fatal("expected non-nil entrypoint")
 			}
 			if got.Url != tc.want {
 				t.Fatalf("got %q, want %q", got.Url, tc.want)
@@ -199,7 +199,7 @@ func TestServerHTTPListener(t *testing.T) {
 	}
 }
 
-func TestServerWSListener(t *testing.T) {
+func TestServerWSEntrypoint(t *testing.T) {
 	testCases := []struct {
 		name    string
 		server  runtimes.Server
@@ -249,12 +249,12 @@ func TestServerWSListener(t *testing.T) {
 				Config: config,
 			}
 
-			got, err := serverWsListener(ctx, "test-server", tc.server)
+			got, err := serverWsEntrypoint(ctx, "test-server", tc.server)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if got == nil {
-				t.Fatal("expected non-nil listener")
+				t.Fatal("expected non-nil entrypoint")
 			}
 			if got.Url != tc.want {
 				t.Fatalf("got %q, want %q", got.Url, tc.want)
@@ -263,7 +263,7 @@ func TestServerWSListener(t *testing.T) {
 	}
 }
 
-func TestServerWsUnixListener(t *testing.T) {
+func TestServerWsUnixEntrypoint(t *testing.T) {
 	testCases := []struct {
 		name       string
 		server     runtimes.Server
@@ -319,12 +319,12 @@ func TestServerWsUnixListener(t *testing.T) {
 				Config: config,
 			}
 
-			got, err := serverWsOverUnixListener(ctx, "test-server", tc.server)
+			got, err := serverWsOverUnixEntrypoint(ctx, "test-server", tc.server)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if got == nil {
-				t.Fatal("expected non-nil listener")
+				t.Fatal("expected non-nil entrypoint")
 			}
 			if got.Url != tc.wantURL {
 				t.Fatalf("URL: got %q, want %q", got.Url, tc.wantURL)

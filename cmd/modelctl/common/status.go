@@ -3,10 +3,10 @@ package common
 import "fmt"
 
 type Status struct {
-	Engine    string            `json:"engine" yaml:"engine"`
-	Services  map[string]string `json:"services" yaml:"services"`
-	Listeners Listeners         `json:"listeners,omitempty" yaml:"listeners,omitempty"`
-	Model     map[string]string `json:"model,omitempty" yaml:"model,omitempty"`
+	Engine      string       `json:"engine" yaml:"engine"`
+	Services    map[string]string `json:"services" yaml:"services"`
+	Entrypoints Entrypoints  `json:"entrypoints,omitempty" yaml:"entrypoints,omitempty"`
+	Model       map[string]string `json:"model,omitempty" yaml:"model,omitempty"`
 }
 
 func SnapStatus(ctx *Context) (*Status, error) {
@@ -27,11 +27,11 @@ func SnapStatus(ctx *Context) (*Status, error) {
 	}
 	statusStr.Services = services
 
-	listeners, err := ServerListeners(ctx)
+	entrypoints, err := ServerEntrypoints(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("getting server listeners: %v", err)
+		return nil, fmt.Errorf("getting server entrypoints: %v", err)
 	}
-	statusStr.Listeners = listeners
+	statusStr.Entrypoints = entrypoints
 
 	modelStatus, err := ModelStatus(ctx)
 	if err != nil {

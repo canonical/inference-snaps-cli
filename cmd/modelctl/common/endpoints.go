@@ -11,18 +11,18 @@ import (
 )
 
 const (
-	openAiListenerKey = "openai"
+	openAiEntrypointKey = "openai"
 )
 
-type Listeners map[string]Listener
+type Entrypoints map[string]Entrypoint
 
-type Listener struct {
+type Entrypoint struct {
 	Url        string `json:"url" yaml:"url"`
 	ApiSpec    string `json:"api-spec,omitempty" yaml:"api-spec,omitempty"`
 	UnixSocket string `json:"unix-socket,omitempty" yaml:"unix-socket,omitempty"`
 }
 
-func ServerListeners(ctx *Context) (Listeners, error) {
+func ServerEntrypoints(ctx *Context) (Entrypoints, error) {
 	activeEngineName, err := ctx.Cache.GetActiveEngine()
 	if err != nil {
 		return nil, fmt.Errorf("%s: %v", LookingUpActiveEngine, err)
@@ -32,7 +32,7 @@ func ServerListeners(ctx *Context) (Listeners, error) {
 		return nil, fmt.Errorf("loading active engine manifest: %v", err)
 	}
 
-	// If the engine does not list a runtime, return no listeners
+	// If the engine does not list a runtime, return no entrypoints
 	if activeEngineManifest.Runtime == "" {
 		return nil, nil
 	}
@@ -42,34 +42,34 @@ func ServerListeners(ctx *Context) (Listeners, error) {
 		return nil, fmt.Errorf("loading runtime manifest: %v", err)
 	}
 
-	listeners := make(Listeners)
+	entrypoints := make(Entrypoints)
 
 	for serverName, serverSettings := range runtimeManifest.Servers {
-		var listener *Listener
+		var entrypoint *Entrypoint
 		var err error
 
 		switch serverSettings.Protocol {
 		case "http", "https":
-			listener, err = serverHttpListener(ctx, serverSettings)
+			entrypoint, err = serverHttpEntrypoint(ctx, serverSettings)
 			if err != nil {
-				return nil, fmt.Errorf("getting server HTTP listener: %v", err)
+				return nil, fmt.Errorf("getting server HTTP entrypoint: %v", err)
 			}
 		case "ws":
-			listener, err = serverWsListener(ctx, serverName, serverSettings)
+			entrypoint, err = serverWsEntrypoint(ctx, serverName, serverSettings)
 			if err != nil {
-				return nil, fmt.Errorf("getting server WebSocket listener: %v", err)
+				return nil, fmt.Errorf("getting server WebSocket entrypoint: %v", err)
 			}
 		case "ws+unix":
-			listener, err = serverWsOverUnixListener(ctx, serverName, serverSettings)
+			entrypoint, err = serverWsOverUnixEntrypoint(ctx, serverName, serverSettings)
 			if err != nil {
-				return nil, fmt.Errorf("getting server WebSocket Unix listener: %v", err)
+				return nil, fmt.Errorf("getting server WebSocket Unix entrypoint: %v", err)
 			}
 		default:
 			return nil, fmt.Errorf("unsupported protocol %q for server %q in runtime %q",
 				serverSettings.Protocol, serverName, activeEngineManifest.Runtime)
 		}
 
-		listeners[serverName] = *listener
+		entrypoints[serverName] = *entrypoint
 	}
 
 	// If builtin webui is enabled, also list it as well
@@ -78,13 +78,13 @@ func ServerListeners(ctx *Context) (Listeners, error) {
 		if err != nil {
 			return nil, fmt.Errorf("getting web UI url: %v", err)
 		}
-		listeners["webui"] = Listener{Url: webUiUrl}
+		entrypoints["webui"] = Entrypoint{Url: webUiUrl}
 	}
 
-	return listeners, nil
+	return entrypoints, nil
 }
 
-func serverHttpListener(ctx *Context, server runtimes.Server) (*Listener, error) {
+func serverHttpEntrypoint(ctx *Context, server runtimes.Server) (*Entrypoint, error) {
 	const (
 		confHttpPort    = "http.port"
 		defaultBasePath = "/"
@@ -102,20 +102,20 @@ func serverHttpListener(ctx *Context, server runtimes.Server) (*Listener, error)
 		basePath = defaultBasePath
 	}
 
-	httpHost, err := listenerHost(ctx, confHost)
+	httpHost, err := entrypointHost(ctx, confHost)
 	if err != nil {
 		return nil, err
 	}
-	listenerUrl := url.URL{
+	entrypointUrl := url.URL{
 		Scheme: server.Protocol,
 		Host:   net.JoinHostPort(httpHost, fmt.Sprint(httpPort)),
 		Path:   basePath,
 	}
 
-	return &Listener{Url: listenerUrl.String()}, nil
+	return &Entrypoint{Url: entrypointUrl.String()}, nil
 }
 
-func serverWsListener(ctx *Context, serverName string, server runtimes.Server) (*Listener, error) {
+func serverWsEntrypoint(ctx *Context, serverName string, server runtimes.Server) (*Entrypoint, error) {
 	const (
 		confWsPort      = "ws.port"
 		defaultBasePath = "/"
@@ -133,46 +133,46 @@ func serverWsListener(ctx *Context, serverName string, server runtimes.Server) (
 		basePath = defaultBasePath
 	}
 
-	wsHost, err := listenerHost(ctx, confWsHost)
+	wsHost, err := entrypointHost(ctx, confWsHost)
 	if err != nil {
 		return nil, err
 	}
 
-	listenerUrl := url.URL{
+	entrypointUrl := url.URL{
 		Scheme: "ws",
 		Host:   net.JoinHostPort(wsHost, fmt.Sprint(wsPort)),
 		Path:   basePath,
 	}
 
-	return &Listener{Url: listenerUrl.String()}, nil
+	return &Entrypoint{Url: entrypointUrl.String()}, nil
 }
 
-func serverWsOverUnixListener(ctx *Context, serverName string, server runtimes.Server) (*Listener, error) {
+func serverWsOverUnixEntrypoint(ctx *Context, serverName string, server runtimes.Server) (*Entrypoint, error) {
 	// For ws+unix, use the same host/port configuration as regular ws
 	// but also populate the UnixSocket field
-	listener, err := serverWsListener(ctx, serverName, server)
+	entrypoint, err := serverWsEntrypoint(ctx, serverName, server)
 	if err != nil {
 		return nil, err
 	}
 
 	socketMap, err := ctx.Config.Get("ws.unix-socket")
 	if err == nil {
-		listener.UnixSocket = fmt.Sprint(socketMap["ws.unix-socket"])
+		entrypoint.UnixSocket = fmt.Sprint(socketMap["ws.unix-socket"])
 	}
 
-	return listener, nil
+	return entrypoint, nil
 }
 
 func OpenAiBaseUrl(ctx *Context) (string, error) {
-	listeners, err := ServerListeners(ctx)
+	entrypoints, err := ServerEntrypoints(ctx)
 	if err != nil {
-		return "", fmt.Errorf("getting server listeners: %v", err)
+		return "", fmt.Errorf("getting server entrypoints: %v", err)
 	}
-	listener, found := listeners[openAiListenerKey]
+	entrypoint, found := entrypoints[openAiEntrypointKey]
 	if !found {
-		return "", fmt.Errorf("%q not found in server listeners", openAiListenerKey)
+		return "", fmt.Errorf("%q not found in server entrypoints", openAiEntrypointKey)
 	}
-	return listener.Url, nil
+	return entrypoint.Url, nil
 }
 
 func UiServerHttpUrl(ctx *Context) (string, error) {
@@ -188,21 +188,21 @@ func UiServerHttpUrl(ctx *Context) (string, error) {
 	}
 	httpPort := httpPortMap[confWebuiHttpPort]
 
-	httpHost, err := listenerHost(ctx, confWebuiHost)
+	httpHost, err := entrypointHost(ctx, confWebuiHost)
 	if err != nil {
 		return "", err
 	}
 
-	listenerUrl := url.URL{
+	entrypointUrl := url.URL{
 		Scheme: "http",
 		Host:   net.JoinHostPort(httpHost, fmt.Sprint(httpPort)),
 		Path:   defaultBasePath,
 	}
 
-	return listenerUrl.String(), nil
+	return entrypointUrl.String(), nil
 }
 
-func listenerHost(ctx *Context, hostConfigKey string) (string, error) {
+func entrypointHost(ctx *Context, hostConfigKey string) (string, error) {
 	hostMap, err := ctx.Config.Get(hostConfigKey)
 	if err != nil {
 		return "", fmt.Errorf("getting config %q: %v", hostConfigKey, err)

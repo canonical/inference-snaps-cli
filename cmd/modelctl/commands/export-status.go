@@ -49,10 +49,10 @@ func (cmd *exportStatusCommand) run(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("getting status: %v", err)
 	}
 
-	// Convert Listeners to Endpoints (extract URLs) for backward compatibility
+	// Convert Entrypoints to Endpoints (extract URLs) for backward compatibility
 	endpoints := make(map[string]string)
-	for name, listener := range statusStr.Listeners {
-		endpoints[name] = listener.Url
+	for name, entrypoint := range statusStr.Entrypoints {
+		endpoints[name] = entrypoint.Url
 	}
 
 	// Decouple internal status definition from shared one
