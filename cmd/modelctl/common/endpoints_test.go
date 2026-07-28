@@ -126,6 +126,50 @@ servers:
 				"webui":  "http://192.0.2.1:8080",
 			},
 		},
+		{
+			name: "secure websocket servers",
+			engineYAML: `
+name: test-engine
+runtime: test-runtime
+`,
+			runtimeYAML: `
+servers:
+  openai-wss:
+    protocol: wss
+    base-path: /v1
+  openai-unix:
+    protocol: wss+unix
+    base-path: /v1
+`,
+			wantEntrypointURLs: map[string]string{
+				"openai-wss":  "wss://127.0.0.1:8081/v1",
+				"openai-unix": "",
+			},
+			wantUnixSockets: map[string]string{
+				"openai-unix": "/run/openai.sock",
+			},
+			wantUnixSocketUrls: map[string]string{
+				"openai-unix": "wss://unix/v1",
+			},
+		},
+		{
+			name: "secure websocket namespaced server",
+			engineYAML: `
+name: test-engine
+runtime: test-runtime
+`,
+			runtimeYAML: `
+servers:
+  logger:
+    protocol: wss
+    base-path: /stream
+    namespace: logger
+`,
+			wantEntrypointURLs: map[string]string{
+				"logger": "wss://localhost:9091/stream",
+				"webui":  "http://192.0.2.1:8080",
+			},
+		},
 	}
 
 	for _, tc := range testCases {

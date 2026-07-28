@@ -142,7 +142,7 @@ func (c *chatClient) handshake() error {
 	host := parsedURL.Hostname()
 	port := parsedURL.Port()
 	if port == "" {
-		if parsedURL.Scheme == "https" {
+		if parsedURL.Scheme == "https" || parsedURL.Scheme == "wss" {
 			port = "443"
 		} else {
 			port = "80"

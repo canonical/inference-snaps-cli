@@ -73,12 +73,12 @@ func ServerEntrypoints(ctx *Context) (Entrypoints, error) {
 			if err != nil {
 				return nil, fmt.Errorf("constructing HTTP Unix entrypoint: %v", err)
 			}
-		case "ws":
+		case "ws", "wss":
 			entrypoint, err = serverWsEntrypoint(ctx, serverSettings)
 			if err != nil {
 				return nil, fmt.Errorf("constructing WebSocket entrypoint: %v", err)
 			}
-		case "ws+unix":
+		case "ws+unix", "wss+unix":
 			entrypoint, err = serverWsOverUnixSocketEntrypoint(ctx, serverSettings)
 			if err != nil {
 				return nil, fmt.Errorf("constructing WebSocket Unix entrypoint: %v", err)
@@ -158,7 +158,7 @@ func serverWsEntrypoint(ctx *Context, server runtimes.Server) (*Entrypoint, erro
 	}
 
 	entrypointUrl := url.URL{
-		Scheme: "ws",
+		Scheme: server.Protocol,
 		Host:   net.JoinHostPort(wsHost, fmt.Sprint(wsPort)),
 		Path:   server.BasePath,
 	}
