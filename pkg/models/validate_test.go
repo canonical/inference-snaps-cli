@@ -133,6 +133,16 @@ func TestCapabilitiesOptional(t *testing.T) {
 	}
 }
 
+func TestCapabilityEmbedding(t *testing.T) {
+	manifest := templateManifest()
+	manifest.Capabilities = []string{"embedding"}
+
+	err := manifest.validate("test")
+	if err != nil {
+		t.Fatalf("embedding is a valid capability, got error: %v", err)
+	}
+}
+
 func TestDiskSizeRequired(t *testing.T) {
 	manifest := templateManifest()
 	manifest.DiskSize = ""
