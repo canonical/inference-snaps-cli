@@ -190,6 +190,9 @@ func OpenAiBaseUrl(ctx *Context) (string, error) {
 	if !found {
 		return "", fmt.Errorf("%q not found in server entrypoints", runtimes.OpenAiServerType)
 	}
+	if entrypoint.Url == "" {
+		return "", fmt.Errorf("%q entrypoint does not have a URL", runtimes.OpenAiServerType)
+	}
 	return entrypoint.Url, nil
 }
 
@@ -199,11 +202,10 @@ func UiServerHttpUrl(ctx *Context) (string, error) {
 		confWebuiHost     = "webui.http.host"
 	)
 
-	httpPortMap, err := ctx.Config.Get(confWebuiHttpPort)
+	httpPort, err := getConfigString(ctx, confWebuiHttpPort)
 	if err != nil {
 		return "", fmt.Errorf("getting config %q: %v", confWebuiHttpPort, err)
 	}
-	httpPort := httpPortMap[confWebuiHttpPort]
 
 	httpHost, err := getConfigString(ctx, confWebuiHost)
 	if err != nil {

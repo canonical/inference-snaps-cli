@@ -3,9 +3,9 @@ package common
 import "fmt"
 
 type Status struct {
-	Engine      string       `json:"engine" yaml:"engine"`
+	Engine      string            `json:"engine" yaml:"engine"`
 	Services    map[string]string `json:"services" yaml:"services"`
-	Entrypoints Entrypoints  `json:"entrypoints,omitempty" yaml:"entrypoints,omitempty"`
+	Entrypoints Entrypoints       `json:"entrypoints,omitempty" yaml:"entrypoints,omitempty"`
 	Model       map[string]string `json:"model,omitempty" yaml:"model,omitempty"`
 }
 
