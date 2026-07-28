@@ -5,10 +5,10 @@ import (
 )
 
 const (
-	capabilityText      string = "text"
-	capabilityVision    string = "vision"
-	capabilityTools     string = "tools"
-	capabilityThinking  string = "thinking"
+	capabilityText          string = "text"
+	capabilityVision        string = "vision"
+	capabilityTools         string = "tools"
+	capabilityThinking      string = "thinking"
 	capabilityTextEmbedding string = "text-embedding"
 )
 
