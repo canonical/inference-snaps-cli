@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
@@ -136,6 +137,16 @@ func isValidProtocol(protocol string) bool {
 	}
 }
 
+func isValidNamespace(namespace string) bool {
+	if namespace == "" {
+		return true
+	}
+	// Namespace must start with a lowercase letter, followed by any combination of
+	// lowercase letters, digits, and hyphens
+	pattern := regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
+	return pattern.MatchString(namespace)
+}
+
 func (server Server) validate(name string) error {
 	if server.Protocol == "" {
 		return fmt.Errorf("required field is not set for server %s: protocol", name)
@@ -143,6 +154,13 @@ func (server Server) validate(name string) error {
 
 	if !isValidProtocol(server.Protocol) {
 		return fmt.Errorf("invalid protocol %q for server %s: must be one of http, https, http+unix, https+unix, ws, wss, ws+unix, wss+unix", server.Protocol, name)
+	}
+
+	// namespace is optional
+	if server.Namespace != "" {
+		if !isValidNamespace(server.Namespace) {
+			return fmt.Errorf("invalid namespace %q for server %s: must start with a lowercase letter, and contain only lowercase letters, digits, and hyphens", server.Namespace, name)
+		}
 	}
 
 	// base-path is optional

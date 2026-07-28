@@ -149,6 +149,47 @@ func TestServerProtocolValid(t *testing.T) {
 	}
 }
 
+func TestServerNamespaceInvalid(t *testing.T) {
+	manifest := templateManifest()
+
+	invalidNamespaces := []string{"-namespace", "1namespace", "Name-Space", "name space", "-", "1"}
+	for _, namespace := range invalidNamespaces {
+		manifest.Servers = map[string]Server{
+			"openai": {
+				Protocol:  "http",
+				Namespace: namespace,
+			},
+		}
+
+		err := manifest.validate("test")
+		if err == nil {
+			t.Fatalf("server namespace %q should be invalid", namespace)
+		}
+		if !strings.Contains(err.Error(), "invalid namespace") {
+			t.Fatalf("expected error about invalid namespace for %q, got: %v", namespace, err)
+		}
+	}
+}
+
+func TestServerNamespaceValid(t *testing.T) {
+	manifest := templateManifest()
+
+	validNamespaces := []string{"", "namespace", "myservice", "logger", "kserve", "abc", "my-service", "service123", "my-service-1"}
+	for _, namespace := range validNamespaces {
+		manifest.Servers = map[string]Server{
+			"openai": {
+				Protocol:  "http",
+				Namespace: namespace,
+			},
+		}
+
+		err := manifest.validate("test")
+		if err != nil {
+			t.Fatalf("server namespace %q should be valid, got error: %v", namespace, err)
+		}
+	}
+}
+
 func TestServerBasePathOptional(t *testing.T) {
 	manifest := templateManifest()
 	manifest.Servers = map[string]Server{
