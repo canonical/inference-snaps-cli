@@ -63,22 +63,22 @@ func ServerEntrypoints(ctx *Context) (Entrypoints, error) {
 		var err error
 
 		switch serverSettings.Protocol {
-		case "http", "https":
+		case runtimes.ProtocolHttp, runtimes.ProtocolHttps:
 			entrypoint, err = serverHttpEntrypoint(ctx, serverSettings)
 			if err != nil {
 				return nil, fmt.Errorf("constructing HTTP entrypoint: %v", err)
 			}
-		case "http+unix", "https+unix":
+		case runtimes.ProtocolHttpUnix, runtimes.ProtocolHttpsUnix:
 			entrypoint, err = serverHttpOverUnixSocketEntrypoint(ctx, serverSettings)
 			if err != nil {
 				return nil, fmt.Errorf("constructing HTTP Unix entrypoint: %v", err)
 			}
-		case "ws", "wss":
+		case runtimes.ProtocolWebSocket, runtimes.ProtocolWebSocketSecure:
 			entrypoint, err = serverWsEntrypoint(ctx, serverSettings)
 			if err != nil {
 				return nil, fmt.Errorf("constructing WebSocket entrypoint: %v", err)
 			}
-		case "ws+unix", "wss+unix":
+		case runtimes.ProtocolWebSocketUnix, runtimes.ProtocolWebSocketSecureUnix:
 			entrypoint, err = serverWsOverUnixSocketEntrypoint(ctx, serverSettings)
 			if err != nil {
 				return nil, fmt.Errorf("constructing WebSocket Unix entrypoint: %v", err)

@@ -1,6 +1,15 @@
 package runtimes
 
 const (
+	// Protocols
+	ProtocolHttp                = "http"
+	ProtocolHttps               = "https"
+	ProtocolHttpUnix            = "http+unix"
+	ProtocolHttpsUnix           = "https+unix"
+	ProtocolWebSocket           = "ws"
+	ProtocolWebSocketSecure     = "wss"
+	ProtocolWebSocketUnix       = "ws+unix"
+	ProtocolWebSocketSecureUnix = "wss+unix"
 	// HTTP configuration keys
 	HttpHostConfKey       = "http.host"
 	HttpPortConfKey       = "http.port"

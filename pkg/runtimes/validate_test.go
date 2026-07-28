@@ -108,6 +108,47 @@ func TestServerProtocolRequired(t *testing.T) {
 	}
 }
 
+func TestServerProtocolInvalid(t *testing.T) {
+	manifest := templateManifest()
+
+	invalidProtocols := []string{"ftp", "ssh", "telnet", "http+invalid"}
+	for _, protocol := range invalidProtocols {
+		manifest.Servers = map[string]Server{
+			"openai": {
+				Protocol: protocol,
+				BasePath: "/v1",
+			},
+		}
+
+		err := manifest.validate("test")
+		if err == nil {
+			t.Fatalf("server protocol %q should be invalid", protocol)
+		}
+		if !strings.Contains(err.Error(), "invalid protocol") {
+			t.Fatalf("expected error about invalid protocol for %q, got: %v", protocol, err)
+		}
+	}
+}
+
+func TestServerProtocolValid(t *testing.T) {
+	manifest := templateManifest()
+
+	validProtocols := []string{"http", "https", "http+unix", "https+unix", "ws", "wss", "ws+unix", "wss+unix"}
+	for _, protocol := range validProtocols {
+		manifest.Servers = map[string]Server{
+			"openai": {
+				Protocol: protocol,
+				BasePath: "/v1",
+			},
+		}
+
+		err := manifest.validate("test")
+		if err != nil {
+			t.Fatalf("server protocol %q should be valid, got error: %v", protocol, err)
+		}
+	}
+}
+
 func TestServerBasePathOptional(t *testing.T) {
 	manifest := templateManifest()
 	manifest.Servers = map[string]Server{

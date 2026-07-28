@@ -125,9 +125,24 @@ func (manifest Manifest) validate(expectedRuntimeName string) error {
 	return nil
 }
 
+func isValidProtocol(protocol string) bool {
+	switch protocol {
+	case ProtocolHttp, ProtocolHttps, ProtocolHttpUnix, ProtocolHttpsUnix:
+		return true
+	case ProtocolWebSocket, ProtocolWebSocketSecure, ProtocolWebSocketUnix, ProtocolWebSocketSecureUnix:
+		return true
+	default:
+		return false
+	}
+}
+
 func (server Server) validate(name string) error {
 	if server.Protocol == "" {
 		return fmt.Errorf("required field is not set for server %s: protocol", name)
+	}
+
+	if !isValidProtocol(server.Protocol) {
+		return fmt.Errorf("invalid protocol %q for server %s: must be one of http, https, http+unix, https+unix, ws, wss, ws+unix, wss+unix", server.Protocol, name)
 	}
 
 	// base-path is optional
