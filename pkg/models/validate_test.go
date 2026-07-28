@@ -133,13 +133,13 @@ func TestCapabilitiesOptional(t *testing.T) {
 	}
 }
 
-func TestCapabilityEmbedding(t *testing.T) {
+func TestCapabilityTextEmbedding(t *testing.T) {
 	manifest := templateManifest()
-	manifest.Capabilities = []string{"embedding"}
+	manifest.Capabilities = []string{"text-embedding"}
 
 	err := manifest.validate("test")
 	if err != nil {
-		t.Fatalf("embedding is a valid capability, got error: %v", err)
+		t.Fatalf("text-embedding is a valid capability, got error: %v", err)
 	}
 }
 

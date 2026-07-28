@@ -9,7 +9,7 @@ const (
 	capabilityVision    string = "vision"
 	capabilityTools     string = "tools"
 	capabilityThinking  string = "thinking"
-	capabilityEmbedding string = "embedding"
+	capabilityEmbedding string = "text-embedding"
 )
 
 type Manifest struct {
