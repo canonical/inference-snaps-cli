@@ -49,17 +49,15 @@ func (cmd *exportStatusCommand) run(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("getting status: %v", err)
 	}
 
-	// Convert Entrypoints to Endpoints (extract URLs) for backward compatibility
-	endpoints := make(map[string]string)
+	urls := make(map[string]string)
 	for name, entrypoint := range statusStr.Entrypoints {
 		if entrypoint.Url != "" {
-			endpoints[name] = entrypoint.Url
+			urls[name] = entrypoint.Url
 		}
 	}
 
-	// Decouple internal status definition from shared one
 	sharedStatusStr := &exportedStatus{
-		Endpoints: endpoints,
+		Endpoints: urls,
 		Model:     statusStr.Model,
 	}
 
