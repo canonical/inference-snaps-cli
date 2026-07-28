@@ -9,7 +9,7 @@ const (
 	capabilityVision    string = "vision"
 	capabilityTools     string = "tools"
 	capabilityThinking  string = "thinking"
-	capabilityEmbedding string = "text-embedding"
+	capabilityTextEmbedding string = "text-embedding"
 )
 
 type Manifest struct {
@@ -31,5 +31,5 @@ type Manifest struct {
 }
 
 func SupportedCapabilities() []string {
-	return []string{capabilityText, capabilityVision, capabilityTools, capabilityThinking, capabilityEmbedding}
+	return []string{capabilityText, capabilityVision, capabilityTools, capabilityThinking, capabilityTextEmbedding}
 }
