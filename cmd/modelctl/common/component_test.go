@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/snap"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
 )
@@ -443,6 +444,73 @@ func TestMissingComponents(t *testing.T) {
 		}
 		if len(missing) != 0 {
 			t.Errorf("expected empty slice, got %v", missing)
+		}
+	})
+}
+
+func TestInstallMissingComponentsConfirmation(t *testing.T) {
+	dirs := setupComponentTestDirs(t)
+	t.Setenv("SNAP_COMPONENTS", t.TempDir())
+
+	engineManifest := &engines.Manifest{Runtime: "test-runtime"}
+
+	t.Run("prompts without a terminal and cancels on decline", func(t *testing.T) {
+		installed := false
+		ctx := &Context{
+			RuntimesDir: dirs.runtimesDir,
+			Snap: snap.MockWithInstall(func(_ string) error {
+				installed = true
+				return nil
+			}),
+		}
+
+		readEnd, writeEnd, err := os.Pipe()
+		if err != nil {
+			t.Fatalf("creating stdin pipe: %v", err)
+		}
+		if _, err := writeEnd.WriteString("n\n"); err != nil {
+			t.Fatalf("writing confirmation response: %v", err)
+		}
+		writeEnd.Close()
+
+		originalStdin := os.Stdin
+		os.Stdin = readEnd
+		t.Cleanup(func() {
+			os.Stdin = originalStdin
+			readEnd.Close()
+		})
+
+		cancelled, err := InstallMissingComponents(ctx, false, engineManifest, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !cancelled {
+			t.Fatal("expected installation to be cancelled")
+		}
+		if installed {
+			t.Fatal("expected no component installation after declining")
+		}
+	})
+
+	t.Run("assume yes installs without prompting", func(t *testing.T) {
+		var installed []string
+		ctx := &Context{
+			RuntimesDir: dirs.runtimesDir,
+			Snap: snap.MockWithInstall(func(name string) error {
+				installed = append(installed, name)
+				return nil
+			}),
+		}
+
+		cancelled, err := InstallMissingComponents(ctx, true, engineManifest, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if cancelled {
+			t.Fatal("expected installation to proceed with --assume-yes")
+		}
+		if len(installed) != 1 || installed[0] != "test-runtime-component" {
+			t.Fatalf("expected runtime component to be installed, got %v", installed)
 		}
 	})
 }

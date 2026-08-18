@@ -367,19 +367,20 @@ func TestPrintComponentsAndConfirm(t *testing.T) {
 	dirs := setupPruneTestDirs(t)
 	cmd := makePruneCmd(dirs, "active-engine", "active-model")
 
-	t.Run("non-TTY auto-confirms without prompting", func(t *testing.T) {
-		// In a test environment stdout is not a TTY, so the confirmation prompt is
-		// skipped and the function returns confirmed=true immediately.
+	t.Run("assume yes confirms without prompting", func(t *testing.T) {
+		cmd.assumeYes = true
+		t.Cleanup(func() { cmd.assumeYes = false })
+
 		confirmed, err := cmd.printComponentsAndConfirm([]string{"comp-a", "comp-b"})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		if !confirmed {
-			t.Error("expected confirmed=true in non-TTY mode")
+			t.Error("expected confirmed=true with --assume-yes")
 		}
 	})
 
-	t.Run("TTY: user confirms with 'y' returns true", func(t *testing.T) {
+	t.Run("user confirms with 'y' returns true", func(t *testing.T) {
 		ptyMaster, ptySlave, err := pty.Open()
 		if err != nil {
 			t.Fatalf("failed to open pty: %v", err)
@@ -387,8 +388,7 @@ func TestPrintComponentsAndConfirm(t *testing.T) {
 		defer ptyMaster.Close()
 		defer ptySlave.Close()
 
-		// Redirect both stdout and stdin to the PTY slave so that
-		// IsTerminalOutput() returns true and PromptYN reads from the slave.
+		// Redirect both stdout and stdin so PromptYN reads from the PTY slave.
 		origStdout, origStdin := os.Stdout, os.Stdin
 		os.Stdout = ptySlave
 		os.Stdin = ptySlave
@@ -405,7 +405,7 @@ func TestPrintComponentsAndConfirm(t *testing.T) {
 		}
 	})
 
-	t.Run("TTY: user declines with 'n' returns false", func(t *testing.T) {
+	t.Run("user declines with 'n' returns false", func(t *testing.T) {
 		ptyMaster, ptySlave, err := pty.Open()
 		if err != nil {
 			t.Fatalf("failed to open pty: %v", err)

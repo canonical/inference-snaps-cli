@@ -226,8 +226,7 @@ func InstallMissingComponents(ctx *Context, assumeYes bool, engineManifest *engi
 		fmt.Println(line)
 	}
 
-	// Only ask for confirmation if it is an interactive terminal
-	if !assumeYes && utils.IsTerminalOutput() {
+	if !assumeYes {
 		fmt.Println()
 		if !PromptYN("Do you want to continue?", true) {
 			fmt.Println("Cancelled. No changes applied.")
