@@ -18,6 +18,8 @@ import (
 // diskSizePattern matches a human-readable size such as "6G" or "512M".
 var diskSizePattern = regexp.MustCompile(`^\d+(\.\d+)?(K|M|G|T)i?B?$`)
 
+var manifestMap = make(map[string]Manifest)
+
 func Validate(manifestFilePath string) error {
 
 	if filepath.Base(manifestFilePath) != ManifestFilename {
@@ -45,6 +47,10 @@ func Validate(manifestFilePath string) error {
 		return err
 	}
 
+	if _, exists := manifestMap[manifestFilePath]; !exists {
+		manifestMap[manifestFilePath] = manifest
+	}
+
 	if err := manifest.validate(modelName); err != nil {
 		return err
 	}
@@ -57,7 +63,14 @@ func Validate(manifestFilePath string) error {
 	if err != nil {
 		return err
 	}
-	return engines.ValidateComponents(manifest.Components, knownComponents)
+	if err := engines.ValidateComponents(manifest.Components, knownComponents); err != nil {
+		return err
+	}
+
+	if err := validateAliases(manifest, manifestMap); err != nil {
+		return err
+	}
+	return nil
 }
 
 func modelNameFromPath(manifestFilePath string) string {
@@ -138,5 +151,20 @@ func (manifest Manifest) validate(expectedModelName string) error {
 		return err
 	}
 
+	return nil
+}
+
+func validateAliases(current Manifest, manifests map[string]Manifest) error {
+	if current.Alias == "" {
+		return nil
+	}
+	for _, manifest := range manifests {
+		if manifest.Name == current.Name {
+			continue
+		}
+		if manifest.Alias == current.Alias {
+			return fmt.Errorf("alias collision: models %q and %q both use %q", manifest.Name, current.Name, current.Alias)
+		}
+	}
 	return nil
 }

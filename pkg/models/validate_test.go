@@ -11,6 +11,7 @@ import (
 func templateManifest() Manifest {
 	manifest := Manifest{
 		Name:         "test",
+		Alias:        "test-alias",
 		Description:  "test",
 		ModelCardUrl: "https://example.com/model-card",
 		Quantization: "Q4_K_M",
@@ -200,5 +201,20 @@ func TestModelNameMatch(t *testing.T) {
 	err := manifest.validate("test")
 	if err == nil {
 		t.Fatal("model directory name should match name in manifest")
+	}
+}
+
+func TestValidateCollidingAliases(t *testing.T) {
+	manifestA := templateManifest()
+	manifestB := templateManifest()
+	manifestB.Name = "different-test-name"
+	manifestB.Alias = "test-alias" // same alias as manifestA
+
+	manifests := map[string]Manifest{
+		"manifestA": manifestA,
+		"manifestB": manifestB,
+	}
+	if err := validateAliases(manifestA, manifests); err == nil {
+		t.Fatalf("expected alias collision, got no error")
 	}
 }
