@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"gopkg.in/yaml.v3"
 )
 
@@ -204,34 +205,55 @@ func TestModelNameMatch(t *testing.T) {
 	}
 }
 
-func TestValidateCollidingAliases(t *testing.T) {
-	manifestA := templateManifest()
-	manifestB := templateManifest()
-	manifestB.Name = "different-test-name"
-	manifestB.Alias = "test-alias" // same alias as manifestA
+func TestValidateAliasCollisionSameEngine(t *testing.T) {
+	modelA := templateManifest()
+	modelA.Name = "model-a"
+	modelA.Alias = "shared"
 
-	manifests := map[string]Manifest{
-		"manifestA": manifestA,
-		"manifestB": manifestB,
+	modelB := templateManifest()
+	modelB.Name = "model-b"
+	modelB.Alias = "shared"
+
+	engineManifests := []engines.Manifest{
+		{Name: "engine-1", Model: engines.Model{Options: []string{"model-a", "model-b"}}},
 	}
-	if err := validateAliases(manifestA, manifests); err == nil {
-		t.Fatalf("expected alias collision, got no error")
+	if err := validateAliasesPerEngine(engineManifests, []Manifest{modelA, modelB}); err == nil {
+		t.Fatalf("expected alias collision within engine, got no error")
 	}
 }
 
-func TestValidateUniqueAliases(t *testing.T) {
-	manifestA := templateManifest()
-	manifestA.Alias = "alias-a"
+func TestValidateAliasSharedAcrossEngines(t *testing.T) {
+	// The same alias is allowed when the two models never share an engine.
+	modelA := templateManifest()
+	modelA.Name = "model-a"
+	modelA.Alias = "shared"
 
-	manifestB := templateManifest()
-	manifestB.Name = "different-test-name"
-	manifestB.Alias = "alias-b"
+	modelB := templateManifest()
+	modelB.Name = "model-b"
+	modelB.Alias = "shared"
 
-	manifests := map[string]Manifest{
-		"manifestA": manifestA,
-		"manifestB": manifestB,
+	engineManifests := []engines.Manifest{
+		{Name: "engine-1", Model: engines.Model{Options: []string{"model-a"}}},
+		{Name: "engine-2", Model: engines.Model{Options: []string{"model-b"}}},
 	}
-	if err := validateAliases(manifestA, manifests); err != nil {
+	if err := validateAliasesPerEngine(engineManifests, []Manifest{modelA, modelB}); err != nil {
+		t.Fatalf("expected no collision across engines, got: %v", err)
+	}
+}
+
+func TestValidateAliasUniqueWithinEngine(t *testing.T) {
+	modelA := templateManifest()
+	modelA.Name = "model-a"
+	modelA.Alias = "alias-a"
+
+	modelB := templateManifest()
+	modelB.Name = "model-b"
+	modelB.Alias = "alias-b"
+
+	engineManifests := []engines.Manifest{
+		{Name: "engine-1", Model: engines.Model{Options: []string{"model-a", "model-b"}}},
+	}
+	if err := validateAliasesPerEngine(engineManifests, []Manifest{modelA, modelB}); err != nil {
 		t.Fatalf("expected no collision, got: %v", err)
 	}
 }

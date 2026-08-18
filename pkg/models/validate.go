@@ -18,8 +18,6 @@ import (
 // diskSizePattern matches a human-readable size such as "6G" or "512M".
 var diskSizePattern = regexp.MustCompile(`^\d+(\.\d+)?(K|M|G|T)i?B?$`)
 
-var manifestMap = make(map[string]Manifest)
-
 func Validate(manifestFilePath string) error {
 
 	if filepath.Base(manifestFilePath) != ManifestFilename {
@@ -63,11 +61,6 @@ func Validate(manifestFilePath string) error {
 		return err
 	}
 
-	if err := validateAliases(manifest, manifestMap); err != nil {
-		return err
-	}
-
-	manifestMap[manifestFilePath] = manifest
 	return nil
 }
 
@@ -152,16 +145,35 @@ func (manifest Manifest) validate(expectedModelName string) error {
 	return nil
 }
 
-func validateAliases(current Manifest, manifests map[string]Manifest) error {
-	if current.Alias == "" {
-		return nil
+func ValidateAliases(enginesDir, modelsDir string) error {
+	modelManifests, err := LoadManifests(modelsDir)
+	if err != nil {
+		return err
 	}
-	for _, manifest := range manifests {
-		if manifest.Name == current.Name {
-			continue
-		}
-		if manifest.Alias == current.Alias {
-			return fmt.Errorf("alias collision: models %q and %q both use %q", manifest.Name, current.Name, current.Alias)
+	engineManifests, err := engines.LoadManifests(enginesDir)
+	if err != nil {
+		return err
+	}
+	return validateAliasesPerEngine(engineManifests, modelManifests)
+}
+
+func validateAliasesPerEngine(engineManifests []engines.Manifest, modelManifests []Manifest) error {
+	modelsByName := make(map[string]Manifest, len(modelManifests))
+	for _, m := range modelManifests {
+		modelsByName[m.Name] = m
+	}
+
+	for _, engine := range engineManifests {
+		aliasOwner := make(map[string]string)
+		for _, modelName := range engine.Model.Options {
+			model, ok := modelsByName[modelName]
+			if !ok || model.Alias == "" {
+				continue
+			}
+			if prev, ok := aliasOwner[model.Alias]; ok && prev != model.Name {
+				return fmt.Errorf("engine %q: models %q and %q both use alias %q", engine.Name, prev, model.Name, model.Alias)
+			}
+			aliasOwner[model.Alias] = model.Name
 		}
 	}
 	return nil
