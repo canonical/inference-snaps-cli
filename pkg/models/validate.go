@@ -47,10 +47,6 @@ func Validate(manifestFilePath string) error {
 		return err
 	}
 
-	if _, exists := manifestMap[manifestFilePath]; !exists {
-		manifestMap[manifestFilePath] = manifest
-	}
-
 	if err := manifest.validate(modelName); err != nil {
 		return err
 	}
@@ -70,6 +66,8 @@ func Validate(manifestFilePath string) error {
 	if err := validateAliases(manifest, manifestMap); err != nil {
 		return err
 	}
+
+	manifestMap[manifestFilePath] = manifest
 	return nil
 }
 

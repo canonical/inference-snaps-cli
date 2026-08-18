@@ -218,3 +218,20 @@ func TestValidateCollidingAliases(t *testing.T) {
 		t.Fatalf("expected alias collision, got no error")
 	}
 }
+
+func TestValidateUniqueAliases(t *testing.T) {
+	manifestA := templateManifest()
+	manifestA.Alias = "alias-a"
+
+	manifestB := templateManifest()
+	manifestB.Name = "different-test-name"
+	manifestB.Alias = "alias-b"
+
+	manifests := map[string]Manifest{
+		"manifestA": manifestA,
+		"manifestB": manifestB,
+	}
+	if err := validateAliases(manifestA, manifests); err != nil {
+		t.Fatalf("expected no collision, got: %v", err)
+	}
+}
