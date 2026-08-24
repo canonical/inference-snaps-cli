@@ -37,7 +37,7 @@ snapcraft -v
 Then install the snap and connect the required interfaces:
 
 ```bash
-sudo snap install --dangerous ./stack-utils_*.snap
+sudo snap install --dangerous ./stack-utils_*.snap ./*.comp
 sudo snap connect stack-utils:hardware-observe 
 ```
 
