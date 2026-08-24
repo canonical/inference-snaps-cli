@@ -464,6 +464,17 @@ func TestInstallMissingComponentsConfirmation(t *testing.T) {
 			}),
 		}
 
+		origStdout := os.Stdout
+		tmpStdout, err := os.CreateTemp(t.TempDir(), "stdout-*")
+		if err != nil {
+			t.Fatalf("creating stdout file: %v", err)
+		}
+		os.Stdout = tmpStdout
+		t.Cleanup(func() {
+			os.Stdout = origStdout
+			_ = tmpStdout.Close()
+		})
+
 		readEnd, writeEnd, err := os.Pipe()
 		if err != nil {
 			t.Fatalf("creating stdin pipe: %v", err)
@@ -471,13 +482,13 @@ func TestInstallMissingComponentsConfirmation(t *testing.T) {
 		if _, err := writeEnd.WriteString("n\n"); err != nil {
 			t.Fatalf("writing confirmation response: %v", err)
 		}
-		writeEnd.Close()
+		_ = writeEnd.Close()
 
 		originalStdin := os.Stdin
 		os.Stdin = readEnd
 		t.Cleanup(func() {
 			os.Stdin = originalStdin
-			readEnd.Close()
+			_ = readEnd.Close()
 		})
 
 		cancelled, err := InstallMissingComponents(ctx, false, engineManifest, nil)
