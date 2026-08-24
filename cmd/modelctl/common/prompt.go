@@ -2,7 +2,9 @@ package common
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 )
@@ -19,21 +21,34 @@ func PromptYN(prompt string, defaultResponse bool) bool {
 		}
 
 		input, err := reader.ReadString('\n')
-		if err != nil {
+		if err != nil && !errors.Is(err, io.EOF) {
 			fmt.Printf("Error reading input: %v\n", err)
-			continue
+			return false
 		}
+		// On EOF, input may still hold a final line without a trailing
+		// newline; honor it, but never fall back to the default or
+		// retry, since no further input can arrive.
+		eof := err != nil
 
 		input = strings.ToLower(strings.TrimSpace(input))
 		switch input {
 		case "": // default on empty input
-			return defaultResponse
+			if !eof {
+				return defaultResponse
+			}
 		case "Y", "y":
 			return true
 		case "N", "n":
 			return false
 		default:
-			fmt.Println(`Invalid input. Please enter "y" or "n".`)
+			if !eof {
+				fmt.Println(`Invalid input. Please enter "y" or "n".`)
+			}
+		}
+
+		if eof {
+			fmt.Println(`No input available to answer the prompt. Assuming "n"; use --assume-yes to bypass confirmation prompts.`)
+			return false
 		}
 	}
 }

@@ -49,6 +49,36 @@ func ExamplePromptYN_invalidThenNo() {
 	// Proceed? [Y/n] -> false
 }
 
+func ExamplePromptYN_eofDeclines() {
+	withStdin("", func() {
+		printToStdout(PromptYN("Proceed?", true))
+	})
+
+	// Output:
+	// Proceed? [Y/n] No input available to answer the prompt. Assuming "n"; use --assume-yes to bypass confirmation prompts.
+	// -> false
+}
+
+func ExamplePromptYN_invalidThenEOF() {
+	withStdin("maybe\n", func() {
+		printToStdout(PromptYN("Proceed?", true))
+	})
+
+	// Output:
+	// Proceed? [Y/n] Invalid input. Please enter "y" or "n".
+	// Proceed? [Y/n] No input available to answer the prompt. Assuming "n"; use --assume-yes to bypass confirmation prompts.
+	// -> false
+}
+
+func ExamplePromptYN_finalLineWithoutNewline() {
+	withStdin("y", func() {
+		printToStdout(PromptYN("Proceed?", false))
+	})
+
+	// Output:
+	// Proceed? [y/N] -> true
+}
+
 func ExamplePromptlnEnter() {
 	withStdin("\n", func() {
 		printToStdout(PromptlnEnter("continue"))
