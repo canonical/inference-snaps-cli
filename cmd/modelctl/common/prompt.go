@@ -29,34 +29,33 @@ func PromptYN(prompt string, defaultResponse bool) (bool, error) {
 		}
 
 		input, err := reader.ReadString('\n')
-		if err != nil && !errors.Is(err, io.EOF) {
+		eof := errors.Is(err, io.EOF)
+		if err != nil && !eof {
 			return false, fmt.Errorf("%w: %v", ErrPromptUnanswerable, err)
 		}
+
 		// At EOF the read may still carry a final line without a trailing
 		// newline. Honour that answer, but never fall back to the default or
 		// loop again, since no further input can arrive.
-		eof := err != nil
-
-		input = strings.ToLower(strings.TrimSpace(input))
-		switch input {
+		switch strings.ToLower(strings.TrimSpace(input)) {
+		case "y":
+			return true, nil
+		case "n":
+			return false, nil
 		case "": // default on empty input
 			if !eof {
 				return defaultResponse, nil
 			}
-		case "Y", "y":
-			return true, nil
-		case "N", "n":
-			return false, nil
 		default:
 			if !eof {
 				fmt.Println(`Invalid input. Please enter "y" or "n".`)
+				continue
 			}
 		}
 
-		if eof {
-			fmt.Println()
-			return false, ErrPromptUnanswerable
-		}
+		// Only reachable at EOF: there is no answer and none can arrive.
+		fmt.Println()
+		return false, ErrPromptUnanswerable
 	}
 }
 
