@@ -228,7 +228,13 @@ func InstallMissingComponents(ctx *Context, assumeYes bool, engineManifest *engi
 
 	if !assumeYes {
 		fmt.Println()
-		if !PromptYN("Do you want to continue?", true) {
+		proceed, err := PromptYN("Do you want to continue?", true)
+		if err != nil {
+			// Nothing has been installed yet, so stopping here is safe, but an
+			// unattended run must not read as a successful install.
+			return false, err
+		}
+		if !proceed {
 			fmt.Println("Cancelled. No changes applied.")
 			return true, nil
 		}

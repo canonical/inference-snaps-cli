@@ -174,7 +174,13 @@ func (cmd *pruneCacheCommand) printComponentsAndConfirm(componentsToRemove []str
 	}
 
 	fmt.Println()
-	if !common.PromptYN("Continue removing components?", false) {
+	confirmed, err := common.PromptYN("Continue removing components?", false)
+	if err != nil {
+		// Nothing has been removed yet, so stopping here is safe. Surface it as
+		// an error anyway: an unattended run must not read as a successful prune.
+		return false, err
+	}
+	if !confirmed {
 		fmt.Println("Cancelled. No changes applied.")
 		return false, nil
 	}

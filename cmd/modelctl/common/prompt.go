@@ -9,8 +9,16 @@ import (
 	"strings"
 )
 
-// PromptYN prompts the user and returns true for 'y', false for 'n'.
-func PromptYN(prompt string, defaultResponse bool) bool {
+// ErrPromptUnanswerable is returned by PromptYN when the question cannot be
+// answered: stdin reached EOF or could not be read. It is not a decline. The
+// caller decides what an unanswerable question means, because that depends on
+// what has already happened by the time it is asked.
+var ErrPromptUnanswerable = errors.New("cannot read a response: stdin is closed or unreadable; use --assume-yes for unattended runs")
+
+// PromptYN prompts the user and returns true for 'y', false for 'n'. It returns
+// ErrPromptUnanswerable if no response can be obtained; the boolean is not
+// meaningful in that case.
+func PromptYN(prompt string, defaultResponse bool) (bool, error) {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
@@ -22,24 +30,23 @@ func PromptYN(prompt string, defaultResponse bool) bool {
 
 		input, err := reader.ReadString('\n')
 		if err != nil && !errors.Is(err, io.EOF) {
-			fmt.Printf("Error reading input: %v\n", err)
-			return false
+			return false, fmt.Errorf("%w: %v", ErrPromptUnanswerable, err)
 		}
-		// On EOF, input may still hold a final line without a trailing
-		// newline; honor it, but never fall back to the default or
-		// retry, since no further input can arrive.
+		// At EOF the read may still carry a final line without a trailing
+		// newline. Honour that answer, but never fall back to the default or
+		// loop again, since no further input can arrive.
 		eof := err != nil
 
 		input = strings.ToLower(strings.TrimSpace(input))
 		switch input {
 		case "": // default on empty input
 			if !eof {
-				return defaultResponse
+				return defaultResponse, nil
 			}
 		case "Y", "y":
-			return true
+			return true, nil
 		case "N", "n":
-			return false
+			return false, nil
 		default:
 			if !eof {
 				fmt.Println(`Invalid input. Please enter "y" or "n".`)
@@ -47,8 +54,8 @@ func PromptYN(prompt string, defaultResponse bool) bool {
 		}
 
 		if eof {
-			fmt.Println(`No input available to answer the prompt. Assuming "n"; use --assume-yes to bypass confirmation prompts.`)
-			return false
+			fmt.Println()
+			return false, ErrPromptUnanswerable
 		}
 	}
 }
@@ -69,11 +76,25 @@ func PromptlnEnter(action string) bool {
 }
 
 func PromptRestartToApplyChanges(ctx *Context, assumeYes bool) error {
-	msg := fmt.Sprintf("Restart %s to apply the changes?", ctx.Snap.InstanceName())
-	if assumeYes || PromptYN(msg, true) {
-		if err := ctx.Snap.Restart(); err != nil {
-			return fmt.Errorf("restarting snap: %v", err)
+	if !assumeYes {
+		msg := fmt.Sprintf("Restart %s to apply the changes?", ctx.Snap.InstanceName())
+		restart, err := PromptYN(msg, true)
+		if err != nil {
+			// The configuration has already been written. Skipping the restart
+			// silently would leave the stored configuration and the running
+			// service diverged while still reporting success, so report it.
+			return fmt.Errorf(
+				"configuration was changed but %s was not restarted, so it is not yet in effect: %w",
+				ctx.Snap.InstanceName(), err,
+			)
 		}
+		if !restart {
+			return nil
+		}
+	}
+
+	if err := ctx.Snap.Restart(); err != nil {
+		return fmt.Errorf("restarting snap: %v", err)
 	}
 	return nil
 }
