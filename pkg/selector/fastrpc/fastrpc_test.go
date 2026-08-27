@@ -27,7 +27,7 @@ func TestMatch(t *testing.T) {
 		},
 	}
 
-	t.Run("default pattern", func(t *testing.T) {
+	t.Run("FastRPC bus", func(t *testing.T) {
 		device := engines.Device{Type: "npu", Bus: "fastrpc"}
 		score, issues := Match(device, hostDevices)
 		if score == 0 || len(issues) > 0 {
@@ -44,7 +44,7 @@ func TestMatch(t *testing.T) {
 		}
 	})
 
-	t.Run("no matching node", func(t *testing.T) {
+	t.Run("no matching node glob", func(t *testing.T) {
 		nodeGlob := "/dev/fastrpc-gdsp*"
 		device := engines.Device{Type: "npu", Bus: "fastrpc", NodeGlob: &nodeGlob}
 		score, issues := Match(device, hostDevices)
@@ -53,6 +53,15 @@ func TestMatch(t *testing.T) {
 		}
 		if len(issues) == 0 {
 			t.Fatal("expected compatibility issues")
+		}
+	})
+
+	t.Run("FastRPC device without legacy metadata", func(t *testing.T) {
+		device := engines.Device{Type: "npu", Bus: "fastrpc"}
+		host := []types.DetectedDevice{{Bus: "fastrpc"}}
+		score, issues := Match(device, host)
+		if score == 0 || len(issues) > 0 {
+			t.Fatalf("expected a positive score with no issues, score=%d issues=%v", score, issues)
 		}
 	})
 }

@@ -12,11 +12,10 @@ import (
 	"github.com/canonical/inference-snaps-cli/pkg/types"
 )
 
-const defaultNpuNodeGlob = "/dev/fastrpc-cdsp*"
-
 func Match(manifestDevice engines.Device, hostDevices []types.DetectedDevice) (int, []string) {
-	nodeGlob := defaultNpuNodeGlob
-	if manifestDevice.NodeGlob != nil {
+	var nodeGlob string
+	hasNodeGlob := manifestDevice.NodeGlob != nil
+	if hasNodeGlob {
 		nodeGlob = *manifestDevice.NodeGlob
 	}
 
@@ -27,16 +26,19 @@ func Match(manifestDevice engines.Device, hostDevices []types.DetectedDevice) (i
 		if !deviceTypeMatch(manifestDevice.Type, hostDevice.Type) {
 			continue
 		}
-		if hostDevice.Metadata == nil || hostDevice.Metadata.ProductName == "" {
-			continue
-		}
 
-		matched, err := filepath.Match(nodeGlob, hostDevice.Metadata.ProductName)
-		if err != nil {
-			return 0, []string{fmt.Sprintf("invalid node-glob %q: %v", nodeGlob, err)}
-		}
-		if !matched {
-			continue
+		if hasNodeGlob {
+			if hostDevice.Metadata == nil || hostDevice.Metadata.ProductName == "" {
+				continue
+			}
+
+			matched, err := filepath.Match(nodeGlob, hostDevice.Metadata.ProductName)
+			if err != nil {
+				return 0, []string{fmt.Sprintf("invalid node-glob %q: %v", nodeGlob, err)}
+			}
+			if !matched {
+				continue
+			}
 		}
 
 		score := weights.PciDevice + weights.PciDeviceType
@@ -56,12 +58,18 @@ func Match(manifestDevice engines.Device, hostDevices []types.DetectedDevice) (i
 		return score, nil
 	}
 
-	return 0, []string{fmt.Sprintf("device node matching %q not found", nodeGlob)}
+	if hasNodeGlob {
+		return 0, []string{fmt.Sprintf("device node matching %q not found", nodeGlob)}
+	}
+	return 0, []string{"fastrpc device not found"}
 }
 
 func deviceTypeMatch(manifestType, hostType string) bool {
 	if manifestType == "" {
 		return true
+	}
+	if hostType == "" {
+		return strings.EqualFold(strings.TrimSpace(manifestType), "npu")
 	}
 
 	manifest := strings.ToLower(strings.TrimSpace(manifestType))
