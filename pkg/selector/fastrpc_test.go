@@ -3,31 +3,25 @@ package selector
 import (
 	"testing"
 
-	"github.com/canonical/inference-snaps-cli/pkg/engines"
-	"github.com/canonical/inference-snaps-cli/pkg/types"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
+	"github.com/canonical/lscompute/pkg/machine"
+	lsfastrpc "github.com/canonical/lscompute/pkg/machine/device/fastrpc"
 )
 
-func TestFastRpcNpuSelection(t *testing.T) {
-	hwInfo := &types.HwInfo{
-		Memory: types.MemoryInfo{TotalRam: 8 * 1024 * 1024 * 1024},
-		Disk: map[string]types.DirStats{
-			"/var/lib/snapd/snaps": {
-				Avail: 20 * 1024 * 1024 * 1024,
-			},
-		},
-		Devices: []types.DetectedDevice{
-			{
-				Type: "npu",
-				Bus:  "fastrpc",
+func TestFastRPCNPUSelection(t *testing.T) {
+	machineInfo := &machine.MachineInfo{
+		Devices: []any{
+			lsfastrpc.Device{
+				Bus:    lsfastrpc.BusName,
+				Domain: lsfastrpc.CDSPDomain,
 			},
 		},
 	}
 
 	manifest := engines.Manifest{
-		Name:        "qualcomm-npu",
-		Description: "qualcomm dragonwing npu",
-		Vendor:      "qualcomm",
-		Grade:       "stable",
+		Name:    "qualcomm-npu",
+		Summary: "Qualcomm Dragonwing NPU",
+		Vendor:  "qualcomm",
 		Devices: engines.Devices{
 			Anyof: []engines.Device{{
 				Type: "npu",
@@ -36,7 +30,7 @@ func TestFastRpcNpuSelection(t *testing.T) {
 		},
 	}
 
-	score, report, err := checkEngine(hwInfo, manifest)
+	score, report, err := checkEngine(machineInfo, manifest)
 	if err != nil {
 		t.Fatal(err)
 	}

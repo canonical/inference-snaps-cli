@@ -60,7 +60,6 @@ func (device Device) validateFastRpc(extraFields []string) error {
 	validFields := []string{
 		"Type",
 		"Bus",
-		"NodeGlob",
 		"SnapConnections",
 	}
 	validFields = append(validFields, extraFields...)

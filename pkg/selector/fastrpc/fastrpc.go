@@ -2,51 +2,31 @@ package fastrpc
 
 import (
 	"fmt"
-	"path/filepath"
-	"strings"
 	"testing"
 
-	"github.com/canonical/go-snapctl"
-	"github.com/canonical/inference-snaps-cli/pkg/engines"
-	"github.com/canonical/inference-snaps-cli/pkg/selector/weights"
-	"github.com/canonical/inference-snaps-cli/pkg/types"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/selector/weights"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/snap"
+	"github.com/canonical/lscompute/pkg/machine"
+	lsfastrpc "github.com/canonical/lscompute/pkg/machine/device/fastrpc"
 )
 
-func Match(manifestDevice engines.Device, hostDevices []types.DetectedDevice) (int, []string) {
-	var nodeGlob string
-	hasNodeGlob := manifestDevice.NodeGlob != nil
-	if hasNodeGlob {
-		nodeGlob = *manifestDevice.NodeGlob
+func Match(manifestDevice engines.Device, machineInfo *machine.MachineInfo) (int, []string) {
+	if machineInfo == nil {
+		return 0, []string{"no machine info provided"}
 	}
 
-	for _, hostDevice := range hostDevices {
-		if hostDevice.Bus != "fastrpc" {
+	for _, device := range machineInfo.Devices {
+		fastRPCDevice, ok := device.(lsfastrpc.Device)
+		if !ok || fastRPCDevice.Bus != lsfastrpc.BusName {
 			continue
 		}
-		if !deviceTypeMatch(manifestDevice.Type, hostDevice.Type) {
+		if manifestDevice.Type != "" && manifestDevice.Type != "npu" {
 			continue
 		}
 
-		if hasNodeGlob {
-			if hostDevice.Metadata == nil || hostDevice.Metadata.ProductName == "" {
-				continue
-			}
-
-			matched, err := filepath.Match(nodeGlob, hostDevice.Metadata.ProductName)
-			if err != nil {
-				return 0, []string{fmt.Sprintf("invalid node-glob %q: %v", nodeGlob, err)}
-			}
-			if !matched {
-				continue
-			}
-		}
-
-		score := weights.PciDevice + weights.PciDeviceType
 		for _, connection := range manifestDevice.SnapConnections {
-			if testing.Testing() {
-				continue
-			}
-			connected, err := snapctl.IsConnected(connection).Run()
+			connected, err := checkSnapConnection(connection)
 			if err != nil {
 				return 0, []string{fmt.Sprintf("checking snap connection %q: %v", connection, err)}
 			}
@@ -55,33 +35,16 @@ func Match(manifestDevice engines.Device, hostDevices []types.DetectedDevice) (i
 			}
 		}
 
-		return score, nil
+		return weights.PciDevice + weights.PciDeviceType, nil
 	}
 
-	if hasNodeGlob {
-		return 0, []string{fmt.Sprintf("device node matching %q not found", nodeGlob)}
-	}
-	return 0, []string{"fastrpc device not found"}
+	return 0, []string{"no fastrpc devices on host system"}
 }
 
-func deviceTypeMatch(manifestType, hostType string) bool {
-	if manifestType == "" {
-		return true
+func checkSnapConnection(connection string) (bool, error) {
+	if testing.Testing() {
+		// Tests do not necessarily run inside a snap.
+		return true, nil
 	}
-	if hostType == "" {
-		return strings.EqualFold(strings.TrimSpace(manifestType), "npu")
-	}
-
-	manifest := strings.ToLower(strings.TrimSpace(manifestType))
-	host := strings.ToLower(strings.TrimSpace(hostType))
-
-	if manifest == host {
-		return true
-	}
-
-	if manifest == "npu" && strings.HasPrefix(host, "npu") {
-		return true
-	}
-
-	return false
+	return snap.IsConnected(connection)
 }

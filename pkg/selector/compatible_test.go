@@ -5,9 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/canonical/inference-snaps-cli/pkg/engines"
-	"github.com/canonical/inference-snaps-cli/pkg/hardware_info"
-	"gopkg.in/yaml.v3"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
+	"go.yaml.in/yaml/v4"
 )
 
 type testValidInvalid struct {
@@ -172,32 +171,6 @@ var validInvalidSets = map[string]testValidInvalid{
 		},
 	},
 
-	"example-memory": {
-		ValidMachines: []string{
-			"hp-zbook-power-16-inch-g11",
-			"mustang",
-			"system76-addw4",
-			"xps13-9350",
-			"lenovo-thinkpad-p16s",
-		},
-		InvalidMachines: []string{
-			"ampere-one-m-banshee-12",
-			"ampere-one-siryn",
-			"ampere-one-x-banshee-8",
-			"asus-ux301l",
-			"hp-pavilion-15-cs-3037nl",
-			"hp-proliant-rl300-gen11-altra",
-			"hp-proliant-rl300-gen11-altra-max",
-			"i7-1165G7",
-			"i7-2600k+arc-a580",
-			"i7-10510U",
-			//"orange-pi-rv2",
-			"raspberry-pi-5",
-			"raspberry-pi-5+hailo-8",
-			"xps13-7390",
-		},
-	},
-
 	"cuda-generic": {
 		ValidMachines: []string{
 			"system76-addw4",
@@ -349,7 +322,7 @@ func TestEngine(t *testing.T) {
 func testValidHw(t *testing.T, engineName string, hwName string) {
 	manifestFile := fmt.Sprintf("../../test_data/engines/%s/%s", engineName, engines.ManifestFilename)
 
-	hardwareInfo, err := hardware_info.GetFromRawData(t, hwName, true, "../../test_data")
+	machineInfo, err := machineInfoFixture(hwName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -366,7 +339,7 @@ func testValidHw(t *testing.T, engineName string, hwName string) {
 	}
 
 	// Valid hardware for engine
-	score, report, err := checkEngine(hardwareInfo, manifest)
+	score, report, err := checkEngine(machineInfo, manifest)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -382,7 +355,7 @@ func testValidHw(t *testing.T, engineName string, hwName string) {
 func testInvalidHw(t *testing.T, engineName string, hwName string) {
 	manifestFile := fmt.Sprintf("../../test_data/engines/%s/%s", engineName, engines.ManifestFilename)
 
-	hardwareInfo, err := hardware_info.GetFromRawData(t, hwName, true, "../../test_data")
+	machineInfo, err := machineInfoFixture(hwName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -398,7 +371,7 @@ func testInvalidHw(t *testing.T, engineName string, hwName string) {
 		t.Fatal(err)
 	}
 
-	score, report, err := checkEngine(hardwareInfo, manifest)
+	score, report, err := checkEngine(machineInfo, manifest)
 	if err != nil {
 		t.Fatal(err)
 	}

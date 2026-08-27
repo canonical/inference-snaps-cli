@@ -1,7 +1,8 @@
 name: arm-neon
 description: ARM CPUs with NEON instruction set
+summary: ARM NEON engine
 vendor: Canonical Ltd
-grade: stable
+experimental: false
 devices:
   anyof:
 #    - type: cpu
@@ -10,5 +11,4 @@ devices:
     - type: cpu
       architecture: arm64
       features: [asimd] # for ARMv8 ASIMD includes NEON instruction set
-memory: 2G
-disk-space: 4G
+

@@ -1,7 +1,7 @@
 name: cuda-generic
 description: Nvidia GPUs using CUDA. All major CUDA versions are targeted.
+summary: CUDA generic engine
 vendor: Canonical Ltd
-grade: stable
 devices:
   allof:
     - type: cpu
@@ -13,9 +13,14 @@ devices:
       # model-ids: [ ]
       vram: 5G
       # compute-capability: 5.0
-memory: 2G
-disk-space: 5G
-components:
-  - dummy-component-1
-  - dummy-component-2
 
+runtime: llama-cpp-cuda
+
+model:
+  default: 26b-q4-k-m-gguf
+  options:
+    - 26b-q4-k-m-gguf
+    - 30b-a3b-q4-k-m-gguf
+
+configurations:
+  sleep-idle-seconds: 600

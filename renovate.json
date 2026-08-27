@@ -1,10 +1,6 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
-  ],
-  "semanticCommits": "disabled",
-  "postUpdateOptions": [
-    "gomodTidy"
+    "config:recommended",
+    "github>canonical/inference-snaps-dev//renovate/default.jsonc#v2"
   ]
 }

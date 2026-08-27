@@ -7,9 +7,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/canonical/inference-snaps-cli/pkg/utils"
-	"gopkg.in/yaml.v3"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
+	"go.yaml.in/yaml/v4"
 )
+
+// The chars limit has been chosen as it is the maximum length that can be displayed without truncation in the
+// list-engines table considering the minimum width of the other columns.
+const SummaryMaxLength = 56
 
 func Validate(manifestFilePath string) error {
 
@@ -77,33 +81,15 @@ func (manifest Manifest) validate(expectedEngineName string) error {
 		}
 	}
 
-	if manifest.Description == "" {
-		return fmt.Errorf("required field is not set: description")
+	if manifest.Summary == "" {
+		return fmt.Errorf("required field is not set: summary")
+	} else if len(manifest.Summary) > SummaryMaxLength {
+
+		return fmt.Errorf("summary field should be at most %d characters: %d", SummaryMaxLength, len(manifest.Summary))
 	}
 
 	if manifest.Vendor == "" {
 		return fmt.Errorf("required field is not set: vendor")
-	}
-
-	if manifest.Grade == "" {
-		return fmt.Errorf("required field is not set: grade")
-	}
-	if manifest.Grade != "stable" && manifest.Grade != "devel" {
-		return fmt.Errorf("grade should be 'stable' or 'devel'")
-	}
-
-	if manifest.Memory != nil {
-		_, err := utils.StringToBytes(*manifest.Memory)
-		if err != nil {
-			return fmt.Errorf("parsing memory: %v", err)
-		}
-	}
-
-	if manifest.DiskSpace != nil {
-		_, err := utils.StringToBytes(*manifest.DiskSpace)
-		if err != nil {
-			return fmt.Errorf("parsing disk space: %v", err)
-		}
 	}
 
 	for key, val := range manifest.Configurations {

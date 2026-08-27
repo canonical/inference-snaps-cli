@@ -3,51 +3,34 @@ package fastrpc
 import (
 	"testing"
 
-	"github.com/canonical/inference-snaps-cli/pkg/engines"
-	"github.com/canonical/inference-snaps-cli/pkg/types"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
+	"github.com/canonical/lscompute/pkg/machine"
+	lsfastrpc "github.com/canonical/lscompute/pkg/machine/device/fastrpc"
 )
 
 func TestMatch(t *testing.T) {
-	hostDevices := []types.DetectedDevice{
-		{
-			Type: "npu",
-			Bus:  "fastrpc",
-			Metadata: &types.DeviceMetadata{
-				VendorName: "qualcomm",
-				ProductName:   "/dev/fastrpc-cdsp",
+	t.Run("FastRPC NPU", func(t *testing.T) {
+		machineInfo := &machine.MachineInfo{
+			Devices: []any{
+				lsfastrpc.Device{
+					Bus:    lsfastrpc.BusName,
+					Domain: lsfastrpc.CDSPDomain,
+				},
 			},
-		},
-		{
-			Type: "npu",
-			Bus:  "fastrpc",
-			Metadata: &types.DeviceMetadata{
-				VendorName: "qualcomm",
-				ProductName:   "/dev/fastrpc-cdsp1-secure",
-			},
-		},
-	}
-
-	t.Run("FastRPC bus", func(t *testing.T) {
+		}
 		device := engines.Device{Type: "npu", Bus: "fastrpc"}
-		score, issues := Match(device, hostDevices)
+
+		score, issues := Match(device, machineInfo)
 		if score == 0 || len(issues) > 0 {
 			t.Fatalf("expected a positive score with no issues, score=%d issues=%v", score, issues)
 		}
 	})
 
-	t.Run("custom node glob", func(t *testing.T) {
-		nodeGlob := "/dev/fastrpc-cdsp1*"
-		device := engines.Device{Type: "npu", Bus: "fastrpc", NodeGlob: &nodeGlob}
-		score, issues := Match(device, hostDevices)
-		if score == 0 || len(issues) > 0 {
-			t.Fatalf("expected a positive score with no issues, score=%d issues=%v", score, issues)
-		}
-	})
+	t.Run("no FastRPC devices", func(t *testing.T) {
+		machineInfo := &machine.MachineInfo{}
+		device := engines.Device{Type: "npu", Bus: "fastrpc"}
 
-	t.Run("no matching node glob", func(t *testing.T) {
-		nodeGlob := "/dev/fastrpc-gdsp*"
-		device := engines.Device{Type: "npu", Bus: "fastrpc", NodeGlob: &nodeGlob}
-		score, issues := Match(device, hostDevices)
+		score, issues := Match(device, machineInfo)
 		if score != 0 {
 			t.Fatalf("expected score=0, got %d", score)
 		}
@@ -56,12 +39,15 @@ func TestMatch(t *testing.T) {
 		}
 	})
 
-	t.Run("FastRPC device without legacy metadata", func(t *testing.T) {
+	t.Run("nil machine info", func(t *testing.T) {
 		device := engines.Device{Type: "npu", Bus: "fastrpc"}
-		host := []types.DetectedDevice{{Bus: "fastrpc"}}
-		score, issues := Match(device, host)
-		if score == 0 || len(issues) > 0 {
-			t.Fatalf("expected a positive score with no issues, score=%d issues=%v", score, issues)
+
+		score, issues := Match(device, nil)
+		if score != 0 {
+			t.Fatalf("expected score=0, got %d", score)
+		}
+		if len(issues) == 0 {
+			t.Fatal("expected compatibility issues")
 		}
 	})
 }

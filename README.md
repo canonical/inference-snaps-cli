@@ -23,7 +23,7 @@ go test -count 1 -failfast ./...
 The CLIs included in this repo can be built using the following commands:
 
 ```bash
-go build ./cmd/cli
+go build ./cmd/modelctl
 ```
 
 ### Build snap
@@ -37,7 +37,7 @@ snapcraft -v
 Then install the snap and connect the required interfaces:
 
 ```bash
-sudo snap install --dangerous ./stack-utils_*.snap
+sudo snap install --dangerous ./stack-utils_*.snap ./stack-utils+*.comp
 sudo snap connect stack-utils:hardware-observe 
 ```
 
@@ -76,10 +76,10 @@ This allows piping the output to another application.
 This command can be used to perform engine selection using static data.
 It is useful for testing purposes.
 
-To use, pipe the machine info in JSON format into `select-engine`.
+To use, pipe the machine info in **JSON format** into `select-engine`.
 You also need to provide the location of the engine manifests from which the selection should be made.
 
-The result is printed as JSON to the standard output, while any other log messages are written as standard errors.
+The result is printed as **JSON** to the standard output by default (use `--format=yaml` for YAML output), while any other log messages are written as standard errors.
 
 Example:
 
@@ -91,7 +91,7 @@ $ inference-snaps-cli show-machine --format=json | inference-snaps-cli debug sel
 ✅ cpu-avx1 - compatible, score = 14
 ✅ cpu-avx2 - compatible, score = 17
 ❌ cpu-avx512 - not compatible: required cpu device not found
-🟠 cpu-devel - score = 12, grade = devel
+🟠 cpu-exptl - score = 12, experimental
 ✅ cuda-generic - compatible, score = 107
 ✅ example-memory - compatible, score = 18
 ✅ intel-cpu - compatible, score = 18
@@ -99,10 +99,16 @@ $ inference-snaps-cli show-machine --format=json | inference-snaps-cli debug sel
 ❌ intel-npu - not compatible: required device not found
 Selected engine for your hardware configuration: cuda-generic
 
-engines:
-    - name: ampere
-      description: Test ampere selection
+{
+  "engines": [
+    {
+      "name": "ampere",
+      "description": "Test ampere selection",
       ...
+    }
+  ],
+  "top-engine": "cuda-generic"
+}
 ```
 
 ## Notes

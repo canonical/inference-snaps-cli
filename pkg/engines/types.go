@@ -1,7 +1,7 @@
 package engines
 
 import (
-	"github.com/canonical/inference-snaps-cli/pkg/types"
+	"github.com/canonical/lscompute/pkg/machine/types"
 )
 
 type CompatibilityReport struct {
@@ -24,16 +24,17 @@ type ScoredManifest struct {
 }
 
 type Manifest struct {
-	Name        string `yaml:"name" json:"name"`
-	Description string `yaml:"description" json:"description"`
-	Vendor      string `yaml:"vendor" json:"vendor"`
-	Grade       string `yaml:"grade" json:"grade"`
+	Name         string `yaml:"name" json:"name"`
+	Summary      string `yaml:"summary" json:"summary"`
+	Description  string `yaml:"description,omitempty" json:"description,omitempty"`
+	Vendor       string `yaml:"vendor" json:"vendor"`
+	Experimental *bool  `yaml:"experimental,omitempty" json:"experimental,omitempty"`
 
-	Devices   Devices `yaml:"devices" json:"devices"`
-	Memory    *string `yaml:"memory,omitempty" json:"memory"`
-	DiskSpace *string `yaml:"disk-space,omitempty" json:"disk-space"`
+	Devices Devices `yaml:"devices" json:"devices"`
 
-	Components     []string       `yaml:"components" json:"components"`
+	Runtime string `yaml:"runtime,omitempty" json:"runtime"`
+	Model   Model  `yaml:"model,omitempty" json:"model"`
+
 	Configurations Configurations `yaml:"configurations" json:"configurations"`
 }
 
@@ -68,9 +69,6 @@ type Device struct {
 	Microarchitecture *string `yaml:"microarchitecture,omitempty" json:"microarchitecture,omitempty"`
 	ComputeCapability *string `yaml:"compute-capability,omitempty" json:"compute-capability,omitempty"`
 
-	// NPU
-	NodeGlob *string `yaml:"node-glob,omitempty" json:"node-glob,omitempty"`
-
 	// Drivers
 	SnapConnections []string `yaml:"snap-connections,omitempty" json:"snap-connections,omitempty"`
 
@@ -79,6 +77,15 @@ type Device struct {
 }
 
 type Configurations map[string]interface{}
+
+type Model struct {
+	Default string   `yaml:"default" json:"default"`
+	Options []string `yaml:"options" json:"options"`
+}
+
+func (manifest Manifest) IsExperimental() bool {
+	return manifest.Experimental != nil && *manifest.Experimental
+}
 
 func (c CompatibilityReport) EngineCompatible() bool {
 	return c.CompatibleMemory && c.CompatibleDisk && c.CompatibleDevices

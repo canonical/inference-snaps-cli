@@ -3,8 +3,8 @@ package engines
 import (
 	"testing"
 
-	"github.com/canonical/inference-snaps-cli/pkg/constants"
-	"github.com/canonical/inference-snaps-cli/pkg/types"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/constants"
+	"github.com/canonical/lscompute/pkg/machine/types"
 )
 
 func TestCpuArchitecture(t *testing.T) {

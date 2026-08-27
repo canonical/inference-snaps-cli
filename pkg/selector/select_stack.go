@@ -2,16 +2,13 @@ package selector
 
 import (
 	"errors"
-	"fmt"
 	"sort"
 
-	"github.com/canonical/inference-snaps-cli/pkg/constants"
-	"github.com/canonical/inference-snaps-cli/pkg/engines"
-	"github.com/canonical/inference-snaps-cli/pkg/selector/cpu"
-	"github.com/canonical/inference-snaps-cli/pkg/selector/fastrpc"
-	"github.com/canonical/inference-snaps-cli/pkg/selector/pci"
-	"github.com/canonical/inference-snaps-cli/pkg/types"
-	"github.com/canonical/inference-snaps-cli/pkg/utils"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/selector/cpu"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/selector/fastrpc"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/selector/pci"
+	"github.com/canonical/lscompute/pkg/machine"
 )
 
 var ErrorNoCompatibleEngine = errors.New("no compatible engines found")
@@ -20,7 +17,7 @@ func TopEngine(scoredEngines []engines.ScoredManifest) (*engines.ScoredManifest,
 	var compatibleEngines []engines.ScoredManifest
 
 	for _, engine := range scoredEngines {
-		if engine.Score > 0 && engine.Grade == "stable" {
+		if engine.Score > 0 && (engine.Experimental == nil || !*engine.Experimental) {
 			compatibleEngines = append(compatibleEngines, engine)
 		}
 	}
@@ -38,11 +35,11 @@ func TopEngine(scoredEngines []engines.ScoredManifest) (*engines.ScoredManifest,
 	return &compatibleEngines[0], nil
 }
 
-func ScoreEngines(hardwareInfo *types.HwInfo, manifests []engines.Manifest) ([]engines.ScoredManifest, error) {
+func ScoreEngines(machineInfo *machine.MachineInfo, manifests []engines.Manifest) ([]engines.ScoredManifest, error) {
 	var scoredEngines []engines.ScoredManifest
 
 	for _, currentManifest := range manifests {
-		score, compatibilityReport, err := checkEngine(hardwareInfo, currentManifest)
+		score, compatibilityReport, err := checkEngine(machineInfo, currentManifest)
 		if err != nil {
 			return nil, err
 		}
@@ -59,7 +56,7 @@ func ScoreEngines(hardwareInfo *types.HwInfo, manifests []engines.Manifest) ([]e
 	return scoredEngines, nil
 }
 
-func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, engines.CompatibilityReport, error) {
+func checkEngine(machineInfo *machine.MachineInfo, manifest engines.Manifest) (int, engines.CompatibilityReport, error) {
 	engineScore := 0
 	compatibilityReport := engines.CompatibilityReport{
 		CompatibleMemory:  true,
@@ -67,61 +64,11 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, en
 		CompatibleDevices: true,
 	}
 
-	// Enough memory
-	if manifest.Memory != nil {
-		requiredMemory, err := utils.StringToBytes(*manifest.Memory)
-		if err != nil {
-			return 0, compatibilityReport, fmt.Errorf("parsing required memory: %v", err)
-		}
-
-		if hardwareInfo.Memory.TotalRam == 0 {
-			// If the TotalRam field is the Go struct Zero value, it was never set.
-			// We do not check swap for the Zero value, as swap can realistically be of size 0 bytes.
-			return 0, compatibilityReport, fmt.Errorf("total memory not reported by host system")
-		}
-
-		compatibilityReport.RequiredMemory = requiredMemory
-		compatibilityReport.TotalRAM = hardwareInfo.Memory.TotalRam
-		compatibilityReport.TotalSwap = hardwareInfo.Memory.TotalSwap
-
-		// Checking combination of ram and swap
-		availableMemory := hardwareInfo.Memory.TotalRam + hardwareInfo.Memory.TotalSwap
-		if availableMemory < requiredMemory {
-			compatibilityReport.CompatibleMemory = false
-		} else {
-			engineScore++
-		}
-	}
-
-	// Enough disk space
-	if manifest.DiskSpace != nil {
-		requiredDisk, err := utils.StringToBytes(*manifest.DiskSpace)
-
-		if err != nil {
-			return 0, compatibilityReport, fmt.Errorf("parsing required disk space: %v", err)
-		}
-
-		if _, ok := hardwareInfo.Disk[constants.SnapStoragePath]; !ok {
-			return 0, compatibilityReport, fmt.Errorf("disk space not reported by host system")
-		}
-
-		availableDiskSpace := hardwareInfo.Disk[constants.SnapStoragePath].Avail
-
-		compatibilityReport.RequiredDiskSpace = requiredDisk
-		compatibilityReport.AvailableDiskSpace = availableDiskSpace
-
-		if availableDiskSpace < requiredDisk {
-			compatibilityReport.CompatibleDisk = false
-		} else {
-			engineScore++
-		}
-	}
-
 	// Devices
 
 	// all
 	if len(manifest.Devices.Allof) > 0 {
-		deviceCompatibilityScore := scoreDevicesAll(hardwareInfo, manifest.Devices.Allof)
+		deviceCompatibilityScore := scoreDevicesAll(machineInfo, manifest.Devices.Allof)
 		if deviceCompatibilityScore == 0 {
 			compatibilityReport.CompatibleDevices = false
 		} else {
@@ -131,7 +78,7 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, en
 
 	// any
 	if len(manifest.Devices.Anyof) > 0 {
-		deviceCompatibilityScore := scoreDevicesAny(hardwareInfo, manifest.Devices.Anyof)
+		deviceCompatibilityScore := scoreDevicesAny(machineInfo, manifest.Devices.Anyof)
 		if deviceCompatibilityScore == 0 {
 			compatibilityReport.CompatibleDevices = false
 		} else {
@@ -146,14 +93,13 @@ func checkEngine(hardwareInfo *types.HwInfo, manifest engines.Manifest) (int, en
 	return engineScore, compatibilityReport, nil
 }
 
-func scoreDevicesAll(hardwareInfo *types.HwInfo, devices []engines.Device) int {
+func scoreDevicesAll(machineInfo *machine.MachineInfo, devices []engines.Device) int {
 	compatible := true
 	compatibilityScore := 0
 
-	for i, _ := range devices {
-
+	for i := range devices {
 		if devices[i].Type == "cpu" {
-			cpuScore, deviceIssues := cpu.Match(devices[i], hardwareInfo.Cpus)
+			cpuScore, deviceIssues := cpu.Match(devices[i], machineInfo)
 			if len(deviceIssues) > 0 {
 				compatible = false
 				devices[i].CompatibilityIssues = append(devices[i].CompatibilityIssues, deviceIssues...)
@@ -167,17 +113,17 @@ func scoreDevicesAll(hardwareInfo *types.HwInfo, devices []engines.Device) int {
 			devices[i].CompatibilityIssues = append(devices[i].CompatibilityIssues, "usb device matching not implemented")
 
 		} else if devices[i].Bus == "fastrpc" {
-			fastRpcScore, fastRpcIssues := fastrpc.Match(devices[i], hardwareInfo.Devices)
-			if len(fastRpcIssues) > 0 {
+			fastRPCScore, fastRPCIssues := fastrpc.Match(devices[i], machineInfo)
+			if len(fastRPCIssues) > 0 {
 				compatible = false
-				devices[i].CompatibilityIssues = append(devices[i].CompatibilityIssues, fastRpcIssues...)
+				devices[i].CompatibilityIssues = append(devices[i].CompatibilityIssues, fastRPCIssues...)
 			} else {
-				compatibilityScore += fastRpcScore
+				compatibilityScore += fastRPCScore
 			}
 
 		} else if devices[i].Bus == "" || devices[i].Bus == "pci" {
 			// Fallback to PCI as default bus
-			pciScore, pciIssues := pci.Match(devices[i], hardwareInfo.PciDevices)
+			pciScore, pciIssues := pci.Match(devices[i], machineInfo)
 			if len(pciIssues) > 0 {
 				compatible = false
 				devices[i].CompatibilityIssues = append(devices[i].CompatibilityIssues, pciIssues...)
@@ -194,15 +140,14 @@ func scoreDevicesAll(hardwareInfo *types.HwInfo, devices []engines.Device) int {
 	return compatibilityScore
 }
 
-func scoreDevicesAny(hardwareInfo *types.HwInfo, devices []engines.Device) int {
+func scoreDevicesAny(machineInfo *machine.MachineInfo, devices []engines.Device) int {
 	compatible := true
 	compatibilityScore := 0
 	devicesFound := 0
 
 	for i, device := range devices {
-
 		if device.Type == "cpu" {
-			cpuScore, deviceIssues := cpu.Match(device, hardwareInfo.Cpus)
+			cpuScore, deviceIssues := cpu.Match(device, machineInfo)
 			if len(deviceIssues) > 0 {
 				devices[i].CompatibilityIssues = append(device.CompatibilityIssues, deviceIssues...)
 			} else {
@@ -212,20 +157,20 @@ func scoreDevicesAny(hardwareInfo *types.HwInfo, devices []engines.Device) int {
 
 		} else if device.Bus == "usb" {
 			compatible = false
-			device.CompatibilityIssues = append(device.CompatibilityIssues, "usb device matching not implemented")
+			devices[i].CompatibilityIssues = append(devices[i].CompatibilityIssues, "usb device matching not implemented")
 
 		} else if device.Bus == "fastrpc" {
-			fastRpcScore, fastRpcIssues := fastrpc.Match(device, hardwareInfo.Devices)
-			if len(fastRpcIssues) > 0 {
-				devices[i].CompatibilityIssues = append(device.CompatibilityIssues, fastRpcIssues...)
+			fastRPCScore, fastRPCIssues := fastrpc.Match(device, machineInfo)
+			if len(fastRPCIssues) > 0 {
+				devices[i].CompatibilityIssues = append(device.CompatibilityIssues, fastRPCIssues...)
 			} else {
 				devicesFound++
-				compatibilityScore += fastRpcScore
+				compatibilityScore += fastRPCScore
 			}
 
 		} else if device.Bus == "" || device.Bus == "pci" {
 			// Fallback to PCI as default bus
-			pciScore, pciIssues := pci.Match(device, hardwareInfo.PciDevices)
+			pciScore, pciIssues := pci.Match(device, machineInfo)
 			if len(pciIssues) > 0 {
 				devices[i].CompatibilityIssues = append(device.CompatibilityIssues, pciIssues...)
 			} else {

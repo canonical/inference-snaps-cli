@@ -3,8 +3,8 @@ package engines
 import (
 	"testing"
 
-	"github.com/canonical/inference-snaps-cli/pkg/constants"
-	"github.com/canonical/inference-snaps-cli/pkg/types"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/constants"
+	"github.com/canonical/lscompute/pkg/machine/types"
 )
 
 func TestDeviceType(t *testing.T) {
@@ -133,8 +133,6 @@ func TestDeviceNpu(t *testing.T) {
 
 	t.Run("NPU fastrpc valid fields", func(t *testing.T) {
 		device = Device{Type: "npu", Bus: "fastrpc"}
-		nodeGlob := "/dev/fastrpc-cdsp*"
-		device.NodeGlob = &nodeGlob
 
 		err := device.validate()
 		if err != nil {
