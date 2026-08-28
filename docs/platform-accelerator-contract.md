@@ -6,8 +6,8 @@ of individual SoCs.
 ## Application Contracts
 
 An inference snap that needs a directly accessible NPU declares one stable
-device plug and a runtime-content plug for each incompatible runtime ABI it
-supports:
+device plug. It declares a runtime-content plug for each incompatible runtime
+ABI it supports:
 
 ```yaml
 plugs:
