@@ -69,6 +69,9 @@ type Device struct {
 	Microarchitecture *string `yaml:"microarchitecture,omitempty" json:"microarchitecture,omitempty"`
 	ComputeCapability *string `yaml:"compute-capability,omitempty" json:"compute-capability,omitempty"`
 
+	// FastRPC
+	Domain *string `yaml:"domain,omitempty" json:"domain,omitempty"`
+
 	// Drivers
 	SnapConnections []string `yaml:"snap-connections,omitempty" json:"snap-connections,omitempty"`
 

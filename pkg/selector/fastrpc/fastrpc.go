@@ -2,6 +2,7 @@ package fastrpc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
@@ -24,6 +25,11 @@ func Match(manifestDevice engines.Device, machineInfo *machine.MachineInfo) (int
 		if manifestDevice.Type != "" && manifestDevice.Type != "npu" {
 			continue
 		}
+		// A domain-less manifest retains the original presence-only behavior.
+		// Backends such as Hexagon HTP should require their domain explicitly.
+		if manifestDevice.Domain != nil && !strings.EqualFold(strings.TrimSpace(*manifestDevice.Domain), string(fastRPCDevice.Domain)) {
+			continue
+		}
 
 		for _, connection := range manifestDevice.SnapConnections {
 			connected, err := checkSnapConnection(connection)
@@ -38,6 +44,9 @@ func Match(manifestDevice engines.Device, machineInfo *machine.MachineInfo) (int
 		return weights.PciDevice + weights.PciDeviceType, nil
 	}
 
+	if manifestDevice.Domain != nil {
+		return 0, []string{fmt.Sprintf("no fastrpc devices in %q domain on host system", *manifestDevice.Domain)}
+	}
 	return 0, []string{"no fastrpc devices on host system"}
 }
 

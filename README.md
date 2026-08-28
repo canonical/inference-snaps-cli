@@ -71,6 +71,24 @@ This prints a machine-readable summary of the host system.
 Errors and warnings are printed as standard errors.
 This allows piping the output to another application.
 
+### Platform NPU Access
+
+Engine manifests should describe the hardware bus and any required snap
+connections, but application snaps should use stable logical capabilities
+instead of vendor-specific plugs. A platform gadget can expose the same
+logical `inference-npu` custom-device contract for different accelerator
+implementations, while a trusted runtime provider can expose the matching
+`inference-npu-runtime` content contract.
+
+Platform-specific device paths, firmware, userspace libraries, and DSP files
+belong in the gadget or runtime provider. The model snap should only require
+the logical plugs and select a backend such as `fastrpc` when the detected
+device and required connections are available.
+
+FastRPC engine manifests can select a specific DSP domain with the device
+`domain` field. Manifests without that field retain the legacy behavior of
+matching any FastRPC domain; HTP engines should specify `domain: cdsp`.
+
 ### Select Engine
 
 This command can be used to perform engine selection using static data.

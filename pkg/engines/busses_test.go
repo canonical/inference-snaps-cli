@@ -51,4 +51,14 @@ func TestDeviceBus(t *testing.T) {
 		}
 		t.Log(err)
 	})
+
+	t.Run("FastRPC domain", func(t *testing.T) {
+		device = Device{Type: "npu", Bus: "fastrpc"}
+		domain := "CDSP"
+		device.Domain = &domain
+		err := device.validate()
+		if err != nil {
+			t.Fatalf("FastRPC domain should be valid: %v", err)
+		}
+	})
 }
