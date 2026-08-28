@@ -6,7 +6,8 @@ of individual SoCs.
 ## Application Contracts
 
 An inference snap that needs a directly accessible NPU declares one stable
-device plug and one versioned runtime-content contract:
+device plug and a runtime-content plug for each incompatible runtime ABI it
+supports:
 
 ```yaml
 plugs:
@@ -61,6 +62,11 @@ gadget/provider mapping and an engine/runtime implementation only when their
 inference backend differs. Existing model snaps keep the same `inference-npu`
 device plug; runtime content plugs are added per incompatible ABI family, not
 per board or SoC.
+
+This deliberately does not create a new snapd interface for Qualcomm,
+MediaTek, Renesas, or individual boards. The existing `custom-device` and
+`content` interfaces carry the access policy. A new content plug is justified
+only when a runtime ABI or file-layout contract cannot be shared safely.
 
 If two platforms cannot share a runtime ABI or layout, they should still use
 the same device capability plug and expose a backend-specific runtime through

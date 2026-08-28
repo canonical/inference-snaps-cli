@@ -77,8 +77,9 @@ Engine manifests should describe the hardware bus and any required snap
 connections, but application snaps should use stable logical capabilities
 instead of vendor-specific plugs. A platform gadget can expose the same
 logical `inference-npu` custom-device contract for different accelerator
-implementations, while a trusted runtime provider can expose the matching
-`inference-npu-runtime` content contract.
+implementations, while a trusted runtime provider can expose a content
+contract for the backend ABI. Runtime content plugs should be shared by
+compatible ABI families, not created for every board or SoC.
 
 Platform-specific device paths, firmware, userspace libraries, and DSP files
 belong in the gadget or runtime provider. The model snap should only require
