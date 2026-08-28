@@ -2,8 +2,8 @@ package fastrpc
 
 import (
 	"fmt"
+	"os"
 	"strings"
-	"testing"
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/selector/weights"
@@ -25,8 +25,11 @@ func Match(manifestDevice engines.Device, machineInfo *machine.MachineInfo) (int
 		if manifestDevice.Type != "" && manifestDevice.Type != "npu" {
 			continue
 		}
-		// A domain-less manifest retains the original presence-only behavior.
-		// Backends such as Hexagon HTP should require their domain explicitly.
+		// FastRPC's CDSP is the NPU domain. A typeless FastRPC requirement is
+		// intentionally broader and can match any DSP domain.
+		if manifestDevice.Type == "npu" && fastRPCDevice.Domain != lsfastrpc.CDSPDomain {
+			continue
+		}
 		if manifestDevice.Domain != nil && !strings.EqualFold(strings.TrimSpace(*manifestDevice.Domain), string(fastRPCDevice.Domain)) {
 			continue
 		}
@@ -41,18 +44,21 @@ func Match(manifestDevice engines.Device, machineInfo *machine.MachineInfo) (int
 			}
 		}
 
-		return weights.PciDevice + weights.PciDeviceType, nil
+		return weights.FastRPCDevice + weights.FastRPCDeviceType, nil
 	}
 
 	if manifestDevice.Domain != nil {
 		return 0, []string{fmt.Sprintf("no fastrpc devices in %q domain on host system", *manifestDevice.Domain)}
 	}
+	if manifestDevice.Type == "npu" {
+		return 0, []string{"no fastrpc devices in \"cdsp\" domain on host system"}
+	}
 	return 0, []string{"no fastrpc devices on host system"}
 }
 
 func checkSnapConnection(connection string) (bool, error) {
-	if testing.Testing() {
-		// Tests do not necessarily run inside a snap.
+	if os.Getenv("SNAP") == "" {
+		// Snap connections can only be queried from inside a snap.
 		return true, nil
 	}
 	return snap.IsConnected(connection)

@@ -63,6 +63,9 @@ func (device Device) validateFastRpc(extraFields []string) error {
 		default:
 			return fmt.Errorf("fastrpc: invalid domain: %s", *device.Domain)
 		}
+		if device.Type == "npu" && !strings.EqualFold(strings.TrimSpace(*device.Domain), "cdsp") {
+			return fmt.Errorf("fastrpc: npu devices require the cdsp domain")
+		}
 	}
 
 	validFields := []string{

@@ -88,9 +88,10 @@ belong in the gadget or runtime provider. The model snap should only require
 the logical plugs and select a backend such as `fastrpc` when the detected
 device and required connections are available.
 
-FastRPC engine manifests can select a specific DSP domain with the device
-`domain` field. Manifests without that field retain the legacy behavior of
-matching any FastRPC domain; HTP engines should specify `domain: cdsp`.
+FastRPC engine manifests with `type: npu` match only the CDSP domain. A
+typeless manifest with `bus: fastrpc` matches any DSP domain. The optional
+`domain` field can further restrict a typeless FastRPC requirement; NPU
+manifests must use the CDSP domain.
 
 ### Select Engine
 

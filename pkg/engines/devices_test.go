@@ -161,6 +161,17 @@ func TestDeviceNpu(t *testing.T) {
 		t.Log(err)
 	})
 
+	t.Run("NPU fastrpc requires CDSP domain", func(t *testing.T) {
+		domain := "adsp"
+		device = Device{Type: "npu", Bus: "fastrpc", Domain: &domain}
+
+		err := device.validate()
+		if err == nil {
+			t.Fatal("NPU fastrpc should reject non-CDSP domain")
+		}
+		t.Log(err)
+	})
+
 	t.Run("NPU fastrpc invalid fields", func(t *testing.T) {
 		device = Device{Type: "npu", Bus: "fastrpc"}
 		hexValue := types.HexInt(0xAA)
