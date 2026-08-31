@@ -112,6 +112,11 @@ func main() {
 		commands.Run(ctx),
 		commands.ServeWebUi(ctx),
 		debug.DebugCommand(ctx),
+		commands.ListEngines(ctx), // deprecated alias for "engines"
+		commands.ListModels(ctx),  // deprecated alias for "models"
+		commands.ShowEngine(ctx),  // deprecated alias for "engine"
+		commands.ShowMachine(ctx), // deprecated alias for "machine"
+
 	)
 
 	// disable logging timestamps

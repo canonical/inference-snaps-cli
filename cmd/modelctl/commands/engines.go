@@ -29,15 +29,25 @@ type outputEngines struct {
 }
 
 func Engines(ctx *common.Context) *cobra.Command {
+	return newEnginesCmd(ctx, "engines", "")
+}
+
+// TODO: remove when we fully migrate to "engines" command
+func ListEngines(ctx *common.Context) *cobra.Command {
+	return newEnginesCmd(ctx, "list-engines", `use "engines" instead`)
+}
+
+func newEnginesCmd(ctx *common.Context, use, deprecated string) *cobra.Command {
 	var cmd enginesCommand
 	cmd.Context = ctx
 
 	cobraCmd := &cobra.Command{
-		Use:               "engines",
+		Use:               use,
 		Short:             "List available engines",
 		Args:              cobra.NoArgs,
 		ValidArgsFunction: cobra.NoFileCompletions,
 		RunE:              cmd.run,
+		Deprecated:        deprecated,
 	}
 
 	// flags

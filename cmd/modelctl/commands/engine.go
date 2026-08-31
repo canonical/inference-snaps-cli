@@ -19,11 +19,20 @@ type engineCommand struct {
 }
 
 func Engine(ctx *common.Context) *cobra.Command {
+	return newEngineCmd(ctx, "engine [<engine>]", "")
+}
+
+// TODO: remove when we fully migrate to "engine" command
+func ShowEngine(ctx *common.Context) *cobra.Command {
+	return newEngineCmd(ctx, "show-engine", `use "engine" instead`)
+}
+
+func newEngineCmd(ctx *common.Context, use, deprecated string) *cobra.Command {
 	var cmd engineCommand
 	cmd.Context = ctx
 
 	cobraCmd := &cobra.Command{
-		Use:   "engine [<engine>]",
+		Use:   use,
 		Short: "Print information about an engine",
 		Long:  "Print information about the active engine, or the specified engine",
 		// Args
@@ -32,6 +41,7 @@ func Engine(ctx *common.Context) *cobra.Command {
 		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: cmd.validateArgs,
 		RunE:              cmd.run,
+		Deprecated:        deprecated,
 	}
 
 	// flags

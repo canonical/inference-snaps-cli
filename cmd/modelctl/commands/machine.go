@@ -21,16 +21,26 @@ type machineCommand struct {
 }
 
 func Machine(ctx *common.Context) *cobra.Command {
+	return newMachineCmd(ctx, "machine", "")
+}
+
+// TODO: remove when we fully migrate to "machine" command
+func ShowMachine(ctx *common.Context) *cobra.Command {
+	return newMachineCmd(ctx, "show-machine", `use "machine" instead`)
+}
+
+func newMachineCmd(ctx *common.Context, use, deprecated string) *cobra.Command {
 	var cmd machineCommand
 	cmd.Context = ctx
 
 	cobraCmd := &cobra.Command{
-		Use:               "machine",
+		Use:               use,
 		Short:             "Print information about the host machine",
 		Long:              "Print information about the host machine, including hardware and compute resources",
 		Args:              cobra.NoArgs,
 		ValidArgsFunction: cobra.NoFileCompletions,
 		RunE:              cmd.run,
+		Deprecated:        deprecated,
 	}
 
 	// flags
