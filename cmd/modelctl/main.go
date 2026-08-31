@@ -93,7 +93,7 @@ func main() {
 
 	addCommandGroup(rootCmd, "engine", "Management Commands:",
 		commands.Engines(ctx),
-		commands.ShowEngine(ctx),
+		commands.Engine(ctx),
 		commands.UseEngine(ctx),
 		commands.Models(ctx),
 		commands.ShowModel(ctx),
@@ -101,7 +101,7 @@ func main() {
 	)
 
 	addCommands(rootCmd,
-		commands.ShowMachine(ctx),
+		commands.Machine(ctx),
 		commands.PruneCache(ctx),
 		commands.Version(ctx),
 	)

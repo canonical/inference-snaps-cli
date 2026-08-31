@@ -50,7 +50,7 @@ func prepareModelsTestData() (*modelsCommand, *outputModels, error) {
 	return &cmd, &modelsList, nil
 }
 
-func TestListModelsJson(t *testing.T) {
+func TestModelsJson(t *testing.T) {
 	cmd, modelsList, err := prepareModelsTestData()
 	if err != nil {
 		t.Fatalf("Error preparing test data: %v", err)
@@ -62,7 +62,7 @@ func TestListModelsJson(t *testing.T) {
 	}
 }
 
-func TestListModelsTable(t *testing.T) {
+func TestModelsTable(t *testing.T) {
 	cmd, modelsList, err := prepareModelsTestData()
 	if err != nil {
 		t.Fatalf("Error preparing test data: %v", err)

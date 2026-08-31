@@ -18,7 +18,7 @@ type engineCommand struct {
 	format string
 }
 
-func ShowEngine(ctx *common.Context) *cobra.Command {
+func Engine(ctx *common.Context) *cobra.Command {
 	var cmd engineCommand
 	cmd.Context = ctx
 
