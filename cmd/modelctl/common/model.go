@@ -24,6 +24,11 @@ type ModelDetails struct {
 	Components []string `json:"components" yaml:"components"`
 }
 
+type ModelDetailsWithCompatibleEngines struct {
+	Model             ModelDetails
+	CompatibleEngines []string
+}
+
 func NewModelDetails(manifest *models.Manifest) (ModelDetails, error) {
 	var modelDetails ModelDetails
 	modelDetails.Name = manifest.Name
@@ -62,7 +67,7 @@ func GetModelByNameOrAlias(ctx *Context, modelName string) (*models.Manifest, er
 		return nil, fmt.Errorf("%s: %w", LoadingEngineManifest, err)
 	}
 
-	allModelManifests, err := models.LoadManifests(ctx.ModelsDir)
+	allModelManifests, err := GetAllModels(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", LoadingModelManifests, err)
 	}
@@ -118,4 +123,45 @@ func ModelStatus(ctx *Context) (map[string]string, error) {
 	}
 
 	return status, nil
+}
+
+func GetAllModels(ctx *Context) ([]models.Manifest, error) {
+	allModelManifests, err := models.LoadManifests(ctx.ModelsDir)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", LoadingModelManifests, err)
+	}
+
+	return allModelManifests, nil
+}
+
+func GetAllModelsWithEngines(ctx *Context) ([]ModelDetailsWithCompatibleEngines, error) {
+	allModelManifests, err := GetAllModels(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	allEngineManifests, err := engines.LoadManifests(ctx.EnginesDir)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", LoadingEngineManifest, err)
+	}
+
+	allModelsWithEngines := []ModelDetailsWithCompatibleEngines{}
+	for _, modelManifest := range allModelManifests {
+		outputModel, err := NewModelDetails(&modelManifest)
+		if err != nil {
+			return nil, fmt.Errorf("creating model details for model %s: %v", modelManifest.Name, err)
+		}
+		compatibleEngines := []string{}
+		for _, engineManifest := range allEngineManifests {
+			if slices.Contains(engineManifest.Model.Options, modelManifest.Name) {
+				compatibleEngines = append(compatibleEngines, engineManifest.Name)
+			}
+		}
+		allModelsWithEngines = append(allModelsWithEngines, ModelDetailsWithCompatibleEngines{
+			Model:             outputModel,
+			CompatibleEngines: compatibleEngines,
+		})
+	}
+
+	return allModelsWithEngines, nil
 }

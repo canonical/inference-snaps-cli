@@ -22,11 +22,12 @@ type listModelsCommand struct {
 
 	// flags
 	format string
+	all    bool
 }
 
 type outputModels struct {
-	ActiveModel string                `json:"active-model"`
-	Models      []common.ModelDetails `json:"models"`
+	ActiveModel string                                     `json:"active-model"`
+	Models      []common.ModelDetailsWithCompatibleEngines `json:"models"`
 }
 
 func ListModels(ctx *common.Context) *cobra.Command {
@@ -49,7 +50,12 @@ func ListModels(ctx *common.Context) *cobra.Command {
 		"table",
 		fmt.Sprintf("output format (%s)", strings.Join(supportedFormats, ", ")),
 	)
-
+	cobraCmd.Flags().BoolVar(
+		&cmd.all,
+		"all",
+		false,
+		"list all models, including those not supported by the active engine",
+	)
 	return cobraCmd
 }
 
@@ -65,16 +71,32 @@ func (cmd *listModelsCommand) run(_ *cobra.Command, _ []string) error {
 	}
 
 	var modelsList outputModels
-	for _, model := range engineManifest.Model.Options {
-		modelManifest, err := models.LoadManifest(cmd.ModelsDir, model)
+	if cmd.all {
+		allModels, err := common.GetAllModelsWithEngines(cmd.Context)
 		if err != nil {
-			return fmt.Errorf("loading model manifest for model %s: %v", model, err)
+			return fmt.Errorf("%s: %w", common.LoadingModelManifests, err)
 		}
-		outputModel, err := common.NewModelDetails(modelManifest)
-		if err != nil {
-			return fmt.Errorf("creating model details for model %s: %v", model, err)
+		for _, modelManifest := range allModels {
+			outputModel := modelManifest.Model
+			modelsList.Models = append(modelsList.Models, common.ModelDetailsWithCompatibleEngines{
+				Model:             outputModel,
+				CompatibleEngines: modelManifest.CompatibleEngines,
+			})
 		}
-		modelsList.Models = append(modelsList.Models, outputModel)
+	} else {
+		for _, model := range engineManifest.Model.Options {
+			modelManifest, err := models.LoadManifest(cmd.ModelsDir, model)
+			if err != nil {
+				return fmt.Errorf("loading model manifest for model %s: %v", model, err)
+			}
+			outputModel, err := common.NewModelDetails(modelManifest)
+			if err != nil {
+				return fmt.Errorf("creating model details for model %s: %v", model, err)
+			}
+			modelsList.Models = append(modelsList.Models, common.ModelDetailsWithCompatibleEngines{
+				Model: outputModel,
+			})
+		}
 	}
 
 	activeModel, err := cmd.Cache.GetActiveModel()
@@ -100,21 +122,45 @@ func (cmd *listModelsCommand) run(_ *cobra.Command, _ []string) error {
 }
 
 func (cmd *listModelsCommand) printModelsJson(modelsList outputModels) error {
-	jsonString, err := json.MarshalIndent(modelsList, "", "  ")
-	if err != nil {
-		return fmt.Errorf("marshalling models: %v", err)
+	if cmd.all {
+		jsonString, err := json.MarshalIndent(modelsList, "", "  ")
+		if err != nil {
+			return fmt.Errorf("marshalling models: %v", err)
+		}
+		fmt.Printf("%s\n", jsonString)
+		return nil
+	} else {
+		outputModelsNoEngines := struct {
+			ActiveModel string                `json:"active-model"`
+			Models      []common.ModelDetails `json:"models"`
+		}{
+			ActiveModel: modelsList.ActiveModel,
+			Models:      []common.ModelDetails{},
+		}
+		for _, modelWithEngines := range modelsList.Models {
+			outputModelsNoEngines.Models = append(outputModelsNoEngines.Models, modelWithEngines.Model)
+		}
+		jsonString, err := json.MarshalIndent(outputModelsNoEngines, "", "  ")
+		if err != nil {
+			return fmt.Errorf("marshalling models: %v", err)
+		}
+		fmt.Printf("%s\n", jsonString)
+		return nil
 	}
-	fmt.Printf("%s\n", jsonString)
-	return nil
 }
 
 func (cmd *listModelsCommand) getModelsTable(modelsList outputModels) (string, error) {
-	var headerRow = []string{"name", "capabilities", "disk size"}
+	includeEnginesColumn := cmd.all
+	headerRow := []string{"name", "capabilities", "disk"}
+	if includeEnginesColumn {
+		headerRow = append(headerRow, "engines")
+	}
 	tableRows := [][]string{headerRow}
 
-	var modelNameMaxLen, modelCapabilitiesMaxLen int
+	var modelNameMaxLen, modelCapabilitiesMaxLen, modelDiskMaxLen int
 
-	for _, model := range modelsList.Models {
+	for _, modelWithEngines := range modelsList.Models {
+		model := modelWithEngines.Model
 		name := model.Name
 		// Mark active model with "*"
 		if model.Name == modelsList.ActiveModel {
@@ -123,12 +169,20 @@ func (cmd *listModelsCommand) getModelsTable(modelsList outputModels) (string, e
 
 		capabilities := strings.Join(model.Capabilities, ", ")
 		diskSize := model.DiskSize
-
+		var engines string
+		for _, engine := range modelWithEngines.CompatibleEngines {
+			engines += engine + ", "
+		}
+		engines = strings.TrimSuffix(engines, ", ")
 		// Find max name and capabilities lengths
 		modelNameMaxLen = max(modelNameMaxLen, len(name), len(headerRow[0]))
 		modelCapabilitiesMaxLen = max(modelCapabilitiesMaxLen, len(capabilities), len(headerRow[1]))
+		modelDiskMaxLen = max(modelDiskMaxLen, len(diskSize), len(headerRow[2]))
 
 		row := []string{name, capabilities, diskSize}
+		if includeEnginesColumn {
+			row = append(row, engines)
+		}
 		tableRows = append(tableRows, row)
 	}
 
@@ -136,8 +190,34 @@ func (cmd *listModelsCommand) getModelsTable(modelsList outputModels) (string, e
 	// Increase column widths to account for paddings
 	modelNameMaxLen += 1
 	modelCapabilitiesMaxLen += 2
-	// Disk size column fills the remaining space
-	modelDiskSizeMaxLen := tableMaxWidth - (modelNameMaxLen + modelCapabilitiesMaxLen)
+	modelDiskMaxLen += 2
+	modelEnginesMaxLen := 0
+	if includeEnginesColumn {
+		modelDiskMaxLen += 1
+		// Engines column fills the remaining space
+		modelEnginesMaxLen = tableMaxWidth - (modelNameMaxLen + modelCapabilitiesMaxLen + modelDiskMaxLen)
+	}
+
+	widths := tw.Mapper[int, int]{
+		0: modelNameMaxLen,         // Model name
+		1: modelCapabilitiesMaxLen, // Capabilities
+		2: modelDiskMaxLen,         // Disk
+	}
+	headerPadding := []tw.Padding{
+		{Overwrite: true, Right: " "},
+		{Overwrite: true, Left: " ", Right: " "},
+		{Overwrite: true, Left: " "},
+	}
+	rowPadding := []tw.Padding{
+		{Overwrite: true, Right: " "},
+		{Overwrite: true, Left: " ", Right: " "},
+		{Overwrite: true, Left: " "},
+	}
+	if includeEnginesColumn {
+		widths[3] = modelEnginesMaxLen // Engines
+		headerPadding = append(headerPadding, tw.Padding{Overwrite: true, Left: " "})
+		rowPadding = append(rowPadding, tw.Padding{Overwrite: true, Left: " "})
+	}
 
 	options := []tablewriter.Option{
 		tablewriter.WithRenderer(renderer.NewColorized(renderer.ColorizedConfig{
@@ -163,31 +243,19 @@ func (cmd *listModelsCommand) getModelsTable(modelsList outputModels) (string, e
 		tablewriter.WithConfig(tablewriter.Config{
 			MaxWidth: tableMaxWidth,
 			Widths: tw.CellWidth{
-				PerColumn: tw.Mapper[int, int]{
-					0: modelNameMaxLen,         // Model name
-					1: modelCapabilitiesMaxLen, // Capabilities
-					2: modelDiskSizeMaxLen,     // Disk size
-				},
+				PerColumn: widths,
 			},
 			Header: tw.CellConfig{
 				Alignment: tw.CellAlignment{Global: tw.AlignLeft},
 				Padding: tw.CellPadding{
-					PerColumn: []tw.Padding{
-						{Overwrite: true, Right: " "},
-						{Overwrite: true, Left: " ", Right: " "},
-						{Overwrite: true, Left: " "},
-					},
+					PerColumn: headerPadding,
 				},
 			},
 			Row: tw.CellConfig{
 				Formatting: tw.CellFormatting{AutoWrap: tw.WrapTruncate},
 				Alignment:  tw.CellAlignment{Global: tw.AlignLeft},
 				Padding: tw.CellPadding{
-					PerColumn: []tw.Padding{
-						{Overwrite: true, Right: " "},
-						{Overwrite: true, Left: " ", Right: " "},
-						{Overwrite: true, Left: " "},
-					},
+					PerColumn: rowPadding,
 				},
 			},
 		}),
@@ -203,6 +271,22 @@ func (cmd *listModelsCommand) getModelsTable(modelsList outputModels) (string, e
 	err = table.Render()
 	if err != nil {
 		return "", fmt.Errorf("rendering: %v", err)
+	}
+
+	allModels, err := common.GetAllModels(cmd.Context)
+	if err != nil {
+		return "", fmt.Errorf("getting all models: %w", err)
+	}
+
+	activeEngine, err := cmd.Cache.GetActiveEngine()
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
+	}
+
+	incompatibleModelsCount := len(allModels) - len(tableRows[1:])
+	if incompatibleModelsCount != 0 {
+		hint := common.SuggestListModels(incompatibleModelsCount, activeEngine)
+		return tableOutput.String() + "\n" + hint + "\n", nil
 	}
 	return tableOutput.String(), nil
 }

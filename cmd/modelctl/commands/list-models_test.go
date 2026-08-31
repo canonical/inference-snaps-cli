@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
-	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
 )
 
@@ -15,26 +14,23 @@ func prepareModelsTestData() (*listModelsCommand, *outputModels, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("error setting active model name: %v", err)
 	}
-
-	manifests, err := models.LoadManifests("../../../test_data/models")
+	err = cache.SetActiveEngine("intel-gpu")
 	if err != nil {
-		return nil, nil, fmt.Errorf("error loading models: %v", err)
-	}
-
-	var allModels []common.ModelDetails
-	for _, manifest := range manifests {
-		details, err := common.NewModelDetails(&manifest)
-		if err != nil {
-			return nil, nil, fmt.Errorf("error creating model details for %s: %v", manifest.Name, err)
-		}
-		allModels = append(allModels, details)
+		return nil, nil, fmt.Errorf("error setting active engine name: %v", err)
 	}
 
 	ctx := &common.Context{
-		ModelsDir: "../../../test_data/models",
-		Cache:     cache,
-		Config:    nil,
+		ModelsDir:  "../../../test_data/models",
+		EnginesDir: "../../../test_data/engines",
+		Cache:      cache,
+		Config:     nil,
 	}
+
+	allModels, err := common.GetAllModelsWithEngines(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error getting all models with engines: %v", err)
+	}
+
 	cmd := listModelsCommand{Context: ctx}
 
 	activeModel, err := cmd.Cache.GetActiveModel()
@@ -85,10 +81,10 @@ func TestGetModelsTable(t *testing.T) {
 		t.Fatalf("Error getting models table: %v", err)
 	}
 
-	expectedTable := `NAME                 CAPABILITIES               DISK SIZE                       
-26b-q4-k-m-gguf      text                       6G                              
-30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G                              
-4b-it-int4-fq-ov*    text                       6G                              
+	expectedTable := `NAME                 CAPABILITIES               DISK 
+26b-q4-k-m-gguf      text                       6G   
+30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G   
+4b-it-int4-fq-ov*    text                       6G   
 `
 
 	if tableStr != expectedTable {
@@ -96,6 +92,27 @@ func TestGetModelsTable(t *testing.T) {
 	}
 }
 
+func TestGetModelsTableAllModels(t *testing.T) {
+	cmd, modelsList, err := prepareModelsTestData()
+	cmd.all = true
+	if err != nil {
+		t.Fatalf("Error preparing test data: %v", err)
+	}
+
+	tableStr, err := cmd.getModelsTable(*modelsList)
+	if err != nil {
+		t.Fatalf("Error getting models table: %v", err)
+	}
+
+	expectedTable := `NAME                 CAPABILITIES               DISK   ENGINES                  
+26b-q4-k-m-gguf      text                       6G     cpu, cuda-generic, rocm… 
+30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G     cpu, cuda-generic, rocm… 
+4b-it-int4-fq-ov*    text                       6G     intel-cpu, intel-gpu, i… 
+`
+	if tableStr != expectedTable {
+		t.Errorf("Models table not as expected.\n\nGot:\n\n%s\n\nWant:\n\n%s", tableStr, expectedTable)
+	}
+}
 func Example_printModelsJson() {
 	cmd, modelsList, err := prepareModelsTestData()
 	if err != nil {
@@ -103,9 +120,9 @@ func Example_printModelsJson() {
 	}
 
 	// Use only the 4b-it-int4-fq-ov model to keep output concise
-	var filtered []common.ModelDetails
+	var filtered []common.ModelDetailsWithCompatibleEngines
 	for _, m := range modelsList.Models {
-		if m.Name == "4b-it-int4-fq-ov" {
+		if m.Model.Name == "4b-it-int4-fq-ov" {
 			filtered = append(filtered, m)
 		}
 	}
@@ -121,17 +138,24 @@ func Example_printModelsJson() {
 	//   "active-model": "4b-it-int4-fq-ov",
 	//   "models": [
 	//     {
-	//       "name": "4b-it-int4-fq-ov",
-	//       "alias": "4b-it",
-	//       "description": "OpenVino 4b test model",
-	//       "model-card-url": "https://example.com/model-card",
-	//       "quantization": "int4-fq",
-	//       "capabilities": [
-	//         "text"
-	//       ],
-	//       "disk-size": "6G",
-	//       "components": [
-	//         "model-4b-it-int4-fq-ov"
+	//       "Model": {
+	//         "name": "4b-it-int4-fq-ov",
+	//         "alias": "4b-it",
+	//         "description": "OpenVino 4b test model",
+	//         "model-card-url": "https://example.com/model-card",
+	//         "quantization": "int4-fq",
+	//         "capabilities": [
+	//           "text"
+	//         ],
+	//         "disk-size": "6G",
+	//         "components": [
+	//           "model-4b-it-int4-fq-ov"
+	//         ]
+	//       },
+	//       "CompatibleEngines": [
+	//         "intel-cpu",
+	//         "intel-gpu",
+	//         "intel-npu"
 	//       ]
 	//     }
 	//   ]
