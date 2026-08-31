@@ -138,24 +138,17 @@ func Example_printModelsJson() {
 	//   "active-model": "4b-it-int4-fq-ov",
 	//   "models": [
 	//     {
-	//       "Model": {
-	//         "name": "4b-it-int4-fq-ov",
-	//         "alias": "4b-it",
-	//         "description": "OpenVino 4b test model",
-	//         "model-card-url": "https://example.com/model-card",
-	//         "quantization": "int4-fq",
-	//         "capabilities": [
-	//           "text"
-	//         ],
-	//         "disk-size": "6G",
-	//         "components": [
-	//           "model-4b-it-int4-fq-ov"
-	//         ]
-	//       },
-	//       "CompatibleEngines": [
-	//         "intel-cpu",
-	//         "intel-gpu",
-	//         "intel-npu"
+	//       "name": "4b-it-int4-fq-ov",
+	//       "alias": "4b-it",
+	//       "description": "OpenVino 4b test model",
+	//       "model-card-url": "https://example.com/model-card",
+	//       "quantization": "int4-fq",
+	//       "capabilities": [
+	//         "text"
+	//       ],
+	//       "disk-size": "6G",
+	//       "components": [
+	//         "model-4b-it-int4-fq-ov"
 	//       ]
 	//     }
 	//   ]

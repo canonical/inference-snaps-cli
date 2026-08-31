@@ -122,31 +122,34 @@ func (cmd *listModelsCommand) run(_ *cobra.Command, _ []string) error {
 }
 
 func (cmd *listModelsCommand) printModelsJson(modelsList outputModels) error {
-	if cmd.all {
-		jsonString, err := json.MarshalIndent(modelsList, "", "  ")
-		if err != nil {
-			return fmt.Errorf("marshalling models: %v", err)
-		}
-		fmt.Printf("%s\n", jsonString)
-		return nil
-	} else {
-		outputModelsNoEngines := struct {
-			ActiveModel string                `json:"active-model"`
-			Models      []common.ModelDetails `json:"models"`
-		}{
-			ActiveModel: modelsList.ActiveModel,
-			Models:      []common.ModelDetails{},
-		}
-		for _, modelWithEngines := range modelsList.Models {
-			outputModelsNoEngines.Models = append(outputModelsNoEngines.Models, modelWithEngines.Model)
-		}
-		jsonString, err := json.MarshalIndent(outputModelsNoEngines, "", "  ")
-		if err != nil {
-			return fmt.Errorf("marshalling models: %v", err)
-		}
-		fmt.Printf("%s\n", jsonString)
-		return nil
+	type jsonModel struct {
+		common.ModelDetails
+		CompatibleEngines []string `json:"compatible-engines,omitempty"`
 	}
+	type outputModelsJSON struct {
+		ActiveModel string      `json:"active-model"`
+		Models      []jsonModel `json:"models"`
+	}
+
+	jsonOutput := outputModelsJSON{
+		ActiveModel: modelsList.ActiveModel,
+		Models:      make([]jsonModel, 0, len(modelsList.Models)),
+	}
+
+	for _, modelWithEngines := range modelsList.Models {
+		m := jsonModel{ModelDetails: modelWithEngines.Model}
+		if cmd.all {
+			m.CompatibleEngines = modelWithEngines.CompatibleEngines
+		}
+		jsonOutput.Models = append(jsonOutput.Models, m)
+	}
+
+	jsonString, err := json.MarshalIndent(jsonOutput, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshalling models: %v", err)
+	}
+	fmt.Printf("%s\n", jsonString)
+	return nil
 }
 
 func (cmd *listModelsCommand) getModelsTable(modelsList outputModels) (string, error) {
