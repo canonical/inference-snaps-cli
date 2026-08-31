@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type listModelsCommand struct {
+type modelsCommand struct {
 	*common.Context
 
 	// flags
@@ -29,12 +29,12 @@ type outputModels struct {
 	Models      []common.ModelDetails `json:"models"`
 }
 
-func ListModels(ctx *common.Context) *cobra.Command {
-	var cmd listModelsCommand
+func Models(ctx *common.Context) *cobra.Command {
+	var cmd modelsCommand
 	cmd.Context = ctx
 
 	cobraCmd := &cobra.Command{
-		Use:               "list-models",
+		Use:               "models",
 		Short:             "List available models",
 		Args:              cobra.NoArgs,
 		ValidArgsFunction: cobra.NoFileCompletions,
@@ -53,7 +53,7 @@ func ListModels(ctx *common.Context) *cobra.Command {
 	return cobraCmd
 }
 
-func (cmd *listModelsCommand) run(_ *cobra.Command, _ []string) error {
+func (cmd *modelsCommand) run(_ *cobra.Command, _ []string) error {
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
 		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
@@ -99,7 +99,7 @@ func (cmd *listModelsCommand) run(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func (cmd *listModelsCommand) printModelsJson(modelsList outputModels) error {
+func (cmd *modelsCommand) printModelsJson(modelsList outputModels) error {
 	jsonString, err := json.MarshalIndent(modelsList, "", "  ")
 	if err != nil {
 		return fmt.Errorf("marshalling models: %v", err)
@@ -108,7 +108,7 @@ func (cmd *listModelsCommand) printModelsJson(modelsList outputModels) error {
 	return nil
 }
 
-func (cmd *listModelsCommand) getModelsTable(modelsList outputModels) (string, error) {
+func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error) {
 	var headerRow = []string{"name", "capabilities", "disk size"}
 	tableRows := [][]string{headerRow}
 
@@ -207,7 +207,7 @@ func (cmd *listModelsCommand) getModelsTable(modelsList outputModels) (string, e
 	return tableOutput.String(), nil
 }
 
-func (cmd *listModelsCommand) printModelsTable(modelsList outputModels) error {
+func (cmd *modelsCommand) printModelsTable(modelsList outputModels) error {
 	if len(modelsList.Models) == 0 {
 		fmt.Fprintln(os.Stderr, "No models found.")
 		return nil

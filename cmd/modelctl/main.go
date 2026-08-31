@@ -92,10 +92,10 @@ func main() {
 	)
 
 	addCommandGroup(rootCmd, "engine", "Management Commands:",
-		commands.ListEngines(ctx),
+		commands.Engines(ctx),
 		commands.ShowEngine(ctx),
 		commands.UseEngine(ctx),
-		commands.ListModels(ctx),
+		commands.Models(ctx),
 		commands.ShowModel(ctx),
 		commands.UseModel(ctx),
 	)
