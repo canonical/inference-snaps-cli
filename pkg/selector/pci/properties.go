@@ -77,8 +77,8 @@ func checkMicroarchitecture(microArchRequired string, hostPciDevice pci.Device) 
 }
 
 // checkComputeCapability compares the compute capability reported by the host device against a
-// version constraint from the engine manifest (e.g. ">=6.0, <7.0"). Compute capability is only
-// reported for NVIDIA devices (vendor-id 0x10de).
+// version constraint from the engine manifest (e.g. ">=6.0, <7.0"). The compute capability is
+// read from hostPciDevice.AdditionalProperties["compute-capability"].
 func checkComputeCapability(constraintRequired string, hostPciDevice pci.Device) error {
 	constraint, err := semver.NewConstraint(constraintRequired)
 	if err != nil {
