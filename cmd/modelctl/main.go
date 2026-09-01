@@ -116,7 +116,6 @@ func main() {
 		commands.ListModels(ctx),  // deprecated alias for "models"
 		commands.ShowEngine(ctx),  // deprecated alias for "engine"
 		commands.ShowMachine(ctx), // deprecated alias for "machine"
-
 	)
 
 	// disable logging timestamps

@@ -33,7 +33,7 @@ func Models(ctx *common.Context) *cobra.Command {
 	return newModelsCmd(ctx, "models", "")
 }
 
-// TODO: remove when we fully migrate to "engines" command
+// TODO: remove when we fully migrate to "models" command
 func ListModels(ctx *common.Context) *cobra.Command {
 	return newModelsCmd(ctx, "list-models", `use "models" instead`)
 }
