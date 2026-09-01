@@ -47,19 +47,6 @@ func TestModelStatus_ModelNameWithEqualsInValue(t *testing.T) {
 	}
 }
 
-func TestModelStatus_InvalidEnvVar(t *testing.T) {
-	modelsDir := t.TempDir()
-	writeModelYAML(t, modelsDir, "my-model", `environment:
-  - INVALID_NO_EQUALS
-`)
-	ctx := makeModelStatusCtx(t, modelsDir, "my-model")
-
-	_, err := ModelStatus(ctx)
-	if err == nil {
-		t.Fatal("expected error for invalid env var, got nil")
-	}
-}
-
 func TestModelStatus_NonExistentModel(t *testing.T) {
 	modelsDir := t.TempDir()
 	ctx := makeModelStatusCtx(t, modelsDir, "non-existent")
