@@ -3,7 +3,6 @@ package fastrpc
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/selector/weights"
@@ -30,9 +29,6 @@ func Match(manifestDevice engines.Device, machineInfo *machine.MachineInfo) (int
 		if manifestDevice.Type == "npu" && fastRPCDevice.Domain != lsfastrpc.CDSPDomain {
 			continue
 		}
-		if manifestDevice.Domain != nil && !strings.EqualFold(strings.TrimSpace(*manifestDevice.Domain), string(fastRPCDevice.Domain)) {
-			continue
-		}
 
 		for _, connection := range manifestDevice.SnapConnections {
 			connected, err := checkSnapConnection(connection)
@@ -47,9 +43,6 @@ func Match(manifestDevice engines.Device, machineInfo *machine.MachineInfo) (int
 		return weights.FastRPCDevice + weights.FastRPCDeviceType, nil
 	}
 
-	if manifestDevice.Domain != nil {
-		return 0, []string{fmt.Sprintf("no fastrpc devices in %q domain on host system", *manifestDevice.Domain)}
-	}
 	if manifestDevice.Type == "npu" {
 		return 0, []string{"no fastrpc devices in \"cdsp\" domain on host system"}
 	}

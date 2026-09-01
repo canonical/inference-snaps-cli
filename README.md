@@ -89,9 +89,7 @@ the logical plugs and select a backend such as `fastrpc` when the detected
 device and required connections are available.
 
 FastRPC engine manifests with `type: npu` match only the CDSP domain. A
-typeless manifest with `bus: fastrpc` matches any DSP domain. The optional
-`domain` field can further restrict a typeless FastRPC requirement; NPU
-manifests must use the CDSP domain.
+typeless manifest with `bus: fastrpc` matches any DSP domain.
 
 ### Select Engine
 

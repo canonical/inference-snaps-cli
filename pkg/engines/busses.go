@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
-	"strings"
 )
 
 func (device Device) validateBus(extraFields []string) error {
@@ -57,21 +56,9 @@ func (device Device) validateFastRpc(extraFields []string) error {
 	if device.Type != "" && device.Type != "npu" {
 		return fmt.Errorf("fastrpc bus only supports npu devices")
 	}
-	if device.Domain != nil {
-		switch strings.ToLower(strings.TrimSpace(*device.Domain)) {
-		case "adsp", "mdsp", "sdsp", "cdsp", "gdsp":
-		default:
-			return fmt.Errorf("fastrpc: invalid domain: %s", *device.Domain)
-		}
-		if device.Type == "npu" && !strings.EqualFold(strings.TrimSpace(*device.Domain), "cdsp") {
-			return fmt.Errorf("fastrpc: npu devices require the cdsp domain")
-		}
-	}
-
 	validFields := []string{
 		"Type",
 		"Bus",
-		"Domain",
 		"SnapConnections",
 	}
 	validFields = append(validFields, extraFields...)

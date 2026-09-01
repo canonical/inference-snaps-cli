@@ -18,16 +18,14 @@ func TestFastRPCNPUSelection(t *testing.T) {
 		},
 	}
 
-	domain := "cdsp"
 	manifest := engines.Manifest{
 		Name:    "qualcomm-npu",
 		Summary: "Qualcomm Dragonwing NPU",
 		Vendor:  "qualcomm",
 		Devices: engines.Devices{
 			Anyof: []engines.Device{{
-				Type:   "npu",
-				Bus:    "fastrpc",
-				Domain: &domain,
+				Type: "npu",
+				Bus:  "fastrpc",
 			}},
 		},
 	}
