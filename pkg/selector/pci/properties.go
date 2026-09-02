@@ -76,9 +76,7 @@ func checkMicroarchitecture(microArchRequired string, hostPciDevice pci.Device) 
 	}
 }
 
-// checkComputeCapability compares the compute capability reported by the host device against a
-// version constraint from the engine manifest (e.g. ">=6.0, <7.0"). The compute capability is
-// read from hostPciDevice.AdditionalProperties["compute-capability"].
+// checkComputeCapability compares the reported compute capability with a semver version range (e.g. ">=6.0, <7.0").
 func checkComputeCapability(constraintRequired string, hostPciDevice pci.Device) error {
 	constraint, err := semver.NewConstraint(constraintRequired)
 	if err != nil {
