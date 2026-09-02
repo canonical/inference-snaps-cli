@@ -1,16 +1,15 @@
 package commands
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
+	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/visualization"
 	"github.com/canonical/lscompute/pkg/machine"
 	"github.com/canonical/lscompute/pkg/machine/host"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 type showMachineCommand struct {
@@ -55,31 +54,11 @@ func (cmd *showMachineCommand) run(_ *cobra.Command, _ []string) error {
 }
 
 func (cmd *showMachineCommand) printMachineInfo(info *machine.MachineInfo) error {
-	switch cmd.format {
-	case "json":
-		return cmd.printMachineInfoJson(info)
-	case "yaml":
-		return cmd.printMachineInfoYaml(info)
-	default:
-		return fmt.Errorf("unknown format %q", cmd.format)
-	}
-}
-
-func (cmd *showMachineCommand) printMachineInfoJson(info *machine.MachineInfo) error {
-	jsonString, err := json.MarshalIndent(info, "", "  ")
+	rendered, err := visualization.Marshal(visualization.New(info), visualization.Format(cmd.format))
 	if err != nil {
-		return fmt.Errorf("json: %s", err)
+		return err
 	}
-	fmt.Printf("%s\n", jsonString)
-	return nil
-}
-
-func (cmd *showMachineCommand) printMachineInfoYaml(info *machine.MachineInfo) error {
-	yamlString, err := yaml.Marshal(info)
-	if err != nil {
-		return fmt.Errorf("yaml: %s", err)
-	}
-	fmt.Printf("%s", yamlString)
+	fmt.Printf("%s", rendered)
 	return nil
 }
 
