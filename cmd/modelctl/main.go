@@ -163,7 +163,7 @@ func registerCommands(rootCmd *cobra.Command, ctx *common.Context) error {
 		commands.Engine(ctx),
 		commands.UseEngine(ctx),
 		commands.Models(ctx),
-		commands.ShowModel(ctx),
+		commands.Model(ctx),
 		commands.UseModel(ctx),
 	)
 
@@ -183,6 +183,7 @@ func registerCommands(rootCmd *cobra.Command, ctx *common.Context) error {
 		commands.ListModels(ctx),  // deprecated alias for "models"
 		commands.ShowEngine(ctx),  // deprecated alias for "engine"
 		commands.ShowMachine(ctx), // deprecated alias for "machine"
+		commands.ShowModel(ctx),   // deprecated alias for "model"
 	)
 
 	return nil

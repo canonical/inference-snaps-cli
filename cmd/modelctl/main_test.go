@@ -30,7 +30,7 @@ func TestCommandNames(t *testing.T) {
 	want := []string{
 		"status", "get", "set", "unset",
 		"engines", "engine", "use-engine",
-		"models", "show-model", "use-model",
+		"models", "model", "use-model",
 		"machine", "prune-cache", "version",
 	}
 
@@ -53,6 +53,7 @@ func TestDeprecatedCommandNames(t *testing.T) {
 	deprecated := map[string]bool{
 		"list-engines": true, "list-models": true,
 		"show-engine": true, "show-machine": true,
+		"show-model": true,
 	}
 
 	for _, cmd := range root.Commands() {
@@ -85,7 +86,7 @@ func TestCommandGroups(t *testing.T) {
 		"engine":      "engine",
 		"use-engine":  "engine",
 		"models":      "engine",
-		"show-model":  "engine",
+		"model":       "engine",
 		"use-model":   "engine",
 		"machine":     "",
 		"prune-cache": "",
