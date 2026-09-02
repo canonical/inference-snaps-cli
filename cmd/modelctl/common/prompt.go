@@ -9,15 +9,7 @@ import (
 	"strings"
 )
 
-// ErrPromptUnanswerable is returned by PromptYN when the question cannot be
-// answered: stdin reached EOF or could not be read. It is not a decline. The
-// caller decides what an unanswerable question means, because that depends on
-// what has already happened by the time it is asked.
-var ErrPromptUnanswerable = errors.New("cannot read a response: stdin is closed or unreadable; use --assume-yes for unattended runs")
-
-// PromptYN prompts the user and returns true for 'y', false for 'n'. It returns
-// ErrPromptUnanswerable if no response can be obtained; the boolean is not
-// meaningful in that case.
+// PromptYN prompts the user and returns true for 'y', false for 'n'.
 func PromptYN(prompt string, defaultResponse bool) (bool, error) {
 	reader := bufio.NewReader(os.Stdin)
 
