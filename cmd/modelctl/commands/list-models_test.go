@@ -149,6 +149,11 @@ func Example_printModelsJson() {
 	//       "disk-size": "6G",
 	//       "components": [
 	//         "model-4b-it-int4-fq-ov"
+	//       ],
+	//       "compatible-engines": [
+	//         "intel-cpu",
+	//         "intel-gpu",
+	//         "intel-npu"
 	//       ]
 	//     }
 	//   ]

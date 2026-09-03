@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
 )
 
@@ -13,7 +14,10 @@ func TestShowModelUnsupportedFormatResultsInError(t *testing.T) {
 		t.Fatalf("could not load model manifest: %v", err)
 	}
 
-	cmd := showModelCommand{format: "invalid-format"}
+	cmd := showModelCommand{
+		Context: &common.Context{EnginesDir: "../../../test_data/engines"},
+		format:  "invalid-format",
+	}
 	err = cmd.printModelManifest(manifest)
 
 	if err == nil {
@@ -27,7 +31,10 @@ func Example_showModelCommand_printModelManifestYaml() {
 		panic(fmt.Sprintf("failed to load model manifest: %v", err))
 	}
 
-	cmd := showModelCommand{format: "yaml"}
+	cmd := showModelCommand{
+		Context: &common.Context{EnginesDir: "../../../test_data/engines"},
+		format:  "yaml",
+	}
 	if err := cmd.printModelManifest(manifest); err != nil {
 		panic(fmt.Sprintf("failed to print model manifest: %v", err))
 	}
@@ -43,6 +50,10 @@ func Example_showModelCommand_printModelManifestYaml() {
 	// disk-size: 6G
 	// components:
 	//     - model-4b-it-int4-fq-ov
+	// compatible-engines:
+	//     - intel-cpu
+	//     - intel-gpu
+	//     - intel-npu
 }
 
 func Example_showModelCommand_printModelManifestJson() {
@@ -51,7 +62,10 @@ func Example_showModelCommand_printModelManifestJson() {
 		panic(fmt.Sprintf("failed to load model manifest: %v", err))
 	}
 
-	cmd := showModelCommand{format: "json"}
+	cmd := showModelCommand{
+		Context: &common.Context{EnginesDir: "../../../test_data/engines"},
+		format:  "json",
+	}
 	if err := cmd.printModelManifest(manifest); err != nil {
 		panic(fmt.Sprintf("failed to print model manifest: %v", err))
 	}
@@ -69,6 +83,11 @@ func Example_showModelCommand_printModelManifestJson() {
 	//   "disk-size": "6G",
 	//   "components": [
 	//     "model-4b-it-int4-fq-ov"
+	//   ],
+	//   "compatible-engines": [
+	//     "intel-cpu",
+	//     "intel-gpu",
+	//     "intel-npu"
 	//   ]
 	// }
 }

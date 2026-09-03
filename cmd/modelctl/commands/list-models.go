@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
@@ -71,12 +72,17 @@ func (cmd *listModelsCommand) run(_ *cobra.Command, _ []string) error {
 	}
 
 	var modelsList outputModels
+	allModelsWithEngines, err := common.GetAllModelsWithEngines(cmd.Context)
+	if err != nil {
+		return fmt.Errorf("%s: %w", common.LoadingModelManifests, err)
+	}
+	compatibleEnginesByModel := make(map[string][]string, len(allModelsWithEngines))
+	for _, model := range allModelsWithEngines {
+		compatibleEnginesByModel[model.Model.Name] = model.CompatibleEngines
+	}
+
 	if cmd.all {
-		allModels, err := common.GetAllModelsWithEngines(cmd.Context)
-		if err != nil {
-			return fmt.Errorf("%s: %w", common.LoadingModelManifests, err)
-		}
-		for _, modelManifest := range allModels {
+		for _, modelManifest := range allModelsWithEngines {
 			outputModel := modelManifest.Model
 			modelsList.Models = append(modelsList.Models, common.ModelDetailsWithCompatibleEngines{
 				Model:             outputModel,
@@ -93,8 +99,16 @@ func (cmd *listModelsCommand) run(_ *cobra.Command, _ []string) error {
 			if err != nil {
 				return fmt.Errorf("creating model details for model %s: %v", model, err)
 			}
+			compatibleEngines, ok := compatibleEnginesByModel[model]
+			if !ok {
+				return fmt.Errorf("loading model manifest for model %s: no compatible engines metadata found", model)
+			}
+			if !slices.Contains(compatibleEngines, activeEngine) {
+				return fmt.Errorf("loading model manifest for model %s: model is not compatible with active engine %s", model, activeEngine)
+			}
 			modelsList.Models = append(modelsList.Models, common.ModelDetailsWithCompatibleEngines{
-				Model: outputModel,
+				Model:             outputModel,
+				CompatibleEngines: compatibleEngines,
 			})
 		}
 	}
@@ -138,9 +152,7 @@ func (cmd *listModelsCommand) printModelsJson(modelsList outputModels) error {
 
 	for _, modelWithEngines := range modelsList.Models {
 		m := jsonModel{ModelDetails: modelWithEngines.Model}
-		if cmd.all {
-			m.CompatibleEngines = modelWithEngines.CompatibleEngines
-		}
+		m.CompatibleEngines = modelWithEngines.CompatibleEngines
 		jsonOutput.Models = append(jsonOutput.Models, m)
 	}
 

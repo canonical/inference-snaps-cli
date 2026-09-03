@@ -20,6 +20,11 @@ type showModelCommand struct {
 	format string
 }
 
+type showModelOutput struct {
+	common.ModelDetails `yaml:",inline"`
+	CompatibleEngines   []string `json:"compatible-engines" yaml:"compatible-engines"`
+}
+
 func ShowModel(ctx *common.Context) *cobra.Command {
 	var cmd showModelCommand
 	cmd.Context = ctx
@@ -112,27 +117,59 @@ func (cmd *showModelCommand) showModel(modelNameOrAlias string) error {
 }
 
 func (cmd *showModelCommand) printModelManifest(manifest *models.Manifest) error {
-	output, err := common.NewModelDetails(manifest)
+	output, err := cmd.getShowModelOutput(manifest)
 	if err != nil {
-		return fmt.Errorf("creating model details: %v", err)
+		return err
 	}
-
 	switch cmd.format {
 	case "json":
+
 		jsonString, err := json.MarshalIndent(output, "", "  ")
 		if err != nil {
 			return fmt.Errorf("json: %s", err)
 		}
 		fmt.Printf("%s\n", jsonString)
+		return nil
+
 	case "yaml", "":
+
 		modelYaml, err := yaml.Marshal(output)
 		if err != nil {
 			return fmt.Errorf("yaml: %s", err)
 		}
 		fmt.Print(string(modelYaml))
+		return nil
 	default:
 		return fmt.Errorf("unknown format %q", cmd.format)
 	}
+}
 
-	return nil
+func (cmd *showModelCommand) getShowModelOutput(manifest *models.Manifest) (showModelOutput, error) {
+	output, err := common.NewModelDetails(manifest)
+	if err != nil {
+		return showModelOutput{}, fmt.Errorf("creating model details: %v", err)
+	}
+
+	compatibleEngines, err := cmd.getCompatibleEngines(manifest.Name)
+	if err != nil {
+		return showModelOutput{}, fmt.Errorf("resolving compatible engines: %v", err)
+	}
+
+	return showModelOutput{ModelDetails: output, CompatibleEngines: compatibleEngines}, nil
+}
+
+func (cmd *showModelCommand) getCompatibleEngines(modelName string) ([]string, error) {
+	engineManifests, err := engines.LoadManifests(cmd.EnginesDir)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", common.LoadingEngineManifest, err)
+	}
+
+	compatibleEngines := []string{}
+	for _, engineManifest := range engineManifests {
+		if slices.Contains(engineManifest.Model.Options, modelName) {
+			compatibleEngines = append(compatibleEngines, engineManifest.Name)
+		}
+	}
+
+	return compatibleEngines, nil
 }
