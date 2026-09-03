@@ -5,12 +5,13 @@ import (
 )
 
 const (
-	capabilityText               string = "text"
-	capabilityVision             string = "vision"
-	capabilityTools              string = "tools"
-	capabilityThinking           string = "thinking"
-	capabilityTextEmbedding      string = "text-embedding"
-	capabilityAudioTranscription string = "audio:transcription"
+	capabilityText                  string = "text"
+	capabilityVision                string = "vision"
+	capabilityTools                 string = "tools"
+	capabilityThinking              string = "thinking"
+	capabilityTextEmbedding         string = "text-embedding"
+	capabilityTranscription         string = "transcription"
+	capabilityRealtimeTranscription string = "realtime-transcription"
 )
 
 type Manifest struct {
@@ -33,5 +34,5 @@ type Manifest struct {
 
 func SupportedCapabilities() []string {
 	return []string{capabilityText, capabilityVision, capabilityTools, capabilityThinking,
-		capabilityTextEmbedding, capabilityAudioTranscription}
+		capabilityTextEmbedding, capabilityTranscription, capabilityRealtimeTranscription}
 }
