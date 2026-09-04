@@ -87,6 +87,13 @@ func TestStringToBytesExponent(t *testing.T) {
 	}
 }
 
+func TestStringToBytesNegativeValues(t *testing.T) {
+	_, err := StringToBytes("-1024M")
+	if err == nil {
+		t.Fatal("Negative values should not be parsed")
+	}
+}
+
 func TestStringToBytes(t *testing.T) {
 	sizeBytes, err := StringToBytes("256")
 	if err != nil {

@@ -82,6 +82,9 @@ func StringToBytes(sizeString string) (uint64, error) {
 	if math.IsNaN(sizeBytes) || math.IsInf(sizeBytes, 0) {
 		return 0, fmt.Errorf("size is not a finite float: %s", sizeString)
 	}
+	if sizeBytes < 0 {
+		return 0, fmt.Errorf("size cannot be negative: %s", sizeString)
+	}
 	sizeBytes = sizeBytes * scaling
 
 	return uint64(sizeBytes), nil
