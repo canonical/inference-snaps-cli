@@ -25,6 +25,18 @@ func TestStringToBytesMegabytes(t *testing.T) {
 	}
 }
 
+func TestStringToBytesFloat(t *testing.T) {
+	sizeBytes, err := StringToBytes("3.14M")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// 3.14 * 1024*1024 = 3292528.64
+	expected := uint64(3292528)
+	if sizeBytes != expected {
+		t.Fatal("incorrectly parsed size")
+	}
+}
+
 func TestStringToBytesTerabytes(t *testing.T) {
 	_, err := StringToBytes("2T")
 	if err == nil {
