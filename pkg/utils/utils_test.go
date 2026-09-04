@@ -37,6 +37,27 @@ func TestStringToBytesFloat(t *testing.T) {
 	}
 }
 
+func TestStringToBytesNaNFloat(t *testing.T) {
+	_, err := StringToBytes("NaNM")
+	if err == nil {
+		t.Fatal("NaN should not be parsed")
+	}
+}
+
+func TestStringToBytesPosInfFloat(t *testing.T) {
+	_, err := StringToBytes("+infM")
+	if err == nil {
+		t.Fatal("+inf should not be parsed")
+	}
+}
+
+func TestStringToBytesNegInfFloat(t *testing.T) {
+	_, err := StringToBytes("-infM")
+	if err == nil {
+		t.Fatal("-inf should not be parsed")
+	}
+}
+
 func TestStringToBytesTerabytes(t *testing.T) {
 	_, err := StringToBytes("2T")
 	if err == nil {
