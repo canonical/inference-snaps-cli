@@ -71,6 +71,26 @@ This prints a machine-readable summary of the host system.
 Errors and warnings are printed as standard errors.
 This allows piping the output to another application.
 
+### Platform NPU Access
+
+Engine manifests should describe the hardware bus and any required snap
+connections, but application snaps should use stable logical capabilities
+instead of vendor-specific plugs. A platform gadget can expose the same
+logical `inference-npu` custom-device contract for different accelerator
+implementations, while a trusted runtime provider can expose a content
+contract for the backend ABI. Runtime content plugs should be shared by
+compatible ABI families, not created for every board or SoC. For example, a
+Qualcomm HTP runtime may use `inference-npu-runtime-qcom-htp`, while different
+incompatible userspace ABIs use their own versioned content contract.
+
+Platform-specific device paths, firmware, userspace libraries, and DSP files
+belong in the gadget or runtime provider. The model snap should only require
+the logical plugs and select a backend such as `fastrpc` when the detected
+device and required connections are available.
+
+FastRPC engine manifests with `type: npu` match only the CDSP domain. A
+typeless manifest with `bus: fastrpc` matches any DSP domain.
+
 ### Select Engine
 
 This command can be used to perform engine selection using static data.
