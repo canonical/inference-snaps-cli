@@ -5,12 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"slices"
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
-	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
 	"github.com/olekukonko/tablewriter/renderer"
@@ -27,8 +25,8 @@ type modelsCommand struct {
 }
 
 type outputModels struct {
-	ActiveModel string                                     `json:"active-model"`
-	Models      []common.ModelDetailsWithCompatibleEngines `json:"models"`
+	ActiveModel string                `json:"active-model"`
+	Models      []common.ModelDetails `json:"models"`
 }
 
 func Models(ctx *common.Context) *cobra.Command {
@@ -82,44 +80,19 @@ func (cmd *modelsCommand) run(_ *cobra.Command, _ []string) error {
 	}
 
 	var modelsList outputModels
-	allModelsWithEngines, err := common.GetAllModelsWithEngines(cmd.Context)
-	if err != nil {
-		return fmt.Errorf("%s: %w", common.LoadingModelManifests, err)
-	}
-	compatibleEnginesByModel := make(map[string][]string, len(allModelsWithEngines))
-	for _, model := range allModelsWithEngines {
-		compatibleEnginesByModel[model.Model.Name] = model.CompatibleEngines
-	}
-
 	if cmd.all {
-		for _, modelManifest := range allModelsWithEngines {
-			outputModel := modelManifest.Model
-			modelsList.Models = append(modelsList.Models, common.ModelDetailsWithCompatibleEngines{
-				Model:             outputModel,
-				CompatibleEngines: modelManifest.CompatibleEngines,
-			})
+		allModels, err := common.GetAllModels(cmd.Context)
+		if err != nil {
+			return fmt.Errorf("getting all models: %v", err)
 		}
+		modelsList.Models = allModels
 	} else {
 		for _, model := range engineManifest.Model.Options {
-			modelManifest, err := models.LoadManifest(cmd.ModelsDir, model)
-			if err != nil {
-				return fmt.Errorf("loading model manifest for model %s: %v", model, err)
-			}
-			outputModel, err := common.NewModelDetails(modelManifest)
+			outputModel, err := common.GetModelDetailsByNameOrAlias(cmd.Context, model)
 			if err != nil {
 				return fmt.Errorf("creating model details for model %s: %v", model, err)
 			}
-			compatibleEngines, ok := compatibleEnginesByModel[model]
-			if !ok {
-				return fmt.Errorf("loading model manifest for model %s: no compatible engines metadata found", model)
-			}
-			if !slices.Contains(compatibleEngines, activeEngine) {
-				return fmt.Errorf("loading model manifest for model %s: model is not compatible with active engine %s", model, activeEngine)
-			}
-			modelsList.Models = append(modelsList.Models, common.ModelDetailsWithCompatibleEngines{
-				Model:             outputModel,
-				CompatibleEngines: compatibleEngines,
-			})
+			modelsList.Models = append(modelsList.Models, *outputModel)
 		}
 	}
 
@@ -146,27 +119,7 @@ func (cmd *modelsCommand) run(_ *cobra.Command, _ []string) error {
 }
 
 func (cmd *modelsCommand) printModelsJson(modelsList outputModels) error {
-	type jsonModel struct {
-		common.ModelDetails
-		CompatibleEngines []string `json:"compatible-engines,omitempty"`
-	}
-	type outputModelsJSON struct {
-		ActiveModel string      `json:"active-model"`
-		Models      []jsonModel `json:"models"`
-	}
-
-	jsonOutput := outputModelsJSON{
-		ActiveModel: modelsList.ActiveModel,
-		Models:      make([]jsonModel, 0, len(modelsList.Models)),
-	}
-
-	for _, modelWithEngines := range modelsList.Models {
-		m := jsonModel{ModelDetails: modelWithEngines.Model}
-		m.CompatibleEngines = modelWithEngines.CompatibleEngines
-		jsonOutput.Models = append(jsonOutput.Models, m)
-	}
-
-	jsonString, err := json.MarshalIndent(jsonOutput, "", "  ")
+	jsonString, err := json.MarshalIndent(modelsList, "", "  ")
 	if err != nil {
 		return fmt.Errorf("marshalling models: %v", err)
 	}
@@ -184,8 +137,7 @@ func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error
 
 	var modelNameMaxLen, modelCapabilitiesMaxLen, modelDiskMaxLen int
 
-	for _, modelWithEngines := range modelsList.Models {
-		model := modelWithEngines.Model
+	for _, model := range modelsList.Models {
 		name := model.Name
 		// Mark active model with "*"
 		if model.Name == modelsList.ActiveModel {
@@ -195,7 +147,7 @@ func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error
 		capabilities := strings.Join(model.Capabilities, ", ")
 		diskSize := model.DiskSize
 		var engines string
-		for _, engine := range modelWithEngines.CompatibleEngines {
+		for _, engine := range model.CompatibleEngines {
 			engines += engine + ", "
 		}
 		engines = strings.TrimSuffix(engines, ", ")
@@ -211,7 +163,12 @@ func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error
 		tableRows = append(tableRows, row)
 	}
 
-	tableMaxWidth := 80
+	var tableMaxWidth int
+	if includeEnginesColumn {
+		tableMaxWidth = 120
+	} else {
+		tableMaxWidth = 80
+	}
 	// Increase column widths to account for paddings
 	modelNameMaxLen += 1
 	modelCapabilitiesMaxLen += 2
@@ -306,6 +263,10 @@ func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
 		return "", fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
+	}
+
+	if cmd.all {
+		return tableOutput.String(), nil
 	}
 
 	incompatibleModelsCount := len(allModels) - len(tableRows[1:])

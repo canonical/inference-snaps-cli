@@ -20,11 +20,6 @@ type modelCommand struct {
 	format string
 }
 
-type showModelOutput struct {
-	common.ModelDetails `yaml:",inline"`
-	CompatibleEngines   []string `json:"compatible-engines" yaml:"compatible-engines"`
-}
-
 func Model(ctx *common.Context) *cobra.Command {
 	return newModelCmd(ctx, "model [<model>]", "")
 }
@@ -114,72 +109,35 @@ func (cmd *modelCommand) showCurrentModel() error {
 }
 
 func (cmd *modelCommand) model(modelNameOrAlias string) error {
-	modelManifest, err := common.GetModelByNameOrAlias(cmd.Context, modelNameOrAlias)
+	modelDetails, err := common.GetModelDetailsByNameOrAlias(cmd.Context, modelNameOrAlias)
 	if err != nil {
 		return err
 	}
 
-	err = cmd.printModelManifest(modelManifest)
+	err = cmd.printModelManifest(modelDetails)
 	if err != nil {
 		return fmt.Errorf("printing model manifest: %v", err)
 	}
 	return nil
 }
 
-func (cmd *modelCommand) printModelManifest(manifest *models.Manifest) error {
-	output, err := cmd.getShowModelOutput(manifest)
-	if err != nil {
-		return err
-	}
+func (cmd *modelCommand) printModelManifest(modelDetails *common.ModelDetails) error {
 	switch cmd.format {
 	case "json":
-
-		jsonString, err := json.MarshalIndent(output, "", "  ")
+		jsonString, err := json.MarshalIndent(modelDetails, "", "  ")
 		if err != nil {
 			return fmt.Errorf("json: %s", err)
 		}
 		fmt.Printf("%s\n", jsonString)
-		return nil
-
 	case "yaml", "":
-
-		modelYaml, err := yaml.Marshal(output)
+		modelYaml, err := yaml.Marshal(modelDetails)
 		if err != nil {
 			return fmt.Errorf("yaml: %s", err)
 		}
 		fmt.Print(string(modelYaml))
-		return nil
 	default:
 		return fmt.Errorf("unknown format %q", cmd.format)
 	}
-}
 
-func (cmd *modelCommand) getShowModelOutput(manifest *models.Manifest) (showModelOutput, error) {
-	output, err := common.NewModelDetails(manifest)
-	if err != nil {
-		return showModelOutput{}, fmt.Errorf("creating model details: %v", err)
-	}
-
-	compatibleEngines, err := cmd.getCompatibleEngines(manifest.Name)
-	if err != nil {
-		return showModelOutput{}, fmt.Errorf("resolving compatible engines: %v", err)
-	}
-
-	return showModelOutput{ModelDetails: output, CompatibleEngines: compatibleEngines}, nil
-}
-
-func (cmd *modelCommand) getCompatibleEngines(modelName string) ([]string, error) {
-	engineManifests, err := engines.LoadManifests(cmd.EnginesDir)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", common.LoadingEngineManifest, err)
-	}
-
-	compatibleEngines := []string{}
-	for _, engineManifest := range engineManifests {
-		if slices.Contains(engineManifest.Model.Options, modelName) {
-			compatibleEngines = append(compatibleEngines, engineManifest.Name)
-		}
-	}
-
-	return compatibleEngines, nil
+	return nil
 }

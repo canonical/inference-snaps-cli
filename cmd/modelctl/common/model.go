@@ -21,11 +21,8 @@ type ModelDetails struct {
 	DiskSize string `json:"disk-size" yaml:"disk-size"`
 
 	Components []string `json:"components" yaml:"components"`
-}
 
-type ModelDetailsWithCompatibleEngines struct {
-	Model             ModelDetails
-	CompatibleEngines []string
+	CompatibleEngines []string `json:"compatible-engines,omitempty" yaml:"compatible-engines,omitempty"`
 }
 
 func NewModelDetails(manifest *models.Manifest) (ModelDetails, error) {
@@ -48,7 +45,7 @@ func NewModelDetails(manifest *models.Manifest) (ModelDetails, error) {
 	return modelDetails, nil
 }
 
-func GetModelByNameOrAlias(ctx *Context, modelName string) (*models.Manifest, error) {
+func GetModelManifestByNameOrAlias(ctx *Context, modelName string) (*models.Manifest, error) {
 	if modelName == "" {
 		return nil, fmt.Errorf("model name must not be empty")
 	}
@@ -66,7 +63,7 @@ func GetModelByNameOrAlias(ctx *Context, modelName string) (*models.Manifest, er
 		return nil, fmt.Errorf("%s: %w", LoadingEngineManifest, err)
 	}
 
-	allModelManifests, err := GetAllModels(ctx)
+	allModelManifests, err := models.LoadManifests(ctx.ModelsDir)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", LoadingModelManifests, err)
 	}
@@ -96,6 +93,34 @@ func GetModelByNameOrAlias(ctx *Context, modelName string) (*models.Manifest, er
 	return manifest, nil
 }
 
+func GetModelDetailsByNameOrAlias(ctx *Context, modelName string) (*ModelDetails, error) {
+	modelManifest, err := GetModelManifestByNameOrAlias(ctx, modelName)
+	if err != nil {
+		return nil, err
+	}
+	modelDetails, err := NewModelDetails(modelManifest)
+	if err != nil {
+		return nil, err
+	}
+	modelDetails.CompatibleEngines = GetCompatibleEnginesByModelName(ctx, modelDetails.Name)
+	return &modelDetails, nil
+}
+
+func GetCompatibleEnginesByModelName(ctx *Context, modelName string) []string {
+	allEngineManifests, err := engines.LoadManifests(ctx.EnginesDir)
+	if err != nil {
+		return nil
+	}
+
+	compatibleEngines := []string{}
+	for _, engineManifest := range allEngineManifests {
+		if slices.Contains(engineManifest.Model.Options, modelName) {
+			compatibleEngines = append(compatibleEngines, engineManifest.Name)
+		}
+	}
+	return compatibleEngines
+}
+
 func ModelStatus(ctx *Context) (map[string]string, error) {
 	activeModelId, err := ctx.Cache.GetActiveModel()
 	if err != nil {
@@ -113,19 +138,10 @@ func ModelStatus(ctx *Context) (map[string]string, error) {
 	return status, nil
 }
 
-func GetAllModels(ctx *Context) ([]models.Manifest, error) {
+func GetAllModels(ctx *Context) ([]ModelDetails, error) {
 	allModelManifests, err := models.LoadManifests(ctx.ModelsDir)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", LoadingModelManifests, err)
-	}
-
-	return allModelManifests, nil
-}
-
-func GetAllModelsWithEngines(ctx *Context) ([]ModelDetailsWithCompatibleEngines, error) {
-	allModelManifests, err := GetAllModels(ctx)
-	if err != nil {
-		return nil, err
 	}
 
 	allEngineManifests, err := engines.LoadManifests(ctx.EnginesDir)
@@ -133,7 +149,7 @@ func GetAllModelsWithEngines(ctx *Context) ([]ModelDetailsWithCompatibleEngines,
 		return nil, fmt.Errorf("%s: %w", LoadingEngineManifest, err)
 	}
 
-	allModelsWithEngines := []ModelDetailsWithCompatibleEngines{}
+	allModelsWithEngines := []ModelDetails{}
 	for _, modelManifest := range allModelManifests {
 		outputModel, err := NewModelDetails(&modelManifest)
 		if err != nil {
@@ -145,10 +161,8 @@ func GetAllModelsWithEngines(ctx *Context) ([]ModelDetailsWithCompatibleEngines,
 				compatibleEngines = append(compatibleEngines, engineManifest.Name)
 			}
 		}
-		allModelsWithEngines = append(allModelsWithEngines, ModelDetailsWithCompatibleEngines{
-			Model:             outputModel,
-			CompatibleEngines: compatibleEngines,
-		})
+		outputModel.CompatibleEngines = compatibleEngines
+		allModelsWithEngines = append(allModelsWithEngines, outputModel)
 	}
 
 	return allModelsWithEngines, nil

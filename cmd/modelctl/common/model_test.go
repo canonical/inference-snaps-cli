@@ -57,7 +57,7 @@ func TestModelStatus_NonExistentModel(t *testing.T) {
 	}
 }
 
-func TestGetModelByNameOrAlias(t *testing.T) {
+func TestGetModelManifestByNameOrAlias(t *testing.T) {
 	tests := []struct {
 		name         string
 		activeEngine string
@@ -125,7 +125,7 @@ func TestGetModelByNameOrAlias(t *testing.T) {
 			}
 			ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir, Cache: cache}
 
-			manifest, err := GetModelByNameOrAlias(ctx, tc.query)
+			manifest, err := GetModelManifestByNameOrAlias(ctx, tc.query)
 
 			if tc.wantErr {
 				if err == nil {
@@ -148,10 +148,11 @@ func TestGetModelByNameOrAlias(t *testing.T) {
 
 func TestGetAllModels(t *testing.T) {
 	modelsDir := t.TempDir()
+	enginesDir := t.TempDir()
 	writeModelYAML(t, modelsDir, "model1", "name: model1\nalias: m1\ndisk-size: 1G\n")
 	writeModelYAML(t, modelsDir, "model2", "name: model2\nalias: m2\ndisk-size: 2G\n")
 
-	ctx := &Context{ModelsDir: modelsDir}
+	ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir}
 
 	models, err := GetAllModels(ctx)
 	if err != nil {
@@ -183,7 +184,7 @@ func TestGetAllModelsWithEngines(t *testing.T) {
 
 	ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir}
 
-	modelsWithEngines, err := GetAllModelsWithEngines(ctx)
+	modelsWithEngines, err := GetAllModels(ctx)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -192,7 +193,7 @@ func TestGetAllModelsWithEngines(t *testing.T) {
 	}
 
 	for _, modelWithEngines := range modelsWithEngines {
-		switch modelWithEngines.Model.Name {
+		switch modelWithEngines.Name {
 		case "model1":
 			if len(modelWithEngines.CompatibleEngines) != 2 || modelWithEngines.CompatibleEngines[0] != "engine1" || modelWithEngines.CompatibleEngines[1] != "engine2" {
 				t.Errorf("model1 should be compatible with engine1 and engine2, got: %v", modelWithEngines.CompatibleEngines)
@@ -210,7 +211,7 @@ func TestGetAllModelsWithEngines(t *testing.T) {
 				t.Errorf("model4 should not be compatible with any engines, got: %v", modelWithEngines.CompatibleEngines)
 			}
 		default:
-			t.Errorf("unexpected model name: %s", modelWithEngines.Model.Name)
+			t.Errorf("unexpected model name: %s", modelWithEngines.Name)
 		}
 	}
 }

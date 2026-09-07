@@ -26,7 +26,7 @@ func prepareModelsTestData() (*modelsCommand, *outputModels, error) {
 		Config:     nil,
 	}
 
-	allModels, err := common.GetAllModelsWithEngines(ctx)
+	allModels, err := common.GetAllModels(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error getting all models with engines: %v", err)
 	}
@@ -120,9 +120,9 @@ func Example_printModelsJson() {
 	}
 
 	// Use only the 4b-it-int4-fq-ov model to keep output concise
-	var filtered []common.ModelDetailsWithCompatibleEngines
+	var filtered []common.ModelDetails
 	for _, m := range modelsList.Models {
-		if m.Model.Name == "4b-it-int4-fq-ov" {
+		if m.Name == "4b-it-int4-fq-ov" {
 			filtered = append(filtered, m)
 		}
 	}
