@@ -114,14 +114,14 @@ func (cmd *modelCommand) model(modelNameOrAlias string) error {
 		return err
 	}
 
-	err = cmd.printModelManifest(modelDetails)
+	err = cmd.printModelDetails(modelDetails)
 	if err != nil {
 		return fmt.Errorf("printing model manifest: %v", err)
 	}
 	return nil
 }
 
-func (cmd *modelCommand) printModelManifest(modelDetails *common.ModelDetails) error {
+func (cmd *modelCommand) printModelDetails(modelDetails *common.ModelDetails) error {
 	switch cmd.format {
 	case "json":
 		jsonString, err := json.MarshalIndent(modelDetails, "", "  ")

@@ -23,14 +23,14 @@ func TestModelUnsupportedFormatResultsInError(t *testing.T) {
 		Context: &common.Context{EnginesDir: "../../../test_data/engines"},
 		format:  "invalid-format",
 	}
-	err = cmd.printModelManifest(&modelDetails)
+	err = cmd.printModelDetails(&modelDetails)
 
 	if err == nil {
 		t.Fatalf("expected unsupported format to error out, got nil error")
 	}
 }
 
-func Example_modelCommand_printModelManifestYaml() {
+func Example_modelCommand_printModelDetailsYaml() {
 	cache := storage.NewMockCache()
 	if err := cache.SetActiveEngine("intel-gpu"); err != nil {
 		panic(fmt.Sprintf("failed to set active engine: %v", err))
@@ -47,7 +47,7 @@ func Example_modelCommand_printModelManifestYaml() {
 	}
 
 	cmd := modelCommand{Context: ctx, format: "yaml"}
-	if err := cmd.printModelManifest(modelDetails); err != nil {
+	if err := cmd.printModelDetails(modelDetails); err != nil {
 		panic(fmt.Sprintf("failed to print model manifest: %v", err))
 	}
 
@@ -68,7 +68,7 @@ func Example_modelCommand_printModelManifestYaml() {
 	//     - intel-npu
 }
 
-func Example_modelCommand_printModelManifestJson() {
+func Example_modelCommand_printModelDetailsJson() {
 	cache := storage.NewMockCache()
 	if err := cache.SetActiveEngine("intel-gpu"); err != nil {
 		panic(fmt.Sprintf("failed to set active engine: %v", err))
@@ -85,7 +85,7 @@ func Example_modelCommand_printModelManifestJson() {
 	}
 
 	cmd := modelCommand{Context: ctx, format: "json"}
-	if err := cmd.printModelManifest(modelDetails); err != nil {
+	if err := cmd.printModelDetails(modelDetails); err != nil {
 		panic(fmt.Sprintf("failed to print model manifest: %v", err))
 	}
 

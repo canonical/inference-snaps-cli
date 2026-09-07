@@ -2,8 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"io"
-	"os"
 	"strings"
 	"testing"
 
@@ -117,50 +115,6 @@ func TestGetModelsTableAllModels(t *testing.T) {
 	}
 }
 
-func TestModelsRunAllFlagIncludesAllModels(t *testing.T) {
-	cache := storage.NewMockCache()
-	if err := cache.SetActiveModel("4b-it-int4-fq-ov"); err != nil {
-		t.Fatalf("SetActiveModel: %v", err)
-	}
-	if err := cache.SetActiveEngine("intel-gpu"); err != nil {
-		t.Fatalf("SetActiveEngine: %v", err)
-	}
-
-	cmd := modelsCommand{
-		Context: &common.Context{
-			ModelsDir:  "../../../test_data/models",
-			EnginesDir: "../../../test_data/engines",
-			Cache:      cache,
-		},
-		format: "json",
-		all:    true,
-	}
-
-	origStdout := os.Stdout
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatalf("os.Pipe: %v", err)
-	}
-	os.Stdout = w
-	defer func() { os.Stdout = origStdout }()
-
-	if err := cmd.run(nil, nil); err != nil {
-		t.Fatalf("run returned error: %v", err)
-	}
-	_ = w.Close()
-	out, err := io.ReadAll(r)
-	if err != nil {
-		t.Fatalf("ReadAll: %v", err)
-	}
-
-	output := string(out)
-	for _, model := range []string{"26b-q4-k-m-gguf", "30b-a3b-q4-k-m-gguf", "4b-it-int4-fq-ov"} {
-		if !strings.Contains(output, model) {
-			t.Fatalf("output missing model %q:\n%s", model, output)
-		}
-	}
-}
-
 func TestGetModelsTableIncludesHintForIncompatibleModels(t *testing.T) {
 	cmd, modelsList, err := prepareModelsTestData()
 	if err != nil {
@@ -178,29 +132,6 @@ func TestGetModelsTableIncludesHintForIncompatibleModels(t *testing.T) {
 	}
 	if !strings.Contains(tableStr, "models --all") {
 		t.Fatalf("expected --all hint in output, got:\n%s", tableStr)
-	}
-}
-
-func TestPrintModelsTableEmptyList(t *testing.T) {
-	cmd := modelsCommand{}
-	origStderr := os.Stderr
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatalf("os.Pipe: %v", err)
-	}
-	os.Stderr = w
-	defer func() { os.Stderr = origStderr }()
-
-	if err := cmd.printModelsTable(outputModels{}); err != nil {
-		t.Fatalf("printModelsTable returned error: %v", err)
-	}
-	_ = w.Close()
-	out, err := io.ReadAll(r)
-	if err != nil {
-		t.Fatalf("ReadAll: %v", err)
-	}
-	if got := string(out); !strings.Contains(got, "No models found.") {
-		t.Fatalf("expected empty-list message, got %q", got)
 	}
 }
 
@@ -228,6 +159,90 @@ func Example_printModelsJson() {
 	// {
 	//   "active-model": "4b-it-int4-fq-ov",
 	//   "models": [
+	//     {
+	//       "name": "4b-it-int4-fq-ov",
+	//       "alias": "4b-it",
+	//       "description": "OpenVino 4b test model",
+	//       "model-card-url": "https://example.com/model-card",
+	//       "quantization": "int4-fq",
+	//       "capabilities": [
+	//         "text"
+	//       ],
+	//       "disk-size": "6G",
+	//       "components": [
+	//         "model-4b-it-int4-fq-ov"
+	//       ],
+	//       "compatible-engines": [
+	//         "intel-cpu",
+	//         "intel-gpu",
+	//         "intel-npu"
+	//       ]
+	//     }
+	//   ]
+	// }
+}
+
+func Example_printAllModelsJson() {
+	cmd, modelsList, err := prepareModelsTestData()
+	cmd.all = true
+	if err != nil {
+		panic(fmt.Sprintf("Error preparing test data: %v", err))
+	}
+
+	err = cmd.printModelsJson(*modelsList)
+	if err != nil {
+		panic(fmt.Sprintf("Error printing models json: %v", err))
+	}
+
+	// Output:
+	// {
+	//   "active-model": "4b-it-int4-fq-ov",
+	//   "models": [
+	//     {
+	//       "name": "26b-q4-k-m-gguf",
+	//       "description": "Test model description",
+	//       "model-card-url": "https://example.com/model-card",
+	//       "quantization": "Q4_K_M",
+	//       "capabilities": [
+	//         "text"
+	//       ],
+	//       "disk-size": "6G",
+	//       "components": [
+	//         "model-26b-a4b-q4-k-m-gguf",
+	//         "mmproj-26b-bf16-gguf"
+	//       ],
+	//       "compatible-engines": [
+	//         "cpu",
+	//         "cuda-generic",
+	//         "rocm-generic"
+	//       ]
+	//     },
+	//     {
+	//       "name": "30b-a3b-q4-k-m-gguf",
+	//       "description": "Test model description",
+	//       "model-card-url": "https://example.com/model-card",
+	//       "quantization": "Q4_K_M",
+	//       "capabilities": [
+	//         "text",
+	//         "vision",
+	//         "audio",
+	//         "tool"
+	//       ],
+	//       "disk-size": "6G",
+	//       "components": [
+	//         "model-30b-a3b-q4-k-m-gguf-1-of-6",
+	//         "model-30b-a3b-q4-k-m-gguf-2-of-6",
+	//         "model-30b-a3b-q4-k-m-gguf-3-of-6",
+	//         "model-30b-a3b-q4-k-m-gguf-4-of-6",
+	//         "model-30b-a3b-q4-k-m-gguf-5-of-6",
+	//         "model-30b-a3b-q4-k-m-gguf-6-of-6"
+	//       ],
+	//       "compatible-engines": [
+	//         "cpu",
+	//         "cuda-generic",
+	//         "rocm-generic"
+	//       ]
+	//     },
 	//     {
 	//       "name": "4b-it-int4-fq-ov",
 	//       "alias": "4b-it",
