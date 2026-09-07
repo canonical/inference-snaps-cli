@@ -2,6 +2,9 @@ package commands
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
@@ -94,25 +97,113 @@ func TestGetModelsTable(t *testing.T) {
 
 func TestGetModelsTableAllModels(t *testing.T) {
 	cmd, modelsList, err := prepareModelsTestData()
-	cmd.all = true
 	if err != nil {
 		t.Fatalf("Error preparing test data: %v", err)
 	}
+	cmd.all = true
 
 	tableStr, err := cmd.getModelsTable(*modelsList)
 	if err != nil {
 		t.Fatalf("Error getting models table: %v", err)
 	}
 
-	expectedTable := `NAME                 CAPABILITIES               DISK   ENGINES                  
-26b-q4-k-m-gguf      text                       6G     cpu, cuda-generic, rocm… 
-30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G     cpu, cuda-generic, rocm… 
-4b-it-int4-fq-ov*    text                       6G     intel-cpu, intel-gpu, i… 
-`
+	expectedTable := "NAME                 CAPABILITIES               DISK   ENGINES                                                          \n" +
+		"26b-q4-k-m-gguf      text                       6G     cpu, cuda-generic, rocm-generic                                  \n" +
+		"30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G     cpu, cuda-generic, rocm-generic                                  \n" +
+		"4b-it-int4-fq-ov*    text                       6G     intel-cpu, intel-gpu, intel-npu                                  \n"
+
 	if tableStr != expectedTable {
 		t.Errorf("Models table not as expected.\n\nGot:\n\n%s\n\nWant:\n\n%s", tableStr, expectedTable)
 	}
 }
+
+func TestModelsRunAllFlagIncludesAllModels(t *testing.T) {
+	cache := storage.NewMockCache()
+	if err := cache.SetActiveModel("4b-it-int4-fq-ov"); err != nil {
+		t.Fatalf("SetActiveModel: %v", err)
+	}
+	if err := cache.SetActiveEngine("intel-gpu"); err != nil {
+		t.Fatalf("SetActiveEngine: %v", err)
+	}
+
+	cmd := modelsCommand{
+		Context: &common.Context{
+			ModelsDir:  "../../../test_data/models",
+			EnginesDir: "../../../test_data/engines",
+			Cache:      cache,
+		},
+		format: "json",
+		all:    true,
+	}
+
+	origStdout := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("os.Pipe: %v", err)
+	}
+	os.Stdout = w
+	defer func() { os.Stdout = origStdout }()
+
+	if err := cmd.run(nil, nil); err != nil {
+		t.Fatalf("run returned error: %v", err)
+	}
+	_ = w.Close()
+	out, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatalf("ReadAll: %v", err)
+	}
+
+	output := string(out)
+	for _, model := range []string{"26b-q4-k-m-gguf", "30b-a3b-q4-k-m-gguf", "4b-it-int4-fq-ov"} {
+		if !strings.Contains(output, model) {
+			t.Fatalf("output missing model %q:\n%s", model, output)
+		}
+	}
+}
+
+func TestGetModelsTableIncludesHintForIncompatibleModels(t *testing.T) {
+	cmd, modelsList, err := prepareModelsTestData()
+	if err != nil {
+		t.Fatalf("Error preparing test data: %v", err)
+	}
+	cmd.all = false
+	modelsList.Models = modelsList.Models[:2]
+
+	tableStr, err := cmd.getModelsTable(*modelsList)
+	if err != nil {
+		t.Fatalf("Error getting models table: %v", err)
+	}
+	if !strings.Contains(tableStr, "Hint:") {
+		t.Fatalf("expected hint in table output, got:\n%s", tableStr)
+	}
+	if !strings.Contains(tableStr, "models --all") {
+		t.Fatalf("expected --all hint in output, got:\n%s", tableStr)
+	}
+}
+
+func TestPrintModelsTableEmptyList(t *testing.T) {
+	cmd := modelsCommand{}
+	origStderr := os.Stderr
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("os.Pipe: %v", err)
+	}
+	os.Stderr = w
+	defer func() { os.Stderr = origStderr }()
+
+	if err := cmd.printModelsTable(outputModels{}); err != nil {
+		t.Fatalf("printModelsTable returned error: %v", err)
+	}
+	_ = w.Close()
+	out, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatalf("ReadAll: %v", err)
+	}
+	if got := string(out); !strings.Contains(got, "No models found.") {
+		t.Fatalf("expected empty-list message, got %q", got)
+	}
+}
+
 func Example_printModelsJson() {
 	cmd, modelsList, err := prepareModelsTestData()
 	if err != nil {
