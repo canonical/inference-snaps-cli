@@ -116,7 +116,7 @@ func (cmd *modelCommand) model(modelNameOrAlias string) error {
 
 	err = cmd.printModelDetails(modelDetails)
 	if err != nil {
-		return fmt.Errorf("printing model manifest: %v", err)
+		return fmt.Errorf("printing model details: %v", err)
 	}
 	return nil
 }
