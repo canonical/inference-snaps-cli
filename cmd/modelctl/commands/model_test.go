@@ -8,13 +8,13 @@ import (
 	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
 )
 
-func TestShowModelUnsupportedFormatResultsInError(t *testing.T) {
+func TestModelUnsupportedFormatResultsInError(t *testing.T) {
 	manifest, err := models.LoadManifest("../../../test_data/models", "4b-it-int4-fq-ov")
 	if err != nil {
 		t.Fatalf("could not load model manifest: %v", err)
 	}
 
-	cmd := showModelCommand{
+	cmd := modelCommand{
 		Context: &common.Context{EnginesDir: "../../../test_data/engines"},
 		format:  "invalid-format",
 	}
@@ -25,13 +25,13 @@ func TestShowModelUnsupportedFormatResultsInError(t *testing.T) {
 	}
 }
 
-func Example_showModelCommand_printModelManifestYaml() {
+func Example_modelCommand_printModelManifestYaml() {
 	manifest, err := models.LoadManifest("../../../test_data/models", "4b-it-int4-fq-ov")
 	if err != nil {
 		panic(fmt.Sprintf("failed to load model manifest: %v", err))
 	}
 
-	cmd := showModelCommand{
+	cmd := modelCommand{
 		Context: &common.Context{EnginesDir: "../../../test_data/engines"},
 		format:  "yaml",
 	}
@@ -56,13 +56,13 @@ func Example_showModelCommand_printModelManifestYaml() {
 	//     - intel-npu
 }
 
-func Example_showModelCommand_printModelManifestJson() {
+func Example_modelCommand_printModelManifestJson() {
 	manifest, err := models.LoadManifest("../../../test_data/models", "4b-it-int4-fq-ov")
 	if err != nil {
 		panic(fmt.Sprintf("failed to load model manifest: %v", err))
 	}
 
-	cmd := showModelCommand{
+	cmd := modelCommand{
 		Context: &common.Context{EnginesDir: "../../../test_data/engines"},
 		format:  "json",
 	}
