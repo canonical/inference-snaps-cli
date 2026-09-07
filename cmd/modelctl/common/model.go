@@ -102,14 +102,18 @@ func GetModelDetailsByNameOrAlias(ctx *Context, modelName string) (*ModelDetails
 	if err != nil {
 		return nil, err
 	}
-	modelDetails.CompatibleEngines = GetCompatibleEnginesByModelName(ctx, modelDetails.Name)
+	compatibleEngines, err := GetCompatibleEnginesByModelName(ctx, modelDetails.Name)
+	if err != nil {
+		return nil, err
+	}
+	modelDetails.CompatibleEngines = compatibleEngines
 	return &modelDetails, nil
 }
 
-func GetCompatibleEnginesByModelName(ctx *Context, modelName string) []string {
+func GetCompatibleEnginesByModelName(ctx *Context, modelName string) ([]string, error) {
 	allEngineManifests, err := engines.LoadManifests(ctx.EnginesDir)
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("%s: %w", LoadingEngineManifest, err)
 	}
 
 	compatibleEngines := []string{}
@@ -118,7 +122,7 @@ func GetCompatibleEnginesByModelName(ctx *Context, modelName string) []string {
 			compatibleEngines = append(compatibleEngines, engineManifest.Name)
 		}
 	}
-	return compatibleEngines
+	return compatibleEngines, nil
 }
 
 func ModelStatus(ctx *Context) (map[string]string, error) {

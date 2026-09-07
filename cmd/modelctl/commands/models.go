@@ -79,20 +79,26 @@ func (cmd *modelsCommand) run(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("%s: %w", common.LoadingEngineManifest, err)
 	}
 
+	allModels, err := common.GetAllModels(cmd.Context)
+	if err != nil {
+		return fmt.Errorf("getting all models: %w", err)
+	}
+
 	var modelsList outputModels
 	if cmd.all {
-		allModels, err := common.GetAllModels(cmd.Context)
-		if err != nil {
-			return fmt.Errorf("getting all models: %v", err)
-		}
 		modelsList.Models = allModels
 	} else {
+		allModelsByName := make(map[string]common.ModelDetails, len(allModels))
+		for _, model := range allModels {
+			allModelsByName[model.Name] = model
+		}
+
 		for _, model := range engineManifest.Model.Options {
-			outputModel, err := common.GetModelDetailsByNameOrAlias(cmd.Context, model)
-			if err != nil {
-				return fmt.Errorf("creating model details for model %s: %v", model, err)
+			outputModel, ok := allModelsByName[model]
+			if !ok {
+				return fmt.Errorf("model %q referenced by engine %q does not exist", model, activeEngine)
 			}
-			modelsList.Models = append(modelsList.Models, *outputModel)
+			modelsList.Models = append(modelsList.Models, outputModel)
 		}
 	}
 
@@ -147,10 +153,9 @@ func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error
 		capabilities := strings.Join(model.Capabilities, ", ")
 		diskSize := model.DiskSize
 		var engines string
-		for _, engine := range model.CompatibleEngines {
-			engines += engine + ", "
+		if includeEnginesColumn {
+			engines = strings.Join(model.CompatibleEngines, ", ")
 		}
-		engines = strings.TrimSuffix(engines, ", ")
 		// Find max name and capabilities lengths
 		modelNameMaxLen = max(modelNameMaxLen, len(name), len(headerRow[0]))
 		modelCapabilitiesMaxLen = max(modelCapabilitiesMaxLen, len(capabilities), len(headerRow[1]))
@@ -255,9 +260,8 @@ func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error
 		return "", fmt.Errorf("rendering: %v", err)
 	}
 
-	allModels, err := common.GetAllModels(cmd.Context)
-	if err != nil {
-		return "", fmt.Errorf("getting all models: %w", err)
+	if cmd.all {
+		return tableOutput.String(), nil
 	}
 
 	activeEngine, err := cmd.Cache.GetActiveEngine()
@@ -265,8 +269,9 @@ func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error
 		return "", fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
 
-	if cmd.all {
-		return tableOutput.String(), nil
+	allModels, err := common.GetAllModels(cmd.Context)
+	if err != nil {
+		return "", fmt.Errorf("getting all models: %w", err)
 	}
 
 	incompatibleModelsCount := len(allModels) - len(tableRows[1:])

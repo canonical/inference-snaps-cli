@@ -88,6 +88,6 @@ func SuggestListModels(incompatibleModelsCount int, activeEngine string) string 
 		word = "There are " + fmt.Sprintf("%d", incompatibleModelsCount) + " other models which are"
 	}
 	return fmt.Sprintf("Hint: %s not compatible with the active %s engine."+
-		" Run \"mymodel models --all\" to list them.",
-		word, activeEngine)
+		" Run \"%s models --all\" to list them.",
+		word, activeEngine, instanceName)
 }
