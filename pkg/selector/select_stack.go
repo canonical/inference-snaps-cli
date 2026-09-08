@@ -157,7 +157,7 @@ func scoreDevicesAny(machineInfo *machine.MachineInfo, devices []engines.Device)
 
 		} else if device.Bus == "usb" {
 			compatible = false
-			devices[i].CompatibilityIssues = append(devices[i].CompatibilityIssues, "usb device matching not implemented")
+			devices[i].CompatibilityIssues = append(device.CompatibilityIssues, "usb device matching not implemented")
 
 		} else if device.Bus == "fastrpc" {
 			fastRPCScore, fastRPCIssues := fastrpc.Match(device, machineInfo)
