@@ -8,8 +8,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-
-	"golang.org/x/term"
 )
 
 // FmtPretty converts any interface to JSON with indentation, for use in logging where better readability is required. Errors are ignored.
@@ -128,10 +126,6 @@ func IsRootUser() bool {
 		return true
 	}
 	return false
-}
-
-func IsTerminalOutput() bool {
-	return term.IsTerminal(int(os.Stdout.Fd()))
 }
 
 func SetEnvironmentVariables(envVars map[string]any) error {
