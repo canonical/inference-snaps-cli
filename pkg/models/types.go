@@ -20,6 +20,7 @@ type Manifest struct {
 
 	Description  string   `json:"description" yaml:"description"`
 	ModelCardUrl string   `json:"model-card-url" yaml:"model-card-url"`
+	Format       string   `json:"format" yaml:"format"`
 	Quantization string   `json:"quantization" yaml:"quantization"`
 	Capabilities []string `json:"capabilities" yaml:"capabilities"`
 

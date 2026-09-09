@@ -165,6 +165,7 @@ func Example_printModelsJson() {
 	//       "alias": "4b-it",
 	//       "description": "OpenVino 4b test model",
 	//       "model-card-url": "https://example.com/model-card",
+	//       "format": "openvino",
 	//       "quantization": "int4-fq",
 	//       "capabilities": [
 	//         "text"

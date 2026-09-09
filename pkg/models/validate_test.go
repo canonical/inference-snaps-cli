@@ -15,6 +15,7 @@ func templateManifest() Manifest {
 		Alias:        "test-alias",
 		Description:  "test",
 		ModelCardUrl: "https://example.com/model-card",
+		Format:       "gguf",
 		Quantization: "Q4_K_M",
 		Capabilities: []string{"text"},
 		DiskSize:     "6G",
@@ -122,6 +123,16 @@ func TestQuantizationOptional(t *testing.T) {
 	err := manifest.validate("test")
 	if err != nil {
 		t.Fatalf("quantization field is optional, got error: %v", err)
+	}
+}
+
+func TestFormatOptional(t *testing.T) {
+	manifest := templateManifest()
+	manifest.Format = ""
+
+	err := manifest.validate("test")
+	if err != nil {
+		t.Fatalf("format field is optional, got error: %v", err)
 	}
 }
 
