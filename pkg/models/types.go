@@ -14,6 +14,11 @@ const (
 	capabilityRealtimeTranscription string = "realtime-transcription"
 )
 
+const (
+	formatGGUF     string = "gguf"
+	formatOpenVINO string = "openvino"
+)
+
 type Manifest struct {
 	Name  string `json:"name" yaml:"name"`
 	Alias string `json:"alias,omitempty" yaml:"alias,omitempty"`
@@ -36,4 +41,8 @@ type Manifest struct {
 func SupportedCapabilities() []string {
 	return []string{capabilityText, capabilityVision, capabilityTools, capabilityThinking,
 		capabilityTextEmbedding, capabilityTranscription, capabilityRealtimeTranscription}
+}
+
+func SupportedFormats() []string {
+	return []string{formatGGUF, formatOpenVINO}
 }

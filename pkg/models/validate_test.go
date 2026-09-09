@@ -136,6 +136,27 @@ func TestFormatOptional(t *testing.T) {
 	}
 }
 
+func TestFormatUnsupported(t *testing.T) {
+	manifest := templateManifest()
+	manifest.Format = "jpeg"
+
+	err := manifest.validate("test")
+	if err == nil {
+		t.Fatal("expected an error for unsupported format")
+	}
+}
+
+func TestFormatSupportedValues(t *testing.T) {
+	for _, format := range SupportedFormats() {
+		manifest := templateManifest()
+		manifest.Format = format
+
+		if err := manifest.validate("test"); err != nil {
+			t.Fatalf("%q is a supported format, got error: %v", format, err)
+		}
+	}
+}
+
 func TestCapabilitiesOptional(t *testing.T) {
 	manifest := templateManifest()
 	manifest.Capabilities = nil
