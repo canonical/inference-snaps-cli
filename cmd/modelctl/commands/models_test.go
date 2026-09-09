@@ -105,10 +105,11 @@ func TestGetModelsTableAllModels(t *testing.T) {
 		t.Fatalf("Error getting models table: %v", err)
 	}
 
-	expectedTable := "NAME                 CAPABILITIES               DISK   ENGINES                                                          \n" +
-		"26b-q4-k-m-gguf      text                       6G     cpu, cuda-generic, rocm-generic                                  \n" +
-		"30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G     cpu, cuda-generic, rocm-generic                                  \n" +
-		"4b-it-int4-fq-ov*    text                       6G     intel-cpu, intel-gpu, intel-npu                                  \n"
+	expectedTable := `NAME                 CAPABILITIES               DISK   ENGINES                                                          
+26b-q4-k-m-gguf      text                       6G     cpu, cuda-generic, rocm-generic                                  
+30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G     cpu, cuda-generic, rocm-generic                                  
+4b-it-int4-fq-ov*    text                       6G     intel-cpu, intel-gpu, intel-npu                                  
+`
 
 	if tableStr != expectedTable {
 		t.Errorf("Models table not as expected.\n\nGot:\n\n%s\n\nWant:\n\n%s", tableStr, expectedTable)

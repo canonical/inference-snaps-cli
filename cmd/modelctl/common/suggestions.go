@@ -81,13 +81,13 @@ func SuggestListModels(incompatibleModelsCount int, activeEngine string) string 
 	if instanceName == "" { // not a snap
 		instanceName = "<snap-instance-name>"
 	}
-	var word string
+	var hintTemplate string
 	if incompatibleModelsCount == 1 {
-		word = "There is " + fmt.Sprintf("%d", incompatibleModelsCount) + " other model which is"
+		hintTemplate = "There is %d other model which is not compatible with the active %s engine"
 	} else {
-		word = "There are " + fmt.Sprintf("%d", incompatibleModelsCount) + " other models which are"
+		hintTemplate = "There are %d other models which are not compatible with the active %s engine"
 	}
-	return fmt.Sprintf("Hint: %s not compatible with the active %s engine."+
-		" Run \"%s models --all\" to list them.",
-		word, activeEngine, instanceName)
+	command := fmt.Sprintf("%s models --all", instanceName)
+	return fmt.Sprintf("Hint: "+hintTemplate+". Run %q to list them.",
+		incompatibleModelsCount, activeEngine, command)
 }

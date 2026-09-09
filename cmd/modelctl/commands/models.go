@@ -134,9 +134,8 @@ func (cmd *modelsCommand) printModelsJson(modelsList outputModels) error {
 }
 
 func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error) {
-	includeEnginesColumn := cmd.all
 	headerRow := []string{"name", "capabilities", "disk"}
-	if includeEnginesColumn {
+	if cmd.all {
 		headerRow = append(headerRow, "engines")
 	}
 	tableRows := [][]string{headerRow}
@@ -153,7 +152,7 @@ func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error
 		capabilities := strings.Join(model.Capabilities, ", ")
 		diskSize := model.DiskSize
 		var engines string
-		if includeEnginesColumn {
+		if cmd.all {
 			engines = strings.Join(model.CompatibleEngines, ", ")
 		}
 		// Find max name and capabilities lengths
@@ -162,14 +161,14 @@ func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error
 		modelDiskMaxLen = max(modelDiskMaxLen, len(diskSize), len(headerRow[2]))
 
 		row := []string{name, capabilities, diskSize}
-		if includeEnginesColumn {
+		if cmd.all {
 			row = append(row, engines)
 		}
 		tableRows = append(tableRows, row)
 	}
 
 	var tableMaxWidth int
-	if includeEnginesColumn {
+	if cmd.all {
 		tableMaxWidth = 120
 	} else {
 		tableMaxWidth = 80
@@ -179,7 +178,7 @@ func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error
 	modelCapabilitiesMaxLen += 2
 	modelDiskMaxLen += 2
 	modelEnginesMaxLen := 0
-	if includeEnginesColumn {
+	if cmd.all {
 		modelDiskMaxLen += 1
 		// Engines column fills the remaining space
 		modelEnginesMaxLen = tableMaxWidth - (modelNameMaxLen + modelCapabilitiesMaxLen + modelDiskMaxLen)
@@ -200,7 +199,7 @@ func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error
 		{Overwrite: true, Left: " ", Right: " "},
 		{Overwrite: true, Left: " "},
 	}
-	if includeEnginesColumn {
+	if cmd.all {
 		widths[3] = modelEnginesMaxLen // Engines
 		headerPadding = append(headerPadding, tw.Padding{Overwrite: true, Left: " "})
 		rowPadding = append(rowPadding, tw.Padding{Overwrite: true, Left: " "})
