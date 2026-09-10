@@ -15,8 +15,10 @@ const (
 )
 
 const (
-	formatGGUF     string = "gguf"
-	formatOpenVINO string = "openvino"
+	formatGGUF        string = "GGUF"
+	formatOpenVINOIR  string = "OpenVINO_IR"
+	formatCTranslate2 string = "CTranslate2"
+	formatMediaTekDLA string = "MediaTek_DLA"
 )
 
 type Manifest struct {
@@ -44,5 +46,5 @@ func SupportedCapabilities() []string {
 }
 
 func SupportedFormats() []string {
-	return []string{formatGGUF, formatOpenVINO}
+	return []string{formatGGUF, formatOpenVINOIR, formatCTranslate2, formatMediaTekDLA}
 }

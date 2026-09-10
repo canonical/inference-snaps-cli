@@ -15,7 +15,7 @@ func templateManifest() Manifest {
 		Alias:        "test-alias",
 		Description:  "test",
 		ModelCardUrl: "https://example.com/model-card",
-		Format:       "gguf",
+		Format:       "GGUF",
 		Quantization: "Q4_K_M",
 		Capabilities: []string{"text"},
 		DiskSize:     "6G",

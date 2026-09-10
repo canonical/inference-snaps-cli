@@ -165,7 +165,7 @@ func Example_printModelsJson() {
 	//       "alias": "4b-it",
 	//       "description": "OpenVino 4b test model",
 	//       "model-card-url": "https://example.com/model-card",
-	//       "format": "openvino",
+	//       "format": "OpenVINO_IR",
 	//       "quantization": "int4-fq",
 	//       "capabilities": [
 	//         "text"
@@ -204,7 +204,7 @@ func Example_printAllModelsJson() {
 	//       "name": "26b-q4-k-m-gguf",
 	//       "description": "Test model description",
 	//       "model-card-url": "https://example.com/model-card",
-	//       "format": "gguf",
+	//       "format": "GGUF",
 	//       "quantization": "Q4_K_M",
 	//       "capabilities": [
 	//         "text"
@@ -224,7 +224,7 @@ func Example_printAllModelsJson() {
 	//       "name": "30b-a3b-q4-k-m-gguf",
 	//       "description": "Test model description",
 	//       "model-card-url": "https://example.com/model-card",
-	//       "format": "gguf",
+	//       "format": "GGUF",
 	//       "quantization": "Q4_K_M",
 	//       "capabilities": [
 	//         "text",
@@ -252,7 +252,7 @@ func Example_printAllModelsJson() {
 	//       "alias": "4b-it",
 	//       "description": "OpenVino 4b test model",
 	//       "model-card-url": "https://example.com/model-card",
-	//       "format": "openvino",
+	//       "format": "OpenVINO_IR",
 	//       "quantization": "int4-fq",
 	//       "capabilities": [
 	//         "text"
