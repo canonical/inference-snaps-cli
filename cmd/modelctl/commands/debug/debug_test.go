@@ -22,9 +22,10 @@ func newTestRoot() *cobra.Command {
 
 func TestDebugSubcommandValidation(t *testing.T) {
 	tests := map[string]struct {
-		args          []string
-		expectErr     bool
-		expectedInErr string
+		args             []string
+		expectErr        bool
+		expectedInErr    string
+		expectedInOutput string
 	}{
 		"unknown subcommand": {
 			args:          []string{"debug", "validate-engines"},
@@ -37,12 +38,27 @@ func TestDebugSubcommandValidation(t *testing.T) {
 			expectedInErr: `unknown command "validate-engines" for "cli debug"`,
 		},
 		"no subcommand prints help": {
-			args:      []string{"debug"},
-			expectErr: false,
+			args:             []string{"debug"},
+			expectErr:        false,
+			expectedInOutput: "Developer/debugging commands",
 		},
 		"help flag": {
-			args:      []string{"debug", "--help"},
-			expectErr: false,
+			args:             []string{"debug", "--help"},
+			expectErr:        false,
+			expectedInOutput: "Developer/debugging commands",
+		},
+		// The parent now carries cobra.NoArgs and a RunE, so these two cases
+		// guard the other direction: a real subcommand must still be reached,
+		// and its own argument validation must be what runs, not the parent's.
+		"valid subcommand": {
+			args:             []string{"debug", "lint-package", "--help"},
+			expectErr:        false,
+			expectedInOutput: "Validate engines, models, and runtimes manifest files",
+		},
+		"valid subcommand keeps its own argument validation": {
+			args:          []string{"debug", "lint-package"},
+			expectErr:     true,
+			expectedInErr: "accepts 1 arg(s), received 0",
 		},
 	}
 
@@ -71,8 +87,9 @@ func TestDebugSubcommandValidation(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Execute(%v) returned error %v, expected none", testData.args, err)
 			}
-			if !strings.Contains(output.String(), "Developer/debugging commands") {
-				t.Errorf("Execute(%v) did not print the command help", testData.args)
+			if !strings.Contains(output.String(), testData.expectedInOutput) {
+				t.Errorf("Execute(%v) printed %q, expected it to contain %q",
+					testData.args, output.String(), testData.expectedInOutput)
 			}
 		})
 	}
