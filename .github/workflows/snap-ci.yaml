@@ -12,7 +12,7 @@ env:
   SNAP_NAME: stack-utils
 
 jobs:
-  test:
+  unit-test:
     runs-on: ubuntu-24.04
 
     steps:
@@ -26,8 +26,8 @@ jobs:
       - name: Run tests
         run: go test -v ./...
 
-  build:
-    needs: [ test ]
+  build-test-publish:
+    needs: [ unit-test ]
     strategy:
       fail-fast: false
       matrix:
@@ -43,6 +43,23 @@ jobs:
       - name: Build snap
         uses: snapcore/action-build@v1
         id: snapcraft
+
+      - name: Refresh/Install snapd
+        shell: bash
+        run: |
+          sudo snap refresh snapd || sudo snap install snapd
+
+      - name: Install the snap
+        shell: bash
+        run: |
+          sudo snap install --dangerous *.snap *.comp
+  
+      - name: Run smoke tests
+        uses: canonical/inference-snaps-dev/.github/actions/smoke-test@v2
+        with:
+          snap-name: ${{ env.SNAP_NAME }}
+          engine: cpu
+          features: openai_models, openai_chat_text
 
       # Upload snap with components
       # Adapted from https://github.com/canonical/inference-snaps-dev/blob/f744b98984a29c377b61d3f7141df79cbad1f67d/.github/workflows/build-publish-snap.yaml#L54-L86
@@ -81,31 +98,3 @@ jobs:
           echo -e "\nUploading snap..."
           set -x
           snapcraft upload "$snap_file" "${component_args[@]}" --release="$channel"
-  
-  smoke-test:
-    needs: [build]
-    strategy:
-      fail-fast: false
-      matrix:
-        runner:
-          - ubuntu-24.04
-          - ubuntu-24.04-arm
-    runs-on: ${{ matrix.runner }}
-    
-    steps:
-      - name: Refresh/Install snapd
-        shell: bash
-        run: |
-          sudo snap refresh snapd || sudo snap install snapd
-
-      - name: Install the snap
-        shell: bash
-        run: |
-          sudo snap install ${{ env.SNAP_NAME }} --channel=latest/edge
-  
-      - name: Run smoke tests
-        uses: canonical/inference-snaps-dev/.github/actions/smoke-test@v2
-        with:
-          snap-name: ${{ env.SNAP_NAME }}
-          engine: cpu
-          features: openai_models, openai_chat_text
