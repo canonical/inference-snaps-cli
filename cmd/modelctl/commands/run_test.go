@@ -80,7 +80,7 @@ func TestWriteShareProviderEnv(t *testing.T) {
 		t.Setenv("SNAP_NAME", "gemma3-jane")
 		t.Setenv("SNAP_INSTANCE_NAME", "gemma3-jane")
 
-		cmd := runCommand{Context: testRunContext(t), shareProvider: defaultShareProviderFlag}
+		cmd := runCommand{Context: testRunContext(t), shareProvider: defaultProviderFilePath}
 		if err := cmd.writeShareProviderEnv(); err != nil {
 			t.Fatalf("writeShareProviderEnv() error = %v", err)
 		}

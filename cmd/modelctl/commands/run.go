@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const defaultShareProviderPath = "$SNAP_COMMON/share/provider/$SNAP_INSTANCE_NAME/provider.env"
+const defaultProviderFilePath = "$SNAP_COMMON/share/provider/provider.env"
 
 type runCommand struct {
 	*common.Context
@@ -50,7 +50,7 @@ func Run(ctx *common.Context) *cobra.Command {
 	cobraCmd.Flags().MarkDeprecated("wait-for-components", "\"run\" always waits for components.")
 	// --share-provider [path]
 	cobraCmd.Flags().StringVar(&cmd.shareProvider, "share-provider", "", "write provider env file to a shared path")
-	cobraCmd.Flags().Lookup("share-provider").NoOptDefVal = defaultShareProviderPath
+	cobraCmd.Flags().Lookup("share-provider").NoOptDefVal = defaultProviderFilePath
 
 	return cobraCmd
 }
