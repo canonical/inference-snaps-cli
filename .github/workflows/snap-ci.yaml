@@ -81,3 +81,31 @@ jobs:
           echo -e "\nUploading snap..."
           set -x
           snapcraft upload "$snap_file" "${component_args[@]}" --release="$channel"
+  
+  smoke-test:
+    needs: [build]
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    
+    steps:
+      - name: Refresh/Install snapd
+        shell: bash
+        run: |
+          sudo snap refresh snapd || sudo snap install snapd
+
+      - name: Install the snap
+        shell: bash
+        run: |
+          sudo snap install ${{ env.SNAP_NAME }} --channel=latest/edge
+  
+      - name: Run smoke tests
+        uses: canonical/inference-snaps-dev/.github/actions/smoke-test@v2
+        with:
+          snap-name: ${{ env.SNAP_NAME }}
+          engine: cpu
+          features: openai_models, openai_chat_text
