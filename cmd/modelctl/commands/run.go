@@ -150,8 +150,12 @@ func (cmd *runCommand) writeShareProviderEnv() error {
 		baseURL,
 	)
 
-	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+	tmpPath := path + ".tmp"
+	if err := os.WriteFile(tmpPath, []byte(content), 0o644); err != nil {
 		return fmt.Errorf("writing provider env file: %v", err)
+	}
+	if err := os.Rename(tmpPath, path); err != nil {
+		return fmt.Errorf("renaming provider env file: %v", err)
 	}
 
 	return nil
