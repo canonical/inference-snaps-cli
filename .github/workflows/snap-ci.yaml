@@ -86,7 +86,7 @@ jobs:
           sudo snap connect ${{ env.SNAP_NAME }}:hardware-observe
 
       - name: Run smoke tests
-        uses: canonical/inference-snaps-dev/.github/actions/smoke-test@v2
+        uses: canonical/inference-snaps-dev/.github/actions/smoke-test@restart-delay #v2
         with:
           snap-name: ${{ env.SNAP_NAME }}
           engine: cpu
