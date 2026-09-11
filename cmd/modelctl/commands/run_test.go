@@ -85,7 +85,7 @@ func TestWriteShareProviderEnv(t *testing.T) {
 			t.Fatalf("writeShareProviderEnv() error = %v", err)
 		}
 
-		path := filepath.Join(os.Getenv("SNAP_COMMON"), "share", "provider", os.Getenv("SNAP_INSTANCE_NAME"), "provider.env")
+		path := filepath.Join(os.Getenv("SNAP_COMMON"), "share", "provider", "provider.env")
 		content, err := os.ReadFile(path)
 		if err != nil {
 			t.Fatalf("reading provider env file: %v", err)
