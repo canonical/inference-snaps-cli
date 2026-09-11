@@ -14,7 +14,7 @@ slots:
     content: inference-provider
     source:
       read:
-        - $SNAP_COMMON/share/provider/stack-utils
+        - $SNAP_COMMON/share/provider
   # Deprecated: use the provider slot
   status:
     interface: content
