@@ -93,7 +93,7 @@ jobs:
           features: openai_models, openai_chat_text
 
   publish:
-    needs: [ build ]
+    needs: [ smoke-test ]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
 
