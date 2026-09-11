@@ -134,7 +134,7 @@ func ModelStatus(ctx *Context) (map[string]string, error) {
 	}
 
 	if activeModelId == "" {
-		return nil, fmt.Errorf("no active model")
+		return nil, ErrNoActiveModel
 	}
 
 	activeModelManifest, err := models.LoadManifest(ctx.ModelsDir, activeModelId)
