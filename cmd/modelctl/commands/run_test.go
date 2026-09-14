@@ -133,7 +133,7 @@ func TestWriteShareProviderEnv(t *testing.T) {
 			t.Fatalf("reading provider env file: %v", err)
 		}
 
-		want := "SNAP_NAME=gemma3-jane\nSNAP_INSTANCE_NAME=gemma3-jane\nOPENAI_BASE_URL=\n"
+		want := "SNAP_NAME=gemma3-jane\nSNAP_INSTANCE_NAME=gemma3-jane\n"
 		if string(content) != want {
 			t.Fatalf("provider env contents mismatch\nwant: %q\ngot:  %q", want, string(content))
 		}
