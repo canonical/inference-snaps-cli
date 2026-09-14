@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -127,16 +128,15 @@ func (cmd *runCommand) writeShareProviderEnv() error {
 		return fmt.Errorf("creating provider env directory: %v", err)
 	}
 
-	baseURL, err := common.OpenAiBaseUrl(cmd.Context)
-	if err != nil {
-		return fmt.Errorf("getting OpenAI base URL: %v", err)
-	}
+	content := "SNAP_NAME=" + snap.SnapName() + "\n"
+	content += "SNAP_INSTANCE_NAME=" + snap.InstanceName() + "\n"
 
-	content := fmt.Sprintf("SNAP_NAME=%s\nSNAP_INSTANCE_NAME=%s\nOPENAI_BASE_URL=%s\n",
-		snap.SnapName(),
-		snap.InstanceName(),
-		baseURL,
-	)
+	baseURL, err := common.OpenAiBaseUrl(cmd.Context)
+	if err != nil && !errors.Is(err, common.ErrNoOpenAiServer) {
+		return fmt.Errorf("getting OpenAI base URL: %v", err)
+	} else {
+		content += "OPENAI_BASE_URL=" + baseURL + "\n"
+	}
 
 	tmpPath := path + ".tmp"
 	if err := os.WriteFile(tmpPath, []byte(content), 0o644); err != nil {

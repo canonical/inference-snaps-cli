@@ -9,7 +9,7 @@ import (
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
 )
 
-func testRunContext(t *testing.T) *common.Context {
+func testRunContext(t *testing.T, runtimeYAML string) *common.Context {
 	t.Helper()
 
 	base := t.TempDir()
@@ -24,7 +24,7 @@ func testRunContext(t *testing.T) *common.Context {
 	if err := os.WriteFile(filepath.Join(enginesDir, "test-engine", "engine.yaml"), []byte("name: test-engine\nruntime: test-runtime\n"), 0o644); err != nil {
 		t.Fatalf("writing engine manifest: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(runtimesDir, "test-runtime", "runtime.yaml"), []byte("servers:\n  openai:\n    protocol: http\n    base-path: /v1\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(runtimesDir, "test-runtime", "runtime.yaml"), []byte(runtimeYAML), 0o644); err != nil {
 		t.Fatalf("writing runtime manifest: %v", err)
 	}
 
@@ -80,7 +80,7 @@ func TestWriteShareProviderEnv(t *testing.T) {
 		t.Setenv("SNAP_NAME", "gemma3-jane")
 		t.Setenv("SNAP_INSTANCE_NAME", "gemma3-jane")
 
-		cmd := runCommand{Context: testRunContext(t), shareProvider: defaultProviderFilePath}
+		cmd := runCommand{Context: testRunContext(t, "servers:\n  openai:\n    protocol: http\n    base-path: /v1\n"), shareProvider: defaultProviderFilePath}
 		if err := cmd.writeShareProviderEnv(); err != nil {
 			t.Fatalf("writeShareProviderEnv() error = %v", err)
 		}
@@ -102,7 +102,7 @@ func TestWriteShareProviderEnv(t *testing.T) {
 		t.Setenv("SNAP_INSTANCE_NAME", "gemma3-jane")
 
 		path := filepath.Join(t.TempDir(), "custom", "provider.env")
-		cmd := runCommand{Context: testRunContext(t), shareProvider: path}
+		cmd := runCommand{Context: testRunContext(t, "servers:\n  openai:\n    protocol: http\n    base-path: /v1\n"), shareProvider: path}
 		if err := cmd.writeShareProviderEnv(); err != nil {
 			t.Fatalf("writeShareProviderEnv() error = %v", err)
 		}
@@ -117,4 +117,26 @@ func TestWriteShareProviderEnv(t *testing.T) {
 			t.Fatalf("provider env contents mismatch\nwant: %q\ngot:  %q", want, string(content))
 		}
 	})
+
+	t.Run("runtime without openai entry", func(t *testing.T) {
+		t.Setenv("SNAP_NAME", "gemma3-jane")
+		t.Setenv("SNAP_INSTANCE_NAME", "gemma3-jane")
+
+		path := filepath.Join(t.TempDir(), "provider.env")
+		cmd := runCommand{Context: testRunContext(t, "servers:\n  kserve:\n    protocol: http\n    base-path: /v2\n"), shareProvider: path}
+		if err := cmd.writeShareProviderEnv(); err != nil {
+			t.Fatalf("writeShareProviderEnv() error = %v", err)
+		}
+
+		content, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("reading provider env file: %v", err)
+		}
+
+		want := "SNAP_NAME=gemma3-jane\nSNAP_INSTANCE_NAME=gemma3-jane\nOPENAI_BASE_URL=\n"
+		if string(content) != want {
+			t.Fatalf("provider env contents mismatch\nwant: %q\ngot:  %q", want, string(content))
+		}
+	})
+
 }
