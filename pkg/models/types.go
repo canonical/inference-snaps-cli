@@ -5,11 +5,20 @@ import (
 )
 
 const (
-	capabilityText          string = "text"
-	capabilityVision        string = "vision"
-	capabilityTools         string = "tools"
-	capabilityThinking      string = "thinking"
-	capabilityTextEmbedding string = "text-embedding"
+	capabilityText                  string = "text"
+	capabilityVision                string = "vision"
+	capabilityTools                 string = "tools"
+	capabilityThinking              string = "thinking"
+	capabilityTextEmbedding         string = "text-embedding"
+	capabilityTranscription         string = "transcription"
+	capabilityRealtimeTranscription string = "realtime-transcription"
+)
+
+const (
+	formatGGUF        string = "GGUF"
+	formatOpenVINOIR  string = "OpenVINO_IR"
+	formatCTranslate2 string = "CTranslate2"
+	formatMediaTekDLA string = "MediaTek_DLA"
 )
 
 type Manifest struct {
@@ -18,6 +27,7 @@ type Manifest struct {
 
 	Description  string   `json:"description" yaml:"description"`
 	ModelCardUrl string   `json:"model-card-url" yaml:"model-card-url"`
+	Format       string   `json:"format" yaml:"format"`
 	Quantization string   `json:"quantization" yaml:"quantization"`
 	Capabilities []string `json:"capabilities" yaml:"capabilities"`
 
@@ -31,5 +41,10 @@ type Manifest struct {
 }
 
 func SupportedCapabilities() []string {
-	return []string{capabilityText, capabilityVision, capabilityTools, capabilityThinking, capabilityTextEmbedding}
+	return []string{capabilityText, capabilityVision, capabilityTools, capabilityThinking,
+		capabilityTextEmbedding, capabilityTranscription, capabilityRealtimeTranscription}
+}
+
+func SupportedFormats() []string {
+	return []string{formatGGUF, formatOpenVINOIR, formatCTranslate2, formatMediaTekDLA}
 }

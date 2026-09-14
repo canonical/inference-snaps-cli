@@ -15,6 +15,7 @@ func templateManifest() Manifest {
 		Alias:        "test-alias",
 		Description:  "test",
 		ModelCardUrl: "https://example.com/model-card",
+		Format:       "GGUF",
 		Quantization: "Q4_K_M",
 		Capabilities: []string{"text"},
 		DiskSize:     "6G",
@@ -125,6 +126,37 @@ func TestQuantizationOptional(t *testing.T) {
 	}
 }
 
+func TestFormatOptional(t *testing.T) {
+	manifest := templateManifest()
+	manifest.Format = ""
+
+	err := manifest.validate("test")
+	if err != nil {
+		t.Fatalf("format field is optional, got error: %v", err)
+	}
+}
+
+func TestFormatUnsupported(t *testing.T) {
+	manifest := templateManifest()
+	manifest.Format = "jpeg"
+
+	err := manifest.validate("test")
+	if err == nil {
+		t.Fatal("expected an error for unsupported format")
+	}
+}
+
+func TestFormatSupportedValues(t *testing.T) {
+	for _, format := range SupportedFormats() {
+		manifest := templateManifest()
+		manifest.Format = format
+
+		if err := manifest.validate("test"); err != nil {
+			t.Fatalf("%q is a supported format, got error: %v", format, err)
+		}
+	}
+}
+
 func TestCapabilitiesOptional(t *testing.T) {
 	manifest := templateManifest()
 	manifest.Capabilities = nil
@@ -145,13 +177,31 @@ func TestCapabilityTextEmbedding(t *testing.T) {
 	}
 }
 
-func TestDiskSizeRequired(t *testing.T) {
-	manifest := templateManifest()
-	manifest.DiskSize = ""
+func TestDiskSizeValidation(t *testing.T) {
+	tests := []struct {
+		name     string
+		diskSize string
+		wantErr  bool
+	}{
+		{name: "required", diskSize: "", wantErr: true},
+		{name: "gibibytes", diskSize: "6G", wantErr: false},
+		{name: "bytes", diskSize: "6000000000", wantErr: false},
+		{name: "unsupported unit", diskSize: "6GiB", wantErr: true},
+	}
 
-	err := manifest.validate("test")
-	if err == nil {
-		t.Fatal("disk-size field is required")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			manifest := templateManifest()
+			manifest.DiskSize = tt.diskSize
+
+			err := manifest.validate("test")
+			if tt.wantErr && err == nil {
+				t.Fatalf("disk-size %q: expected an error, got nil", tt.diskSize)
+			}
+			if !tt.wantErr && err != nil {
+				t.Fatalf("disk-size %q: expected no error, got: %v", tt.diskSize, err)
+			}
+		})
 	}
 }
 

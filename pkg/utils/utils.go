@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -55,9 +56,12 @@ func FmtBytesShort(bytes uint64) string {
 	return fmt.Sprintf("%d", bytes)
 }
 
+// StringToBytes parses a size string into a byte count. Only numbers
+// (in bytes), or a number suffixed with "G" or "M", are supported.
+// Fractional values are accepted and truncated towards zero.
 func StringToBytes(sizeString string) (uint64, error) {
-	var sizeBytes uint64
-	var scaling uint64 = 1
+	var sizeBytes float64
+	var scaling float64 = 1
 	var err error
 
 	if strings.HasSuffix(sizeString, "G") {
@@ -68,13 +72,27 @@ func StringToBytes(sizeString string) (uint64, error) {
 		scaling = 1024 * 1024
 	}
 
-	sizeBytes, err = strconv.ParseUint(sizeString, 10, 64)
+	if strings.Contains(strings.ToLower(sizeString), "e") {
+		return 0, fmt.Errorf("size contains scientific notation which is not supported: %s", sizeString)
+	}
+
+	sizeBytes, err = strconv.ParseFloat(sizeString, 64)
 	if err != nil {
 		return 0, err
 	}
+	if math.IsNaN(sizeBytes) || math.IsInf(sizeBytes, 0) {
+		return 0, fmt.Errorf("size is not a finite float: %s", sizeString)
+	}
+	if sizeBytes < 0 {
+		return 0, fmt.Errorf("size cannot be negative: %s", sizeString)
+	}
 	sizeBytes = sizeBytes * scaling
 
-	return sizeBytes, nil
+	if sizeBytes >= math.MaxUint64 {
+		return 0, fmt.Errorf("size %q overflows uint64", sizeString)
+	}
+
+	return uint64(sizeBytes), nil
 }
 
 // SplitPathIntoDirectories takes a file path and returns a slice of strings containing the individual directory names that makes up the path

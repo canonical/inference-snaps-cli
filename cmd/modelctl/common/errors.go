@@ -7,6 +7,7 @@ var (
 	ErrPermissionDenied   = errors.New("permission denied, try again with sudo")
 	ErrNoActiveEngine     = errors.New("no active engine")
 	ErrNoActiveModel      = errors.New("no active model")
+	ErrNoOpenAiServer     = errors.New("no OpenAI server available")
 	ErrPromptUnanswerable = errors.New("cannot read a response: stdin is closed or unreadable; use --assume-yes for unattended runs")
 )
 
