@@ -132,21 +132,9 @@ func (cmd *runCommand) writeShareProviderEnv() error {
 		return fmt.Errorf("getting OpenAI base URL: %v", err)
 	}
 
-	snapName, instanceName := snap.SnapName(), snap.InstanceName()
-	if cmd.Context != nil && cmd.Context.Snap != nil {
-		snapName = cmd.Context.Snap.SnapName()
-		instanceName = cmd.Context.Snap.InstanceName()
-	}
-	if snapName == "" {
-		snapName = snap.SnapName()
-	}
-	if instanceName == "" {
-		instanceName = snap.InstanceName()
-	}
-
 	content := fmt.Sprintf("SNAP_NAME=%s\nSNAP_INSTANCE_NAME=%s\nOPENAI_BASE_URL=%s\n",
-		snapName,
-		instanceName,
+		snap.SnapName(),
+		snap.InstanceName(),
 		baseURL,
 	)
 
