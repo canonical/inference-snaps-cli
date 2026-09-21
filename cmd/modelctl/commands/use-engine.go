@@ -11,6 +11,8 @@ import (
 	"github.com/canonical/inference-snaps-cli/v2/pkg/runtimes"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/selector"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
+	"github.com/canonical/lscompute/pkg/machine"
+	"github.com/canonical/lscompute/pkg/machine/host"
 	"github.com/spf13/cobra"
 )
 
@@ -178,6 +180,17 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 // By default, the previous model will be used if it is compatible.
 // If it is not compatible, the engine's default model will be selected.
 func (cmd *useEngineCommand) switchEngine(engineName string) error {
+
+	machineInfo, _, err := machine.Get(host.Real(), true)
+	if err != nil {
+		return fmt.Errorf("getting machine info: %v", err)
+	}
+	return cmd.switchEngineWithMachineInfo(engineName, machineInfo)
+
+}
+
+func (cmd *useEngineCommand) switchEngineWithMachineInfo(engineName string, machineInfo *machine.MachineInfo) error {
+
 	newEngineManifest, err := engines.LoadManifest(cmd.EnginesDir, engineName)
 	if err != nil {
 		if errors.Is(err, engines.ErrManifestNotFound) {
@@ -199,6 +212,22 @@ func (cmd *useEngineCommand) switchEngine(engineName string) error {
 		newModelID = activeModelID
 	} else {
 		newModelID = newEngineManifest.Model.Default
+	}
+
+	if len(newEngineManifest.Model.Options) > 0 {
+		modelManifests, err := models.LoadManifests(cmd.ModelsDir)
+		if err != nil {
+			return fmt.Errorf("loading model manifests: %v", err)
+		}
+		manifestsByName := make(map[string]models.Manifest, len(modelManifests))
+		for _, manifest := range modelManifests {
+			manifestsByName[manifest.Name] = manifest
+		}
+
+		newModelID, err = selector.SelectModel(newEngineManifest.Model.Options, newModelID, manifestsByName, machineInfo)
+		if err != nil {
+			return fmt.Errorf("selecting model: %v", err)
+		}
 	}
 
 	return cmd.switchEngineAndModel(engineName, newModelID)

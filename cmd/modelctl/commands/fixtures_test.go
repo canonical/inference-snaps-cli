@@ -80,6 +80,20 @@ func machineInfoFixture(name string) (*machine.MachineInfo, error) {
 			}},
 		}, nil
 
+	case "low-disk-available-machine":
+		return &machine.MachineInfo{
+			Disk: map[string]disk.DirInfo{
+				"/var/lib/snapd/snaps": {Total: 1006451294208, Avail: 1024 * 1024 * 1024},
+			},
+		}, nil
+
+	case "no-disk-available-machine":
+		return &machine.MachineInfo{
+			Disk: map[string]disk.DirInfo{
+				"/var/lib/snapd/snaps": {Total: 1006451294208, Avail: 0},
+			},
+		}, nil
+
 	default:
 		return nil, fmt.Errorf("no machine fixture for %q", name)
 	}

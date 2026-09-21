@@ -84,7 +84,8 @@ func TestGetModelsTable(t *testing.T) {
 
 	expectedTable := `NAME                 CAPABILITIES               DISK 
 26b-q4-k-m-gguf      text                       6G   
-30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G   
+30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6M   
+30m-q4-k-m-gguf      text, vision, audio, tool  1M   
 4b-it-int4-fq-ov*    text                       6G   
 `
 
@@ -107,7 +108,8 @@ func TestGetModelsTableAllModels(t *testing.T) {
 
 	expectedTable := `NAME                 CAPABILITIES               DISK   ENGINES                                                          
 26b-q4-k-m-gguf      text                       6G     arm-neon, cpu, cpu-avx1, cpu-avx2, cpu-avx512, cuda-generic, ro… 
-30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G     cpu, cuda-generic, rocm-generic                                  
+30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6M     cpu, cuda-generic, rocm-generic                                  
+30m-q4-k-m-gguf      text, vision, audio, tool  1M     cpu                                                              
 4b-it-int4-fq-ov*    text                       6G     intel-cpu, intel-gpu, intel-npu                                  
 `
 
@@ -236,7 +238,7 @@ func Example_printAllModelsJson() {
 	//         "audio",
 	//         "tool"
 	//       ],
-	//       "disk-size": "6G",
+	//       "disk-size": "6M",
 	//       "components": [
 	//         "model-30b-a3b-q4-k-m-gguf-1-of-6",
 	//         "model-30b-a3b-q4-k-m-gguf-2-of-6",
@@ -249,6 +251,31 @@ func Example_printAllModelsJson() {
 	//         "cpu",
 	//         "cuda-generic",
 	//         "rocm-generic"
+	//       ]
+	//     },
+	//     {
+	//       "name": "30m-q4-k-m-gguf",
+	//       "description": "Test model description",
+	//       "model-card-url": "https://example.com/model-card",
+	//       "format": "GGUF",
+	//       "quantization": "Q4_K_M",
+	//       "capabilities": [
+	//         "text",
+	//         "vision",
+	//         "audio",
+	//         "tool"
+	//       ],
+	//       "disk-size": "1M",
+	//       "components": [
+	//         "model-30m-q4-k-m-gguf-1-of-6",
+	//         "model-30m-q4-k-m-gguf-2-of-6",
+	//         "model-30m-q4-k-m-gguf-3-of-6",
+	//         "model-30m-q4-k-m-gguf-4-of-6",
+	//         "model-30m-q4-k-m-gguf-5-of-6",
+	//         "model-30m-q4-k-m-gguf-6-of-6"
+	//       ],
+	//       "compatible-engines": [
+	//         "cpu"
 	//       ]
 	//     },
 	//     {

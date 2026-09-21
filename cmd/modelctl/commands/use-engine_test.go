@@ -308,6 +308,46 @@ func TestSwitchEngine_withModelID(t *testing.T) {
 	}
 }
 
+func TestSwitchEngineWithMachineInfo_lowDisk(t *testing.T) {
+	setupSnapComponents(t)
+	cmd := newUseEngineCmd()
+	machineInfo, err := machineInfoFixture("low-disk-available-machine")
+	if err != nil {
+		t.Fatalf("unexpected error getting machine info fixture: %v", err)
+	}
+	err = cmd.switchEngineWithMachineInfo("cpu", machineInfo)
+	if err != nil {
+		t.Fatalf("unexpected error switching engine: %v", err)
+	}
+	activeModel, err := cmd.Cache.GetActiveModel()
+	if err != nil {
+		t.Fatalf("unexpected error getting active model: %v", err)
+	}
+	if activeModel != "30b-a3b-q4-k-m-gguf" {
+		t.Errorf("active model = %q, want %q", activeModel, "30b-a3b-q4-k-m-gguf")
+	}
+}
+
+func TestSwitchEngineWithMachineInfo_noDiskNoModel(t *testing.T) {
+	setupSnapComponents(t)
+	cmd := newUseEngineCmd()
+	machineInfo, err := machineInfoFixture("no-disk-available-machine")
+	if err != nil {
+		t.Fatalf("unexpected error getting machine info fixture: %v", err)
+	}
+	err = cmd.switchEngineWithMachineInfo("cpu", machineInfo)
+	if err != nil {
+		t.Fatalf("unexpected error switching engine: %v", err)
+	}
+	activeModel, err := cmd.Cache.GetActiveModel()
+	if err != nil {
+		t.Fatalf("unexpected error getting active model: %v", err)
+	}
+	if activeModel != "30m-q4-k-m-gguf" {
+		t.Errorf("active model = %q, want %q", activeModel, "30m-q4-k-m-gguf")
+	}
+}
+
 func TestFixActiveEngine_noActiveEngine(t *testing.T) {
 	cache := storage.NewMockCache()
 	cmd := useEngineCommand{
