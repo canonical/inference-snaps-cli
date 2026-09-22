@@ -137,6 +137,15 @@ func isValidProtocol(protocol string) bool {
 	}
 }
 
+func isUnixSocketProtocol(protocol string) bool {
+	switch protocol {
+	case ProtocolHttpUnix, ProtocolHttpsUnix, ProtocolWebSocketUnix, ProtocolWebSocketSecureUnix:
+		return true
+	default:
+		return false
+	}
+}
+
 func isValidNamespace(namespace string) bool {
 	if namespace == "" {
 		return true
@@ -180,6 +189,18 @@ func (server Server) validate(name string) error {
 
 		if parsed.RawQuery != "" || parsed.Fragment != "" {
 			return fmt.Errorf("invalid base-path for server %s: query and fragment are not allowed", name)
+		}
+	}
+
+	// unix-socket is optional
+	if server.UnixSocket != "" {
+		if !isUnixSocketProtocol(server.Protocol) {
+			return fmt.Errorf("invalid unix-socket for server %s: unix-socket can only be used with unix socket protocols", name)
+		}
+
+		// it must be a file name, not a path
+		if strings.Contains(server.UnixSocket, "/") {
+			return fmt.Errorf("invalid unix-socket for server %s: must be a file name, not a path", name)
 		}
 	}
 
