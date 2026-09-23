@@ -103,7 +103,11 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 		return err
 	} else {
 		if len(args) == 1 {
-			return cmd.switchEngine(args[0], true)
+			machineInfo, _, err := machine.Get(host.Real(), true)
+			if err != nil {
+				return fmt.Errorf("getting machine info: %v", err)
+			}
+			return cmd.switchEngineWithMachineInfo(args[0], machineInfo)
 		} else {
 			return fmt.Errorf("engine name not specified")
 		}
@@ -118,18 +122,18 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 
 	if !observable && cmd.fallback != "" {
 		fmt.Printf("Hardware information is unavailable; falling back to engine %q.\n", cmd.fallback)
-		return cmd.switchEngine(cmd.fallback, observable)
+		return cmd.switchEngineWithMachineInfo(cmd.fallback, nil)
 	}
 
-	scoredEngines, err := common.ScoreEnginesWithSpinner(cmd.Context)
+	scoredEngines, machineInfo, err := common.ScoreEnginesWithSpinnerAndMachineInfo(cmd.Context)
 	if err != nil {
 		return fmt.Errorf("scoring engines: %v", err)
 	}
 
-	return cmd.autoSelectScoredEngine(scoredEngines)
+	return cmd.autoSelectScoredEngine(scoredEngines, machineInfo)
 }
 
-func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.ScoredManifest) error {
+func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.ScoredManifest, machineInfo *machine.MachineInfo) error {
 
 	fmt.Println("Evaluating engines for optimal hardware compatibility:")
 	for _, engine := range scoredEngines {
@@ -151,7 +155,7 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 	}
 
 	if cmd.considerComponents {
-		ok, err := selectEngineForSeededComponents(cmd, scoredEngines)
+		ok, err := selectEngineForSeededComponents(cmd, scoredEngines, machineInfo)
 		if err != nil {
 			return err
 		}
@@ -168,7 +172,7 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 
 	fmt.Printf("Selected engine: %s\n", selectedEngine.Name)
 
-	err = cmd.switchEngine(selectedEngine.Name, true)
+	err = cmd.switchEngineWithMachineInfo(selectedEngine.Name, machineInfo)
 	if err != nil {
 		return fmt.Errorf("use engine: %s", err)
 	}
@@ -176,22 +180,9 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 	return nil
 }
 
-// switchEngine changes the engine and model used by the snap
+// switchEngineWithMachineInfo changes the engine and model used by the snap.
 // By default, the previous model will be used if it is compatible.
 // If it is not compatible, the engine's default model will be selected.
-func (cmd *useEngineCommand) switchEngine(engineName string, observable bool) error {
-
-	if !observable {
-		return cmd.switchEngineWithMachineInfo(engineName, nil)
-	}
-	machineInfo, _, err := machine.Get(host.Real(), true)
-	if err != nil {
-		return fmt.Errorf("getting machine info: %v", err)
-	}
-	return cmd.switchEngineWithMachineInfo(engineName, machineInfo)
-
-}
-
 func (cmd *useEngineCommand) switchEngineWithMachineInfo(engineName string, machineInfo *machine.MachineInfo) error {
 
 	newEngineManifest, err := engines.LoadManifest(cmd.EnginesDir, engineName)
@@ -379,8 +370,6 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 	return nil
 }
 
-// printScoredModels reports the disk-space compatibility of the candidate
-// models, mirroring the engine compatibility output.
 func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManifest) {
 	if len(scoredModels) == 0 {
 		return
@@ -431,7 +420,7 @@ func engineNames[T any](items []T, getName func(T) string) []string {
 
 // selectEngineForSeededComponents looks at components that are currently installed,
 // tries to match these to an engine and model that are compatible, and switches to it.
-func selectEngineForSeededComponents(cmd *useEngineCommand, scoredEngines []engines.ScoredManifest) (bool, error) {
+func selectEngineForSeededComponents(cmd *useEngineCommand, scoredEngines []engines.ScoredManifest, machineInfo *machine.MachineInfo) (bool, error) {
 	fmt.Println("Checking preinstalled components to influence engine and model selection")
 
 	allEngines, err := engines.LoadManifests(cmd.EnginesDir)
@@ -560,7 +549,7 @@ func selectEngineForSeededComponents(cmd *useEngineCommand, scoredEngines []engi
 	}
 
 	if seededModelForEngine == "" {
-		err = cmd.switchEngine(topEngine.Name, true)
+		err = cmd.switchEngineWithMachineInfo(topEngine.Name, machineInfo)
 		if err != nil {
 			return false, fmt.Errorf("switching engine: %v", err)
 		}

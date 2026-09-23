@@ -91,7 +91,11 @@ func ExampleUseEngine_noRestartWhenEngineAndModelUnchanged() {
 		},
 	}
 
-	if err := cmd.switchEngine("intel-gpu", true); err != nil {
+	machineInfo, err := machineInfoFixture("dummy-machine")
+	if err != nil {
+		panic(err)
+	}
+	if err := cmd.switchEngineWithMachineInfo("intel-gpu", machineInfo); err != nil {
 		panic(err)
 	}
 
@@ -129,7 +133,11 @@ func ExampleUseEngine_restartWhenEngineChanged() {
 		},
 	}
 
-	if err := cmd.switchEngine("cpu-avx1", true); err != nil {
+	machineInfo, err := machineInfoFixture("dummy-machine")
+	if err != nil {
+		panic(err)
+	}
+	if err := cmd.switchEngineWithMachineInfo("cpu-avx1", machineInfo); err != nil {
 		panic(err)
 	}
 
@@ -193,7 +201,7 @@ func ExampleUseEngine_autoSelectEngine() {
 	if err != nil {
 		panic(err)
 	}
-	if err := cmd.autoSelectScoredEngine(scoredEngines); err != nil {
+	if err := cmd.autoSelectScoredEngine(scoredEngines, machine); err != nil {
 		panic(err)
 	}
 
@@ -636,7 +644,11 @@ func TestSwitchToPreinstalledEngineAndModel(t *testing.T) {
 			}
 
 			cmd := newUseEngineCmd()
-			switched, err := selectEngineForSeededComponents(cmd, scored)
+			machineInfo, err := machineInfoFixture("dummy-machine")
+			if err != nil {
+				t.Fatalf("loading machine fixture: %v", err)
+			}
+			switched, err := selectEngineForSeededComponents(cmd, scored, machineInfo)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}

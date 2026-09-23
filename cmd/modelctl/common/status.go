@@ -1,6 +1,10 @@
 package common
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
+)
 
 type Status struct {
 	Engine      string             `json:"engine" yaml:"engine"`
@@ -36,7 +40,15 @@ func SnapStatus(ctx *Context) (*Status, error) {
 
 	modelStatus, err := ModelStatus(ctx)
 	if err == ErrNoActiveModel {
-		statusStr.Notices = append(statusStr.Notices, SuggestNotEnoughSpaceForModel(activeEngineName))
+		// ErrNoActiveModel is also the normal state for engines that define no
+		// model, so only flag disk exhaustion when a model was actually expected.
+		engineManifest, mErr := engines.LoadManifest(ctx.EnginesDir, activeEngineName)
+		if mErr != nil {
+			return nil, fmt.Errorf("loading engine manifest: %w", mErr)
+		}
+		if len(engineManifest.Model.Options) > 0 {
+			statusStr.Notices = append(statusStr.Notices, SuggestNotEnoughSpaceForModel(activeEngineName))
+		}
 		return &statusStr, err
 	} else if err != nil {
 		return nil, fmt.Errorf("getting model status: %v", err)

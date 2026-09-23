@@ -52,18 +52,6 @@ func NewModelDetails(manifest *models.Manifest) (ModelDetails, error) {
 	return modelDetails, nil
 }
 
-// NewScoredModelDetails builds ModelDetails from a scored model manifest,
-// filling in the compatibility status and any incompatibility issues.
-func NewScoredModelDetails(scored models.ScoredManifest) (ModelDetails, error) {
-	modelDetails, err := NewModelDetails(&scored.Manifest)
-	if err != nil {
-		return modelDetails, err
-	}
-	modelDetails.Compatible = scored.CompatibilityReport.ModelCompatible()
-	modelDetails.fillIncompatibilityIssues(scored.CompatibilityReport)
-	return modelDetails, nil
-}
-
 func (m *ModelDetails) fillIncompatibilityIssues(report models.CompatibilityReport) {
 	var issues []string
 	if !report.CompatibleDisk {
@@ -203,10 +191,6 @@ func GetAllModels(ctx *Context) ([]ModelDetails, error) {
 	return allModelsWithEngines, nil
 }
 
-// ScoreModels scores the given model options against the host machine,
-// using the available disk space as the compatibility criterion.
-// Fitting models are scored by their disk size so that the largest model
-// that fits is preferred; models that do not fit are scored 0.
 func ScoreModels(modelOptions []string, manifests map[string]models.Manifest, machineInfo *machine.MachineInfo) ([]models.ScoredManifest, error) {
 	availableDiskSpace, err := availableDiskSpace(machineInfo)
 	if err != nil {
@@ -246,15 +230,6 @@ func ScoreModels(modelOptions []string, manifests map[string]models.Manifest, ma
 	return scoredModels, nil
 }
 
-/*
-SelectModel loads the model manifests, scores the given model options against
-the host machine, and returns the identifier of the model to use along with the
-scored models so callers can report on the selection.
-
-The preferred model is returned when it fits the available disk space.
-Otherwise the largest model that fits is selected. When no model fits, the
-smallest model is returned together with utils.ErrInsufficientDiskSpaceForModel.
-*/
 func SelectModel(ctx *Context, modelOptions []string, preferredModel string, machineInfo *machine.MachineInfo) (string, []models.ScoredManifest, error) {
 	modelManifests, err := models.LoadManifests(ctx.ModelsDir)
 	if err != nil {
