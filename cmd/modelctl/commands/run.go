@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/constants"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/snap"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
@@ -113,7 +114,7 @@ func (cmd *runCommand) processEnvConfigs() error {
 }
 
 func defaultProviderDirectoryPath() string {
-	return filepath.Join(os.Getenv("SNAP_COMMON"), "share", "provider")
+	return os.ExpandEnv(constants.DefaultShareProviderPath)
 }
 
 func (cmd *runCommand) writeShareProviderEnv() error {
