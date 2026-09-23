@@ -21,6 +21,22 @@ const (
 	formatMediaTekDLA string = "MediaTek_DLA"
 )
 
+type CompatibilityReport struct {
+	CompatibleDisk     bool
+	RequiredDiskSpace  uint64
+	AvailableDiskSpace uint64
+}
+
+func (c CompatibilityReport) ModelCompatible() bool {
+	return c.CompatibleDisk
+}
+
+type ScoredManifest struct {
+	Manifest            `yaml:",inline"`
+	Score               uint64              `yaml:"score" json:"score"`
+	CompatibilityReport CompatibilityReport `yaml:"-" json:"-"`
+}
+
 type Manifest struct {
 	Name  string `json:"name" yaml:"name"`
 	Alias string `json:"alias,omitempty" yaml:"alias,omitempty"`

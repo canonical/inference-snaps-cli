@@ -56,9 +56,14 @@ func (cmd *exportStatusCommand) run(_ *cobra.Command, args []string) error {
 		}
 	}
 
+	var model map[string]string
+	if statusStr.Model != nil {
+		model = *statusStr.Model
+	}
+
 	sharedStatusStr := &exportedStatus{
 		Endpoints: urls,
-		Model:     statusStr.Model,
+		Model:     model,
 	}
 
 	var shareDir string

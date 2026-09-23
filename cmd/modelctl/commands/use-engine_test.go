@@ -91,7 +91,7 @@ func ExampleUseEngine_noRestartWhenEngineAndModelUnchanged() {
 		},
 	}
 
-	if err := cmd.switchEngine("intel-gpu"); err != nil {
+	if err := cmd.switchEngine("intel-gpu", true); err != nil {
 		panic(err)
 	}
 
@@ -129,7 +129,7 @@ func ExampleUseEngine_restartWhenEngineChanged() {
 		},
 	}
 
-	if err := cmd.switchEngine("cpu-avx1"); err != nil {
+	if err := cmd.switchEngine("cpu-avx1", true); err != nil {
 		panic(err)
 	}
 
@@ -343,8 +343,8 @@ func TestSwitchEngineWithMachineInfo_noDiskNoModel(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error getting active model: %v", err)
 	}
-	if activeModel != "30m-q4-k-m-gguf" {
-		t.Errorf("active model = %q, want %q", activeModel, "30m-q4-k-m-gguf")
+	if activeModel != "" {
+		t.Errorf("active model = %q, want %q", activeModel, "")
 	}
 }
 

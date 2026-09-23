@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/canonical/inference-snaps-cli/v2/pkg/constants"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
+	"github.com/canonical/lscompute/pkg/machine"
 )
 
 type ModelDetails struct {
@@ -24,6 +26,9 @@ type ModelDetails struct {
 	Components []string `json:"components" yaml:"components"`
 
 	CompatibleEngines []string `json:"compatible-engines,omitempty" yaml:"compatible-engines,omitempty"`
+
+	Compatible          bool     `json:"compatible,omitempty" yaml:"compatible,omitempty"`
+	CompatibilityIssues []string `json:"compatibility-issues,omitempty" yaml:"compatibility-issues,omitempty"`
 }
 
 func NewModelDetails(manifest *models.Manifest) (ModelDetails, error) {
@@ -45,6 +50,26 @@ func NewModelDetails(manifest *models.Manifest) (ModelDetails, error) {
 	modelDetails.DiskSize = utils.FmtBytesShort(diskSizeBytes)
 
 	return modelDetails, nil
+}
+
+// NewScoredModelDetails builds ModelDetails from a scored model manifest,
+// filling in the compatibility status and any incompatibility issues.
+func NewScoredModelDetails(scored models.ScoredManifest) (ModelDetails, error) {
+	modelDetails, err := NewModelDetails(&scored.Manifest)
+	if err != nil {
+		return modelDetails, err
+	}
+	modelDetails.Compatible = scored.CompatibilityReport.ModelCompatible()
+	modelDetails.fillIncompatibilityIssues(scored.CompatibilityReport)
+	return modelDetails, nil
+}
+
+func (m *ModelDetails) fillIncompatibilityIssues(report models.CompatibilityReport) {
+	var issues []string
+	if !report.CompatibleDisk {
+		issues = append(issues, "insufficient disk space")
+	}
+	m.CompatibilityIssues = issues
 }
 
 func GetModelManifestByNameOrAlias(ctx *Context, modelName string) (*models.Manifest, error) {
@@ -176,4 +201,112 @@ func GetAllModels(ctx *Context) ([]ModelDetails, error) {
 	}
 
 	return allModelsWithEngines, nil
+}
+
+// ScoreModels scores the given model options against the host machine,
+// using the available disk space as the compatibility criterion.
+// Fitting models are scored by their disk size so that the largest model
+// that fits is preferred; models that do not fit are scored 0.
+func ScoreModels(modelOptions []string, manifests map[string]models.Manifest, machineInfo *machine.MachineInfo) ([]models.ScoredManifest, error) {
+	availableDiskSpace, err := availableDiskSpace(machineInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	scoredModels := make([]models.ScoredManifest, 0, len(modelOptions))
+	for _, modelID := range modelOptions {
+		manifest, ok := manifests[modelID]
+		if !ok {
+			return nil, fmt.Errorf("model manifest not found: %s", modelID)
+		}
+
+		size, err := utils.StringToBytes(manifest.DiskSize)
+		if err != nil {
+			return nil, fmt.Errorf("parsing disk size for model %q: %w", modelID, err)
+		}
+
+		report := models.CompatibilityReport{
+			CompatibleDisk:     size <= availableDiskSpace,
+			RequiredDiskSpace:  size,
+			AvailableDiskSpace: availableDiskSpace,
+		}
+
+		score := uint64(0)
+		if report.CompatibleDisk {
+			score = size
+		}
+
+		scoredModels = append(scoredModels, models.ScoredManifest{
+			Manifest:            manifest,
+			Score:               score,
+			CompatibilityReport: report,
+		})
+	}
+
+	return scoredModels, nil
+}
+
+/*
+SelectModel loads the model manifests, scores the given model options against
+the host machine, and returns the identifier of the model to use along with the
+scored models so callers can report on the selection.
+
+The preferred model is returned when it fits the available disk space.
+Otherwise the largest model that fits is selected. When no model fits, the
+smallest model is returned together with utils.ErrInsufficientDiskSpaceForModel.
+*/
+func SelectModel(ctx *Context, modelOptions []string, preferredModel string, machineInfo *machine.MachineInfo) (string, []models.ScoredManifest, error) {
+	modelManifests, err := models.LoadManifests(ctx.ModelsDir)
+	if err != nil {
+		return "", nil, fmt.Errorf("%s: %w", LoadingModelManifests, err)
+	}
+	manifestsByName := make(map[string]models.Manifest, len(modelManifests))
+	for _, manifest := range modelManifests {
+		manifestsByName[manifest.Name] = manifest
+	}
+
+	scoredModels, err := ScoreModels(modelOptions, manifestsByName, machineInfo)
+	if err != nil {
+		return "", nil, err
+	}
+
+	if preferredModel != "" {
+		for _, model := range scoredModels {
+			if model.Name == preferredModel && model.CompatibilityReport.ModelCompatible() {
+				return preferredModel, scoredModels, nil
+			}
+		}
+	}
+
+	selected := ""
+	var selectedSize uint64
+	smallestModel := ""
+	smallestSize := ^uint64(0)
+	for _, model := range scoredModels {
+		size := model.CompatibilityReport.RequiredDiskSpace
+		if size < smallestSize {
+			smallestModel = model.Name
+			smallestSize = size
+		}
+		if model.CompatibilityReport.ModelCompatible() && (selected == "" || size > selectedSize) {
+			selected = model.Name
+			selectedSize = size
+		}
+	}
+
+	if selected != "" {
+		return selected, scoredModels, nil
+	}
+	if smallestModel != "" {
+		return smallestModel, scoredModels, utils.ErrInsufficientDiskSpaceForModel
+	}
+	return "", scoredModels, fmt.Errorf("no model options available")
+}
+
+func availableDiskSpace(machineInfo *machine.MachineInfo) (uint64, error) {
+	disk, ok := machineInfo.Disk[constants.SnapStoragePath]
+	if !ok {
+		return 0, fmt.Errorf("disk information unavailable for %s", constants.SnapStoragePath)
+	}
+	return disk.Avail, nil
 }

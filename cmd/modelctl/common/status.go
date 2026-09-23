@@ -3,10 +3,11 @@ package common
 import "fmt"
 
 type Status struct {
-	Engine      string            `json:"engine" yaml:"engine"`
-	Services    map[string]string `json:"services" yaml:"services"`
-	Entrypoints Entrypoints       `json:"entrypoints,omitempty" yaml:"entrypoints,omitempty"`
-	Model       map[string]string `json:"model,omitempty" yaml:"model,omitempty"`
+	Engine      string             `json:"engine" yaml:"engine"`
+	Services    map[string]string  `json:"services" yaml:"services"`
+	Entrypoints Entrypoints        `json:"entrypoints,omitempty" yaml:"entrypoints,omitempty"`
+	Model       *map[string]string `json:"model" yaml:"model"`
+	Notices     []string           `json:"notices,omitempty" yaml:"notices,omitempty"`
 }
 
 func SnapStatus(ctx *Context) (*Status, error) {
@@ -34,10 +35,13 @@ func SnapStatus(ctx *Context) (*Status, error) {
 	statusStr.Entrypoints = entrypoints
 
 	modelStatus, err := ModelStatus(ctx)
-	if err != nil {
+	if err == ErrNoActiveModel {
+		statusStr.Notices = append(statusStr.Notices, SuggestNotEnoughSpaceForModel(activeEngineName))
+		return &statusStr, err
+	} else if err != nil {
 		return nil, fmt.Errorf("getting model status: %v", err)
 	}
-	statusStr.Model = modelStatus
+	statusStr.Model = &modelStatus
 
 	return &statusStr, nil
 }

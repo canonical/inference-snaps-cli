@@ -103,7 +103,7 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 		return err
 	} else {
 		if len(args) == 1 {
-			return cmd.switchEngine(args[0])
+			return cmd.switchEngine(args[0], true)
 		} else {
 			return fmt.Errorf("engine name not specified")
 		}
@@ -118,7 +118,7 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 
 	if !observable && cmd.fallback != "" {
 		fmt.Printf("Hardware information is unavailable; falling back to engine %q.\n", cmd.fallback)
-		return cmd.switchEngine(cmd.fallback)
+		return cmd.switchEngine(cmd.fallback, observable)
 	}
 
 	scoredEngines, err := common.ScoreEnginesWithSpinner(cmd.Context)
@@ -168,7 +168,7 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 
 	fmt.Printf("Selected engine: %s\n", selectedEngine.Name)
 
-	err = cmd.switchEngine(selectedEngine.Name)
+	err = cmd.switchEngine(selectedEngine.Name, true)
 	if err != nil {
 		return fmt.Errorf("use engine: %s", err)
 	}
@@ -179,8 +179,11 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 // switchEngine changes the engine and model used by the snap
 // By default, the previous model will be used if it is compatible.
 // If it is not compatible, the engine's default model will be selected.
-func (cmd *useEngineCommand) switchEngine(engineName string) error {
+func (cmd *useEngineCommand) switchEngine(engineName string, observable bool) error {
 
+	if !observable {
+		return cmd.switchEngineWithMachineInfo(engineName, nil)
+	}
 	machineInfo, _, err := machine.Get(host.Real(), true)
 	if err != nil {
 		return fmt.Errorf("getting machine info: %v", err)
@@ -214,18 +217,15 @@ func (cmd *useEngineCommand) switchEngineWithMachineInfo(engineName string, mach
 		newModelID = newEngineManifest.Model.Default
 	}
 
-	if len(newEngineManifest.Model.Options) > 0 {
-		modelManifests, err := models.LoadManifests(cmd.ModelsDir)
-		if err != nil {
-			return fmt.Errorf("loading model manifests: %v", err)
+	if len(newEngineManifest.Model.Options) > 0 && machineInfo != nil {
+		var scoredModels []models.ScoredManifest
+		newModelID, scoredModels, err = common.SelectModel(cmd.Context, newEngineManifest.Model.Options, newModelID, machineInfo)
+		if cmd.auto {
+			cmd.printScoredModels(scoredModels)
 		}
-		manifestsByName := make(map[string]models.Manifest, len(modelManifests))
-		for _, manifest := range modelManifests {
-			manifestsByName[manifest.Name] = manifest
-		}
-
-		newModelID, err = selector.SelectModel(newEngineManifest.Model.Options, newModelID, manifestsByName, machineInfo)
-		if err != nil {
+		if err == utils.ErrInsufficientDiskSpaceForModel {
+			return cmd.switchEngineAndModel(engineName, "")
+		} else if err != nil {
 			return fmt.Errorf("selecting model: %v", err)
 		}
 	}
@@ -377,6 +377,26 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 	}
 
 	return nil
+}
+
+// printScoredModels reports the disk-space compatibility of the candidate
+// models, mirroring the engine compatibility output.
+func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManifest) {
+	if len(scoredModels) == 0 {
+		return
+	}
+	fmt.Println("Selecting a compatible model:")
+	for _, model := range scoredModels {
+		if model.CompatibilityReport.ModelCompatible() {
+			fmt.Printf("✔ %s\n", model.Name)
+		} else {
+			report := model.CompatibilityReport
+			fmt.Printf("✘ %s: requires %s disk space, has %s\n",
+				model.Name,
+				utils.FmtBytesShort(report.RequiredDiskSpace),
+				utils.FmtBytesShort(report.AvailableDiskSpace))
+		}
+	}
 }
 
 func (cmd *useEngineCommand) verboseIncompatibilityReasons(report engines.CompatibilityReport) []string {
@@ -540,7 +560,7 @@ func selectEngineForSeededComponents(cmd *useEngineCommand, scoredEngines []engi
 	}
 
 	if seededModelForEngine == "" {
-		err = cmd.switchEngine(topEngine.Name)
+		err = cmd.switchEngine(topEngine.Name, true)
 		if err != nil {
 			return false, fmt.Errorf("switching engine: %v", err)
 		}
