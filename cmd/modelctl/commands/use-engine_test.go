@@ -144,6 +144,7 @@ func ExampleUseEngine_autoSelectEngine() {
 	config := storage.NewMockConfig()
 	cmd := useEngineCommand{
 		assumeYes: true,
+		auto:      true,
 		Context: &common.Context{
 			EnginesDir:  "../../../test_data/engines",
 			RuntimesDir: "../../../test_data/runtimes",
@@ -203,8 +204,66 @@ func ExampleUseEngine_autoSelectEngine() {
 	// • cpu-exptl: experimental, score=10
 	// ✔ cpu: compatible, score=10
 	// Selected engine: cpu
+	// Selecting a compatible model:
+	// ✔ 30m-q4-k-m-gguf
+	// ✔ 26b-q4-k-m-gguf
+	// ✔ 30b-a3b-q4-k-m-gguf
 	// Engine changed to "cpu".
 	// Model changed to "26b-q4-k-m-gguf".
+	// [mock] Restarting all services
+}
+
+func ExampleUseEngine_printIncompatibleModels() {
+	cache := storage.NewMockCache()
+	config := storage.NewMockConfig()
+	cmd := useEngineCommand{
+		assumeYes: true,
+		auto:      true,
+		Context: &common.Context{
+			EnginesDir:  "../../../test_data/engines",
+			RuntimesDir: "../../../test_data/runtimes",
+			ModelsDir:   "../../../test_data/models",
+			Cache:       cache,
+			Config:      config,
+			Snap:        snap.Mock(),
+		},
+	}
+	// Create a temporary SNAP_COMPONENTS directory with stub component directories so that
+	// required components appear "installed" and the install flow produces no extra output.
+	snapComponents, err := os.MkdirTemp("", "snap-components-*")
+	if err != nil {
+		panic(err)
+	}
+	defer os.RemoveAll(snapComponents)
+	if err := os.Mkdir(snapComponents+"/runtime-llama-cpp-cpu", 0755); err != nil {
+		panic(err)
+	}
+	if err := os.Mkdir(snapComponents+"/model-26b-a4b-q4-k-m-gguf", 0755); err != nil {
+		panic(err)
+	}
+	if err := os.Mkdir(snapComponents+"/mmproj-26b-bf16-gguf", 0755); err != nil {
+		panic(err)
+	}
+	if err := os.Setenv("SNAP_COMPONENTS", snapComponents); err != nil {
+		panic(err)
+	}
+	defer os.Unsetenv("SNAP_COMPONENTS")
+	cmd.Verbose = true
+	machine, err := machineInfoFixture("no-disk-available-machine")
+	if err != nil {
+		panic(err)
+	}
+
+	if err := cmd.switchEngineWithMachineInfo("cpu", machine); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// Selecting a compatible model:
+	// ✘ 30m-q4-k-m-gguf: requires 1M disk space, has 0
+	// ✘ 26b-q4-k-m-gguf: requires 6G disk space, has 0
+	// ✘ 30b-a3b-q4-k-m-gguf: requires 6G disk space, has 0
+	// Engine changed to "cpu".
 	// [mock] Restarting all services
 }
 
@@ -323,8 +382,8 @@ func TestSwitchEngineWithMachineInfo_lowDisk(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error getting active model: %v", err)
 	}
-	if activeModel != "30b-a3b-q4-k-m-gguf" {
-		t.Errorf("active model = %q, want %q", activeModel, "30b-a3b-q4-k-m-gguf")
+	if activeModel != "30m-q4-k-m-gguf" {
+		t.Errorf("active model = %q, want %q", activeModel, "30m-q4-k-m-gguf")
 	}
 }
 
