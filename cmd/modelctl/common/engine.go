@@ -201,14 +201,7 @@ and scores the engines according to their compatibility with the host.
 
 Warning: calls to this function can block for a number of seconds while the host machine information is being looked up.
 */
-func ScoreEngines(ctx *Context) ([]engines.ScoredManifest, []string, error) {
-	scoredEngines, _, warnings, err := scoreEngines(ctx)
-	return scoredEngines, warnings, err
-}
-
-// scoreEngines is like ScoreEngines but also returns the machine snapshot used for
-// scoring, so callers can reuse it for subsequent decisions (e.g. model selection).
-func scoreEngines(ctx *Context) ([]engines.ScoredManifest, *machine.MachineInfo, []string, error) {
+func ScoreEngines(ctx *Context) ([]engines.ScoredManifest, *machine.MachineInfo, []string, error) {
 	allEngines, err := engines.LoadManifests(ctx.EnginesDir)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("loading engines: %w", err)
@@ -227,19 +220,9 @@ func scoreEngines(ctx *Context) ([]engines.ScoredManifest, *machine.MachineInfo,
 	return scoredEngines, machineInfo, warnings, nil
 }
 
-// ScoreEnginesWithSpinner is same as ScoreEngines but with a progress spinner.
-// It prints the warnings to stderr.
-func ScoreEnginesWithSpinner(ctx *Context) ([]engines.ScoredManifest, error) {
-	scoredEngines, _, err := ScoreEnginesWithSpinnerAndMachineInfo(ctx)
-	return scoredEngines, err
-}
-
-// ScoreEnginesWithSpinnerAndMachineInfo is like ScoreEnginesWithSpinner but also returns
-// the machine snapshot used for scoring, so callers can reuse it for model selection
-// instead of re-reading the host.
-func ScoreEnginesWithSpinnerAndMachineInfo(ctx *Context) ([]engines.ScoredManifest, *machine.MachineInfo, error) {
+func ScoreEnginesWithSpinner(ctx *Context) ([]engines.ScoredManifest, *machine.MachineInfo, error) {
 	stopProgress := StartProgressSpinner("Checking engine compatibility")
-	scoredEngines, machineInfo, warnings, err := scoreEngines(ctx)
+	scoredEngines, machineInfo, warnings, err := ScoreEngines(ctx)
 	stopProgress()
 
 	if len(warnings) > 0 && ctx.Verbose {

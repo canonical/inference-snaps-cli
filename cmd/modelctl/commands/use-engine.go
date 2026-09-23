@@ -125,7 +125,7 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 		return cmd.switchEngineWithMachineInfo(cmd.fallback, nil)
 	}
 
-	scoredEngines, machineInfo, err := common.ScoreEnginesWithSpinnerAndMachineInfo(cmd.Context)
+	scoredEngines, machineInfo, err := common.ScoreEnginesWithSpinner(cmd.Context)
 	if err != nil {
 		return fmt.Errorf("scoring engines: %v", err)
 	}
@@ -184,7 +184,6 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 // By default, the previous model will be used if it is compatible.
 // If it is not compatible, the engine's default model will be selected.
 func (cmd *useEngineCommand) switchEngineWithMachineInfo(engineName string, machineInfo *machine.MachineInfo) error {
-
 	newEngineManifest, err := engines.LoadManifest(cmd.EnginesDir, engineName)
 	if err != nil {
 		if errors.Is(err, engines.ErrManifestNotFound) {
