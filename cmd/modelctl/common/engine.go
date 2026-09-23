@@ -121,7 +121,9 @@ func unloadEngineEnvironmentFromSettings(settings *Settings) error {
 // and creates any necessary symlinks
 func LoadEngineEnvironment(ctx *Context) (func(), error) {
 	engineSettings, err := EngineSettings(ctx)
-	if err != nil {
+	if err == ErrNoActiveModel {
+		return nil, err
+	} else if err != nil {
 		return nil, fmt.Errorf("error loading engine component settings: %w", err)
 	}
 
