@@ -79,13 +79,22 @@ func TestWriteShareProviderEnv(t *testing.T) {
 		t.Setenv("SNAP_COMMON", t.TempDir())
 		t.Setenv("SNAP_NAME", "gemma3-jane")
 		t.Setenv("SNAP_INSTANCE_NAME", "gemma3-jane")
+		expectedProviderDir := os.ExpandEnv("$SNAP_COMMON/share/provider")
 
 		cmd := runCommand{Context: testRunContext(t, "servers:\n  openai:\n    protocol: http\n    base-path: /v1\n"), shareProvider: defaultProviderDirectoryPath()}
 		if err := cmd.writeShareProviderEnv(); err != nil {
 			t.Fatalf("writeShareProviderEnv() error = %v", err)
 		}
 
-		path := filepath.Join(os.Getenv("SNAP_COMMON"), "share", "provider", "provider.env")
+		cachedShareProviderDirectory, err := cmd.Context.Cache.GetSharedProviderDirectory()
+		if err != nil {
+			t.Fatalf("getting cached shared provider directory: %v", err)
+		}
+		if cachedShareProviderDirectory != expectedProviderDir {
+			t.Fatalf("cached shared provider directory mismatch\nwant: %q\ngot:  %q", expectedProviderDir, cachedShareProviderDirectory)
+		}
+
+		path := filepath.Join(expectedProviderDir, "provider.env")
 		content, err := os.ReadFile(path)
 		if err != nil {
 			t.Fatalf("reading provider env file: %v", err)
@@ -107,6 +116,14 @@ func TestWriteShareProviderEnv(t *testing.T) {
 			t.Fatalf("writeShareProviderEnv() error = %v", err)
 		}
 
+		cachedShareProviderDirectory, err := cmd.Context.Cache.GetSharedProviderDirectory()
+		if err != nil {
+			t.Fatalf("getting cached shared provider directory: %v", err)
+		}
+		if cachedShareProviderDirectory != path {
+			t.Fatalf("cached shared provider directory mismatch\nwant: %q\ngot:  %q", path, cachedShareProviderDirectory)
+		}
+
 		content, err := os.ReadFile(filepath.Join(path, "provider.env"))
 		if err != nil {
 			t.Fatalf("reading provider env file: %v", err)
@@ -126,6 +143,14 @@ func TestWriteShareProviderEnv(t *testing.T) {
 		cmd := runCommand{Context: testRunContext(t, "servers:\n  kserve:\n    protocol: http\n    base-path: /v2\n"), shareProvider: path}
 		if err := cmd.writeShareProviderEnv(); err != nil {
 			t.Fatalf("writeShareProviderEnv() error = %v", err)
+		}
+
+		cachedShareProviderDirectory, err := cmd.Context.Cache.GetSharedProviderDirectory()
+		if err != nil {
+			t.Fatalf("getting cached shared provider directory: %v", err)
+		}
+		if cachedShareProviderDirectory != path {
+			t.Fatalf("cached shared provider directory mismatch\nwant: %q\ngot:  %q", path, cachedShareProviderDirectory)
 		}
 
 		content, err := os.ReadFile(filepath.Join(path, "provider.env"))
