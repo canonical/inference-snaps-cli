@@ -126,6 +126,10 @@ func (cmd *runCommand) writeShareProviderEnv() error {
 		return fmt.Errorf("creating provider env directory: %v", err)
 	}
 
+	if err := cmd.Context.Cache.SetSharedProviderDirectory(cmd.shareProvider); err != nil {
+		return fmt.Errorf("saving shared provider directory: %v", err)
+	}
+
 	providerEnvPath := filepath.Join(cmd.shareProvider, "provider.env")
 	content := "SNAP_NAME=" + snap.SnapName() + "\n"
 	content += "SNAP_INSTANCE_NAME=" + snap.InstanceName() + "\n"

@@ -62,8 +62,8 @@ servers:
 				"webui":       "http://192.0.2.1:8080",
 			},
 			wantUnixSockets: map[string]string{
-				"openai-unix": "/run/openai.sock",
-				"kserve-unix": "/run/kserve.sock",
+				"openai-unix": "/tmp/share/provider/openai-unix.sock",
+				"kserve-unix": "/tmp/share/provider/kserve-unix.sock",
 			},
 			wantUnixSocketUrls: map[string]string{
 				"openai-unix": "http://unix/v1",
@@ -103,7 +103,7 @@ servers:
 				"openai-unix": "",
 			},
 			wantUnixSockets: map[string]string{
-				"openai-unix": "/run/openai.sock",
+				"openai-unix": "/tmp/share/provider/openai-unix.sock",
 			},
 			wantUnixSocketUrls: map[string]string{
 				"openai-unix": "ws://unix/v1",
@@ -147,7 +147,7 @@ servers:
 				"openai-unix": "",
 			},
 			wantUnixSockets: map[string]string{
-				"openai-unix": "/run/openai.sock",
+				"openai-unix": "/tmp/share/provider/openai-unix.sock",
 			},
 			wantUnixSocketUrls: map[string]string{
 				"openai-unix": "wss://unix/v1",
@@ -348,10 +348,10 @@ func TestServerHTTPEntrypoint(t *testing.T) {
 
 func TestServerHttpUnixSocketEntrypoint(t *testing.T) {
 	testCases := []struct {
-		name          string
-		server        runtimes.Server
-		socketPath    string
-		wantSocketURL string
+		name           string
+		server         runtimes.Server
+		wantSocketPath string
+		wantSocketURL  string
 	}{
 		{
 			name: "http unix default namespace",
@@ -359,8 +359,8 @@ func TestServerHttpUnixSocketEntrypoint(t *testing.T) {
 				Protocol: "http+unix",
 				BasePath: "/v1",
 			},
-			socketPath:    "/run/test.sock",
-			wantSocketURL: "http://unix/v1",
+			wantSocketPath: "/tmp/share/provider/http unix default namespace.sock",
+			wantSocketURL:  "http://unix/v1",
 		},
 		{
 			name: "http unix with namespace",
@@ -369,30 +369,21 @@ func TestServerHttpUnixSocketEntrypoint(t *testing.T) {
 				BasePath:  "/api/v2",
 				Namespace: "proxy",
 			},
-			socketPath:    "/run/proxy.sock",
-			wantSocketURL: "http://unix/api/v2",
+			wantSocketPath: "/tmp/share/provider/http unix with namespace.sock",
+			wantSocketURL:  "http://unix/api/v2",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			config := storage.NewMockConfig()
-			configs := map[string]string{}
-			if tc.server.Namespace != "" {
-				configs[tc.server.Namespace+".http.unix-socket"] = tc.socketPath
-			} else {
-				configs["http.unix-socket"] = tc.socketPath
-			}
-			for key, value := range configs {
-				if err := config.Set(key, value, storage.UserConfig); err != nil {
-					t.Fatalf("Set(%q): %v", key, err)
-				}
-			}
+			cache := storage.NewMockCache()
 			ctx := &Context{
 				Config: config,
+				Cache:  cache,
 			}
 
-			got, err := serverHttpOverUnixSocketEntrypoint(ctx, tc.server)
+			got, err := serverHttpOverUnixSocketEntrypoint(ctx, tc.name, tc.server)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -402,8 +393,8 @@ func TestServerHttpUnixSocketEntrypoint(t *testing.T) {
 			if got.Url != "" {
 				t.Fatalf("URL: got %q, want empty", got.Url)
 			}
-			if got.UnixSocket != tc.socketPath {
-				t.Fatalf("UnixSocket: got %q, want %q", got.UnixSocket, tc.socketPath)
+			if got.UnixSocket != tc.wantSocketPath {
+				t.Fatalf("UnixSocket: got %q, want %q", got.UnixSocket, tc.wantSocketPath)
 			}
 			if got.UnixSocketUrl != tc.wantSocketURL {
 				t.Fatalf("UnixSocketUrl: got %q, want %q", got.UnixSocketUrl, tc.wantSocketURL)
@@ -488,10 +479,10 @@ func TestServerWSEntrypoint(t *testing.T) {
 
 func TestServerWsUnixSocketEntrypoint(t *testing.T) {
 	testCases := []struct {
-		name          string
-		server        runtimes.Server
-		socketPath    string
-		wantSocketURL string
+		name           string
+		server         runtimes.Server
+		wantSocketPath string
+		wantSocketURL  string
 	}{
 		{
 			name: "ws unix default namespace",
@@ -499,8 +490,8 @@ func TestServerWsUnixSocketEntrypoint(t *testing.T) {
 				Protocol: "ws+unix",
 				BasePath: "/v1",
 			},
-			socketPath:    "/run/ws.sock",
-			wantSocketURL: "ws://unix/v1",
+			wantSocketPath: "/tmp/share/provider/ws unix default namespace.sock",
+			wantSocketURL:  "ws://unix/v1",
 		},
 		{
 			name: "ws unix with namespace",
@@ -509,28 +500,21 @@ func TestServerWsUnixSocketEntrypoint(t *testing.T) {
 				BasePath:  "/api/stream",
 				Namespace: "proxy",
 			},
-			socketPath:    "/run/proxy-ws.sock",
-			wantSocketURL: "ws://unix/api/stream",
+			wantSocketPath: "/tmp/share/provider/ws unix with namespace.sock",
+			wantSocketURL:  "ws://unix/api/stream",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			config := storage.NewMockConfig()
-			configs := map[string]string{}
-			if tc.server.Namespace != "" {
-				configs[tc.server.Namespace+".ws.unix-socket"] = tc.socketPath
-			} else {
-				configs["ws.unix-socket"] = tc.socketPath
+			cache := storage.NewMockCache()
+			ctx := &Context{
+				Config: config,
+				Cache:  cache,
 			}
-			for key, value := range configs {
-				if err := config.Set(key, value, storage.UserConfig); err != nil {
-					t.Fatalf("Set(%q): %v", key, err)
-				}
-			}
-			ctx := &Context{Config: config}
 
-			got, err := serverWsOverUnixSocketEntrypoint(ctx, tc.server)
+			got, err := serverWsOverUnixSocketEntrypoint(ctx, tc.name, tc.server)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -540,8 +524,8 @@ func TestServerWsUnixSocketEntrypoint(t *testing.T) {
 			if got.Url != "" {
 				t.Fatalf("URL: got %q, want empty", got.Url)
 			}
-			if got.UnixSocket != tc.socketPath {
-				t.Fatalf("UnixSocket: got %q, want %q", got.UnixSocket, tc.socketPath)
+			if got.UnixSocket != tc.wantSocketPath {
+				t.Fatalf("UnixSocket: got %q, want %q", got.UnixSocket, tc.wantSocketPath)
 			}
 			if got.UnixSocketUrl != tc.wantSocketURL {
 				t.Fatalf("UnixSocketUrl: got %q, want %q", got.UnixSocketUrl, tc.wantSocketURL)
