@@ -216,6 +216,7 @@ func ExampleUseEngine_autoSelectEngine() {
 	// ✔ 30m-q4-k-m-gguf
 	// ✔ 26b-q4-k-m-gguf
 	// ✔ 30b-a3b-q4-k-m-gguf
+	// Selected model: 26b-q4-k-m-gguf
 	// Engine changed to "cpu".
 	// Model changed to "26b-q4-k-m-gguf".
 	// [mock] Restarting all services

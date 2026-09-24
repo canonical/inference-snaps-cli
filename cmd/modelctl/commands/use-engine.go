@@ -212,7 +212,7 @@ func (cmd *useEngineCommand) switchEngineWithMachineInfo(engineName string, mach
 		var scoredModels []models.ScoredManifest
 		newModelID, scoredModels, err = common.SelectModel(cmd.Context, newEngineManifest.Model.Options, newModelID, machineInfo)
 		if cmd.auto {
-			cmd.printScoredModels(scoredModels)
+			cmd.printScoredModels(scoredModels, newModelID)
 		}
 		if err == utils.ErrInsufficientDiskSpaceForModel {
 			return cmd.switchEngineAndModel(engineName, "")
@@ -370,13 +370,15 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 	return nil
 }
 
-func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManifest) {
+func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManifest, newModelID string) {
 	if len(scoredModels) == 0 {
 		return
 	}
+	var compatibleModels []string
 	fmt.Println("Selecting a compatible model:")
 	for _, model := range scoredModels {
 		if model.CompatibilityReport.CompatibleDisk {
+			compatibleModels = append(compatibleModels, model.Name)
 			fmt.Printf("✔ %s\n", model.Name)
 		} else {
 			report := model.CompatibilityReport
@@ -385,6 +387,9 @@ func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManif
 				utils.FmtBytesShort(report.RequiredDiskSpace),
 				utils.FmtBytesShort(report.AvailableDiskSpace))
 		}
+	}
+	if slices.Contains(compatibleModels, newModelID) {
+		fmt.Printf("Selected model: %s\n", newModelID)
 	}
 }
 
