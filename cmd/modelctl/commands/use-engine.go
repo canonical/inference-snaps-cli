@@ -375,7 +375,7 @@ func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManif
 	}
 	fmt.Println("Selecting a compatible model:")
 	for _, model := range scoredModels {
-		if model.CompatibilityReport.ModelCompatible() {
+		if model.CompatibilityReport.CompatibleDisk {
 			fmt.Printf("✔ %s\n", model.Name)
 		} else {
 			report := model.CompatibilityReport

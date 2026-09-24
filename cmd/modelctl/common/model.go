@@ -247,7 +247,7 @@ func SelectModel(ctx *Context, modelOptions []string, preferredModel string, mac
 
 	if preferredModel != "" {
 		for _, model := range scoredModels {
-			if model.Name == preferredModel && model.CompatibilityReport.ModelCompatible() {
+			if model.Name == preferredModel && model.CompatibilityReport.CompatibleDisk {
 				return preferredModel, scoredModels, nil
 			}
 		}
@@ -263,7 +263,7 @@ func SelectModel(ctx *Context, modelOptions []string, preferredModel string, mac
 			smallestModel = model.Name
 			smallestSize = size
 		}
-		if model.CompatibilityReport.ModelCompatible() && (selected == "" || size > selectedSize) {
+		if model.CompatibilityReport.CompatibleDisk && (selected == "" || size > selectedSize) {
 			selected = model.Name
 			selectedSize = size
 		}

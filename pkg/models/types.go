@@ -27,10 +27,6 @@ type CompatibilityReport struct {
 	AvailableDiskSpace uint64
 }
 
-func (c CompatibilityReport) ModelCompatible() bool {
-	return c.CompatibleDisk
-}
-
 type ScoredManifest struct {
 	Manifest            `yaml:",inline"`
 	Score               uint64              `yaml:"score" json:"score"`
