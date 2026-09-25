@@ -35,7 +35,11 @@ func LoadManifests(manifestsDir string) ([]Manifest, error) {
 		var manifest Manifest
 		err = yaml.Unmarshal(data, &manifest)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %s", manifestsDir, err)
+			return nil, fmt.Errorf("malformed manifest %s: %v", fileName, err)
+		}
+
+		if err := manifest.validate(""); err != nil {
+			return nil, fmt.Errorf("invalid manifest %s: %v", fileName, err)
 		}
 
 		manifests = append(manifests, manifest)
@@ -59,7 +63,11 @@ func LoadManifest(manifestsDir, runtimeName string) (*Manifest, error) {
 	var manifest Manifest
 	err = yaml.Unmarshal(data, &manifest)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %s", manifestsDir, err)
+		return nil, fmt.Errorf("malformed manifest %s: %v", fileName, err)
+	}
+
+	if err := manifest.validate(""); err != nil {
+		return nil, fmt.Errorf("invalid manifest %s: %v", fileName, err)
 	}
 
 	return &manifest, nil
