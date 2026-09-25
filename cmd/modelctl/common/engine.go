@@ -24,7 +24,6 @@ type Settings struct {
 }
 
 // CurrentRuntimeManifest loads the manifest for the active engine's runtime.
-// It returns nil when the active engine does not require a runtime.
 func CurrentRuntimeManifest(ctx *Context) (*runtimes.Manifest, error) {
 	activeEngineName, err := ctx.Cache.GetActiveEngine()
 	if err != nil {
@@ -40,7 +39,7 @@ func CurrentRuntimeManifest(ctx *Context) (*runtimes.Manifest, error) {
 	}
 
 	if activeEngineManifest.Runtime == "" {
-		return nil, nil
+		return nil, ErrNoActiveRuntime
 	}
 
 	runtimeManifest, err := runtimes.LoadManifest(ctx.RuntimesDir, activeEngineManifest.Runtime)

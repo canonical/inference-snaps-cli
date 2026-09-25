@@ -154,21 +154,19 @@ func (cmd *runCommand) writeShareProviderEnv() error {
 	}
 
 	runtime, err := common.CurrentRuntimeManifest(cmd.Context)
-	if err != nil {
+	if err != nil && !errors.Is(err, common.ErrNoActiveRuntime) {
 		return fmt.Errorf("getting current runtime manifest: %v", err)
 	}
-	if runtime != nil {
-		for serverName, server := range runtime.Servers {
-			if server.IsUnixProtocol() {
-				content.WriteString("UNIX_SOCKET")
-				if server.Namespace != "" {
-					content.WriteString("_")
-					content.WriteString(strings.ReplaceAll(strings.ToUpper(server.Namespace), "-", "_"))
-				}
-				content.WriteString("=")
-				content.WriteString(serverName)
-				content.WriteString(".sock\n")
+	for serverName, server := range runtime.Servers {
+		if server.IsUnixProtocol() {
+			content.WriteString("UNIX_SOCKET")
+			if server.Namespace != "" {
+				content.WriteString("_")
+				content.WriteString(strings.ReplaceAll(strings.ToUpper(server.Namespace), "-", "_"))
 			}
+			content.WriteString("=")
+			content.WriteString(serverName)
+			content.WriteString(".sock\n")
 		}
 	}
 
