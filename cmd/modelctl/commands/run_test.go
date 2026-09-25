@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -165,6 +166,73 @@ func TestWriteShareProviderEnv(t *testing.T) {
 		}
 	})
 
+	tests := []struct {
+		name       string
+		serverName string
+		protocol   string
+		namespace  string
+		wantSocket string
+	}{
+		{
+			name:       "http unix socket",
+			serverName: "test",
+			protocol:   "http+unix",
+			wantSocket: "UNIX_SOCKET=test.sock",
+		},
+		{
+			name:       "https unix socket",
+			serverName: "example",
+			protocol:   "https+unix",
+			wantSocket: "UNIX_SOCKET=example.sock",
+		},
+		{
+			name:       "websocket unix socket",
+			serverName: "server",
+			protocol:   "ws+unix",
+			wantSocket: "UNIX_SOCKET=server.sock",
+		},
+		{
+			name:       "secure websocket unix socket",
+			serverName: "server",
+			protocol:   "wss+unix",
+			wantSocket: "UNIX_SOCKET=server.sock",
+		},
+		{
+			name:       "namespaced unix socket",
+			serverName: "server",
+			protocol:   "http+unix",
+			namespace:  "speech-to-text",
+			wantSocket: "UNIX_SOCKET_SPEECH_TO_TEXT=server.sock",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("SNAP_NAME", "gemma3-jane")
+			t.Setenv("SNAP_INSTANCE_NAME", "gemma3-jane")
+
+			runtimeYAML := fmt.Sprintf("servers:\n  %s:\n    protocol: %s\n    base-path: /v1\n", tt.serverName, tt.protocol)
+			if tt.namespace != "" {
+				runtimeYAML += fmt.Sprintf("    namespace: %s\n", tt.namespace)
+			}
+
+			path := t.TempDir()
+			cmd := runCommand{Context: testRunContext(t, runtimeYAML), shareProvider: path}
+			if err := cmd.writeShareProviderEnv(); err != nil {
+				t.Fatalf("writeShareProviderEnv() error = %v", err)
+			}
+
+			content, err := os.ReadFile(filepath.Join(path, "provider.env"))
+			if err != nil {
+				t.Fatalf("reading provider env file: %v", err)
+			}
+
+			want := "SNAP_NAME=gemma3-jane\nSNAP_INSTANCE_NAME=gemma3-jane\n" + tt.wantSocket + "\n"
+			if string(content) != want {
+				t.Fatalf("provider env contents mismatch\nwant: %q\ngot:  %q", want, string(content))
+			}
+		})
+	}
 }
 
 func TestNoActiveModel(t *testing.T) {
