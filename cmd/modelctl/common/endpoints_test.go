@@ -84,7 +84,7 @@ servers:
   openai:
     protocol: ftp
 `,
-			wantErrContains: "invalid protocol",
+			wantErrContains: "unsupported protocol",
 		},
 		{
 			name: "websocket servers",
