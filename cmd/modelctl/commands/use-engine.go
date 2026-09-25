@@ -108,7 +108,7 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 				return fmt.Errorf("checking hardware observability: %v", err)
 			}
 			if !observable {
-				return cmd.switchEngineWithMachineInfo(args[0], nil)
+				return cmd.switchEngine(args[0])
 			}
 			machineInfo, _, err := machine.Get(host.Real(), true)
 			if err != nil {
@@ -129,7 +129,7 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 
 	if !observable && cmd.fallback != "" {
 		fmt.Printf("Hardware information is unavailable; falling back to engine %q.\n", cmd.fallback)
-		return cmd.switchEngineWithMachineInfo(cmd.fallback, nil)
+		return cmd.switchEngine(cmd.fallback)
 	}
 
 	scoredEngines, machineInfo, err := common.ScoreEnginesWithSpinner(cmd.Context)
@@ -187,9 +187,13 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 	return nil
 }
 
-// switchEngineWithMachineInfo changes the engine and model used by the snap.
+func (cmd *useEngineCommand) switchEngine(engineName string) error {
+	return cmd.switchEngineWithMachineInfo(engineName, nil)
+}
+
+// switchEngineWithMachineInfo changes the engine and model used by the snap
 // By default, the previous model will be used if it is compatible.
-// If it is not compatible, the engine's default model will be selected.
+// If it is not compatible, another model will be selected based on the engine's default and available disk space.
 func (cmd *useEngineCommand) switchEngineWithMachineInfo(engineName string, machineInfo *machine.MachineInfo) error {
 	newEngineManifest, err := engines.LoadManifest(cmd.EnginesDir, engineName)
 	if err != nil {
@@ -221,7 +225,7 @@ func (cmd *useEngineCommand) switchEngineWithMachineInfo(engineName string, mach
 		if cmd.auto {
 			cmd.printScoredModels(scoredModels, newModelID)
 		}
-		if err != nil && err != utils.ErrInsufficientDiskSpaceForModel {
+		if err != nil && err != common.ErrInsufficientDiskSpaceForModel {
 			return fmt.Errorf("selecting model: %v", err)
 		}
 	}

@@ -42,7 +42,7 @@ func NewModelDetails(manifest *models.Manifest) (ModelDetails, error) {
 	// Change disk size to largest possible unit representation
 	diskSizeBytes, err := utils.StringToBytes(manifest.DiskSize)
 	if err != nil {
-		return modelDetails, err
+		return modelDetails, ErrInsufficientDiskSpaceForModel
 	}
 	modelDetails.DiskSize = utils.FmtBytesShort(diskSizeBytes)
 
@@ -258,7 +258,7 @@ func SelectModel(ctx *Context, modelOptions []string, preferredModel string, mac
 		return selected, scoredModels, nil
 	}
 
-	return "", scoredModels, utils.ErrInsufficientDiskSpaceForModel
+	return "", scoredModels, ErrInsufficientDiskSpaceForModel
 }
 
 func availableDiskSpace(machineInfo *machine.MachineInfo) (uint64, error) {
