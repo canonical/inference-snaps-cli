@@ -27,6 +27,7 @@ name: test-engine
 runtime: test-runtime
 `,
 			runtimeYAML: `
+name: test-runtime
 servers:
   openai:
     protocol: http
@@ -48,6 +49,7 @@ name: test-engine
 runtime: test-runtime
 `,
 			runtimeYAML: `
+name: test-runtime
 servers:
   openai-unix:
     protocol: http+unix
@@ -78,11 +80,12 @@ name: test-engine
 runtime: test-runtime
 `,
 			runtimeYAML: `
+name: test-runtime
 servers:
   openai:
     protocol: ftp
 `,
-			wantErrContains: "unsupported protocol",
+			wantErrContains: "invalid protocol",
 		},
 		{
 			name: "websocket servers",
@@ -91,6 +94,7 @@ name: test-engine
 runtime: test-runtime
 `,
 			runtimeYAML: `
+name: test-runtime
 servers:
   openai-ws:
     protocol: ws
@@ -117,6 +121,7 @@ name: test-engine
 runtime: test-runtime
 `,
 			runtimeYAML: `
+name: test-runtime
 servers:
   logger:
     protocol: ws
@@ -135,6 +140,7 @@ name: test-engine
 runtime: test-runtime
 `,
 			runtimeYAML: `
+name: test-runtime
 servers:
   openai-wss:
     protocol: wss
@@ -161,6 +167,7 @@ name: test-engine
 runtime: test-runtime
 `,
 			runtimeYAML: `
+name: test-runtime
 servers:
   logger:
     protocol: wss
@@ -554,6 +561,7 @@ func TestOpenAiBaseUrl(t *testing.T) {
 		{
 			name: "openai server present",
 			runtimeYAML: `
+name: test
 servers:
   openai:
     protocol: http
@@ -564,6 +572,7 @@ servers:
 		{
 			name: "no openai server",
 			runtimeYAML: `
+name: test
 servers:
   kserve:
     protocol: http
