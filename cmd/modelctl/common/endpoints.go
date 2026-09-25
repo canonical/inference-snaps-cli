@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/runtimes"
 )
 
@@ -35,29 +34,15 @@ func (e Entrypoint) MarshalYAML() (any, error) {
 }
 
 func ServerEntrypoints(ctx *Context) (Entrypoints, error) {
-	activeEngineName, err := ctx.Cache.GetActiveEngine()
+	runtimeManifest, err := CurrentRuntimeManifest(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", LookingUpActiveEngine, err)
-	}
-	if activeEngineName == "" {
-		return nil, ErrNoActiveEngine
-	}
-	activeEngineManifest, err := engines.LoadManifest(ctx.EnginesDir, activeEngineName)
-	if err != nil {
-		return nil, fmt.Errorf("loading active engine manifest: %v", err)
-	}
-
-	// If the engine does not list a runtime, return no entrypoints
-	if activeEngineManifest.Runtime == "" {
-		return nil, nil
-	}
-
-	runtimeManifest, err := runtimes.LoadManifest(ctx.RuntimesDir, activeEngineManifest.Runtime)
-	if err != nil {
-		return nil, fmt.Errorf("loading runtime manifest: %v", err)
+		return nil, fmt.Errorf("loading runtime manifest: %w", err)
 	}
 
 	entrypoints := make(Entrypoints)
+	if runtimeManifest == nil {
+		return entrypoints, nil
+	}
 
 	for serverName, serverSettings := range runtimeManifest.Servers {
 		var entrypoint *Entrypoint
@@ -86,7 +71,7 @@ func ServerEntrypoints(ctx *Context) (Entrypoints, error) {
 			}
 		default:
 			return nil, fmt.Errorf("unsupported protocol %q for server %q in runtime %q",
-				serverSettings.Protocol, serverName, activeEngineManifest.Runtime)
+				serverSettings.Protocol, serverName, runtimeManifest.Name)
 		}
 		entrypoints[serverName] = *entrypoint
 	}
