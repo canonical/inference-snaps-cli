@@ -196,18 +196,15 @@ servers:
 			config := storage.NewMockConfig()
 
 			configs := map[string]string{
-				"http.port":        "8080",
-				"http.host":        "127.0.0.1",
-				"http.unix-socket": "/run/openai.sock",
-				"ws.port":          "8081",
-				"ws.host":          "127.0.0.1",
-				"ws.unix-socket":   "/run/openai.sock",
+				"http.port": "8080",
+				"http.host": "127.0.0.1",
+				"ws.port":   "8081",
+				"ws.host":   "127.0.0.1",
 				// namespaced configurations
-				"webui.http.port":         "8080",
-				"webui.http.host":         "192.0.2.1",
-				"logger.ws.port":          "9091",
-				"logger.ws.host":          "localhost",
-				"kserve.http.unix-socket": "/run/kserve.sock",
+				"webui.http.port": "8080",
+				"webui.http.host": "192.0.2.1",
+				"logger.ws.port":  "9091",
+				"logger.ws.host":  "localhost",
 			}
 
 			for key, value := range configs {
