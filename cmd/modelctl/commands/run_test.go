@@ -166,6 +166,38 @@ func TestWriteShareProviderEnv(t *testing.T) {
 		}
 	})
 
+	t.Run("openai server over unix socket", func(t *testing.T) {
+		t.Setenv("SNAP_NAME", "gemma3-jane")
+		t.Setenv("SNAP_INSTANCE_NAME", "gemma3-jane")
+
+		// OpenAiBaseUrl rejects an "openai" entrypoint that has no Url (e.g. a
+		// Unix socket entrypoint), so writeShareProviderEnv must not let that
+		// error abort the function before the UNIX_SOCKET entries are written.
+		path := t.TempDir()
+		cmd := runCommand{Context: testRunContext(t, "name: test\nservers:\n  openai:\n    protocol: http+unix\n    base-path: /v1\n"), shareProvider: path}
+		if err := cmd.writeShareProviderEnv(); err != nil {
+			t.Fatalf("writeShareProviderEnv() error = %v", err)
+		}
+
+		cachedShareProviderDirectory, err := cmd.Cache.GetSharedProviderDirectory()
+		if err != nil {
+			t.Fatalf("getting cached shared provider directory: %v", err)
+		}
+		if cachedShareProviderDirectory != path {
+			t.Fatalf("cached shared provider directory mismatch\nwant: %q\ngot:  %q", path, cachedShareProviderDirectory)
+		}
+
+		content, err := os.ReadFile(filepath.Join(path, "provider.env"))
+		if err != nil {
+			t.Fatalf("reading provider env file: %v", err)
+		}
+
+		want := "SNAP_NAME=gemma3-jane\nSNAP_INSTANCE_NAME=gemma3-jane\nUNIX_SOCKET=openai.sock\n"
+		if string(content) != want {
+			t.Fatalf("provider env contents mismatch\nwant: %q\ngot:  %q", want, string(content))
+		}
+	})
+
 	tests := []struct {
 		name       string
 		serverName string
@@ -211,7 +243,7 @@ func TestWriteShareProviderEnv(t *testing.T) {
 			t.Setenv("SNAP_NAME", "gemma3-jane")
 			t.Setenv("SNAP_INSTANCE_NAME", "gemma3-jane")
 
-			runtimeYAML := fmt.Sprintf("servers:\n  %s:\n    protocol: %s\n    base-path: /v1\n", tt.serverName, tt.protocol)
+			runtimeYAML := fmt.Sprintf("name: test-runtime\nservers:\n  %s:\n    protocol: %s\n    base-path: /v1\n", tt.serverName, tt.protocol)
 			if tt.namespace != "" {
 				runtimeYAML += fmt.Sprintf("    namespace: %s\n", tt.namespace)
 			}
