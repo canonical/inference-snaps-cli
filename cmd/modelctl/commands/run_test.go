@@ -169,7 +169,7 @@ func TestWriteShareProviderEnv(t *testing.T) {
 
 func TestNoActiveModel(t *testing.T) {
 	t.Run("no active model", func(t *testing.T) {
-		cmd := runCommand{Context: testRunContext(t, "")}
+		cmd := runCommand{Context: testRunContext(t, "name: test-runtime\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n")}
 		err := cmd.run(nil, []string{"echo", "Hello World!"})
 		if err == nil || err.Error() != "no active model" {
 			t.Fatalf("expected error 'no active model', got %v", err)
