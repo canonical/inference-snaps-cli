@@ -7,9 +7,7 @@ type mockCache struct {
 }
 
 func NewMockCache() Cache {
-	return &mockCache{
-		sharedProviderDirectory: "/tmp/share/provider",
-	}
+	return &mockCache{}
 }
 
 func (c *mockCache) SetActiveEngine(engine string) error {

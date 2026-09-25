@@ -2,6 +2,7 @@ package common
 
 import (
 	"errors"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -62,8 +63,8 @@ servers:
 				"webui":       "http://192.0.2.1:8080",
 			},
 			wantUnixSockets: map[string]string{
-				"openai-unix": "/tmp/share/provider/openai-unix.sock",
-				"kserve-unix": "/tmp/share/provider/kserve-unix.sock",
+				"openai-unix": "openai-unix.sock",
+				"kserve-unix": "kserve-unix.sock",
 			},
 			wantUnixSocketUrls: map[string]string{
 				"openai-unix": "http://unix/v1",
@@ -103,7 +104,7 @@ servers:
 				"openai-unix": "",
 			},
 			wantUnixSockets: map[string]string{
-				"openai-unix": "/tmp/share/provider/openai-unix.sock",
+				"openai-unix": "openai-unix.sock",
 			},
 			wantUnixSocketUrls: map[string]string{
 				"openai-unix": "ws://unix/v1",
@@ -147,7 +148,7 @@ servers:
 				"openai-unix": "",
 			},
 			wantUnixSockets: map[string]string{
-				"openai-unix": "/tmp/share/provider/openai-unix.sock",
+				"openai-unix": "openai-unix.sock",
 			},
 			wantUnixSocketUrls: map[string]string{
 				"openai-unix": "wss://unix/v1",
@@ -179,6 +180,7 @@ servers:
 
 			enginesDir := t.TempDir()
 			runtimesDir := t.TempDir()
+			shareProviderDir := t.TempDir()
 
 			const (
 				engineName  = "test-engine"
@@ -191,6 +193,9 @@ servers:
 			cache := storage.NewMockCache()
 			if err := cache.SetActiveEngine(engineName); err != nil {
 				t.Fatalf("SetActiveEngine: %v", err)
+			}
+			if err := cache.SetSharedProviderDirectory(shareProviderDir); err != nil {
+				t.Fatalf("SetSharedProviderDirectory: %v", err)
 			}
 
 			config := storage.NewMockConfig()
@@ -247,8 +252,8 @@ servers:
 				if !found {
 					t.Fatalf("missing entrypoint %q", name)
 				}
-				if entrypoint.UnixSocket != wantSocket {
-					t.Fatalf("entrypoint %q unix socket: got %q, want %q", name, entrypoint.UnixSocket, wantSocket)
+				if entrypoint.UnixSocket != filepath.Join(shareProviderDir, wantSocket) {
+					t.Fatalf("entrypoint %q unix socket: got %q, want %q", name, entrypoint.UnixSocket, filepath.Join(shareProviderDir, wantSocket))
 				}
 			}
 			for name, wantSocketURL := range tc.wantUnixSocketUrls {
@@ -347,7 +352,7 @@ func TestServerHttpUnixSocketEntrypoint(t *testing.T) {
 	testCases := []struct {
 		name           string
 		server         runtimes.Server
-		wantSocketPath string
+		wantSocketName string
 		wantSocketURL  string
 	}{
 		{
@@ -356,7 +361,7 @@ func TestServerHttpUnixSocketEntrypoint(t *testing.T) {
 				Protocol: "http+unix",
 				BasePath: "/v1",
 			},
-			wantSocketPath: "/tmp/share/provider/http unix default namespace.sock",
+			wantSocketName: "http unix default namespace.sock",
 			wantSocketURL:  "http://unix/v1",
 		},
 		{
@@ -366,7 +371,7 @@ func TestServerHttpUnixSocketEntrypoint(t *testing.T) {
 				BasePath:  "/api/v2",
 				Namespace: "proxy",
 			},
-			wantSocketPath: "/tmp/share/provider/http unix with namespace.sock",
+			wantSocketName: "http unix with namespace.sock",
 			wantSocketURL:  "http://unix/api/v2",
 		},
 	}
@@ -375,6 +380,10 @@ func TestServerHttpUnixSocketEntrypoint(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			config := storage.NewMockConfig()
 			cache := storage.NewMockCache()
+
+			shareProviderDir := t.TempDir()
+			cache.SetSharedProviderDirectory(shareProviderDir)
+
 			ctx := &Context{
 				Config: config,
 				Cache:  cache,
@@ -390,8 +399,8 @@ func TestServerHttpUnixSocketEntrypoint(t *testing.T) {
 			if got.Url != "" {
 				t.Fatalf("URL: got %q, want empty", got.Url)
 			}
-			if got.UnixSocket != tc.wantSocketPath {
-				t.Fatalf("UnixSocket: got %q, want %q", got.UnixSocket, tc.wantSocketPath)
+			if got.UnixSocket != filepath.Join(shareProviderDir, tc.wantSocketName) {
+				t.Fatalf("UnixSocket: got %q, want %q", got.UnixSocket, filepath.Join(shareProviderDir, tc.wantSocketName))
 			}
 			if got.UnixSocketUrl != tc.wantSocketURL {
 				t.Fatalf("UnixSocketUrl: got %q, want %q", got.UnixSocketUrl, tc.wantSocketURL)
@@ -478,7 +487,7 @@ func TestServerWsUnixSocketEntrypoint(t *testing.T) {
 	testCases := []struct {
 		name           string
 		server         runtimes.Server
-		wantSocketPath string
+		wantSocketName string
 		wantSocketURL  string
 	}{
 		{
@@ -487,7 +496,7 @@ func TestServerWsUnixSocketEntrypoint(t *testing.T) {
 				Protocol: "ws+unix",
 				BasePath: "/v1",
 			},
-			wantSocketPath: "/tmp/share/provider/ws unix default namespace.sock",
+			wantSocketName: "ws unix default namespace.sock",
 			wantSocketURL:  "ws://unix/v1",
 		},
 		{
@@ -497,7 +506,7 @@ func TestServerWsUnixSocketEntrypoint(t *testing.T) {
 				BasePath:  "/api/stream",
 				Namespace: "proxy",
 			},
-			wantSocketPath: "/tmp/share/provider/ws unix with namespace.sock",
+			wantSocketName: "ws unix with namespace.sock",
 			wantSocketURL:  "ws://unix/api/stream",
 		},
 	}
@@ -506,6 +515,10 @@ func TestServerWsUnixSocketEntrypoint(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			config := storage.NewMockConfig()
 			cache := storage.NewMockCache()
+
+			shareProviderDir := t.TempDir()
+			cache.SetSharedProviderDirectory(shareProviderDir)
+
 			ctx := &Context{
 				Config: config,
 				Cache:  cache,
@@ -521,8 +534,8 @@ func TestServerWsUnixSocketEntrypoint(t *testing.T) {
 			if got.Url != "" {
 				t.Fatalf("URL: got %q, want empty", got.Url)
 			}
-			if got.UnixSocket != tc.wantSocketPath {
-				t.Fatalf("UnixSocket: got %q, want %q", got.UnixSocket, tc.wantSocketPath)
+			if got.UnixSocket != filepath.Join(shareProviderDir, tc.wantSocketName) {
+				t.Fatalf("UnixSocket: got %q, want %q", got.UnixSocket, filepath.Join(shareProviderDir, tc.wantSocketName))
 			}
 			if got.UnixSocketUrl != tc.wantSocketURL {
 				t.Fatalf("UnixSocketUrl: got %q, want %q", got.UnixSocketUrl, tc.wantSocketURL)
