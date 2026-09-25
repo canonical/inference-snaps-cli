@@ -134,14 +134,23 @@ func (cmd *runCommand) writeShareProviderEnv() error {
 	}
 
 	providerEnvPath := filepath.Join(cmd.shareProvider, "provider.env")
-	content := "SNAP_NAME=" + snap.SnapName() + "\n"
-	content += "SNAP_INSTANCE_NAME=" + snap.InstanceName() + "\n"
+	var content strings.Builder
+
+	content.WriteString("SNAP_NAME=")
+	content.WriteString(snap.SnapName())
+	content.WriteString("\n")
+
+	content.WriteString("SNAP_INSTANCE_NAME=")
+	content.WriteString(snap.InstanceName())
+	content.WriteString("\n")
 
 	baseURL, err := common.OpenAiBaseUrl(cmd.Context)
 	if err != nil && !errors.Is(err, common.ErrNoOpenAiServer) {
 		return fmt.Errorf("getting OpenAI base URL: %v", err)
 	} else if err == nil {
-		content += "OPENAI_BASE_URL=" + baseURL + "\n"
+		content.WriteString("OPENAI_BASE_URL=")
+		content.WriteString(baseURL)
+		content.WriteString("\n")
 	}
 
 	runtime, err := common.CurrentRuntimeManifest(cmd.Context)
@@ -151,18 +160,20 @@ func (cmd *runCommand) writeShareProviderEnv() error {
 	if runtime != nil {
 		for serverName, server := range runtime.Servers {
 			if server.IsUnixProtocol() {
-				key := "UNIX_SOCKET"
+				content.WriteString("UNIX_SOCKET")
 				if server.Namespace != "" {
-					key += "_" + strings.ToUpper(server.Namespace)
+					content.WriteString("_")
+					content.WriteString(strings.ToUpper(server.Namespace))
 				}
-				unixSocket := serverName + ".sock"
-				content += fmt.Sprintf("%s=%s\n", key, unixSocket)
+				content.WriteString("=")
+				content.WriteString(serverName)
+				content.WriteString(".sock\n")
 			}
 		}
 	}
 
 	tmpPath := providerEnvPath + ".tmp"
-	if err := os.WriteFile(tmpPath, []byte(content), 0o644); err != nil {
+	if err := os.WriteFile(tmpPath, []byte(content.String()), 0o644); err != nil {
 		return fmt.Errorf("writing provider env file: %v", err)
 	}
 	if err := os.Rename(tmpPath, providerEnvPath); err != nil {
