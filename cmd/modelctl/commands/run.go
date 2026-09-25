@@ -163,7 +163,7 @@ func (cmd *runCommand) writeShareProviderEnv() error {
 				content.WriteString("UNIX_SOCKET")
 				if server.Namespace != "" {
 					content.WriteString("_")
-					content.WriteString(strings.ToUpper(server.Namespace))
+					content.WriteString(strings.ReplaceAll(strings.ToUpper(server.Namespace), "-", "_"))
 				}
 				content.WriteString("=")
 				content.WriteString(serverName)
