@@ -32,7 +32,7 @@ const (
 	cacheKeyPrefix             = "cache."
 	activeEngineKey            = cacheKeyPrefix + "active-engine"
 	activeModelKey             = cacheKeyPrefix + "active-model"
-	sharedProviderDirectoryKey = cacheKeyPrefix + "shared-provider"
+	sharedProviderDirectoryKey = cacheKeyPrefix + "shared-provider-dir"
 )
 
 func (c *cache) SetSharedProviderDirectory(path string) error {
