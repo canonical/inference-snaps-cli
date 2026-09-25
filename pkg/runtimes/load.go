@@ -38,7 +38,7 @@ func LoadManifests(manifestsDir string) ([]Manifest, error) {
 			return nil, fmt.Errorf("malformed manifest %s: %v", fileName, err)
 		}
 
-		if err := manifest.validate(""); err != nil {
+		if err := manifest.validate(runtimeDir.Name()); err != nil {
 			return nil, fmt.Errorf("invalid manifest %s: %v", fileName, err)
 		}
 
@@ -66,7 +66,7 @@ func LoadManifest(manifestsDir, runtimeName string) (*Manifest, error) {
 		return nil, fmt.Errorf("malformed manifest %s: %v", fileName, err)
 	}
 
-	if err := manifest.validate(""); err != nil {
+	if err := manifest.validate(runtimeName); err != nil {
 		return nil, fmt.Errorf("invalid manifest %s: %v", fileName, err)
 	}
 

@@ -112,7 +112,7 @@ func TestWriteShareProviderEnv(t *testing.T) {
 		t.Setenv("SNAP_INSTANCE_NAME", "gemma3-jane")
 
 		path := filepath.Join(t.TempDir(), "custom")
-		cmd := runCommand{Context: testRunContext(t, "name: test\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n"), shareProvider: path}
+		cmd := runCommand{Context: testRunContext(t, "name: test-runtime\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n"), shareProvider: path}
 		if err := cmd.writeShareProviderEnv(); err != nil {
 			t.Fatalf("writeShareProviderEnv() error = %v", err)
 		}
