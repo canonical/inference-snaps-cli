@@ -26,9 +26,6 @@ type ModelDetails struct {
 	Components []string `json:"components" yaml:"components"`
 
 	CompatibleEngines []string `json:"compatible-engines,omitempty" yaml:"compatible-engines,omitempty"`
-
-	Compatible          bool     `json:"compatible,omitempty" yaml:"compatible,omitempty"`
-	CompatibilityIssues []string `json:"compatibility-issues,omitempty" yaml:"compatibility-issues,omitempty"`
 }
 
 func NewModelDetails(manifest *models.Manifest) (ModelDetails, error) {
@@ -50,14 +47,6 @@ func NewModelDetails(manifest *models.Manifest) (ModelDetails, error) {
 	modelDetails.DiskSize = utils.FmtBytesShort(diskSizeBytes)
 
 	return modelDetails, nil
-}
-
-func (m *ModelDetails) fillIncompatibilityIssues(report models.CompatibilityReport) {
-	var issues []string
-	if !report.CompatibleDisk {
-		issues = append(issues, "insufficient disk space")
-	}
-	m.CompatibilityIssues = issues
 }
 
 func GetModelManifestByNameOrAlias(ctx *Context, modelName string) (*models.Manifest, error) {
@@ -230,6 +219,8 @@ func ScoreModels(modelOptions []string, manifests map[string]models.Manifest, ma
 	return scoredModels, nil
 }
 
+// SelectModel picks a model that fits the available disk: the preferred one if it fits, otherwise the largest fitting model.
+// Returns ErrInsufficientDiskSpaceForModel when none fit.
 func SelectModel(ctx *Context, modelOptions []string, preferredModel string, machineInfo *machine.MachineInfo) (string, []models.ScoredManifest, error) {
 	modelManifests, err := models.LoadManifests(ctx.ModelsDir)
 	if err != nil {
@@ -254,15 +245,9 @@ func SelectModel(ctx *Context, modelOptions []string, preferredModel string, mac
 	}
 
 	selected := ""
-	var selectedSize uint64
-	smallestModel := ""
-	smallestSize := ^uint64(0)
+	selectedSize := uint64(0)
 	for _, model := range scoredModels {
 		size := model.CompatibilityReport.RequiredDiskSpace
-		if size < smallestSize {
-			smallestModel = model.Name
-			smallestSize = size
-		}
 		if model.CompatibilityReport.CompatibleDisk && (selected == "" || size > selectedSize) {
 			selected = model.Name
 			selectedSize = size
@@ -272,10 +257,8 @@ func SelectModel(ctx *Context, modelOptions []string, preferredModel string, mac
 	if selected != "" {
 		return selected, scoredModels, nil
 	}
-	if smallestModel != "" {
-		return smallestModel, scoredModels, utils.ErrInsufficientDiskSpaceForModel
-	}
-	return "", scoredModels, fmt.Errorf("no model options available")
+
+	return "", scoredModels, utils.ErrInsufficientDiskSpaceForModel
 }
 
 func availableDiskSpace(machineInfo *machine.MachineInfo) (uint64, error) {

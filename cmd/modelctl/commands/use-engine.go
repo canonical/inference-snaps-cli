@@ -103,6 +103,13 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 		return err
 	} else {
 		if len(args) == 1 {
+			observable, err := cmd.Snap.HardwareObservable()
+			if err != nil {
+				return fmt.Errorf("checking hardware observability: %v", err)
+			}
+			if !observable {
+				return cmd.switchEngineWithMachineInfo(args[0], nil)
+			}
 			machineInfo, _, err := machine.Get(host.Real(), true)
 			if err != nil {
 				return fmt.Errorf("getting machine info: %v", err)
@@ -214,9 +221,7 @@ func (cmd *useEngineCommand) switchEngineWithMachineInfo(engineName string, mach
 		if cmd.auto {
 			cmd.printScoredModels(scoredModels, newModelID)
 		}
-		if err == utils.ErrInsufficientDiskSpaceForModel {
-			return cmd.switchEngineAndModel(engineName, "")
-		} else if err != nil {
+		if err != nil && err != utils.ErrInsufficientDiskSpaceForModel {
 			return fmt.Errorf("selecting model: %v", err)
 		}
 	}
