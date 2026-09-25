@@ -126,7 +126,7 @@ func (cmd *runCommand) writeShareProviderEnv() error {
 		return fmt.Errorf("creating provider env directory: %v", err)
 	}
 
-	if err := cmd.Context.Cache.SetSharedProviderDirectory(cmd.shareProvider); err != nil {
+	if err := cmd.Cache.SetSharedProviderDirectory(cmd.shareProvider); err != nil {
 		return fmt.Errorf("saving shared provider directory: %v", err)
 	}
 

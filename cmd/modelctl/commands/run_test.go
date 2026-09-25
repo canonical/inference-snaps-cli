@@ -86,7 +86,7 @@ func TestWriteShareProviderEnv(t *testing.T) {
 			t.Fatalf("writeShareProviderEnv() error = %v", err)
 		}
 
-		cachedShareProviderDirectory, err := cmd.Context.Cache.GetSharedProviderDirectory()
+		cachedShareProviderDirectory, err := cmd.Cache.GetSharedProviderDirectory()
 		if err != nil {
 			t.Fatalf("getting cached shared provider directory: %v", err)
 		}
@@ -116,7 +116,7 @@ func TestWriteShareProviderEnv(t *testing.T) {
 			t.Fatalf("writeShareProviderEnv() error = %v", err)
 		}
 
-		cachedShareProviderDirectory, err := cmd.Context.Cache.GetSharedProviderDirectory()
+		cachedShareProviderDirectory, err := cmd.Cache.GetSharedProviderDirectory()
 		if err != nil {
 			t.Fatalf("getting cached shared provider directory: %v", err)
 		}
@@ -145,7 +145,7 @@ func TestWriteShareProviderEnv(t *testing.T) {
 			t.Fatalf("writeShareProviderEnv() error = %v", err)
 		}
 
-		cachedShareProviderDirectory, err := cmd.Context.Cache.GetSharedProviderDirectory()
+		cachedShareProviderDirectory, err := cmd.Cache.GetSharedProviderDirectory()
 		if err != nil {
 			t.Fatalf("getting cached shared provider directory: %v", err)
 		}
