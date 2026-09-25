@@ -50,7 +50,7 @@ func Run(ctx *common.Context) *cobra.Command {
 	cobraCmd.Flags().MarkDeprecated("wait-for-components", "\"run\" always waits for components.")
 	// --share-provider [path]
 	cobraCmd.Flags().StringVar(&cmd.shareProvider, "share-provider", "", "write provider env file to a shared directory")
-	cobraCmd.Flags().Lookup("share-provider").NoOptDefVal = defaultProviderDirectoryPath()
+	cobraCmd.Flags().Lookup("share-provider").NoOptDefVal = cmd.defaultProviderDirectoryPath()
 
 	return cobraCmd
 }
@@ -113,7 +113,7 @@ func (cmd *runCommand) processEnvConfigs() error {
 	return nil
 }
 
-func defaultProviderDirectoryPath() string {
+func (cmd *runCommand) defaultProviderDirectoryPath() string {
 	return os.ExpandEnv(constants.DefaultShareProviderPath)
 }
 
