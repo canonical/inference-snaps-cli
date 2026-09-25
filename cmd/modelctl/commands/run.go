@@ -144,6 +144,23 @@ func (cmd *runCommand) writeShareProviderEnv() error {
 		content += "OPENAI_BASE_URL=" + baseURL + "\n"
 	}
 
+	runtime, err := common.CurrentRuntimeManifest(cmd.Context)
+	if err != nil {
+		return fmt.Errorf("getting current runtime manifest: %v", err)
+	}
+	if runtime != nil {
+		for serverName, server := range runtime.Servers {
+			if server.IsUnixProtocol() {
+				key := "UNIX_SOCKET"
+				if server.Namespace != "" {
+					key += "_" + strings.ToUpper(server.Namespace)
+				}
+				unixSocket := serverName + ".sock"
+				content += fmt.Sprintf("%s=%s\n", key, unixSocket)
+			}
+		}
+	}
+
 	tmpPath := providerEnvPath + ".tmp"
 	if err := os.WriteFile(tmpPath, []byte(content), 0o644); err != nil {
 		return fmt.Errorf("writing provider env file: %v", err)
