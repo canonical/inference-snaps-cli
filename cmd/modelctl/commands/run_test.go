@@ -174,7 +174,7 @@ func TestWriteShareProviderEnv(t *testing.T) {
 		// Unix socket entrypoint), so writeShareProviderEnv must not let that
 		// error abort the function before the UNIX_SOCKET entries are written.
 		path := t.TempDir()
-		cmd := runCommand{Context: testRunContext(t, "name: test\nservers:\n  openai:\n    protocol: http+unix\n    base-path: /v1\n"), shareProvider: path}
+		cmd := runCommand{Context: testRunContext(t, "name: test-runtime\nservers:\n  openai:\n    protocol: http+unix\n    base-path: /v1\n"), shareProvider: path}
 		if err := cmd.writeShareProviderEnv(); err != nil {
 			t.Fatalf("writeShareProviderEnv() error = %v", err)
 		}
