@@ -81,7 +81,8 @@ func TestWriteShareProviderEnv(t *testing.T) {
 		t.Setenv("SNAP_INSTANCE_NAME", "gemma3-jane")
 		expectedProviderDir := os.ExpandEnv("$SNAP_COMMON/share/provider")
 
-		cmd := runCommand{Context: testRunContext(t, "name: test-runtime\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n"), shareProvider: defaultProviderDirectoryPath()}
+		cmd := runCommand{Context: testRunContext(t, "name: test-runtime\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n")}
+		cmd.shareProvider = cmd.defaultProviderDirectoryPath()
 		if err := cmd.writeShareProviderEnv(); err != nil {
 			t.Fatalf("writeShareProviderEnv() error = %v", err)
 		}
@@ -140,7 +141,7 @@ func TestWriteShareProviderEnv(t *testing.T) {
 		t.Setenv("SNAP_INSTANCE_NAME", "gemma3-jane")
 
 		path := t.TempDir()
-		cmd := runCommand{Context: testRunContext(t, "name: test\nservers:\n  kserve:\n    protocol: http\n    base-path: /v2\n"), shareProvider: path}
+		cmd := runCommand{Context: testRunContext(t, "name: test-runtime\nservers:\n  kserve:\n    protocol: http\n    base-path: /v2\n"), shareProvider: path}
 		if err := cmd.writeShareProviderEnv(); err != nil {
 			t.Fatalf("writeShareProviderEnv() error = %v", err)
 		}
