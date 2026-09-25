@@ -567,7 +567,7 @@ func TestOpenAiBaseUrl(t *testing.T) {
 		{
 			name: "openai server present",
 			runtimeYAML: `
-name: test
+name: test-runtime
 servers:
   openai:
     protocol: http
@@ -578,7 +578,7 @@ servers:
 		{
 			name: "no openai server",
 			runtimeYAML: `
-name: test
+name: test-runtime
 servers:
   kserve:
     protocol: http

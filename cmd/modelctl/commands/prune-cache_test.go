@@ -83,7 +83,7 @@ model:
   - model-a
   - model-b
 `)
-	writeFile(filepath.Join(root, "runtimes", "active-runtime", "runtime.yaml"), `name: test
+	writeFile(filepath.Join(root, "runtimes", "active-runtime", "runtime.yaml"), `name: active-runtime
 servers:
   openai:
     protocol: http
@@ -93,7 +93,7 @@ components:
 `)
 	// inactive-runtime also lists active-runtime-comp to exercise the
 	// "required by active selection → must be excluded" path.
-	writeFile(filepath.Join(root, "runtimes", "inactive-runtime", "runtime.yaml"), `name: test
+	writeFile(filepath.Join(root, "runtimes", "inactive-runtime", "runtime.yaml"), `name: inactive-runtime
 servers:
   openai:
     protocol: http
