@@ -2,13 +2,15 @@ package common
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 )
 
 // PromptYN prompts the user and returns true for 'y', false for 'n'.
-func PromptYN(prompt string, defaultResponse bool) bool {
+func PromptYN(prompt string, defaultResponse bool) (bool, error) {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
@@ -19,22 +21,33 @@ func PromptYN(prompt string, defaultResponse bool) bool {
 		}
 
 		input, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Printf("Error reading input: %v\n", err)
-			continue
+		eof := errors.Is(err, io.EOF)
+		if err != nil && !eof {
+			return false, fmt.Errorf("%w: %v", ErrPromptUnanswerable, err)
 		}
 
-		input = strings.ToLower(strings.TrimSpace(input))
-		switch input {
+		// At EOF the read may still carry a final line without a trailing
+		// newline. Honour that answer, but never fall back to the default or
+		// loop again, since no further input can arrive.
+		switch strings.ToLower(strings.TrimSpace(input)) {
+		case "y":
+			return true, nil
+		case "n":
+			return false, nil
 		case "": // default on empty input
-			return defaultResponse
-		case "Y", "y":
-			return true
-		case "N", "n":
-			return false
+			if !eof {
+				return defaultResponse, nil
+			}
 		default:
-			fmt.Println(`Invalid input. Please enter "y" or "n".`)
+			if !eof {
+				fmt.Println(`Invalid input. Please enter "y" or "n".`)
+				continue
+			}
 		}
+
+		// Only reachable at EOF: there is no answer and none can arrive.
+		fmt.Println()
+		return false, ErrPromptUnanswerable
 	}
 }
 
@@ -54,11 +67,25 @@ func PromptlnEnter(action string) bool {
 }
 
 func PromptRestartToApplyChanges(ctx *Context, assumeYes bool) error {
-	msg := fmt.Sprintf("Restart %s to apply the changes?", ctx.Snap.InstanceName())
-	if assumeYes || PromptYN(msg, true) {
-		if err := ctx.Snap.Restart(); err != nil {
-			return fmt.Errorf("restarting snap: %v", err)
+	if !assumeYes {
+		msg := fmt.Sprintf("Restart %s to apply the changes?", ctx.Snap.InstanceName())
+		restart, err := PromptYN(msg, true)
+		if err != nil {
+			// The configuration has already been written. Skipping the restart
+			// silently would leave the stored configuration and the running
+			// service diverged while still reporting success, so report it.
+			return fmt.Errorf(
+				"configuration was changed but %s was not restarted, so it is not yet in effect: %w",
+				ctx.Snap.InstanceName(), err,
+			)
 		}
+		if !restart {
+			return nil
+		}
+	}
+
+	if err := ctx.Snap.Restart(); err != nil {
+		return fmt.Errorf("restarting snap: %v", err)
 	}
 	return nil
 }
