@@ -16,7 +16,8 @@ func TestStatusStruct(t *testing.T) {
 	writeEngineYAML(t, enginesDir, "my-engine", `name: my-engine
 runtime: my-runtime
 `)
-	writeRuntimeYAML(t, runtimesDir, "my-runtime", `servers:
+	writeRuntimeYAML(t, runtimesDir, "my-runtime", `name: my-runtime
+servers:
   openai:
     protocol: http
     base-path: /v1
@@ -58,8 +59,8 @@ runtime: my-runtime
 	if status.Entrypoints["openai"].Url != "http://127.0.0.1:8080/v1" {
 		t.Errorf("openai entrypoint URL: got %q, want %q", status.Entrypoints["openai"].Url, "http://127.0.0.1:8080/v1")
 	}
-	if status.Model["name"] != "my-model" {
-		t.Errorf("model name: got %q, want %q", status.Model["name"], "my-model")
+	if status.Model == nil || (*status.Model)["name"] != "my-model" {
+		t.Errorf("model name: got %v, want %q", status.Model, "my-model")
 	}
 }
 

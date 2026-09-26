@@ -16,12 +16,14 @@ import (
 
 // errCache is a storage.Cache that returns errors from the specified methods.
 type errCache struct {
-	failGetEngine bool
-	failGetModel  bool
+	failGetEngine                  bool
+	failGetModel                   bool
+	failGetSharedProviderDirectory bool
 }
 
-func (c *errCache) SetActiveEngine(string) error { return nil }
-func (c *errCache) SetActiveModel(string) error  { return nil }
+func (c *errCache) SetActiveEngine(string) error            { return nil }
+func (c *errCache) SetActiveModel(string) error             { return nil }
+func (c *errCache) SetSharedProviderDirectory(string) error { return nil }
 func (c *errCache) GetActiveEngine() (string, error) {
 	if c.failGetEngine {
 		return "", errors.New("cache error: GetActiveEngine")
@@ -33,6 +35,12 @@ func (c *errCache) GetActiveModel() (string, error) {
 		return "", errors.New("cache error: GetActiveModel")
 	}
 	return "test-model", nil
+}
+func (c *errCache) GetSharedProviderDirectory() (string, error) {
+	if c.failGetSharedProviderDirectory {
+		return "", errors.New("cache error: GetSharedProviderDirectory")
+	}
+	return "/tmp/shared", nil
 }
 
 // writeFile writes content to path, creating all parent directories.
@@ -81,7 +89,12 @@ func setupEngineContext(t *testing.T, runtimeEnv, modelEnv []string, runtimeLayo
 		"name: test-engine\nruntime: test-runtime\n")
 
 	// Runtime manifest
-	runtimeYAML := "servers: {}\n"
+	runtimeYAML := `name: test-runtime
+servers:
+  openai:
+    protocol: http
+    base-path: /v1
+`
 	if len(runtimeEnv) > 0 {
 		runtimeYAML += "environment:\n"
 		for _, e := range runtimeEnv {
@@ -274,7 +287,7 @@ func TestEngineSettingsNoActiveModel(t *testing.T) {
 	writeFile(t, filepath.Join(enginesDir, "test-engine", "engine.yaml"),
 		"name: test-engine\nruntime: test-runtime\n")
 	writeFile(t, filepath.Join(runtimesDir, "test-runtime", "runtime.yaml"),
-		"servers: {}\n")
+		"name: test-runtime\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n")
 
 	cache := storage.NewMockCache()
 	_ = cache.SetActiveEngine("test-engine")
@@ -540,7 +553,7 @@ func TestEngineSettingsCacheErrorOnGetModel(t *testing.T) {
 	writeFile(t, filepath.Join(enginesDir, "test-engine", "engine.yaml"),
 		"name: test-engine\nruntime: test-runtime\n")
 	writeFile(t, filepath.Join(runtimesDir, "test-runtime", "runtime.yaml"),
-		"servers: {}\n")
+		"name: test-runtime\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n")
 
 	ctx := &Context{
 		EnginesDir:  enginesDir,
@@ -702,7 +715,7 @@ func TestScoreEnginesLoadManifestsError(t *testing.T) {
 		Config:     storage.NewMockConfig(),
 		Cache:      storage.NewMockCache(),
 	}
-	_, _, err := ScoreEngines(ctx)
+	_, _, _, err := ScoreEngines(ctx)
 	if err == nil {
 		t.Fatal("expected error from missing engines dir")
 	}
@@ -721,7 +734,7 @@ func TestScoreEnginesMachineInfoError(t *testing.T) {
 		Config:     storage.NewMockConfig(),
 		Cache:      storage.NewMockCache(),
 	}
-	_, _, err := ScoreEngines(ctx)
+	_, _, _, err := ScoreEngines(ctx)
 	if err == nil || !strings.Contains(err.Error(), "hw error") {
 		t.Fatalf("expected hw error, got: %v", err)
 	}
@@ -746,7 +759,7 @@ func TestScoreEnginesScorerError(t *testing.T) {
 		Config:     storage.NewMockConfig(),
 		Cache:      storage.NewMockCache(),
 	}
-	_, _, err := ScoreEngines(ctx)
+	_, _, _, err := ScoreEngines(ctx)
 	if err == nil || !strings.Contains(err.Error(), "scorer error") {
 		t.Fatalf("expected scorer error, got: %v", err)
 	}
@@ -776,7 +789,7 @@ func TestScoreEnginesSuccess(t *testing.T) {
 		Config:     storage.NewMockConfig(),
 		Cache:      storage.NewMockCache(),
 	}
-	scored, warnings, err := ScoreEngines(ctx)
+	scored, _, warnings, err := ScoreEngines(ctx)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -809,7 +822,7 @@ func TestScoreEnginesWithSpinnerSuccess(t *testing.T) {
 		Config:     storage.NewMockConfig(),
 		Cache:      storage.NewMockCache(),
 	}
-	_, err := ScoreEnginesWithSpinner(ctx)
+	_, _, err := ScoreEnginesWithSpinner(ctx)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -835,7 +848,7 @@ func TestScoreEnginesWithSpinnerVerboseWarnings(t *testing.T) {
 		Cache:      storage.NewMockCache(),
 		Verbose:    true,
 	}
-	_, err := ScoreEnginesWithSpinner(ctx)
+	_, _, err := ScoreEnginesWithSpinner(ctx)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
