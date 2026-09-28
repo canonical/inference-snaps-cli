@@ -3,12 +3,14 @@ package common
 import (
 	"fmt"
 	"slices"
+	"strconv"
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/constants"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
 	"github.com/canonical/lscompute/pkg/machine"
+	"github.com/canonical/lscompute/pkg/machine/device/pci"
 )
 
 type ModelDetails struct {
@@ -186,6 +188,11 @@ func ScoreModels(modelOptions []string, manifests map[string]models.Manifest, ma
 		return nil, err
 	}
 
+	availableMemory, err := availableMemory(machineInfo)
+	if err != nil {
+		return nil, err
+	}
+
 	scoredModels := make([]models.ScoredManifest, 0, len(modelOptions))
 	for _, modelID := range modelOptions {
 		manifest, ok := manifests[modelID]
@@ -268,4 +275,32 @@ func availableDiskSpace(machine *machine.Machine) (uint64, error) {
 		}
 	}
 	return 0, fmt.Errorf("disk information unavailable for %s", constants.SnapStoragePath)
+}
+
+func availableMemory(machineInfo *machine.MachineInfo) (uint64, error) {
+	var vram string = "-1"
+	for _, d := range machineInfo.Devices {
+		device, ok := d.(pci.Device)
+		if !ok {
+			continue
+		}
+		if device.IsGpu() {
+			vram, ok := machineInfo.Devices[device].AdditionalProperties["vram"]
+			if !ok {
+				vram = "-1"
+			}
+		}
+	}
+	if vram == "-1" {
+		return machineInfo.Memory.TotalRam + machineInfo.Memory.totalSwap, nil
+	} else if vram == "[N/A]" {
+		// assuming unified memory
+		return machineInfo.Memory.TotalRam + machineInfo.Memory.totalSwap, nil
+	} else {
+		vramVal, err := strconv.ParseUint(vram, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return vramVal, nil
+	}
 }
