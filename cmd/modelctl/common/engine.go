@@ -39,7 +39,7 @@ func CurrentRuntimeManifest(ctx *Context) (*runtimes.Manifest, error) {
 	}
 
 	if activeEngineManifest.Runtime == "" {
-		return nil, ErrNoActiveRuntime
+		return nil, ErrEngineNoRuntime
 	}
 
 	runtimeManifest, err := runtimes.LoadManifest(ctx.RuntimesDir, activeEngineManifest.Runtime)

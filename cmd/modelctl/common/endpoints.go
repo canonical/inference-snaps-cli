@@ -36,7 +36,7 @@ func (e Entrypoint) MarshalYAML() (any, error) {
 func ServerEntrypoints(ctx *Context) (Entrypoints, error) {
 	runtimeManifest, err := CurrentRuntimeManifest(ctx)
 	if err != nil {
-		if err == ErrNoActiveRuntime {
+		if err == ErrEngineNoRuntime {
 			return Entrypoints{}, nil
 		}
 		return nil, fmt.Errorf("loading runtime manifest: %w", err)

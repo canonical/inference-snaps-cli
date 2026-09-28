@@ -154,7 +154,7 @@ func (cmd *runCommand) writeShareProviderEnv() error {
 	}
 
 	runtime, err := common.CurrentRuntimeManifest(cmd.Context)
-	if err != nil && !errors.Is(err, common.ErrNoActiveRuntime) {
+	if err != nil && !errors.Is(err, common.ErrEngineNoRuntime) {
 		return fmt.Errorf("getting current runtime manifest: %v", err)
 	}
 	for serverName, server := range runtime.Servers {

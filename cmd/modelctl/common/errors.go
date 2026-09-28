@@ -6,7 +6,7 @@ import "errors"
 var (
 	ErrPermissionDenied              = errors.New("permission denied, try again with sudo")
 	ErrNoActiveEngine                = errors.New("no active engine")
-	ErrNoActiveRuntime               = errors.New("no active runtime")
+	ErrEngineNoRuntime               = errors.New("engine has no runtime")
 	ErrNoActiveModel                 = errors.New("no active model")
 	ErrNoOpenAiServer                = errors.New("no OpenAI server available")
 	ErrOpenAiServerNoUrl             = errors.New("openai server has no URL")
