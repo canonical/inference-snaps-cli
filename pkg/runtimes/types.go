@@ -7,11 +7,12 @@ import (
 )
 
 type Manifest struct {
-	Name        string                    `json:"name" yaml:"name"`
-	Servers     map[string]Server         `json:"servers" yaml:"servers"`
-	Environment []string                  `json:"environment" yaml:"environment"`
-	Layout      map[string]engines.Layout `yaml:"layout"`
-	Components  []string                  `json:"components" yaml:"components"`
+	Name           string                    `json:"name" yaml:"name"`
+	Servers        map[string]Server         `json:"servers" yaml:"servers"`
+	Environment    []string                  `json:"environment" yaml:"environment"`
+	Layout         map[string]engines.Layout `yaml:"layout"`
+	Components     []string                  `json:"components" yaml:"components"`
+	RequiredMemory string                    `json:"memory" yaml:"memory"`
 }
 
 type Server struct {
