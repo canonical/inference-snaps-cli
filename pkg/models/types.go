@@ -25,6 +25,9 @@ type CompatibilityReport struct {
 	CompatibleDisk     bool
 	RequiredDiskSpace  uint64
 	AvailableDiskSpace uint64
+	CompatibleMemory   bool
+	RequiredMemory     uint64
+	AvailableMemory    uint64
 }
 
 type ScoredManifest struct {
@@ -43,7 +46,8 @@ type Manifest struct {
 	Quantization string   `json:"quantization" yaml:"quantization"`
 	Capabilities []string `json:"capabilities" yaml:"capabilities"`
 
-	DiskSize string `json:"disk-size" yaml:"disk-size"`
+	DiskSize    string `json:"disk-size" yaml:"disk-size"`
+	KVCacheSize string `json:"kv-cache-size" yaml:"kv-cache-size"`
 
 	Components []string `json:"components" yaml:"components"`
 

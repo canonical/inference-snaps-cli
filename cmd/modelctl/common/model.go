@@ -8,9 +8,9 @@ import (
 	"github.com/canonical/inference-snaps-cli/v2/pkg/constants"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/runtimes"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
 	"github.com/canonical/lscompute/pkg/machine"
-	"github.com/canonical/lscompute/pkg/machine/device/pci"
 )
 
 type ModelDetails struct {
@@ -182,15 +182,25 @@ func GetAllModels(ctx *Context) ([]ModelDetails, error) {
 	return allModelsWithEngines, nil
 }
 
-func ScoreModels(modelOptions []string, manifests map[string]models.Manifest, machine *machine.Machine) ([]models.ScoredManifest, error) {
+func ScoreModels(modelOptions []string, manifests map[string]models.Manifest, machine *machine.Machine, runtimeManifest *runtimes.Manifest) ([]models.ScoredManifest, error) {
 	availableDiskSpace, err := availableDiskSpace(machine)
 	if err != nil {
 		return nil, err
 	}
 
-	availableMemory, err := availableMemory(machineInfo)
+	availableMemory, err := availableMemory(machine)
 	if err != nil {
 		return nil, err
+	}
+
+	var runtimeMemory uint64
+	if runtimeManifest.RequiredMemory != "" {
+		runtimeMemory, err = utils.StringToBytes(runtimeManifest.RequiredMemory)
+		if err != nil {
+			return nil, fmt.Errorf("parsing runtime memory: %v", err)
+		}
+	} else {
+		runtimeMemory = 200 * 1024 * 1024 // 200 MB
 	}
 
 	scoredModels := make([]models.ScoredManifest, 0, len(modelOptions))
@@ -205,15 +215,28 @@ func ScoreModels(modelOptions []string, manifests map[string]models.Manifest, ma
 			return nil, fmt.Errorf("parsing disk size for model %q: %w", modelID, err)
 		}
 
+		var kvCache uint64
+		if manifest.KVCacheSize != "" {
+			kvCache, err = utils.StringToBytes(manifest.KVCacheSize)
+			if err != nil {
+				return nil, fmt.Errorf("parsing kv cache for model %q: %w", modelID, err)
+			}
+		} else {
+			kvCache = 500 * 1024 * 1024 // 500 MB
+		}
+
 		report := models.CompatibilityReport{
 			CompatibleDisk:     size <= availableDiskSpace,
 			RequiredDiskSpace:  size,
 			AvailableDiskSpace: availableDiskSpace,
+			RequiredMemory:     size + kvCache + runtimeMemory + 2*1024*1024*1024, // 2GB for squashfs and OS
+			AvailableMemory:    availableMemory,
 		}
+		report.CompatibleMemory = report.RequiredMemory <= availableMemory
 
 		score := uint64(0)
-		if report.CompatibleDisk {
-			score = size
+		if report.CompatibleDisk && report.CompatibleMemory {
+			score = report.RequiredDiskSpace + report.RequiredMemory
 		}
 
 		scoredModels = append(scoredModels, models.ScoredManifest{
@@ -228,7 +251,7 @@ func ScoreModels(modelOptions []string, manifests map[string]models.Manifest, ma
 
 // SelectModel picks a model that fits the available disk: the preferred one if it fits, otherwise the largest fitting model.
 // Returns ErrInsufficientDiskSpaceForModel when none fit.
-func SelectModel(ctx *Context, modelOptions []string, preferredModel string, machine *machine.Machine) (string, []models.ScoredManifest, error) {
+func SelectModel(ctx *Context, modelOptions []string, preferredModel string, machine *machine.Machine, engineRuntime string) (string, []models.ScoredManifest, error) {
 	modelManifests, err := models.LoadManifests(ctx.ModelsDir)
 	if err != nil {
 		return "", nil, fmt.Errorf("%s: %w", LoadingModelManifests, err)
@@ -238,7 +261,12 @@ func SelectModel(ctx *Context, modelOptions []string, preferredModel string, mac
 		manifestsByName[manifest.Name] = manifest
 	}
 
-	scoredModels, err := ScoreModels(modelOptions, manifestsByName, machine)
+	runtimeManifest, err := runtimes.LoadManifest(ctx.RuntimesDir, engineRuntime)
+	if err != nil {
+		return "", nil, fmt.Errorf("loading runtime manifest: %v", err)
+	}
+
+	scoredModels, err := ScoreModels(modelOptions, manifestsByName, machine, runtimeManifest)
 	if err != nil {
 		return "", nil, err
 	}
@@ -277,25 +305,22 @@ func availableDiskSpace(machine *machine.Machine) (uint64, error) {
 	return 0, fmt.Errorf("disk information unavailable for %s", constants.SnapStoragePath)
 }
 
-func availableMemory(machineInfo *machine.MachineInfo) (uint64, error) {
+func availableMemory(machineInfo *machine.Machine) (uint64, error) {
 	var vram string = "-1"
-	for _, d := range machineInfo.Devices {
-		device, ok := d.(pci.Device)
-		if !ok {
-			continue
-		}
-		if device.IsGpu() {
-			vram, ok := machineInfo.Devices[device].AdditionalProperties["vram"]
-			if !ok {
+	var found bool
+	for _, d := range machineInfo.PCIDevices {
+		if d.IsAccelerator() {
+			vram, found = d.AdditionalProperties["vram"]
+			if !found {
 				vram = "-1"
 			}
 		}
 	}
 	if vram == "-1" {
-		return machineInfo.Memory.TotalRam + machineInfo.Memory.totalSwap, nil
+		return machineInfo.Memory.TotalRam + machineInfo.Memory.TotalSwap, nil
 	} else if vram == "[N/A]" {
 		// assuming unified memory
-		return machineInfo.Memory.TotalRam + machineInfo.Memory.totalSwap, nil
+		return machineInfo.Memory.TotalRam + machineInfo.Memory.TotalSwap, nil
 	} else {
 		vramVal, err := strconv.ParseUint(vram, 10, 64)
 		if err != nil {

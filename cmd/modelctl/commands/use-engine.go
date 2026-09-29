@@ -221,7 +221,7 @@ func (cmd *useEngineCommand) switchEngineWithMachine(engineName string, machine 
 	// Active model is not changed when autoselecting a new engine. SelectModel will respect the preferred model if possible.
 	if len(newEngineManifest.Model.Options) > 0 && machine != nil {
 		var scoredModels []models.ScoredManifest
-		newModelID, scoredModels, err = common.SelectModel(cmd.Context, newEngineManifest.Model.Options, newModelID, machine)
+		newModelID, scoredModels, err = common.SelectModel(cmd.Context, newEngineManifest.Model.Options, newModelID, machine, newEngineManifest.Runtime)
 		if cmd.auto {
 			cmd.printScoredModels(scoredModels, newModelID)
 		}
