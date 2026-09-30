@@ -38,6 +38,7 @@ func Run(baseURL string, errorMessages []string) error {
 		Handler:           responseHandler,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
+	fmt.Printf("[fallback] Listening on %s\n", address)
 	return server.ListenAndServe()
 }
 
@@ -83,7 +84,13 @@ func handler(errorMessages []string) (http.Handler, error) {
 	}
 	body = append(body, '\n')
 
-	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		clientAddress := r.RemoteAddr
+		if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+			clientAddress = host
+		}
+		fmt.Printf("[fallback] %s - \"%s %s %s\" %d -\n",
+			clientAddress, r.Method, r.URL.RequestURI(), r.Proto, http.StatusServiceUnavailable)
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "no-store")
 		w.WriteHeader(http.StatusServiceUnavailable)

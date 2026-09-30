@@ -121,6 +121,7 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 				return fmt.Errorf("empty status reported")
 			}
 
+			fmt.Println("Command failed to run, starting fallback server...")
 			if err := fallbackserver.Run(url, statusStr.Notices); err != nil {
 				return fmt.Errorf("running fallback server: %v", err)
 			}
