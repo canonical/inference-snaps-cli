@@ -1,6 +1,7 @@
 package common
 
 import (
+	"cmp"
 	"fmt"
 	"slices"
 	"strconv"
@@ -13,45 +14,7 @@ import (
 	"github.com/canonical/lscompute/pkg/machine"
 )
 
-type ModelDetails struct {
-	Name  string `json:"name" yaml:"name"`
-	Alias string `json:"alias,omitempty" yaml:"alias,omitempty"`
-
-	Description  string   `json:"description" yaml:"description"`
-	ModelCardUrl string   `json:"model-card-url" yaml:"model-card-url"`
-	Format       string   `json:"format" yaml:"format"`
-	Quantization string   `json:"quantization" yaml:"quantization"`
-	Capabilities []string `json:"capabilities" yaml:"capabilities"`
-
-	DiskSize string `json:"disk-size" yaml:"disk-size"`
-
-	Components []string `json:"components" yaml:"components"`
-
-	CompatibleEngines []string `json:"compatible-engines,omitempty" yaml:"compatible-engines,omitempty"`
-}
-
-func NewModelDetails(manifest *models.Manifest) (ModelDetails, error) {
-	var modelDetails ModelDetails
-	modelDetails.Name = manifest.Name
-	modelDetails.Alias = manifest.Alias
-	modelDetails.Description = manifest.Description
-	modelDetails.ModelCardUrl = manifest.ModelCardUrl
-	modelDetails.Format = manifest.Format
-	modelDetails.Quantization = manifest.Quantization
-	modelDetails.Capabilities = manifest.Capabilities
-	modelDetails.Components = manifest.Components
-
-	// Change disk size to largest possible unit representation
-	diskSizeBytes, err := utils.StringToBytes(manifest.DiskSize)
-	if err != nil {
-		return modelDetails, ErrInsufficientDiskSpaceForModel
-	}
-	modelDetails.DiskSize = utils.FmtBytesShort(diskSizeBytes)
-
-	return modelDetails, nil
-}
-
-func GetModelManifestByNameOrAlias(ctx *Context, modelName string) (*models.Manifest, error) {
+func GetModelManifestByNameOrAlias(ctx *Context, modelName string, machine *machine.Machine) (*models.ScoredManifest, error) {
 	if modelName == "" {
 		return nil, fmt.Errorf("model name must not be empty")
 	}
@@ -96,24 +59,13 @@ func GetModelManifestByNameOrAlias(ctx *Context, modelName string) (*models.Mani
 	if manifest == nil {
 		return nil, fmt.Errorf("model %q does not exist", modelName)
 	}
-	return manifest, nil
-}
 
-func GetModelDetailsByNameOrAlias(ctx *Context, modelName string) (*ModelDetails, error) {
-	modelManifest, err := GetModelManifestByNameOrAlias(ctx, modelName)
+	scoredManifest, err := GetScoredModel(ctx, *engineManifest, *manifest, machine)
 	if err != nil {
 		return nil, err
 	}
-	modelDetails, err := NewModelDetails(modelManifest)
-	if err != nil {
-		return nil, err
-	}
-	compatibleEngines, err := GetCompatibleEnginesByModelName(ctx, modelDetails.Name)
-	if err != nil {
-		return nil, err
-	}
-	modelDetails.CompatibleEngines = compatibleEngines
-	return &modelDetails, nil
+
+	return &scoredManifest, nil
 }
 
 func GetCompatibleEnginesByModelName(ctx *Context, modelName string) ([]string, error) {
@@ -152,10 +104,15 @@ func ModelStatus(ctx *Context) (map[string]string, error) {
 	return status, nil
 }
 
-func GetAllModels(ctx *Context) ([]ModelDetails, error) {
+func GetAllModels(ctx *Context, machine *machine.Machine) ([]ModelDetails, error) {
 	allModelManifests, err := models.LoadManifests(ctx.ModelsDir)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", LoadingModelManifests, err)
+	}
+
+	manifestsByName := make(map[string]models.Manifest, len(allModelManifests))
+	for _, manifest := range allModelManifests {
+		manifestsByName[manifest.Name] = manifest
 	}
 
 	allEngineManifests, err := engines.LoadManifests(ctx.EnginesDir)
@@ -163,26 +120,52 @@ func GetAllModels(ctx *Context) ([]ModelDetails, error) {
 		return nil, fmt.Errorf("%s: %w", LoadingEngineManifest, err)
 	}
 
-	allModelsWithEngines := []ModelDetails{}
-	for _, modelManifest := range allModelManifests {
-		outputModel, err := NewModelDetails(&modelManifest)
-		if err != nil {
-			return nil, fmt.Errorf("creating model details for model %s: %v", modelManifest.Name, err)
-		}
-		compatibleEngines := []string{}
-		for _, engineManifest := range allEngineManifests {
-			if slices.Contains(engineManifest.Model.Options, modelManifest.Name) {
-				compatibleEngines = append(compatibleEngines, engineManifest.Name)
-			}
-		}
-		outputModel.CompatibleEngines = compatibleEngines
-		allModelsWithEngines = append(allModelsWithEngines, outputModel)
+	activeEngine, err := ctx.Cache.GetActiveEngine()
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", LookingUpActiveEngine, err)
 	}
 
-	return allModelsWithEngines, nil
+	var allScoredModelManifests []models.ScoredManifest
+	for _, engineManifest := range allEngineManifests {
+		if engineManifest.Name == activeEngine {
+			allScoredModelManifests, err = ScoreModelsAgainstEngine(ctx, engineManifest, manifestsByName, machine)
+			if err != nil {
+				return nil, fmt.Errorf("scoring models: %v", err)
+			}
+			break
+		}
+	}
+	var allModelsDetails []ModelDetails
+	for _, manifest := range allScoredModelManifests {
+		modelDetails, err := NewModelDetails(&manifest)
+		if err != nil {
+			return nil, fmt.Errorf("creating model details for %s: %w", manifest.Name, err)
+		}
+		allModelsDetails = append(allModelsDetails, modelDetails)
+	}
+	slices.SortFunc(allModelsDetails, func(a, b ModelDetails) int {
+		return cmp.Compare(a.Name, b.Name)
+	})
+	return allModelsDetails, nil
 }
 
-func ScoreModels(modelOptions []string, manifests map[string]models.Manifest, machine *machine.Machine, runtimeManifest *runtimes.Manifest) ([]models.ScoredManifest, error) {
+func GetScoredModel(ctx *Context, engineManifest engines.Manifest, modelManifest models.Manifest, machine *machine.Machine) (models.ScoredManifest, error) {
+	manifests := map[string]models.Manifest{
+		modelManifest.Name: modelManifest,
+	}
+	scoredModels, err := ScoreModelsAgainstEngine(ctx, engineManifest, manifests, machine)
+	if err != nil {
+		return models.ScoredManifest{}, err
+	}
+	for _, scoredModel := range scoredModels {
+		if scoredModel.Manifest.Name == modelManifest.Name {
+			return scoredModel, nil
+		}
+	}
+	return models.ScoredManifest{}, fmt.Errorf("model not found: %s", modelManifest.Name)
+}
+
+func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, modelManifests map[string]models.Manifest, machine *machine.Machine) ([]models.ScoredManifest, error) {
 	availableDiskSpace, err := availableDiskSpace(machine)
 	if err != nil {
 		return nil, err
@@ -191,6 +174,11 @@ func ScoreModels(modelOptions []string, manifests map[string]models.Manifest, ma
 	availableMemory, err := availableMemory(machine)
 	if err != nil {
 		return nil, err
+	}
+
+	runtimeManifest, err := runtimes.LoadManifest(ctx.RuntimesDir, engineManifest.Runtime)
+	if err != nil {
+		return nil, fmt.Errorf("loading runtime manifest: %v", err)
 	}
 
 	var runtimeMemory uint64
@@ -203,12 +191,9 @@ func ScoreModels(modelOptions []string, manifests map[string]models.Manifest, ma
 		runtimeMemory = 200 * 1024 * 1024 // 200 MB
 	}
 
-	scoredModels := make([]models.ScoredManifest, 0, len(modelOptions))
-	for _, modelID := range modelOptions {
-		manifest, ok := manifests[modelID]
-		if !ok {
-			return nil, fmt.Errorf("model manifest not found: %s", modelID)
-		}
+	scoredModels := make([]models.ScoredManifest, 0, len(modelManifests))
+	for modelID := range modelManifests {
+		manifest := modelManifests[modelID]
 
 		size, err := utils.StringToBytes(manifest.DiskSize)
 		if err != nil {
@@ -233,59 +218,76 @@ func ScoreModels(modelOptions []string, manifests map[string]models.Manifest, ma
 			AvailableMemory:    availableMemory,
 		}
 		report.CompatibleMemory = report.RequiredMemory <= availableMemory
+		report.Compatible = report.CompatibleDisk && report.CompatibleMemory
 
 		score := uint64(0)
 		if report.CompatibleDisk && report.CompatibleMemory {
 			score = report.RequiredDiskSpace + report.RequiredMemory
 		}
-
-		scoredModels = append(scoredModels, models.ScoredManifest{
+		scoredModelManifest := models.ScoredManifest{
 			Manifest:            manifest,
 			Score:               score,
 			CompatibilityReport: report,
-		})
+		}
+		compatibleEngines := []string{}
+		engineManifests, err := engines.LoadManifests(ctx.EnginesDir)
+		if err != nil {
+			return nil, fmt.Errorf("loading engine manifests: %w", err)
+		}
+		for _, engineManifest := range engineManifests {
+			if slices.Contains(engineManifest.Model.Options, manifest.Name) {
+				compatibleEngines = append(compatibleEngines, engineManifest.Name)
+			}
+		}
+		scoredModelManifest.CompatibilityReport.CompatibleEngines = compatibleEngines
+		scoredModels = append(scoredModels, scoredModelManifest)
 	}
-
 	return scoredModels, nil
 }
 
 // SelectModel picks a model that fits the available disk: the preferred one if it fits, otherwise the largest fitting model.
 // Returns ErrInsufficientDiskSpaceForModel when none fit.
-func SelectModel(ctx *Context, modelOptions []string, preferredModel string, machine *machine.Machine, engineRuntime string) (string, []models.ScoredManifest, error) {
+func SelectModel(ctx *Context, engineManifest engines.Manifest, preferredModel string, machine *machine.Machine) (string, []models.ScoredManifest, error) {
 	modelManifests, err := models.LoadManifests(ctx.ModelsDir)
 	if err != nil {
 		return "", nil, fmt.Errorf("%s: %w", LoadingModelManifests, err)
 	}
-	manifestsByName := make(map[string]models.Manifest, len(modelManifests))
+	modelManifestsByName := make(map[string]models.Manifest)
 	for _, manifest := range modelManifests {
-		manifestsByName[manifest.Name] = manifest
+		modelManifestsByName[manifest.Name] = manifest
 	}
 
-	runtimeManifest, err := runtimes.LoadManifest(ctx.RuntimesDir, engineRuntime)
-	if err != nil {
-		return "", nil, fmt.Errorf("loading runtime manifest: %v", err)
+	filteredManifestsByName := make(map[string]models.Manifest)
+	for _, model := range engineManifest.Model.Options {
+		if manifest, ok := modelManifestsByName[model]; ok {
+			filteredManifestsByName[model] = manifest
+		}
 	}
+	modelManifestsByName = filteredManifestsByName
 
-	scoredModels, err := ScoreModels(modelOptions, manifestsByName, machine, runtimeManifest)
+	scoredModels, err := ScoreModelsAgainstEngine(ctx, engineManifest, modelManifestsByName, machine)
 	if err != nil {
 		return "", nil, err
 	}
+	// Keep the engine manifest's order; scoring iterates a map.
+	slices.SortFunc(scoredModels, func(a, b models.ScoredManifest) int {
+		return cmp.Compare(slices.Index(engineManifest.Model.Options, a.Name), slices.Index(engineManifest.Model.Options, b.Name))
+	})
 
 	if preferredModel != "" {
 		for _, model := range scoredModels {
-			if model.Name == preferredModel && model.CompatibilityReport.CompatibleDisk {
+			if model.Name == preferredModel && model.CompatibilityReport.Compatible {
 				return preferredModel, scoredModels, nil
 			}
 		}
 	}
 
 	selected := ""
-	selectedSize := uint64(0)
+	selectedScore := uint64(0)
 	for _, model := range scoredModels {
-		size := model.CompatibilityReport.RequiredDiskSpace
-		if model.CompatibilityReport.CompatibleDisk && (selected == "" || size > selectedSize) {
+		if model.CompatibilityReport.Compatible && (selected == "" || model.Score > selectedScore) {
 			selected = model.Name
-			selectedSize = size
+			selectedScore = model.Score
 		}
 	}
 
@@ -305,10 +307,10 @@ func availableDiskSpace(machine *machine.Machine) (uint64, error) {
 	return 0, fmt.Errorf("disk information unavailable for %s", constants.SnapStoragePath)
 }
 
-func availableMemory(machineInfo *machine.Machine) (uint64, error) {
+func availableMemory(machine *machine.Machine) (uint64, error) {
 	var vram string = "-1"
 	var found bool
-	for _, d := range machineInfo.PCIDevices {
+	for _, d := range machine.PCIDevices {
 		if d.IsAccelerator() {
 			vram, found = d.AdditionalProperties["vram"]
 			if !found {
@@ -316,12 +318,13 @@ func availableMemory(machineInfo *machine.Machine) (uint64, error) {
 			}
 		}
 	}
-	if vram == "-1" {
-		return machineInfo.Memory.TotalRam + machineInfo.Memory.TotalSwap, nil
-	} else if vram == "[N/A]" {
+	switch vram {
+	case "-1":
+		return machine.Memory.TotalRam + machine.Memory.TotalSwap, nil
+	case "[N/A]":
 		// assuming unified memory
-		return machineInfo.Memory.TotalRam + machineInfo.Memory.TotalSwap, nil
-	} else {
+		return machine.Memory.TotalRam + machine.Memory.TotalSwap, nil
+	default:
 		vramVal, err := strconv.ParseUint(vram, 10, 64)
 		if err != nil {
 			return 0, err

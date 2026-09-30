@@ -21,13 +21,19 @@ func prepareModelsTestData() (*modelsCommand, *outputModels, error) {
 	}
 
 	ctx := &common.Context{
-		ModelsDir:  "../../../test_data/models",
-		EnginesDir: "../../../test_data/engines",
-		Cache:      cache,
-		Config:     nil,
+		ModelsDir:   "../../../test_data/models",
+		EnginesDir:  "../../../test_data/engines",
+		RuntimesDir: "../../../test_data/runtimes",
+		Cache:       cache,
+		Config:      nil,
 	}
 
-	allModels, err := common.GetAllModels(ctx)
+	machine, err := machineFixture("dummy-machine")
+	if err != nil {
+		return nil, nil, fmt.Errorf("error creating machine fixture: %v", err)
+	}
+
+	allModels, err := common.GetAllModels(ctx, machine)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error getting all models with engines: %v", err)
 	}
@@ -78,9 +84,6 @@ func TestGetModelsTable(t *testing.T) {
 	}
 
 	tableStr, err := cmd.getModelsTable(*modelsList)
-	if err != nil {
-		t.Fatalf("Error getting models table: %v", err)
-	}
 
 	expectedTable := `NAME                 CAPABILITIES               DISK 
 26b-q4-k-m-gguf      text                       6G   
@@ -180,7 +183,8 @@ func Example_printModelsJson() {
 	//         "intel-cpu",
 	//         "intel-gpu",
 	//         "intel-npu"
-	//       ]
+	//       ],
+	//       "compatible": true
 	//     }
 	//   ]
 	// }
@@ -224,7 +228,8 @@ func Example_printAllModelsJson() {
 	//         "cpu-avx512",
 	//         "cuda-generic",
 	//         "rocm-generic"
-	//       ]
+	//       ],
+	//       "compatible": true
 	//     },
 	//     {
 	//       "name": "30b-a3b-q4-k-m-gguf",
@@ -251,7 +256,8 @@ func Example_printAllModelsJson() {
 	//         "cpu",
 	//         "cuda-generic",
 	//         "rocm-generic"
-	//       ]
+	//       ],
+	//       "compatible": true
 	//     },
 	//     {
 	//       "name": "30m-q4-k-m-gguf",
@@ -271,7 +277,8 @@ func Example_printAllModelsJson() {
 	//       ],
 	//       "compatible-engines": [
 	//         "cpu"
-	//       ]
+	//       ],
+	//       "compatible": true
 	//     },
 	//     {
 	//       "name": "4b-it-int4-fq-ov",
@@ -291,7 +298,8 @@ func Example_printAllModelsJson() {
 	//         "intel-cpu",
 	//         "intel-gpu",
 	//         "intel-npu"
-	//       ]
+	//       ],
+	//       "compatible": true
 	//     }
 	//   ]
 	// }

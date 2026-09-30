@@ -78,6 +78,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 				Architecture:   "amd64",
 				ManufacturerId: "GenuineIntel",
 			}},
+			Memory: memory.Memory{TotalRam: 1024, TotalSwap: 100000000000},
 			Disk: []disk.Disk{{
 				Total:     1006451294208,
 				Available: 943543738368,
@@ -87,6 +88,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 
 	case "low-disk-available-machine":
 		return &machine.Machine{
+			Memory: memory.Memory{TotalRam: 1024 * 1024 * 1024 * 5, TotalSwap: 1024 * 1024 * 1024 * 5},
 			Disk: []disk.Disk{{
 				Total:     1006451294208,
 				Available: 1024 * 1024 * 1024,
@@ -96,13 +98,13 @@ func machineFixture(name string) (*machine.Machine, error) {
 
 	case "no-disk-available-machine":
 		return &machine.Machine{
+			Memory: memory.Memory{TotalRam: 1024, TotalSwap: 0},
 			Disk: []disk.Disk{{
 				Total:     1006451294208,
 				Available: 0,
 				Path:      "/var/lib/snapd/snaps",
 			}},
 		}, nil
-
 	default:
 		return nil, fmt.Errorf("no machine fixture for %q", name)
 	}

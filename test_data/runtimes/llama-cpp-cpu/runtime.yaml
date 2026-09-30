@@ -20,5 +20,7 @@ environment:
   # Add staged shared libraries
   - LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SNAP_COMPONENTS/runtime-llama-cpp-cpu/usr/lib/$ARCH_TRIPLET
 
+memory: 2G
+
 components:
   - runtime-llama-cpp-cpu
