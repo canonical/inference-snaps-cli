@@ -157,16 +157,16 @@ func (cmd *runCommand) writeShareProviderEnv() error {
 	if err != nil && !errors.Is(err, common.ErrEngineNoRuntime) {
 		return fmt.Errorf("getting current runtime manifest: %v", err)
 	}
-	for serverName, server := range runtime.Servers {
+	for _, server := range runtime.Servers {
 		if server.IsUnixProtocol() {
-			content.WriteString("UNIX_SOCKET")
 			if server.Namespace != "" {
-				content.WriteString("_")
 				content.WriteString(strings.ReplaceAll(strings.ToUpper(server.Namespace), "-", "_"))
+				content.WriteString("_")
 			}
+			content.WriteString("UNIX_SOCKET")
 			content.WriteString("=")
-			content.WriteString(serverName)
-			content.WriteString(".sock\n")
+			content.WriteString(server.UnixSocketName())
+			content.WriteString("\n")
 		}
 	}
 

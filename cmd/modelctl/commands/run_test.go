@@ -192,7 +192,7 @@ func TestWriteShareProviderEnv(t *testing.T) {
 			t.Fatalf("reading provider env file: %v", err)
 		}
 
-		want := "SNAP_NAME=gemma3-jane\nSNAP_INSTANCE_NAME=gemma3-jane\nUNIX_SOCKET=openai.sock\n"
+		want := "SNAP_NAME=gemma3-jane\nSNAP_INSTANCE_NAME=gemma3-jane\nUNIX_SOCKET=server.sock\n"
 		if string(content) != want {
 			t.Fatalf("provider env contents mismatch\nwant: %q\ngot:  %q", want, string(content))
 		}
@@ -209,13 +209,13 @@ func TestWriteShareProviderEnv(t *testing.T) {
 			name:       "http unix socket",
 			serverName: "test",
 			protocol:   "http+unix",
-			wantSocket: "UNIX_SOCKET=test.sock",
+			wantSocket: "UNIX_SOCKET=server.sock",
 		},
 		{
 			name:       "https unix socket",
 			serverName: "example",
 			protocol:   "https+unix",
-			wantSocket: "UNIX_SOCKET=example.sock",
+			wantSocket: "UNIX_SOCKET=server.sock",
 		},
 		{
 			name:       "websocket unix socket",
@@ -234,7 +234,28 @@ func TestWriteShareProviderEnv(t *testing.T) {
 			serverName: "server",
 			protocol:   "http+unix",
 			namespace:  "speech-to-text",
-			wantSocket: "UNIX_SOCKET_SPEECH_TO_TEXT=server.sock",
+			wantSocket: "SPEECH_TO_TEXT_UNIX_SOCKET=speech-to-text.sock",
+		},
+		{
+			name:       "namespaced https unix socket",
+			serverName: "example",
+			protocol:   "https+unix",
+			namespace:  "namespace",
+			wantSocket: "NAMESPACE_UNIX_SOCKET=namespace.sock",
+		},
+		{
+			name:       "namespaced websocket unix socket",
+			serverName: "server",
+			protocol:   "ws+unix",
+			namespace:  "example",
+			wantSocket: "EXAMPLE_UNIX_SOCKET=example.sock",
+		},
+		{
+			name:       "secure websocket unix socket",
+			serverName: "server",
+			protocol:   "wss+unix",
+			namespace:  "namespace",
+			wantSocket: "NAMESPACE_UNIX_SOCKET=namespace.sock",
 		},
 	}
 

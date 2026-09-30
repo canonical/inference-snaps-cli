@@ -29,3 +29,10 @@ func (s *Server) IsUnixProtocol() bool {
 	}
 	return slices.Contains(unixProtocols, s.Protocol)
 }
+
+func (s *Server) UnixSocketName() string {
+	if s.Namespace != "" {
+		return s.Namespace + ".sock"
+	}
+	return "server.sock"
+}
