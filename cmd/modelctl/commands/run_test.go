@@ -1,8 +1,12 @@
 package commands
 
 import (
+	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
+	"syscall"
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
@@ -175,4 +179,67 @@ func TestNoActiveModel(t *testing.T) {
 			t.Fatalf("expected error 'no active model', got %v", err)
 		}
 	})
+}
+
+func TestRunCommandFailure(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{name: "non-zero exit", args: []string{"/bin/sh", "-c", "exit 7"}},
+		{name: "executable not found", args: []string{filepath.Join(t.TempDir(), "missing-command")}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := testRunContext(t, "name: test-runtime\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n")
+			modelsDir := t.TempDir()
+			modelDir := filepath.Join(modelsDir, "test-model")
+			if err := os.Mkdir(modelDir, 0o755); err != nil {
+				t.Fatalf("creating model dir: %v", err)
+			}
+			if err := os.WriteFile(filepath.Join(modelDir, "model.yaml"), []byte("name: test-model\n"), 0o644); err != nil {
+				t.Fatalf("writing model manifest: %v", err)
+			}
+			ctx.ModelsDir = modelsDir
+			if err := ctx.Cache.SetActiveModel("test-model"); err != nil {
+				t.Fatalf("setting active model: %v", err)
+			}
+
+			err := (&runCommand{Context: ctx}).run(nil, tt.args)
+			if err == nil || !strings.HasPrefix(err.Error(), "command exited with non-zero status: ") {
+				t.Fatalf("expected friendly command failure, got %v", err)
+			}
+		})
+	}
+}
+
+func TestCommandStopped(t *testing.T) {
+	tests := []struct {
+		name    string
+		command string
+		want    bool
+	}{
+		{name: "SIGTERM", command: "kill -TERM $$", want: true},
+		{name: "SIGINT", command: "kill -INT $$", want: true},
+		{name: "SIGKILL", command: "kill -KILL $$", want: false},
+		{name: "non-zero exit", command: "exit 7", want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := exec.Command("/bin/sh", "-c", tt.command).Run()
+			if err == nil {
+				t.Fatal("expected command to fail")
+			}
+			if got := commandStopped(err); got != tt.want {
+				var status syscall.WaitStatus
+				var exitErr *exec.ExitError
+				if errors.As(err, &exitErr) {
+					status, _ = exitErr.ProcessState.Sys().(syscall.WaitStatus)
+				}
+				t.Fatalf("commandStopped() = %v, want %v (status %v)", got, tt.want, status)
+			}
+		})
+	}
 }
