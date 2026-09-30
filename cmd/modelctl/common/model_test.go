@@ -7,8 +7,41 @@ import (
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
 	"github.com/canonical/lscompute/pkg/machine"
+	"github.com/canonical/lscompute/pkg/machine/cpu"
+	"github.com/canonical/lscompute/pkg/machine/device/pci"
 	"github.com/canonical/lscompute/pkg/machine/disk"
+	"github.com/canonical/lscompute/pkg/machine/memory"
 )
+
+func getTestMachine() *machine.Machine {
+	return &machine.Machine{
+		CPUs: []cpu.CPU{{
+			Architecture:   "amd64",
+			ManufacturerId: "GenuineIntel",
+			Flags:          []string{"fpu", "vme", "de"},
+		}},
+		Memory: memory.Memory{TotalRam: 67012501504, TotalSwap: 0},
+		Disk: []disk.Disk{{
+			Total:     1006451294208,
+			Available: 943543738368,
+			Path:      "/var/lib/snapd/snaps",
+		}},
+		PCIDevices: []pci.Device{{
+			Bus:                  "pci",
+			Slot:                 "0000:00:00.0",
+			BusNumber:            0x0,
+			DeviceClass:          0x600,
+			ProgrammingInterface: new(uint8(0)),
+			VendorId:             0x8086,
+			DeviceId:             0x4637,
+			SubvendorId:          new(uint16(0x103C)),
+			SubdeviceId:          new(uint16(0x89C6)),
+			FriendlyNames: pci.FriendlyNames{
+				VendorName:    "Intel Corporation",
+				SubvendorName: "Hewlett-Packard Company",
+			}},
+		}}
+}
 
 // writeModelYAML creates a model manifest at modelsDir/<name>/model.yaml with the given content.
 func writeModelYAML(t *testing.T, modelsDir, name, content string) {
@@ -65,6 +98,7 @@ func TestGetModelManifestByNameOrAlias(t *testing.T) {
 		activeEngine string
 		modelYAML    string // empty means don't write a model manifest
 		engineYAML   string // empty means don't write an engine manifest
+		runtimeYAML  string // empty means don't write a runtime manifest
 		query        string
 		wantName     string // non-empty: expect this Name in the returned manifest
 		wantAlias    string // non-empty: expect this Alias in the returned manifest
@@ -74,7 +108,8 @@ func TestGetModelManifestByNameOrAlias(t *testing.T) {
 			name:         "found by alias",
 			activeEngine: "my-engine",
 			modelYAML:    "name: my-model-id\nalias: my-model\ndisk-size: 1G\n",
-			engineYAML:   "name: my-engine\nmodel:\n  options:\n    - my-model-id\n",
+			engineYAML:   "name: my-engine\nruntime: my-runtime\nmodel:\n  options:\n    - my-model-id\n",
+			runtimeYAML:  "name: my-runtime\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n",
 			query:        "my-model",
 			wantName:     "my-model-id",
 		},
@@ -82,7 +117,8 @@ func TestGetModelManifestByNameOrAlias(t *testing.T) {
 			name:         "found by name",
 			activeEngine: "my-engine",
 			modelYAML:    "name: my-model-id\nalias: my-model\ndisk-size: 1G\n",
-			engineYAML:   "name: my-engine\nmodel:\n  options:\n    - my-model-id\n",
+			engineYAML:   "name: my-engine\nruntime: my-runtime\nmodel:\n  options:\n    - my-model-id\n",
+			runtimeYAML:  "name: my-runtime\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n",
 			query:        "my-model-id",
 			wantAlias:    "my-model",
 		},
@@ -97,6 +133,7 @@ func TestGetModelManifestByNameOrAlias(t *testing.T) {
 			activeEngine: "my-engine",
 			modelYAML:    "id: other-model-id\nname: other-model\ndisk-size: 1G\n",
 			engineYAML:   "name: my-engine\nmodel:\n  options:\n    - some-other-model-id\n",
+			runtimeYAML:  "name: my-runtime\n",
 			query:        "other-model",
 			wantErr:      true,
 		},
@@ -104,6 +141,7 @@ func TestGetModelManifestByNameOrAlias(t *testing.T) {
 			name:         "model does not exist",
 			activeEngine: "my-engine",
 			engineYAML:   "name: my-engine\nmodel:\n  options: []\n",
+			runtimeYAML:  "name: my-runtime\n",
 			query:        "nonexistent-model",
 			wantErr:      true,
 		},
@@ -113,6 +151,7 @@ func TestGetModelManifestByNameOrAlias(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			modelsDir := t.TempDir()
 			enginesDir := t.TempDir()
+			runtimeDir := t.TempDir()
 
 			if tc.modelYAML != "" {
 				writeModelYAML(t, modelsDir, "my-model", tc.modelYAML)
@@ -120,14 +159,16 @@ func TestGetModelManifestByNameOrAlias(t *testing.T) {
 			if tc.engineYAML != "" {
 				writeEngineYAML(t, enginesDir, "my-engine", tc.engineYAML)
 			}
-
+			if tc.runtimeYAML != "" {
+				writeRuntimeYAML(t, runtimeDir, "my-runtime", tc.runtimeYAML)
+			}
 			cache := storage.NewMockCache()
 			if err := cache.SetActiveEngine(tc.activeEngine); err != nil {
 				t.Fatalf("SetActiveEngine: %v", err)
 			}
-			ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir, Cache: cache}
+			ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir, RuntimesDir: runtimeDir, Cache: cache}
 
-			manifest, err := GetModelManifestByNameOrAlias(ctx, tc.query)
+			manifest, err := GetModelManifestByNameOrAlias(ctx, tc.query, getTestMachine())
 
 			if tc.wantErr {
 				if err == nil {
@@ -151,12 +192,19 @@ func TestGetModelManifestByNameOrAlias(t *testing.T) {
 func TestGetAllModels(t *testing.T) {
 	modelsDir := t.TempDir()
 	enginesDir := t.TempDir()
+	runtimeDir := t.TempDir()
 	writeModelYAML(t, modelsDir, "model1", "name: model1\nalias: m1\ndisk-size: 1G\n")
 	writeModelYAML(t, modelsDir, "model2", "name: model2\nalias: m2\ndisk-size: 2G\n")
+	writeRuntimeYAML(t, runtimeDir, "my-runtime", "name: my-runtime\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n")
+	writeEngineYAML(t, enginesDir, "my-engine", "name: my-engine\nruntime: my-runtime\nmodel:\n  options:\n    - model1\n")
 
-	ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir}
+	cache := storage.NewMockCache()
+	if err := cache.SetActiveEngine("my-engine"); err != nil {
+		t.Fatalf("SetActiveEngine: %v", err)
+	}
+	ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir, RuntimesDir: runtimeDir, Cache: cache}
 
-	models, err := GetAllModels(ctx)
+	models, err := GetAllModels(ctx, getTestMachine())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -175,18 +223,24 @@ func TestGetAllModels(t *testing.T) {
 func TestGetAllModelsWithEngines(t *testing.T) {
 	modelsDir := t.TempDir()
 	enginesDir := t.TempDir()
+	runtimeDir := t.TempDir()
 
 	writeModelYAML(t, modelsDir, "model1", "name: model1\nalias: m1\ndisk-size: 1G\n")
 	writeModelYAML(t, modelsDir, "model2", "name: model2\nalias: m2\ndisk-size: 2G\n")
 	writeModelYAML(t, modelsDir, "model3", "name: model3\nalias: m3\ndisk-size: 3G\n")
 	writeModelYAML(t, modelsDir, "model4", "name: model4\nalias: m4\ndisk-size: 4G\n")
+	writeRuntimeYAML(t, runtimeDir, "my-runtime", "name: my-runtime\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n")
 
-	writeEngineYAML(t, enginesDir, "engine1", "name: engine1\nmodel:\n  options:\n    - model1\n    - model3\n")
-	writeEngineYAML(t, enginesDir, "engine2", "name: engine2\nmodel:\n  options:\n    - model1\n    - model2\n")
+	writeEngineYAML(t, enginesDir, "engine1", "name: engine1\nruntime: my-runtime\nmodel:\n  options:\n    - model1\n    - model3\n")
+	writeEngineYAML(t, enginesDir, "engine2", "name: engine2\nruntime: my-runtime\nmodel:\n  options:\n    - model1\n    - model2\n")
 
-	ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir}
+	cache := storage.NewMockCache()
+	if err := cache.SetActiveEngine("engine1"); err != nil {
+		t.Fatalf("SetActiveEngine: %v", err)
+	}
+	ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir, RuntimesDir: runtimeDir, Cache: cache}
 
-	modelsWithEngines, err := GetAllModels(ctx)
+	modelsWithEngines, err := GetAllModels(ctx, getTestMachine())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

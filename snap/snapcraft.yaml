@@ -207,6 +207,8 @@ components:
     <<: *test-component
   model-30b-a3b-q4-k-m-gguf-6-of-6:
     <<: *test-component
+  model-30m-q4-k-m-gguf:
+    <<: *test-component
 
 apps:
   stack-utils:

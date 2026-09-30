@@ -221,7 +221,7 @@ func (cmd *useEngineCommand) switchEngineWithMachine(engineName string, machine 
 	// Active model is not changed when autoselecting a new engine. SelectModel will respect the preferred model if possible.
 	if len(newEngineManifest.Model.Options) > 0 && machine != nil {
 		var scoredModels []models.ScoredManifest
-		newModelID, scoredModels, err = common.SelectModel(cmd.Context, newEngineManifest.Model.Options, newModelID, machine, newEngineManifest.Runtime)
+		newModelID, scoredModels, err = common.SelectModel(cmd.Context, *newEngineManifest, newModelID, machine)
 		if cmd.auto {
 			cmd.printScoredModels(scoredModels, newModelID)
 		}
@@ -386,15 +386,22 @@ func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManif
 	var compatibleModels []string
 	fmt.Println("Selecting a compatible model:")
 	for _, model := range scoredModels {
-		if model.CompatibilityReport.CompatibleDisk {
+		if model.CompatibilityReport.Compatible {
 			compatibleModels = append(compatibleModels, model.Name)
 			fmt.Printf("✔ %s\n", model.Name)
 		} else {
 			report := model.CompatibilityReport
-			fmt.Printf("✘ %s: requires %s disk space, has %s\n",
-				model.Name,
-				utils.FmtBytesShort(report.RequiredDiskSpace),
-				utils.FmtBytesShort(report.AvailableDiskSpace))
+			if !report.CompatibleDisk {
+				fmt.Printf("✘ %s: requires %s disk space, has %s\n",
+					model.Name,
+					utils.FmtBytesShort(report.RequiredDiskSpace),
+					utils.FmtBytesShort(report.AvailableDiskSpace))
+			} else if !report.CompatibleMemory {
+				fmt.Printf("✘ %s: requires %s memory, has %s\n",
+					model.Name,
+					utils.FmtBytesShort(report.RequiredMemory),
+					utils.FmtBytesShort(report.AvailableMemory))
+			}
 		}
 	}
 	if slices.Contains(compatibleModels, newModelID) {
