@@ -97,10 +97,6 @@ func (c *mockConfig) Unset(key string, confType configType) error {
 	return nil
 }
 
-func (c *mockConfig) Migrate() error {
-	return migrateConfig(c)
-}
-
 // failConfig is a Config implementation whose mutating methods always return err.
 type failConfig struct {
 	err error
@@ -117,7 +113,6 @@ func (c *failConfig) SetDocument(_ string, _ any, _ configType) error { return c
 func (c *failConfig) Unset(_ string, _ configType) error              { return c.err }
 func (c *failConfig) Get(_ string) (map[string]any, error)            { return map[string]any{}, nil }
 func (c *failConfig) GetAll() (map[string]any, error)                 { return map[string]any{}, nil }
-func (c *failConfig) Migrate() error                                  { return c.err }
 
 // selectiveFailConfig delegates to a normal mockConfig but returns failErr when
 // Unset or SetDocument is called with failKey.
@@ -157,7 +152,4 @@ func (c *selectiveFailConfig) Get(key string) (map[string]any, error) {
 }
 func (c *selectiveFailConfig) GetAll() (map[string]any, error) {
 	return c.base.GetAll()
-}
-func (c *selectiveFailConfig) Migrate() error {
-	return c.base.Migrate()
 }
