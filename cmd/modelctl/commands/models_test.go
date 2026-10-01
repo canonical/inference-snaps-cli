@@ -272,6 +272,7 @@ func Example_printAllModelsJson() {
 	//         "tool"
 	//       ],
 	//       "disk-size": "1M",
+	//       "kv-cache-size": "1M",
 	//       "components": [
 	//         "model-30m-q4-k-m-gguf"
 	//       ],
