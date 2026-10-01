@@ -95,7 +95,6 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 		if err := cmd.migrateConfig(); err != nil {
 			return err
 		}
-
 		err := cmd.fixActiveEngine()
 		if errors.Is(err, common.ErrNoActiveEngine) { // If no engine is active, there's nothing to fix
 			return nil
@@ -351,16 +350,40 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 	if !slices.Contains(engineManifest.Model.Options, activeModelId) {
 		activeModelId = engineManifest.Model.Default
 	}
-	err = cmd.Cache.SetActiveModel(activeModelId)
-	if err != nil {
-		return fmt.Errorf("setting active model: %v", err)
-	}
 
 	var modelManifest *models.Manifest
 	if activeModelId != "" {
 		modelManifest, err = models.LoadManifest(cmd.ModelsDir, activeModelId)
 		if err != nil {
 			return fmt.Errorf("loading active model manifest: %v", err)
+		}
+	}
+
+	observable, err := cmd.Snap.HardwareObservable()
+	if err != nil {
+		return fmt.Errorf("checking hardware observability: %v", err)
+	}
+	if observable && modelManifest != nil {
+		machine, _, err := machine.Get(host.Real(), true, true)
+		if err != nil {
+			return fmt.Errorf("getting machine info: %v", err)
+		}
+		scoredModel, err := common.GetScoredModel(cmd.Context, *engineManifest, *modelManifest, machine)
+		if err != nil {
+			return fmt.Errorf("scoring active model: %v", err)
+		}
+		if scoredModel.CompatibilityReport.Compatible {
+			err = cmd.Cache.SetActiveModel(activeModelId)
+			if err != nil {
+				return fmt.Errorf("setting active model: %v", err)
+			}
+		} else {
+			modelManifest = nil
+		}
+	} else if modelManifest != nil {
+		err = cmd.Cache.SetActiveModel(activeModelId)
+		if err != nil {
+			return fmt.Errorf("setting active model: %v", err)
 		}
 	}
 
