@@ -233,15 +233,15 @@ func TestWriteShareProviderEnv(t *testing.T) {
 			name:       "namespaced unix socket",
 			serverName: "server",
 			protocol:   "http+unix",
-			namespace:  "speech-to-text",
-			wantSocket: "SPEECH_TO_TEXT_UNIX_SOCKET=speech-to-text.sock",
+			namespace:  "example",
+			wantSocket: "EXAMPLE_UNIX_SOCKET=example.sock",
 		},
 		{
 			name:       "namespaced https unix socket",
 			serverName: "example",
 			protocol:   "https+unix",
-			namespace:  "namespace",
-			wantSocket: "NAMESPACE_UNIX_SOCKET=namespace.sock",
+			namespace:  "example",
+			wantSocket: "EXAMPLE_UNIX_SOCKET=example.sock",
 		},
 		{
 			name:       "namespaced websocket unix socket",
@@ -254,8 +254,8 @@ func TestWriteShareProviderEnv(t *testing.T) {
 			name:       "secure websocket unix socket",
 			serverName: "server",
 			protocol:   "wss+unix",
-			namespace:  "namespace",
-			wantSocket: "NAMESPACE_UNIX_SOCKET=namespace.sock",
+			namespace:  "example",
+			wantSocket: "EXAMPLE_UNIX_SOCKET=example.sock",
 		},
 	}
 
