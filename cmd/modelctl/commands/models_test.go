@@ -111,7 +111,7 @@ func TestGetModelsTableAllModels(t *testing.T) {
 
 	expectedTable := `NAME                 CAPABILITIES               DISK  MEMORY   ENGINES                                                  
 26b-q4-k-m-gguf      text                       6G    8.7G     arm-neon, cpu, cpu-avx1, cpu-avx2, cpu-avx512, cuda-gen… 
-30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G    8.7G     cpu, cuda-generic, rocm-generic                          
+30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G    8.7G     cpu, cuda-generic, cuda-no-vram, rocm-generic            
 30m-q4-k-m-gguf      text, vision, audio, tool  1M    2.2G     cpu                                                      
 4b-it-int4-fq-ov*    text                       6G    8.7G     intel-cpu, intel-gpu, intel-npu                          
 `
@@ -227,6 +227,7 @@ func Example_printAllModelsJson() {
 	//         "cpu-avx2",
 	//         "cpu-avx512",
 	//         "cuda-generic",
+	//         "cuda-no-vram",
 	//         "rocm-generic"
 	//       ],
 	//       "compatible": true
@@ -255,6 +256,7 @@ func Example_printAllModelsJson() {
 	//       "compatible-engines": [
 	//         "cpu",
 	//         "cuda-generic",
+	//         "cuda-no-vram",
 	//         "rocm-generic"
 	//       ],
 	//       "compatible": true
