@@ -106,4 +106,5 @@ func handler(errorMessages []string) (http.Handler, error) {
 		w.Header().Set("Cache-Control", "no-store")
 		w.WriteHeader(status)
 		_, _ = w.Write(body)
+	}), nil
 }
