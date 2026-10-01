@@ -10,8 +10,10 @@ import (
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/runtimes"
+	selectorpci "github.com/canonical/inference-snaps-cli/v2/pkg/selector/pci"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
 	"github.com/canonical/lscompute/pkg/machine"
+	"github.com/canonical/lscompute/pkg/machine/device/pci"
 )
 
 func GetModelManifestByNameOrAlias(ctx *Context, modelName string, machine *machine.Machine) (*models.ScoredManifest, error) {
@@ -171,7 +173,7 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 		return nil, err
 	}
 
-	availableMemory, err := availableMemory(machine)
+	availableMemory, err := availableMemory(machine, engineManifest)
 	if err != nil {
 		return nil, err
 	}
@@ -307,28 +309,41 @@ func availableDiskSpace(machine *machine.Machine) (uint64, error) {
 	return 0, fmt.Errorf("disk information unavailable for %s", constants.SnapStoragePath)
 }
 
-func availableMemory(machine *machine.Machine) (uint64, error) {
-	var vram string = "-1"
-	var found bool
-	for _, d := range machine.PCIDevices {
-		if d.IsAccelerator() {
-			vram, found = d.AdditionalProperties["vram"]
-			if !found {
-				vram = "-1"
-			}
+func availableMemory(machine *machine.Machine, engineManifest engines.Manifest) (uint64, error) {
+	systemMemory := machine.Memory.TotalRam + machine.Memory.TotalSwap
+
+	var gpuDevices []engines.Device
+	for _, device := range slices.Concat(engineManifest.Devices.Allof, engineManifest.Devices.Anyof) {
+		if device.Type == "gpu" && (device.Bus == "" || device.Bus == "pci") {
+			gpuDevices = append(gpuDevices, device)
 		}
 	}
-	switch vram {
-	case "-1":
-		return machine.Memory.TotalRam + machine.Memory.TotalSwap, nil
-	case "[N/A]":
+	if len(gpuDevices) == 0 {
+		return systemMemory, nil
+	}
+
+	// Use the host GPU that best satisfies the engine, mirroring engine selection scoring
+	var bestDevice *pci.Device
+	bestScore := 0
+	for _, gpuDevice := range gpuDevices {
+		hostDevice, score := selectorpci.BestMatch(gpuDevice, machine)
+		if hostDevice != nil && score > bestScore {
+			bestDevice = hostDevice
+			bestScore = score
+		}
+	}
+	if bestDevice == nil {
+		return systemMemory, nil
+	}
+
+	vram, found := bestDevice.AdditionalProperties["vram"]
+	if !found || vram == "[N/A]" {
 		// assuming unified memory
-		return machine.Memory.TotalRam + machine.Memory.TotalSwap, nil
-	default:
-		vramVal, err := strconv.ParseUint(vram, 10, 64)
-		if err != nil {
-			return 0, err
-		}
-		return vramVal, nil
+		return systemMemory, nil
 	}
+	vramVal, err := strconv.ParseUint(vram, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("parsing vram %q of pci device %s: %w", vram, bestDevice.Slot, err)
+	}
+	return vramVal, nil
 }
