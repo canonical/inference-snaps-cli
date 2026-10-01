@@ -89,11 +89,21 @@ func handler(errorMessages []string) (http.Handler, error) {
 		if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
 			clientAddress = host
 		}
+		status := http.StatusServiceUnavailable
+		if r.Method == http.MethodOptions {
+			status = http.StatusNoContent
+		}
 		fmt.Printf("[fallback] %s - \"%s %s %s\" %d -\n",
-			clientAddress, r.Method, r.URL.RequestURI(), r.Proto, http.StatusServiceUnavailable)
+			clientAddress, r.Method, r.URL.RequestURI(), r.Proto, status)
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(status)
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "no-store")
-		w.WriteHeader(http.StatusServiceUnavailable)
+		w.WriteHeader(status)
 		_, _ = w.Write(body)
-	}), nil
 }

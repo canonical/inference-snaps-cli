@@ -287,9 +287,8 @@ def _handle_panic_signal(signum, frame):
     raise RuntimeError("Injected panic")
 
 
-def _positive_float(value):
     parsed = float(value)
-    if parsed <= 0:
+    if not 0 < parsed < float("inf"):
         raise argparse.ArgumentTypeError("must be greater than zero")
     return parsed
 
