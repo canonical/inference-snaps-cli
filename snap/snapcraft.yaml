@@ -224,6 +224,16 @@ components:
   model-30m-q4-k-m-gguf:
     <<: *test-component
 
+hooks:
+  install:
+    plugs:
+      - hardware-observe
+      - opengl
+  post-refresh:
+    plugs:
+      - hardware-observe
+      - opengl
+
 apps:
   stack-utils:
     command: bin/modelctl
