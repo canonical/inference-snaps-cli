@@ -85,11 +85,11 @@ func TestGetModelsTable(t *testing.T) {
 
 	tableStr, err := cmd.getModelsTable(*modelsList)
 
-	expectedTable := `NAME                 CAPABILITIES               DISK 
-26b-q4-k-m-gguf      text                       6G   
-30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G   
-30m-q4-k-m-gguf      text, vision, audio, tool  1M   
-4b-it-int4-fq-ov*    text                       6G   
+	expectedTable := `NAME                 CAPABILITIES               DISK  MEMORY 
+26b-q4-k-m-gguf      text                       6G    8.7G   
+30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G    8.7G   
+30m-q4-k-m-gguf      text, vision, audio, tool  1M    2.2G   
+4b-it-int4-fq-ov*    text                       6G    8.7G   
 `
 
 	if tableStr != expectedTable {
@@ -109,11 +109,11 @@ func TestGetModelsTableAllModels(t *testing.T) {
 		t.Fatalf("Error getting models table: %v", err)
 	}
 
-	expectedTable := `NAME                 CAPABILITIES               DISK   ENGINES                                                          
-26b-q4-k-m-gguf      text                       6G     arm-neon, cpu, cpu-avx1, cpu-avx2, cpu-avx512, cuda-generic, ro… 
-30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G     cpu, cuda-generic, rocm-generic                                  
-30m-q4-k-m-gguf      text, vision, audio, tool  1M     cpu                                                              
-4b-it-int4-fq-ov*    text                       6G     intel-cpu, intel-gpu, intel-npu                                  
+	expectedTable := `NAME                 CAPABILITIES               DISK  MEMORY   ENGINES                                                  
+26b-q4-k-m-gguf      text                       6G    8.7G     arm-neon, cpu, cpu-avx1, cpu-avx2, cpu-avx512, cuda-gen… 
+30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G    8.7G     cpu, cuda-generic, rocm-generic                          
+30m-q4-k-m-gguf      text, vision, audio, tool  1M    2.2G     cpu                                                      
+4b-it-int4-fq-ov*    text                       6G    8.7G     intel-cpu, intel-gpu, intel-npu                          
 `
 
 	if tableStr != expectedTable {

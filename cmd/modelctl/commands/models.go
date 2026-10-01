@@ -142,13 +142,13 @@ func (cmd *modelsCommand) printModelsJson(modelsList outputModels) error {
 }
 
 func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error) {
-	headerRow := []string{"name", "capabilities", "disk"}
+	headerRow := []string{"name", "capabilities", "disk", "memory"}
 	if cmd.all {
 		headerRow = append(headerRow, "engines")
 	}
 	tableRows := [][]string{headerRow}
 
-	var modelNameMaxLen, modelCapabilitiesMaxLen, modelDiskMaxLen int
+	var modelNameMaxLen, modelCapabilitiesMaxLen, modelDiskMaxLen, modelMemoryMaxLen int
 
 	for _, model := range modelsList.Models {
 		name := model.Name
@@ -159,6 +159,7 @@ func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error
 
 		capabilities := strings.Join(model.Capabilities, ", ")
 		diskSize := model.DiskSize
+		requiredMemory := model.RequiredMemory
 		var engines string
 		if cmd.all {
 			engines = strings.Join(model.CompatibleEngines, ", ")
@@ -167,8 +168,9 @@ func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error
 		modelNameMaxLen = max(modelNameMaxLen, len(name), len(headerRow[0]))
 		modelCapabilitiesMaxLen = max(modelCapabilitiesMaxLen, len(capabilities), len(headerRow[1]))
 		modelDiskMaxLen = max(modelDiskMaxLen, len(diskSize), len(headerRow[2]))
+		modelMemoryMaxLen = max(modelMemoryMaxLen, len(requiredMemory), len(headerRow[3]))
 
-		row := []string{name, capabilities, diskSize}
+		row := []string{name, capabilities, diskSize, requiredMemory}
 		if cmd.all {
 			row = append(row, engines)
 		}
@@ -185,30 +187,34 @@ func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error
 	modelNameMaxLen += 1
 	modelCapabilitiesMaxLen += 2
 	modelDiskMaxLen += 2
+	modelMemoryMaxLen += 2
 	modelEnginesMaxLen := 0
 	if cmd.all {
-		modelDiskMaxLen += 1
+		modelMemoryMaxLen += 1
 		// Engines column fills the remaining space
-		modelEnginesMaxLen = tableMaxWidth - (modelNameMaxLen + modelCapabilitiesMaxLen + modelDiskMaxLen)
+		modelEnginesMaxLen = tableMaxWidth - (modelNameMaxLen + modelCapabilitiesMaxLen + modelDiskMaxLen + modelMemoryMaxLen)
 	}
 
 	widths := tw.Mapper[int, int]{
 		0: modelNameMaxLen,         // Model name
 		1: modelCapabilitiesMaxLen, // Capabilities
 		2: modelDiskMaxLen,         // Disk
+		3: modelMemoryMaxLen,       // Memory
 	}
 	headerPadding := []tw.Padding{
 		{Overwrite: true, Right: " "},
+		{Overwrite: true, Left: " ", Right: " "},
 		{Overwrite: true, Left: " ", Right: " "},
 		{Overwrite: true, Left: " "},
 	}
 	rowPadding := []tw.Padding{
 		{Overwrite: true, Right: " "},
 		{Overwrite: true, Left: " ", Right: " "},
+		{Overwrite: true, Left: " ", Right: " "},
 		{Overwrite: true, Left: " "},
 	}
 	if cmd.all {
-		widths[3] = modelEnginesMaxLen // Engines
+		widths[4] = modelEnginesMaxLen // Engines
 		headerPadding = append(headerPadding, tw.Padding{Overwrite: true, Left: " "})
 		rowPadding = append(rowPadding, tw.Padding{Overwrite: true, Left: " "})
 	}

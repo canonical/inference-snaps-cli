@@ -17,6 +17,9 @@ type ModelDetails struct {
 
 	DiskSize string `json:"disk-size" yaml:"disk-size"`
 
+	// Table-only for now; depends on the active engine's runtime
+	RequiredMemory string `json:"-" yaml:"-"`
+
 	KVCacheSize string `json:"kv-cache-size,omitempty" yaml:"kv-cache-size,omitempty"`
 
 	Components []string `json:"components" yaml:"components"`
@@ -47,6 +50,7 @@ func NewModelDetails(manifest *models.ScoredManifest) (ModelDetails, error) {
 		return modelDetails, ErrInsufficientDiskSpaceForModel
 	}
 	modelDetails.DiskSize = utils.FmtBytesShort(diskSizeBytes)
+	modelDetails.RequiredMemory = utils.FmtBytesShort(manifest.CompatibilityReport.RequiredMemory)
 
 	modelDetails.fillIncompatibilityIssues(manifest.CompatibilityReport)
 	return modelDetails, nil
