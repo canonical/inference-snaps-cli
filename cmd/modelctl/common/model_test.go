@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
 	"github.com/canonical/lscompute/pkg/machine"
 	"github.com/canonical/lscompute/pkg/machine/cpu"
@@ -289,5 +290,109 @@ func TestAvailableDiskSpace(t *testing.T) {
 	}
 	if diskSpace != 1024 {
 		t.Errorf("expected positive available disk space, got: %d", diskSpace)
+	}
+}
+
+func TestAvailableMemory(t *testing.T) {
+	machine := machine.Machine{
+		CPUs: []cpu.CPU{{
+			Architecture:   "amd64",
+			ManufacturerId: "GenuineIntel",
+			Flags:          []string{"fpu", "vme", "de"},
+		}},
+		Memory: memory.Memory{TotalRam: 67012501504, TotalSwap: 0}, // 64 GiB RAM, no swap
+		Disk: []disk.Disk{{
+			Total:     1006451294208, // ~937 GiB
+			Available: 943543738368,  // ~878 GiB
+			Path:      "/var/lib/snapd/snaps",
+		}},
+		PCIDevices: []pci.Device{
+			{
+				Bus:                  "pci",
+				Slot:                 "0000:00:00.0",
+				BusNumber:            0x0,
+				DeviceClass:          0x380,
+				ProgrammingInterface: new(uint8(0)),
+				VendorId:             0x1002, //amd
+				DeviceId:             0x4637,
+				SubvendorId:          new(uint16(0x103C)),
+				SubdeviceId:          new(uint16(0x89C6)),
+				AdditionalProperties: map[string]string{
+					"vram":              "10737418240", // 10 GiB
+					"microarchitecture": "gfx1153",
+				},
+			},
+			{
+				Bus:                  "pci",
+				Slot:                 "0000:00:00.0",
+				BusNumber:            0x0,
+				DeviceClass:          0x380,
+				ProgrammingInterface: new(uint8(0)),
+				VendorId:             0x1002, //amd
+				DeviceId:             0x4637,
+				SubvendorId:          new(uint16(0x103C)),
+				SubdeviceId:          new(uint16(0x89C6)),
+				AdditionalProperties: map[string]string{
+					"vram":              "107374182400", // 100 GiB
+					"microarchitecture": "gfx1152",
+				},
+			},
+			{
+				Bus:                  "pci",
+				Slot:                 "0000:00:00.0",
+				BusNumber:            0x0,
+				DeviceClass:          0x380,
+				ProgrammingInterface: new(uint8(0)),
+				VendorId:             0x10de, // nvidia
+				DeviceId:             0x4637,
+				SubvendorId:          new(uint16(0x103C)),
+				SubdeviceId:          new(uint16(0x89C6)),
+				AdditionalProperties: map[string]string{
+					"vram":               "[N/A]", // 10 GiB
+					"compute-capability": "6.7",
+				},
+			},
+		},
+	}
+
+	//test that the vram is computed for the correct device
+	engine, err := engines.LoadManifest("../../../test_data/engines", "rocm-generic")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	memoryAvailable, err := availableMemory(&machine, *engine)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if memoryAvailable != 107374182400 {
+		t.Errorf("expected 107374182400 available memory, got: %d", memoryAvailable)
+	}
+
+	// test that vram is ignored if engine is not gpu capable
+	engine, err = engines.LoadManifest("../../../test_data/engines", "cpu")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	memoryAvailable, err = availableMemory(&machine, *engine)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if memoryAvailable != 67012501504 {
+		t.Errorf("expected 67012501504 available memory, got: %d", memoryAvailable)
+	}
+
+	// test that system memory is returned when nvidia-smi return "[N/A]" for the VRAM
+	engine, err = engines.LoadManifest("../../../test_data/engines", "cuda-generic")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	memoryAvailable, err = availableMemory(&machine, *engine)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if memoryAvailable != 67012501504 {
+		t.Errorf("expected 67012501504 available memory, got: %d", memoryAvailable)
 	}
 }
