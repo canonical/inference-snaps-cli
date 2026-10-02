@@ -203,8 +203,8 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 		}
 
 		var kvCache uint64
-		if manifest.KVCacheSize != "" {
-			kvCache, err = utils.StringToBytes(manifest.KVCacheSize)
+		if manifest.RequiredMemory != "" {
+			kvCache, err = utils.StringToBytes(manifest.RequiredMemory)
 			if err != nil {
 				return nil, fmt.Errorf("parsing kv cache for model %q: %w", modelID, err)
 			}

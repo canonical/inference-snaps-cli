@@ -12,7 +12,7 @@ type Manifest struct {
 	Environment    []string                  `json:"environment" yaml:"environment"`
 	Layout         map[string]engines.Layout `yaml:"layout"`
 	Components     []string                  `json:"components" yaml:"components"`
-	RequiredMemory string                    `json:"memory" yaml:"memory"`
+	RequiredMemory string                    `json:"required-memory" yaml:"required-memory"`
 }
 
 type Server struct {

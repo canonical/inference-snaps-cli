@@ -176,6 +176,7 @@ func Example_printModelsJson() {
 	//         "text"
 	//       ],
 	//       "disk-size": "6G",
+	//       "required-memory": "8.7G",
 	//       "components": [
 	//         "model-4b-it-int4-fq-ov"
 	//       ],
@@ -216,6 +217,7 @@ func Example_printAllModelsJson() {
 	//         "text"
 	//       ],
 	//       "disk-size": "6G",
+	//       "required-memory": "8.7G",
 	//       "components": [
 	//         "model-26b-a4b-q4-k-m-gguf",
 	//         "mmproj-26b-bf16-gguf"
@@ -245,6 +247,7 @@ func Example_printAllModelsJson() {
 	//         "tool"
 	//       ],
 	//       "disk-size": "6G",
+	//       "required-memory": "8.7G",
 	//       "components": [
 	//         "model-30b-a3b-q4-k-m-gguf-1-of-6",
 	//         "model-30b-a3b-q4-k-m-gguf-2-of-6",
@@ -274,7 +277,7 @@ func Example_printAllModelsJson() {
 	//         "tool"
 	//       ],
 	//       "disk-size": "1M",
-	//       "kv-cache-size": "1M",
+	//       "required-memory": "2.2G",
 	//       "components": [
 	//         "model-30m-q4-k-m-gguf"
 	//       ],
@@ -294,6 +297,7 @@ func Example_printAllModelsJson() {
 	//         "text"
 	//       ],
 	//       "disk-size": "6G",
+	//       "required-memory": "8.7G",
 	//       "components": [
 	//         "model-4b-it-int4-fq-ov"
 	//       ],

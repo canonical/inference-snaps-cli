@@ -48,8 +48,8 @@ type Manifest struct {
 	Quantization string   `json:"quantization" yaml:"quantization"`
 	Capabilities []string `json:"capabilities" yaml:"capabilities"`
 
-	DiskSize    string `json:"disk-size" yaml:"disk-size"`
-	KVCacheSize string `json:"kv-cache-size,omitempty" yaml:"kv-cache-size,omitempty"`
+	DiskSize       string `json:"disk-size" yaml:"disk-size"`
+	RequiredMemory string `json:"required-memory,omitempty" yaml:"required-memory,omitempty"`
 
 	Components []string `json:"components" yaml:"components"`
 

@@ -13,7 +13,7 @@ capabilities:
   - audio
   - tool
 
-kv-cache-size: 1M
+required-memory: 1M
 
 components:
   - model-30m-q4-k-m-gguf
