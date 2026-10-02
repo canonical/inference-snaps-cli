@@ -23,7 +23,7 @@ func prepareTestData() (*enginesCommand, *outputEngines, error) {
 		return nil, nil, fmt.Errorf("error loading engines: %v", err)
 	}
 
-	machineInfo, err := machineInfoFixture("xps13-7390")
+	machineInfo, err := machineFixture("xps13-7390")
 	if err != nil {
 		return nil, nil, fmt.Errorf("error getting hardware info: %v", err)
 	}
@@ -102,16 +102,17 @@ cpu-avx2               Canonical Ltd      CPU AVX2 engine                yes
 cpu-avx1               Canonical Ltd      CPU AVX1 engine                yes   
 cpu                    Canonical Ltd      General CPU engine             yes   
 cpu-exptl              Canonical Ltd      CPU development engine         exptl 
-intel-gpu              Intel Corporation  Intel GPU engine               no    
-not-compatible-engine  Canonical Ltd      This summary is too long and…  no    
-cpu-avx512             Canonical Ltd      CPU AVX512 engine              no    
-arm-neon               Canonical Ltd      ARM NEON engine                no    
-ampere-altra           Canonical Ltd      Ampere Altra engine            no    
-ampere                 Canonical Ltd      Ampere ARM64 engine            no    
-intel-npu              Intel Corporation  Intel NPU engine               no    
 rocm-generic           Canonical Ltd      ROCm generic engine            no    
-amd-gpu                Canonical Ltd      AMD GPU engine                 no    
+not-compatible-engine  Canonical Ltd      This summary is too long and…  no    
+intel-npu              Intel Corporation  Intel NPU engine               no    
+intel-gpu              Intel Corporation  Intel GPU engine               no    
+ampere                 Canonical Ltd      Ampere ARM64 engine            no    
+cuda-no-vram           Canonical Ltd      CUDA engine without VRAM req…  no    
 cuda-generic           Canonical Ltd      CUDA generic engine            no    
+amd-gpu                Canonical Ltd      AMD GPU engine                 no    
+cpu-avx512             Canonical Ltd      CPU AVX512 engine              no    
+ampere-altra           Canonical Ltd      Ampere Altra engine            no    
+arm-neon               Canonical Ltd      ARM NEON engine                no    
 `
 
 	if tableStr != expectedTable {

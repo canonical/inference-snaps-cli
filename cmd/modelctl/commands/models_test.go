@@ -21,13 +21,19 @@ func prepareModelsTestData() (*modelsCommand, *outputModels, error) {
 	}
 
 	ctx := &common.Context{
-		ModelsDir:  "../../../test_data/models",
-		EnginesDir: "../../../test_data/engines",
-		Cache:      cache,
-		Config:     nil,
+		ModelsDir:   "../../../test_data/models",
+		EnginesDir:  "../../../test_data/engines",
+		RuntimesDir: "../../../test_data/runtimes",
+		Cache:       cache,
+		Config:      nil,
 	}
 
-	allModels, err := common.GetAllModels(ctx)
+	machine, err := machineFixture("dummy-machine")
+	if err != nil {
+		return nil, nil, fmt.Errorf("error creating machine fixture: %v", err)
+	}
+
+	allModels, err := common.GetAllModels(ctx, machine)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error getting all models with engines: %v", err)
 	}
@@ -78,15 +84,12 @@ func TestGetModelsTable(t *testing.T) {
 	}
 
 	tableStr, err := cmd.getModelsTable(*modelsList)
-	if err != nil {
-		t.Fatalf("Error getting models table: %v", err)
-	}
 
-	expectedTable := `NAME                 CAPABILITIES               DISK 
-26b-q4-k-m-gguf      text                       6G   
-30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G   
-30m-q4-k-m-gguf      text, vision, audio, tool  1M   
-4b-it-int4-fq-ov*    text                       6G   
+	expectedTable := `NAME                 CAPABILITIES               DISK  MEMORY 
+26b-q4-k-m-gguf      text                       6G    8.7G   
+30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G    8.7G   
+30m-q4-k-m-gguf      text, vision, audio, tool  1M    2.2G   
+4b-it-int4-fq-ov*    text                       6G    8.7G   
 `
 
 	if tableStr != expectedTable {
@@ -106,11 +109,11 @@ func TestGetModelsTableAllModels(t *testing.T) {
 		t.Fatalf("Error getting models table: %v", err)
 	}
 
-	expectedTable := `NAME                 CAPABILITIES               DISK   ENGINES                                                          
-26b-q4-k-m-gguf      text                       6G     arm-neon, cpu, cpu-avx1, cpu-avx2, cpu-avx512, cuda-generic, ro… 
-30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G     cpu, cuda-generic, rocm-generic                                  
-30m-q4-k-m-gguf      text, vision, audio, tool  1M     cpu                                                              
-4b-it-int4-fq-ov*    text                       6G     intel-cpu, intel-gpu, intel-npu                                  
+	expectedTable := `NAME                 CAPABILITIES               DISK  MEMORY   ENGINES                                                  
+26b-q4-k-m-gguf      text                       6G    8.7G     arm-neon, cpu, cpu-avx1, cpu-avx2, cpu-avx512, cuda-gen… 
+30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G    8.7G     cpu, cuda-generic, cuda-no-vram, rocm-generic            
+30m-q4-k-m-gguf      text, vision, audio, tool  1M    2.2G     cpu                                                      
+4b-it-int4-fq-ov*    text                       6G    8.7G     intel-cpu, intel-gpu, intel-npu                          
 `
 
 	if tableStr != expectedTable {
@@ -173,6 +176,7 @@ func Example_printModelsJson() {
 	//         "text"
 	//       ],
 	//       "disk-size": "6G",
+	//       "required-memory": "8.7G",
 	//       "components": [
 	//         "model-4b-it-int4-fq-ov"
 	//       ],
@@ -180,7 +184,8 @@ func Example_printModelsJson() {
 	//         "intel-cpu",
 	//         "intel-gpu",
 	//         "intel-npu"
-	//       ]
+	//       ],
+	//       "compatible": true
 	//     }
 	//   ]
 	// }
@@ -212,6 +217,7 @@ func Example_printAllModelsJson() {
 	//         "text"
 	//       ],
 	//       "disk-size": "6G",
+	//       "required-memory": "8.7G",
 	//       "components": [
 	//         "model-26b-a4b-q4-k-m-gguf",
 	//         "mmproj-26b-bf16-gguf"
@@ -223,8 +229,10 @@ func Example_printAllModelsJson() {
 	//         "cpu-avx2",
 	//         "cpu-avx512",
 	//         "cuda-generic",
+	//         "cuda-no-vram",
 	//         "rocm-generic"
-	//       ]
+	//       ],
+	//       "compatible": true
 	//     },
 	//     {
 	//       "name": "30b-a3b-q4-k-m-gguf",
@@ -239,6 +247,7 @@ func Example_printAllModelsJson() {
 	//         "tool"
 	//       ],
 	//       "disk-size": "6G",
+	//       "required-memory": "8.7G",
 	//       "components": [
 	//         "model-30b-a3b-q4-k-m-gguf-1-of-6",
 	//         "model-30b-a3b-q4-k-m-gguf-2-of-6",
@@ -250,8 +259,10 @@ func Example_printAllModelsJson() {
 	//       "compatible-engines": [
 	//         "cpu",
 	//         "cuda-generic",
+	//         "cuda-no-vram",
 	//         "rocm-generic"
-	//       ]
+	//       ],
+	//       "compatible": true
 	//     },
 	//     {
 	//       "name": "30m-q4-k-m-gguf",
@@ -266,12 +277,14 @@ func Example_printAllModelsJson() {
 	//         "tool"
 	//       ],
 	//       "disk-size": "1M",
+	//       "required-memory": "2.2G",
 	//       "components": [
 	//         "model-30m-q4-k-m-gguf"
 	//       ],
 	//       "compatible-engines": [
 	//         "cpu"
-	//       ]
+	//       ],
+	//       "compatible": true
 	//     },
 	//     {
 	//       "name": "4b-it-int4-fq-ov",
@@ -284,6 +297,7 @@ func Example_printAllModelsJson() {
 	//         "text"
 	//       ],
 	//       "disk-size": "6G",
+	//       "required-memory": "8.7G",
 	//       "components": [
 	//         "model-4b-it-int4-fq-ov"
 	//       ],
@@ -291,7 +305,8 @@ func Example_printAllModelsJson() {
 	//         "intel-cpu",
 	//         "intel-gpu",
 	//         "intel-npu"
-	//       ]
+	//       ],
+	//       "compatible": true
 	//     }
 	//   ]
 	// }
