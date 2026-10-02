@@ -92,6 +92,10 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 			return fmt.Errorf("cannot specify both engine name and --fix flag")
 		}
 
+		if err := cmd.migrateConfig(); err != nil {
+			return err
+		}
+
 		err := cmd.fixActiveEngine()
 		if errors.Is(err, common.ErrNoActiveEngine) { // If no engine is active, there's nothing to fix
 			return nil
@@ -410,6 +414,13 @@ func (cmd *useEngineCommand) verboseIncompatibilityReasons(report engines.Compat
 		reasons = append(reasons, "required device not found")
 	}
 	return reasons
+}
+
+func (cmd *useEngineCommand) migrateConfig() error {
+	if err := cmd.Config.Migrate(); err != nil {
+		return fmt.Errorf("migrating config: %v", err)
+	}
+	return nil
 }
 
 // engineNames extracts the Name field from a slice of engine manifests using the provided accessor.
