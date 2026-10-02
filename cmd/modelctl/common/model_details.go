@@ -17,10 +17,7 @@ type ModelDetails struct {
 
 	DiskSize string `json:"disk-size" yaml:"disk-size"`
 
-	// Table-only for now; depends on the active engine's runtime
-	RequiredMemory string `json:"-" yaml:"-"`
-
-	KVCacheSize string `json:"kv-cache-size,omitempty" yaml:"kv-cache-size,omitempty"`
+	RequiredMemory string `json:"required-memory,omitempty" yaml:"required-memory,omitempty"`
 
 	Components []string `json:"components" yaml:"components"`
 
@@ -39,7 +36,6 @@ func NewModelDetails(manifest *models.ScoredManifest) (ModelDetails, error) {
 	modelDetails.Format = manifest.Format
 	modelDetails.Quantization = manifest.Quantization
 	modelDetails.Capabilities = manifest.Capabilities
-	modelDetails.KVCacheSize = manifest.KVCacheSize
 	modelDetails.Components = manifest.Components
 	modelDetails.CompatibleEngines = manifest.CompatibilityReport.CompatibleEngines
 	modelDetails.Compatible = manifest.CompatibilityReport.Compatible

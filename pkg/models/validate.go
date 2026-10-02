@@ -127,9 +127,9 @@ func (manifest Manifest) validate(expectedModelName string) error {
 		return fmt.Errorf("invalid disk-size %q: %w", manifest.DiskSize, err)
 	}
 
-	if manifest.KVCacheSize != "" {
-		if _, err := utils.StringToBytes(manifest.KVCacheSize); err != nil {
-			return fmt.Errorf("invalid kv-cache-size %q: %w", manifest.KVCacheSize, err)
+	if manifest.RequiredMemory != "" {
+		if _, err := utils.StringToBytes(manifest.RequiredMemory); err != nil {
+			return fmt.Errorf("invalid required-memory %q: %w", manifest.RequiredMemory, err)
 		}
 	}
 
