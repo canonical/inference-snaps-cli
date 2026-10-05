@@ -356,7 +356,7 @@ func (cmd *machineCommand) printMachineYaml(md MachineDetails) error {
 
 func (cmd *machineCommand) fetchMachineWithSpinner() (*machine.Machine, error) {
 	stopProgress := common.StartProgressSpinner("Gathering machine information")
-	hwInfo, warnings, err := machine.Get(host.Real(), machine.Options{FriendlyNames: true, All: true})
+	hwInfo, warnings, err := machine.Get(host.Real(), true, true)
 	stopProgress()
 
 	if len(warnings) > 0 && cmd.Verbose {

@@ -725,7 +725,7 @@ func TestScoreEnginesMachineError(t *testing.T) {
 	// Set up an engines dir so LoadManifests succeeds (returns empty slice)
 	orig := machineGet
 	t.Cleanup(func() { machineGet = orig })
-	machineGet = func(host.Host, machine.Options) (*machine.Machine, []string, error) {
+	machineGet = func(host.Host, bool, bool) (*machine.Machine, []string, error) {
 		return nil, nil, errors.New("hw error")
 	}
 
@@ -747,7 +747,7 @@ func TestScoreEnginesScorerError(t *testing.T) {
 		machineGet = origGet
 		engineScorer = origScorer
 	})
-	machineGet = func(host.Host, machine.Options) (*machine.Machine, []string, error) {
+	machineGet = func(host.Host, bool, bool) (*machine.Machine, []string, error) {
 		return &machine.Machine{}, nil, nil
 	}
 	engineScorer = func(*machine.Machine, []engines.Manifest) ([]engines.ScoredManifest, error) {
@@ -772,7 +772,7 @@ func TestScoreEnginesSuccess(t *testing.T) {
 		machineGet = origGet
 		engineScorer = origScorer
 	})
-	machineGet = func(host.Host, machine.Options) (*machine.Machine, []string, error) {
+	machineGet = func(host.Host, bool, bool) (*machine.Machine, []string, error) {
 		return &machine.Machine{}, []string{"a warning"}, nil
 	}
 	want := []engines.ScoredManifest{{Manifest: engines.Manifest{Name: "mock-engine"}}}
@@ -810,7 +810,7 @@ func TestScoreEnginesWithSpinnerSuccess(t *testing.T) {
 		machineGet = origGet
 		engineScorer = origScorer
 	})
-	machineGet = func(host.Host, machine.Options) (*machine.Machine, []string, error) {
+	machineGet = func(host.Host, bool, bool) (*machine.Machine, []string, error) {
 		return &machine.Machine{}, nil, nil
 	}
 	engineScorer = func(*machine.Machine, []engines.Manifest) ([]engines.ScoredManifest, error) {
@@ -835,7 +835,7 @@ func TestScoreEnginesWithSpinnerVerboseWarnings(t *testing.T) {
 		machineGet = origGet
 		engineScorer = origScorer
 	})
-	machineGet = func(host.Host, machine.Options) (*machine.Machine, []string, error) {
+	machineGet = func(host.Host, bool, bool) (*machine.Machine, []string, error) {
 		return &machine.Machine{}, []string{"warning1", "warning2"}, nil
 	}
 	engineScorer = func(*machine.Machine, []engines.Manifest) ([]engines.ScoredManifest, error) {

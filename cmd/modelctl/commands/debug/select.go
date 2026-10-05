@@ -58,7 +58,7 @@ func (cmd *selectCommand) run(_ *cobra.Command, args []string) error {
 	} else {
 		h = host.Fake(cmd.machineDir)
 	}
-	machineInfo, _, err := machine.Get(h, machine.Options{FriendlyNames: true, All: true})
+	machineInfo, _, err := machine.Get(h, true, true)
 
 	if err != nil {
 		return fmt.Errorf("decoding machine info: %s", err)

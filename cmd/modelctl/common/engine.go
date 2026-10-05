@@ -234,7 +234,7 @@ func ScoreEngines(ctx *Context) ([]engines.ScoredManifest, *machine.Machine, []s
 		return nil, nil, nil, fmt.Errorf("loading engines: %w", err)
 	}
 
-	machineInfo, warnings, err := machineGet(host.Real(), machine.Options{FriendlyNames: false, All: true})
+	machineInfo, warnings, err := machineGet(host.Real(), false, true)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("getting machine info: %w", err)
 	}

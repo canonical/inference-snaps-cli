@@ -110,7 +110,7 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 			if !observable {
 				return cmd.switchEngine(args[0])
 			}
-			machine, _, err := machine.Get(host.Real(), machine.Options{FriendlyNames: true, All: true})
+			machine, _, err := machine.Get(host.Real(), true, true)
 			if err != nil {
 				return fmt.Errorf("getting machine info: %v", err)
 			}
