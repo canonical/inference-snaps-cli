@@ -445,6 +445,21 @@ func TestRunCommandFallbackHelper(t *testing.T) {
 	}
 
 	err := (&runCommand{Context: ctx, fallbackServer: true}).run(nil, []string{"/bin/sh", "-c", childCommand})
+	if mode == "sigterm" || mode == "sigint" {
+		var exitErr *exec.ExitError
+		if !errors.As(err, &exitErr) {
+			t.Fatalf("expected child signal error, got %v", err)
+		}
+		status, ok := exitErr.ProcessState.Sys().(syscall.WaitStatus)
+		wantSignal := syscall.SIGTERM
+		if mode == "sigint" {
+			wantSignal = syscall.SIGINT
+		}
+		if !ok || !status.Signaled() || status.Signal() != wantSignal {
+			t.Fatalf("expected child signal %v, got %v", wantSignal, err)
+		}
+		return
+	}
 	if err != nil {
 		t.Fatalf("run command failed: %v", err)
 	}

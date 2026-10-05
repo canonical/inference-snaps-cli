@@ -101,7 +101,7 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 		return cmd.startFallbackServer(commandErr)
 	}
 
-	return nil
+	return commandErr
 }
 
 func (cmd *runCommand) startFallbackServer(commandErr error) error {
@@ -136,10 +136,9 @@ func (cmd *runCommand) startFallbackServer(commandErr error) error {
 		if err := fallbackserver.Run(url, servedErrorMessages); err != nil {
 			return fmt.Errorf("running fallback server: %v", err)
 		}
-	} else {
-		return commandErr
 	}
-	return nil
+
+	return commandErr
 }
 
 func commandStopped(err error) bool {
