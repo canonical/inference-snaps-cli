@@ -71,8 +71,8 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 	}
 
 	clean, err := common.LoadEngineEnvironment(cmd.Context)
-	if err == common.ErrNoActiveModel {
-		return fmt.Errorf("no active model")
+	if errors.Is(err, common.ErrNoActiveModel) {
+		return cmd.startFallbackServer(err)
 	}
 	if err != nil {
 		return fmt.Errorf("loading engine environment: %v", err)
@@ -97,39 +97,51 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 
 	commandErr := execCmd.Run()
 
-	if commandErr != nil {
-		// systemd normally sends SIGTERM to every process in the service's
-		// control group. If only the child receives it, Run returns an
-		// ExitError; treat that as an intentional stop rather than a failure.
-		if commandStopped(commandErr) {
-			return nil
-		}
-		if cmd.fallbackServer {
-			// For now only serve a fallback server if the engine defines an openai endpoint
-			url, err := common.OpenAiBaseUrl(cmd.Context)
-			if err != nil && errors.Is(err, common.ErrNoOpenAiServer) {
-				return fmt.Errorf("command exited with non-zero status: %v", commandErr)
-			} else if err != nil {
-				return fmt.Errorf("getting OpenAI base URL: %v", err)
-			}
-
-			statusStr, err := common.SnapStatus(cmd.Context)
-			if err != nil && !errors.Is(err, common.ErrNoActiveModel) {
-				return fmt.Errorf("getting status: %v", err)
-			}
-			if statusStr == nil {
-				return fmt.Errorf("empty status reported")
-			}
-
-			fmt.Println("Command failed to run, starting fallback server...")
-			if err := fallbackserver.Run(url, statusStr.Notices); err != nil {
-				return fmt.Errorf("running fallback server: %v", err)
-			}
-		} else {
-			return fmt.Errorf("command exited with non-zero status: %v", commandErr)
-		}
+	// systemd normally sends SIGTERM to every process in the service's
+	// control group. If only the child receives it, Run() returns an ExitError.
+	// Treat that as an intentional stop rather than a failure.
+	if commandErr != nil && !commandStopped(commandErr) {
+		return cmd.startFallbackServer(commandErr)
 	}
 
+	return nil
+}
+
+func (cmd *runCommand) startFallbackServer(commandErr error) error {
+	if cmd.fallbackServer {
+		// For now only serve a fallback server if the engine defines an openai endpoint
+		url, err := common.OpenAiBaseUrl(cmd.Context)
+		if err != nil && errors.Is(err, common.ErrNoOpenAiServer) {
+			return fmt.Errorf("command exited with non-zero status: %v", commandErr)
+		} else if err != nil {
+			return fmt.Errorf("getting OpenAI base URL: %v", err)
+		}
+
+		var servedErrorMessages []string
+
+		statusStr, err := common.SnapStatus(cmd.Context)
+		if err != nil {
+			if errors.Is(err, common.ErrNoActiveModel) {
+				servedErrorMessages = append(servedErrorMessages, "No active model is set. Please set an active model and try again.")
+			} else {
+				return fmt.Errorf("getting status: %v", err)
+			}
+		}
+		if statusStr == nil {
+			return fmt.Errorf("empty status reported")
+		}
+
+		// Report all notices as errors to explain why the server failed
+		servedErrorMessages = append(servedErrorMessages, statusStr.Notices...)
+
+		fmt.Println("Starting fallback server...")
+
+		if err := fallbackserver.Run(url, servedErrorMessages); err != nil {
+			return fmt.Errorf("running fallback server: %v", err)
+		}
+	} else {
+		return fmt.Errorf("command exited with non-zero status: %v", commandErr)
+	}
 	return nil
 }
 

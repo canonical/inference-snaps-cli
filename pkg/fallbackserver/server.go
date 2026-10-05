@@ -70,7 +70,7 @@ func listenAddress(baseURL string) (string, error) {
 func handler(errorMessages []string) (http.Handler, error) {
 	message := defaultErrorMessage
 	if len(errorMessages) > 0 {
-		message += "\n" + strings.Join(errorMessages, "\n")
+		message = strings.Join(errorMessages, "\n")
 	}
 
 	response := errorResponse{}
