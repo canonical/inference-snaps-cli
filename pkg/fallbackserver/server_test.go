@@ -92,13 +92,8 @@ func TestHandlerReportsServiceUnavailable(t *testing.T) {
 			if err := json.NewDecoder(recorder.Body).Decode(&response); err != nil {
 				t.Fatalf("decoding response: %v", err)
 			}
-			if !strings.HasPrefix(response.Error.Message, defaultErrorMessage) {
-				t.Fatalf("error message %q does not start with %q", response.Error.Message, defaultErrorMessage)
-			}
-			for _, message := range errorMessages {
-				if !strings.Contains(response.Error.Message, message) {
-					t.Fatalf("error message %q does not contain %q", response.Error.Message, message)
-				}
+			if want := strings.Join(errorMessages, "\n"); response.Error.Message != want {
+				t.Fatalf("error message = %q, want %q", response.Error.Message, want)
 			}
 			if response.Error.Type != "unavailable_error" {
 				t.Fatalf("error type = %q, want %q", response.Error.Type, "unavailable_error")

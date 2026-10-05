@@ -109,7 +109,7 @@ func (cmd *runCommand) startFallbackServer(commandErr error) error {
 		// For now only serve a fallback server if the engine defines an openai endpoint
 		url, err := common.OpenAiBaseUrl(cmd.Context)
 		if err != nil && errors.Is(err, common.ErrNoOpenAiServer) {
-			return fmt.Errorf("command exited with non-zero status: %v", commandErr)
+			return commandErr
 		} else if err != nil {
 			return fmt.Errorf("getting OpenAI base URL: %v", err)
 		}
@@ -137,7 +137,7 @@ func (cmd *runCommand) startFallbackServer(commandErr error) error {
 			return fmt.Errorf("running fallback server: %v", err)
 		}
 	} else {
-		return fmt.Errorf("command exited with non-zero status: %v", commandErr)
+		return commandErr
 	}
 	return nil
 }

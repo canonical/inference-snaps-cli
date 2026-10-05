@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -329,12 +328,14 @@ func TestNoActiveModel(t *testing.T) {
 }
 
 func TestRunCommandFailure(t *testing.T) {
+	missingCommand := filepath.Join(t.TempDir(), "missing-command")
 	tests := []struct {
-		name string
-		args []string
+		name    string
+		args    []string
+		wantErr string
 	}{
-		{name: "non-zero exit", args: []string{"/bin/sh", "-c", "exit 7"}},
-		{name: "executable not found", args: []string{filepath.Join(t.TempDir(), "missing-command")}},
+		{name: "non-zero exit", args: []string{"/bin/sh", "-c", "exit 7"}, wantErr: "exit status 7"},
+		{name: "executable not found", args: []string{missingCommand}, wantErr: "fork/exec " + missingCommand + ": no such file or directory"},
 	}
 
 	for _, tt := range tests {
@@ -343,8 +344,8 @@ func TestRunCommandFailure(t *testing.T) {
 			activateTestModel(t, ctx)
 
 			err := (&runCommand{Context: ctx}).run(nil, tt.args)
-			if err == nil || !strings.HasPrefix(err.Error(), "command exited with non-zero status: ") {
-				t.Fatalf("expected friendly command failure, got %v", err)
+			if err == nil || err.Error() != tt.wantErr {
+				t.Fatalf("expected error %q, got %v", tt.wantErr, err)
 			}
 		})
 	}
