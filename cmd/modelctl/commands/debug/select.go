@@ -52,13 +52,13 @@ func SelectCommand(ctx *common.Context) *cobra.Command {
 }
 
 func (cmd *selectCommand) run(_ *cobra.Command, args []string) error {
-	var machineInfo *machine.Machine
-	var err error
+	var h host.Host
 	if cmd.machineDir == "/" {
-		machineInfo, _, err = machine.Get(host.Real(), true, true)
+		h = host.Real()
 	} else {
-		machineInfo, _, err = machine.Get(host.Fake(cmd.machineDir), true, true)
+		h = host.Fake(cmd.machineDir)
 	}
+	machineInfo, _, err := machine.Get(h, machine.Options{FriendlyNames: true, All: true})
 
 	if err != nil {
 		return fmt.Errorf("decoding machine info: %s", err)

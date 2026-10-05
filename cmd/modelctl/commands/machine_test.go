@@ -77,7 +77,7 @@ func Example_machineCommand_printMachineYaml() {
 	//       flags: [fpu, vme, de]
 	// memory:
 	//     total-ram: 62.4G
-	//     total-swap: 0
+	//     total-swap: "0"
 	// disks:
 	//     - path: /var/lib/snapd/snaps
 	//       total: 937.3G

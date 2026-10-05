@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -56,8 +55,8 @@ func (m MemoryDetails) MarshalYAML() (any, error) {
 		TotalRam  any `yaml:"total-ram"`
 		TotalSwap any `yaml:"total-swap"`
 	}{
-		TotalRam:  FormatBytes(m.TotalRam),
-		TotalSwap: FormatBytes(m.TotalSwap),
+		TotalRam:  utils.FmtBytesShort(m.TotalRam),
+		TotalSwap: utils.FmtBytesShort(m.TotalSwap),
 	}, nil
 }
 
@@ -77,8 +76,8 @@ func (d DiskDetails) MarshalYAML() (any, error) {
 	}{
 		MountPoint: d.MountPoint,
 		Path:       d.Path,
-		Total:      FormatBytes(d.Total),
-		Avail:      FormatBytes(d.Avail),
+		Total:      utils.FmtBytesShort(d.Total),
+		Avail:      utils.FmtBytesShort(d.Avail),
 	}, nil
 }
 
@@ -138,7 +137,7 @@ func (a PciAdditionalDeviceProperties) MarshalYAML() (any, error) {
 		ComputeCapability string `yaml:"compute-capability,omitempty"`
 	}{
 		Microarchitecture: a.Microarchitecture,
-		Vram:              FormatBytes(a.Vram),
+		Vram:              utils.FmtBytesShort(a.Vram),
 		ComputeCapability: a.ComputeCapability,
 	}, nil
 }
@@ -252,53 +251,6 @@ func NewMachineDetails(info *machine.Machine) *MachineDetails {
 	return v
 }
 
-func (m *MachineDetails) Marshal(f string) ([]byte, error) {
-	switch f {
-	case FormatJSON:
-		jsonString, err := json.MarshalIndent(m, "", "  ")
-		if err != nil {
-			return nil, err
-		}
-		jsonString = append(jsonString, '\n')
-		return jsonString, nil
-	case FormatPlain:
-		return m.marshalPlain()
-	default:
-		return nil, fmt.Errorf("unknown format %q (choices: plain, json)", f)
-	}
-}
-
-func (m *MachineDetails) marshalPlain() ([]byte, error) {
-	var b bytes.Buffer
-	enc := yaml.NewEncoder(&b)
-	enc.SetIndent(2)
-	if err := enc.Encode(m); err != nil {
-		return nil, err
-	}
-	if err := enc.Close(); err != nil {
-		return nil, err
-	}
-	return b.Bytes(), nil
-}
-
-func FormatBytes(b uint64) any {
-	const (
-		mib = 1024 * 1024
-		gib = 1024 * mib
-		tib = 1024 * gib
-	)
-	switch {
-	case b >= tib:
-		return fmt.Sprintf("%.1fT", float64(b)/tib)
-	case b >= gib:
-		return fmt.Sprintf("%.1fG", float64(b)/gib)
-	case b >= mib:
-		return fmt.Sprintf("%.1fM", float64(b)/mib)
-	default:
-		return b
-	}
-}
-
 func newPciAdditionalDeviceProperties(props map[string]string) *PciAdditionalDeviceProperties {
 	if len(props) == 0 {
 		return nil
@@ -404,7 +356,7 @@ func (cmd *machineCommand) printMachineYaml(md MachineDetails) error {
 
 func (cmd *machineCommand) fetchMachineWithSpinner() (*machine.Machine, error) {
 	stopProgress := common.StartProgressSpinner("Gathering machine information")
-	hwInfo, warnings, err := machine.Get(host.Real(), true, true)
+	hwInfo, warnings, err := machine.Get(host.Real(), machine.Options{FriendlyNames: true, All: true})
 	stopProgress()
 
 	if len(warnings) > 0 && cmd.Verbose {
