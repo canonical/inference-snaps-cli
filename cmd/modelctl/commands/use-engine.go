@@ -389,6 +389,11 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 		if err != nil {
 			return fmt.Errorf("setting active model: %v", err)
 		}
+	} else {
+		err = cmd.Cache.SetActiveModel("")
+		if err != nil {
+			return fmt.Errorf("clearing active model: %v", err)
+		}
 	}
 
 	// Make sure all components are correctly installed and engine is configured

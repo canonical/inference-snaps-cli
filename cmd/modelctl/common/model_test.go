@@ -339,6 +339,47 @@ func TestScoreModelsAgainstEngineRequiredMemoryOverflow(t *testing.T) {
 	}
 }
 
+func TestSelectModelScoreOverflow(t *testing.T) {
+	modelsDir := t.TempDir()
+	enginesDir := t.TempDir()
+	runtimeDir := t.TempDir()
+	writeModelYAML(t, modelsDir, "small", "name: small\ndisk-size: 1G\nrequired-memory: 0\n")
+	writeModelYAML(t, modelsDir, "large", "name: large\ndisk-size: 9223372036854775808\nrequired-memory: 0\n")
+	writeRuntimeYAML(t, runtimeDir, "my-runtime", "name: my-runtime\nrequired-memory: 0\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n")
+	writeEngineYAML(t, enginesDir, "my-engine", "name: my-engine\nruntime: my-runtime\nmodel:\n  options:\n    - small\n    - large\n")
+	ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir, RuntimesDir: runtimeDir}
+	engine, err := engines.LoadManifest(enginesDir, "my-engine")
+	if err != nil {
+		t.Fatalf("loading engine: %v", err)
+	}
+	hostMachine := getTestMachine()
+	hostMachine.Memory.TotalRam = math.MaxUint64
+	hostMachine.Disk[0].Available = math.MaxUint64
+
+	selected, scoredModels, err := SelectModel(ctx, *engine, "", hostMachine)
+	if err != nil {
+		t.Fatalf("selecting model: %v", err)
+	}
+	if selected != "large" {
+		t.Errorf("selected model = %q, want large", selected)
+	}
+	if len(scoredModels) != 2 {
+		t.Fatalf("expected two scored models, got %d", len(scoredModels))
+	}
+	for _, model := range scoredModels {
+		if !model.CompatibilityReport.Compatible {
+			t.Errorf("model %q should be compatible", model.Name)
+		}
+		wantScore := uint64(4 * 1024 * 1024 * 1024)
+		if model.Name == "large" {
+			wantScore = math.MaxUint64
+		}
+		if model.Score != wantScore {
+			t.Errorf("model %q score = %d, want %d", model.Name, model.Score, wantScore)
+		}
+	}
+}
+
 func TestAvailableDiskSpace(t *testing.T) {
 	machine := new(machine.Machine{})
 	machine.Disk = []disk.Disk{

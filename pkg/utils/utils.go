@@ -97,6 +97,17 @@ func StringToBytes(sizeString string) (uint64, error) {
 	return uint64(sizeBytes), nil
 }
 
+func CheckedAddUint64(values ...uint64) (uint64, bool) {
+	var total uint64
+	for _, value := range values {
+		if value > math.MaxUint64-total {
+			return 0, false
+		}
+		total += value
+	}
+	return total, true
+}
+
 // SplitPathIntoDirectories takes a file path and returns a slice of strings containing the individual directory names that makes up the path
 func SplitPathIntoDirectories(p string) []string {
 	var parts []string

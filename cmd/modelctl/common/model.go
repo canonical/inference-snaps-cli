@@ -179,19 +179,18 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 		return nil, err
 	}
 
-	runtimeManifest, err := runtimes.LoadManifest(ctx.RuntimesDir, engineManifest.Runtime)
-	if err != nil {
-		return nil, fmt.Errorf("loading runtime manifest: %v", err)
-	}
-
-	var runtimeMemory uint64
-	if runtimeManifest.RequiredMemory != "" {
-		runtimeMemory, err = utils.StringToBytes(runtimeManifest.RequiredMemory)
+	var runtimeMemory uint64 = 200 * 1024 * 1024 // 200 MB
+	if engineManifest.Runtime != "" {
+		runtimeManifest, err := runtimes.LoadManifest(ctx.RuntimesDir, engineManifest.Runtime)
 		if err != nil {
-			return nil, fmt.Errorf("parsing runtime memory: %v", err)
+			return nil, fmt.Errorf("loading runtime manifest: %v", err)
 		}
-	} else {
-		runtimeMemory = 200 * 1024 * 1024 // 200 MB
+		if runtimeManifest.RequiredMemory != "" {
+			runtimeMemory, err = utils.StringToBytes(runtimeManifest.RequiredMemory)
+			if err != nil {
+				return nil, fmt.Errorf("parsing runtime memory: %v", err)
+			}
+		}
 	}
 
 	engineManifests, err := engines.LoadManifests(ctx.EnginesDir)
@@ -218,13 +217,10 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 			kvCache = 500 * 1024 * 1024 // 500 MB
 		}
 
-		requiredMemory := size
 		// 2GB for squashfs and OS
-		for _, memoryRequirement := range []uint64{kvCache, runtimeMemory, 2 * 1024 * 1024 * 1024} {
-			if memoryRequirement > math.MaxUint64-requiredMemory {
-				return nil, fmt.Errorf("required memory for model %q overflows uint64", modelID)
-			}
-			requiredMemory += memoryRequirement
+		requiredMemory, ok := utils.CheckedAddUint64(size, kvCache, runtimeMemory, 2*1024*1024*1024)
+		if !ok {
+			return nil, fmt.Errorf("required memory for model %q overflows uint64", modelID)
 		}
 
 		report := models.CompatibilityReport{
@@ -239,7 +235,10 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 
 		score := uint64(0)
 		if report.CompatibleDisk && report.CompatibleMemory {
-			score = report.RequiredDiskSpace + report.RequiredMemory
+			score, ok = utils.CheckedAddUint64(report.RequiredDiskSpace, report.RequiredMemory)
+			if !ok {
+				score = math.MaxUint64
+			}
 		}
 		scoredModelManifest := models.ScoredManifest{
 			Manifest:            manifest,
