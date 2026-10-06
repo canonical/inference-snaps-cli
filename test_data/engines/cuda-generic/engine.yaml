@@ -6,7 +6,7 @@ devices:
   allof:
     - type: cpu
       architecture: amd64
-      flags: [sse4_2, f16c, fma, avx, avx2]    
+      flags: [sse4_2, f16c, fma, avx, avx2]
     - type: gpu
       bus: pci
       vendor-id: 0x10de # Nvidia Corporation
