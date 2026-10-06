@@ -8,44 +8,6 @@ import (
 	"testing"
 )
 
-func TestListenAddress(t *testing.T) {
-	tests := []struct {
-		name    string
-		baseURL string
-		want    string
-		wantErr bool
-	}{
-		{name: "host port and path", baseURL: "http://127.0.0.1:8080/v1", want: "127.0.0.1:8080"},
-		{name: "default port", baseURL: "http://localhost/v3", want: "localhost:80"},
-		{name: "IPv6", baseURL: "http://[::1]:9000/api/v1", want: "[::1]:9000"},
-		{name: "no path", baseURL: "http://localhost:8080", want: "localhost:8080"},
-		{name: "invalid URL", baseURL: "://localhost:8080/v1", wantErr: true},
-		{name: "missing host", baseURL: "http:///v1", wantErr: true},
-		{name: "HTTPS unsupported", baseURL: "https://localhost:8080/v1", wantErr: true},
-		{name: "user information", baseURL: "http://user@localhost:8080/v1", wantErr: true},
-		{name: "query", baseURL: "http://localhost:8080/v1?key=value", wantErr: true},
-		{name: "fragment", baseURL: "http://localhost:8080/v1#fragment", wantErr: true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := listenAddress(tt.baseURL)
-			if tt.wantErr {
-				if err == nil {
-					t.Fatalf("listenAddress(%q) unexpectedly succeeded with %q", tt.baseURL, got)
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("listenAddress(%q) returned error: %v", tt.baseURL, err)
-			}
-			if got != tt.want {
-				t.Fatalf("listenAddress(%q) = %q, want %q", tt.baseURL, got, tt.want)
-			}
-		})
-	}
-}
-
 func TestHandlerReportsServiceUnavailable(t *testing.T) {
 	type apiError struct {
 		Error struct {
@@ -56,11 +18,11 @@ func TestHandlerReportsServiceUnavailable(t *testing.T) {
 		} `json:"error"`
 	}
 
-	errorMessages := []string{
+	errorMessage := strings.Join([]string{
 		"Not enough disk space.",
 		`Model "example" could not be installed.`,
-	}
-	responseHandler, err := handler(errorMessages)
+	}, "\n")
+	responseHandler, err := handler(errorMessage)
 	if err != nil {
 		t.Fatalf("creating handler: %v", err)
 	}
@@ -92,8 +54,8 @@ func TestHandlerReportsServiceUnavailable(t *testing.T) {
 			if err := json.NewDecoder(recorder.Body).Decode(&response); err != nil {
 				t.Fatalf("decoding response: %v", err)
 			}
-			if want := strings.Join(errorMessages, "\n"); response.Error.Message != want {
-				t.Fatalf("error message = %q, want %q", response.Error.Message, want)
+			if response.Error.Message != errorMessage {
+				t.Fatalf("error message = %q, want %q", response.Error.Message, errorMessage)
 			}
 			if response.Error.Type != "unavailable_error" {
 				t.Fatalf("error type = %q, want %q", response.Error.Type, "unavailable_error")
@@ -109,7 +71,7 @@ func TestHandlerReportsServiceUnavailable(t *testing.T) {
 }
 
 func TestHandlerWithoutErrorMessages(t *testing.T) {
-	responseHandler, err := handler(nil)
+	responseHandler, err := handler("")
 	if err != nil {
 		t.Fatalf("creating handler: %v", err)
 	}

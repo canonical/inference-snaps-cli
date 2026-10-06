@@ -21,6 +21,46 @@ import (
 
 const runFallbackHelperEnv = "GO_WANT_RUN_FALLBACK_HELPER"
 
+func TestListenAddress(t *testing.T) {
+	tests := []struct {
+		name    string
+		baseURL string
+		want    string
+		wantErr bool
+	}{
+		{name: "host port and path", baseURL: "http://127.0.0.1:8080/v1", want: "127.0.0.1:8080"},
+		{name: "default port", baseURL: "http://localhost/v3", want: "localhost:80"},
+		{name: "IPv6", baseURL: "http://[::1]:9000/api/v1", want: "[::1]:9000"},
+		{name: "IPv6 default port", baseURL: "http://[::1]/v1", want: "[::1]:80"},
+		{name: "no path", baseURL: "http://localhost:8080", want: "localhost:8080"},
+		{name: "invalid URL", baseURL: "://localhost:8080/v1", wantErr: true},
+		{name: "missing host", baseURL: "http:///v1", wantErr: true},
+		{name: "invalid port", baseURL: "http://localhost:invalid/v1", wantErr: true},
+		{name: "HTTPS", baseURL: "https://localhost:8080/v1", want: "localhost:8080"},
+		{name: "user information", baseURL: "http://user@localhost:8080/v1", want: "localhost:8080"},
+		{name: "query", baseURL: "http://localhost:8080/v1?key=value", want: "localhost:8080"},
+		{name: "fragment", baseURL: "http://localhost:8080/v1#fragment", want: "localhost:8080"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := listenAddress(tt.baseURL)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("listenAddress(%q) unexpectedly succeeded with %q", tt.baseURL, got)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("listenAddress(%q) returned error: %v", tt.baseURL, err)
+			}
+			if got != tt.want {
+				t.Fatalf("listenAddress(%q) = %q, want %q", tt.baseURL, got, tt.want)
+			}
+		})
+	}
+}
+
 func testRunContext(t *testing.T, runtimeYAML string) *common.Context {
 	t.Helper()
 
