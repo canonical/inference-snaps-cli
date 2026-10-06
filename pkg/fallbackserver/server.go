@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 )
 
-const defaultErrorMessage = "The inference server failed to start."
+const defaultErrorMessage = "Inference server failed to start."
 
 type errorResponse struct {
 	Error struct {
@@ -21,14 +20,10 @@ type errorResponse struct {
 	} `json:"error"`
 }
 
-// Run starts an OpenAI-compatible error server at baseURL and blocks until the
+// Run starts an OpenAI-compatible error server at address and blocks until the
 // server stops.
-func Run(baseURL string, errorMessages []string) error {
-	address, err := listenAddress(baseURL)
-	if err != nil {
-		return err
-	}
-	responseHandler, err := handler(errorMessages)
+func Run(address string, errorMessage string) error {
+	responseHandler, err := handler(errorMessage)
 	if err != nil {
 		return fmt.Errorf("creating error response: %w", err)
 	}
@@ -42,35 +37,10 @@ func Run(baseURL string, errorMessages []string) error {
 	return server.ListenAndServe()
 }
 
-func listenAddress(baseURL string) (string, error) {
-	parsed, err := url.Parse(baseURL)
-	if err != nil {
-		return "", fmt.Errorf("parsing base URL: %w", err)
-	}
-	if parsed.Scheme != "http" {
-		return "", fmt.Errorf("unsupported base URL scheme %q: expected \"http\"", parsed.Scheme)
-	}
-	if parsed.Hostname() == "" {
-		return "", fmt.Errorf("base URL %q does not contain a host", baseURL)
-	}
-	if parsed.User != nil {
-		return "", fmt.Errorf("base URL must not contain user information")
-	}
-	if parsed.RawQuery != "" || parsed.Fragment != "" {
-		return "", fmt.Errorf("base URL must not contain a query or fragment")
-	}
-
-	port := parsed.Port()
-	if port == "" {
-		port = "80" // default for http url without a port
-	}
-	return net.JoinHostPort(parsed.Hostname(), port), nil
-}
-
-func handler(errorMessages []string) (http.Handler, error) {
+func handler(errorMessage string) (http.Handler, error) {
 	message := defaultErrorMessage
-	if len(errorMessages) > 0 {
-		message = strings.Join(errorMessages, "\n")
+	if strings.TrimSpace(errorMessage) != "" {
+		message = errorMessage
 	}
 
 	response := errorResponse{}

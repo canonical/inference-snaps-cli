@@ -3,6 +3,8 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"net"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -69,7 +71,7 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 
 	clean, err := common.LoadEngineEnvironment(cmd.Context)
 	if errors.Is(err, common.ErrNoActiveModel) {
-		return cmd.startFallbackServer(err)
+		return cmd.fallback(err)
 	}
 	if err != nil {
 		return fmt.Errorf("loading engine environment: %v", err)
@@ -91,54 +93,84 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 	execCmd := exec.Command(command, args[1:]...)
 	execCmd.Stdout = os.Stdout
 	execCmd.Stderr = os.Stderr
-
-	commandErr := execCmd.Run()
-
-	// systemd normally sends SIGTERM to every process in the service's
-	// control group. If only the child receives it, Run() returns an ExitError.
-	// Treat that as an intentional stop rather than a failure.
-	if commandErr != nil && !commandStopped(commandErr) {
-		return cmd.startFallbackServer(commandErr)
+	err = execCmd.Run()
+	if err != nil {
+		return cmd.fallback(err)
 	}
-
-	return commandErr
+	return err
 }
 
-func (cmd *runCommand) startFallbackServer(commandErr error) error {
-	if cmd.fallbackServer {
-		// For now only serve a fallback server if the engine defines an openai endpoint
-		url, err := common.OpenAiBaseUrl(cmd.Context)
-		if err != nil && errors.Is(err, common.ErrNoOpenAiServer) {
-			return commandErr
-		} else if err != nil {
-			return fmt.Errorf("getting OpenAI base URL: %v", err)
-		}
-
-		var servedErrorMessages []string
-
-		statusStr, err := common.SnapStatus(cmd.Context)
-		if err != nil {
-			if errors.Is(err, common.ErrNoActiveModel) {
-				servedErrorMessages = append(servedErrorMessages, "No active model is set. Please set an active model and try again.")
-			} else {
-				return fmt.Errorf("getting status: %v", err)
-			}
-		}
-		if statusStr == nil {
-			return fmt.Errorf("empty status reported")
-		}
-
-		// Report all notices as errors to explain why the server failed
-		servedErrorMessages = append(servedErrorMessages, statusStr.Notices...)
-
-		fmt.Println("Starting fallback server...")
-
-		if err := fallbackserver.Run(url, servedErrorMessages); err != nil {
-			return fmt.Errorf("running fallback server: %v", err)
-		}
+func (cmd *runCommand) fallback(commandErr error) error {
+	if !cmd.fallbackServer {
+		return commandErr
 	}
 
-	return commandErr
+	// If the child process is stopped with a direct sigterm or sigkill signal,
+	// interpret it as an expected exit which does not require a fallback server.
+	if commandStopped(commandErr) {
+		return commandErr
+	}
+
+	// For now only serve a fallback server if the engine defines an openai endpoint
+	baseUrl, err := common.OpenAiBaseUrl(cmd.Context)
+	if err != nil && errors.Is(err, common.ErrNoOpenAiServer) {
+		return commandErr
+	} else if err != nil {
+		return fmt.Errorf("getting OpenAI base URL: %v", err)
+	}
+
+	fallbackListenAddress, err := listenAddress(baseUrl)
+	if err != nil {
+		return fmt.Errorf("parsing OpenAI base URL: %v", err)
+	}
+
+	return cmd.startFallbackServer(fallbackListenAddress)
+}
+
+// listenAddress parses a URL and returns the host:port address
+func listenAddress(baseURL string) (string, error) {
+	parsed, err := url.Parse(baseURL)
+	if err != nil {
+		return "", fmt.Errorf("parsing base URL: %w", err)
+	}
+	if parsed.Hostname() == "" {
+		return "", fmt.Errorf("base URL %q does not contain a host", baseURL)
+	}
+
+	port := parsed.Port()
+	if port == "" {
+		port = "80" // default for http url without a port
+	}
+	return net.JoinHostPort(parsed.Hostname(), port), nil
+}
+
+// startFallbackServer gathers error messages explaining why the command failed,
+// then runs a fallback server on the provided address
+func (cmd *runCommand) startFallbackServer(address string) error {
+	servedErrorMessage := "Inference server failed to start. Please check the logs for more information."
+
+	statusStr, err := common.SnapStatus(cmd.Context)
+	if err != nil {
+		switch {
+		case errors.Is(err, common.ErrNoActiveEngine):
+			servedErrorMessage = "No active engine is set. Please set an active engine and try again."
+		case errors.Is(err, common.ErrNoActiveModel):
+			servedErrorMessage = "No active model is set. Please set an active model and try again."
+		default:
+			return fmt.Errorf("getting status: %v", err)
+		}
+	}
+	if statusStr == nil {
+		return fmt.Errorf("empty status reported")
+	}
+
+	fmt.Println("Starting fallback server...")
+
+	if err := fallbackserver.Run(address, servedErrorMessage); err != nil {
+		return fmt.Errorf("running fallback server: %v", err)
+	}
+
+	return nil
 }
 
 func commandStopped(err error) bool {
