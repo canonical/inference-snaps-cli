@@ -9,6 +9,7 @@ const (
 	capabilityVision                string = "vision"
 	capabilityTools                 string = "tools"
 	capabilityThinking              string = "thinking"
+	capabilityDecision              string = "decision"
 	capabilityTextEmbedding         string = "text-embedding"
 	capabilityTranscription         string = "transcription"
 	capabilityRealtimeTranscription string = "realtime-transcription"
@@ -59,7 +60,7 @@ type Manifest struct {
 }
 
 func SupportedCapabilities() []string {
-	return []string{capabilityText, capabilityVision, capabilityTools, capabilityThinking,
+	return []string{capabilityText, capabilityVision, capabilityTools, capabilityThinking, capabilityDecision,
 		capabilityTextEmbedding, capabilityTranscription, capabilityRealtimeTranscription}
 }
 
