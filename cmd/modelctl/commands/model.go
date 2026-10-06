@@ -111,31 +111,17 @@ func (cmd *modelCommand) showCurrentModel() error {
 }
 
 func (cmd *modelCommand) model(modelNameOrAlias string) error {
-	activeEngine, err := cmd.Cache.GetActiveEngine()
-	if err != nil {
-		return err
-	}
-	activeEngineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngine)
-	if err != nil {
-		return err
-	}
-
-	modelManifest, err := models.LoadManifest(cmd.ModelsDir, modelNameOrAlias)
-	if err != nil {
-		return err
-	}
-
 	machine, _, err := machine.Get(host.Real(), true, true)
 	if err != nil {
 		return fmt.Errorf("getting machine info: %v", err)
 	}
 
-	scoredModelDetails, err := common.GetScoredModel(cmd.Context, *activeEngineManifest, *modelManifest, machine)
+	scoredModelDetails, err := common.GetModelManifestByNameOrAlias(cmd.Context, modelNameOrAlias, machine)
 	if err != nil {
 		return fmt.Errorf("scoring model: %v", err)
 	}
 
-	modelDetails, err := common.NewModelDetails(&scoredModelDetails)
+	modelDetails, err := common.NewModelDetails(scoredModelDetails)
 	if err != nil {
 		return fmt.Errorf("creating model details: %v", err)
 	}

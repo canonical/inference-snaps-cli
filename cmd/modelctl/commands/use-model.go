@@ -95,7 +95,6 @@ func (cmd *useModelCommand) switchModel(modelNameOrAlias string, machine *machin
 	if err != nil {
 		return err
 	}
-
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
 		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)

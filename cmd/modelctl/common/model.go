@@ -3,6 +3,7 @@ package common
 import (
 	"cmp"
 	"fmt"
+	"math"
 	"slices"
 	"strconv"
 
@@ -193,6 +194,11 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 		runtimeMemory = 200 * 1024 * 1024 // 200 MB
 	}
 
+	engineManifests, err := engines.LoadManifests(ctx.EnginesDir)
+	if err != nil {
+		return nil, fmt.Errorf("loading engine manifests: %w", err)
+	}
+
 	scoredModels := make([]models.ScoredManifest, 0, len(modelManifests))
 	for modelID := range modelManifests {
 		manifest := modelManifests[modelID]
@@ -212,11 +218,20 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 			kvCache = 500 * 1024 * 1024 // 500 MB
 		}
 
+		requiredMemory := size
+		// 2GB for squashfs and OS
+		for _, memoryRequirement := range []uint64{kvCache, runtimeMemory, 2 * 1024 * 1024 * 1024} {
+			if memoryRequirement > math.MaxUint64-requiredMemory {
+				return nil, fmt.Errorf("required memory for model %q overflows uint64", modelID)
+			}
+			requiredMemory += memoryRequirement
+		}
+
 		report := models.CompatibilityReport{
 			CompatibleDisk:     size <= availableDiskSpace,
 			RequiredDiskSpace:  size,
 			AvailableDiskSpace: availableDiskSpace,
-			RequiredMemory:     size + kvCache + runtimeMemory + 2*1024*1024*1024, // 2GB for squashfs and OS
+			RequiredMemory:     requiredMemory,
 			AvailableMemory:    availableMemory,
 		}
 		report.CompatibleMemory = report.RequiredMemory <= availableMemory
@@ -232,10 +247,6 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 			CompatibilityReport: report,
 		}
 		compatibleEngines := []string{}
-		engineManifests, err := engines.LoadManifests(ctx.EnginesDir)
-		if err != nil {
-			return nil, fmt.Errorf("loading engine manifests: %w", err)
-		}
 		for _, engineManifest := range engineManifests {
 			if slices.Contains(engineManifest.Model.Options, manifest.Name) {
 				compatibleEngines = append(compatibleEngines, engineManifest.Name)
@@ -261,9 +272,11 @@ func SelectModel(ctx *Context, engineManifest engines.Manifest, preferredModel s
 
 	filteredManifestsByName := make(map[string]models.Manifest)
 	for _, model := range engineManifest.Model.Options {
-		if manifest, ok := modelManifestsByName[model]; ok {
-			filteredManifestsByName[model] = manifest
+		manifest, ok := modelManifestsByName[model]
+		if !ok {
+			return "", nil, fmt.Errorf("model manifest not found: %s", model)
 		}
+		filteredManifestsByName[model] = manifest
 	}
 	modelManifestsByName = filteredManifestsByName
 
@@ -310,7 +323,7 @@ func availableDiskSpace(machine *machine.Machine) (uint64, error) {
 }
 
 func availableMemory(machine *machine.Machine, engineManifest engines.Manifest) (uint64, error) {
-	systemMemory := machine.Memory.TotalRam + machine.Memory.TotalSwap
+	systemMemory := machine.Memory.TotalRam
 
 	var gpuDevices []engines.Device
 	for _, device := range slices.Concat(engineManifest.Devices.Allof, engineManifest.Devices.Anyof) {

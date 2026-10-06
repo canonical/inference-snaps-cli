@@ -379,6 +379,10 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 			}
 		} else {
 			modelManifest = nil
+			err = cmd.Cache.SetActiveModel("")
+			if err != nil {
+				return fmt.Errorf("clearing active model: %v", err)
+			}
 		}
 	} else if modelManifest != nil {
 		err = cmd.Cache.SetActiveModel(activeModelId)

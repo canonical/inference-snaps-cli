@@ -1,11 +1,14 @@
 package common
 
 import (
+	"math"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
 	"github.com/canonical/lscompute/pkg/machine"
 	"github.com/canonical/lscompute/pkg/machine/cpu"
@@ -270,6 +273,69 @@ func TestGetAllModelsWithEngines(t *testing.T) {
 		default:
 			t.Errorf("unexpected model name: %s", modelWithEngines.Name)
 		}
+	}
+}
+
+func TestScoreModelsAgainstEngineRequiredMemoryOverflow(t *testing.T) {
+	tests := []struct {
+		name          string
+		diskSize      string
+		cacheMemory   string
+		runtimeMemory string
+		wantMemory    uint64
+		wantOverflow  bool
+	}{
+		{
+			name: "cache overflow", diskSize: "9223372036854775808",
+			cacheMemory: "9223372036854775808", runtimeMemory: "1", wantOverflow: true,
+		},
+		{
+			name: "runtime overflow", diskSize: "9223372036854775808",
+			cacheMemory: "1", runtimeMemory: "9223372036854775808", wantOverflow: true,
+		},
+		{
+			name: "overhead overflow", diskSize: "18446744073709549568",
+			cacheMemory: "1", runtimeMemory: "1", wantOverflow: true,
+		},
+		{
+			name: "maximum valid total", diskSize: "18446744071562065920",
+			cacheMemory: "1024", runtimeMemory: "1023", wantMemory: math.MaxUint64,
+		},
+		{
+			name: "normal total", diskSize: "1G",
+			cacheMemory: "500M", runtimeMemory: "200M", wantMemory: 3*1024*1024*1024 + 700*1024*1024,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			runtimeDir := t.TempDir()
+			enginesDir := t.TempDir()
+			writeRuntimeYAML(t, runtimeDir, "my-runtime", "name: my-runtime\nrequired-memory: "+test.runtimeMemory+"\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n")
+			writeEngineYAML(t, enginesDir, "my-engine", "name: my-engine\nruntime: my-runtime\nmodel:\n  options:\n    - my-model\n")
+			ctx := &Context{EnginesDir: enginesDir, RuntimesDir: runtimeDir}
+			manifests := map[string]models.Manifest{
+				"my-model": {Name: "my-model", DiskSize: test.diskSize, RequiredMemory: test.cacheMemory},
+			}
+			scoredModels, err := ScoreModelsAgainstEngine(ctx, engines.Manifest{Runtime: "my-runtime"}, manifests, getTestMachine())
+			if test.wantOverflow {
+				if err == nil || !strings.Contains(err.Error(), `required memory for model "my-model" overflows uint64`) {
+					t.Fatalf("expected required memory overflow error, got %v", err)
+				}
+				if scoredModels != nil {
+					t.Fatalf("expected no scored models on overflow, got %v", scoredModels)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(scoredModels) != 1 {
+				t.Fatalf("expected one scored model, got %d", len(scoredModels))
+			}
+			if got := scoredModels[0].CompatibilityReport.RequiredMemory; got != test.wantMemory {
+				t.Errorf("required memory = %d, want %d", got, test.wantMemory)
+			}
+		})
 	}
 }
 

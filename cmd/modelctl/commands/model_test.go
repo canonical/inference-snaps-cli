@@ -175,7 +175,7 @@ func Example_modelCommand_printModelDetailsJson() {
 	// }
 }
 
-func Example_modelCommand_printModelDetailsIncomaptible() {
+func Example_modelCommand_printModelDetailsIncompatible() {
 	cache := storage.NewMockCache()
 	if err := cache.SetActiveEngine("intel-gpu"); err != nil {
 		panic(fmt.Sprintf("failed to set active engine: %v", err))
