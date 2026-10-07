@@ -43,7 +43,7 @@ func NewModelDetails(manifest *models.ScoredManifest) (ModelDetails, error) {
 	// Change disk size to largest possible unit representation
 	diskSizeBytes, err := utils.StringToBytes(manifest.DiskSize)
 	if err != nil {
-		return modelDetails, ErrInsufficientDiskSpaceForModel
+		return modelDetails, err
 	}
 	modelDetails.DiskSize = utils.FmtBytesShort(diskSizeBytes)
 	modelDetails.RequiredMemory = utils.FmtBytesShort(manifest.CompatibilityReport.RequiredMemory)
