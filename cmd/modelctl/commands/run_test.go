@@ -22,6 +22,7 @@ import (
 const runFallbackHelperEnv = "GO_WANT_RUN_FALLBACK_HELPER"
 
 func TestListenAddress(t *testing.T) {
+	cmd := runCommand{}
 	tests := []struct {
 		name    string
 		baseURL string
@@ -44,7 +45,7 @@ func TestListenAddress(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := listenAddress(tt.baseURL)
+			got, err := cmd.listenAddress(tt.baseURL)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatalf("listenAddress(%q) unexpectedly succeeded with %q", tt.baseURL, got)
@@ -542,6 +543,7 @@ func startRunFallbackHelper(t *testing.T, mode string, port int) (*exec.Cmd, <-c
 }
 
 func TestCommandStopped(t *testing.T) {
+	cmd := runCommand{}
 	tests := []struct {
 		name    string
 		command string
@@ -559,7 +561,7 @@ func TestCommandStopped(t *testing.T) {
 			if err == nil {
 				t.Fatal("expected command to fail")
 			}
-			if got := commandStopped(err); got != tt.want {
+			if got := cmd.commandStopped(err); got != tt.want {
 				var status syscall.WaitStatus
 				var exitErr *exec.ExitError
 				if errors.As(err, &exitErr) {

@@ -24,9 +24,8 @@ type runCommand struct {
 	*common.Context
 
 	// flags
-	waitForComponents bool
-	shareProvider     string
-	fallbackServer    bool
+	shareProvider  string
+	fallbackServer bool
 }
 
 func Run(ctx *common.Context) *cobra.Command {
@@ -107,7 +106,7 @@ func (cmd *runCommand) fallback(commandErr error) error {
 
 	// If the child process is stopped with a direct sigterm or sigkill signal,
 	// interpret it as an expected exit which does not require a fallback server.
-	if commandStopped(commandErr) {
+	if cmd.commandStopped(commandErr) {
 		return commandErr
 	}
 
@@ -119,7 +118,7 @@ func (cmd *runCommand) fallback(commandErr error) error {
 		return fmt.Errorf("getting OpenAI base URL: %v", err)
 	}
 
-	fallbackListenAddress, err := listenAddress(baseUrl)
+	fallbackListenAddress, err := cmd.listenAddress(baseUrl)
 	if err != nil {
 		return fmt.Errorf("parsing OpenAI base URL: %v", err)
 	}
@@ -128,7 +127,7 @@ func (cmd *runCommand) fallback(commandErr error) error {
 }
 
 // listenAddress parses a URL and returns the host:port address
-func listenAddress(baseURL string) (string, error) {
+func (*runCommand) listenAddress(baseURL string) (string, error) {
 	parsed, err := url.Parse(baseURL)
 	if err != nil {
 		return "", fmt.Errorf("parsing base URL: %w", err)
@@ -173,7 +172,7 @@ func (cmd *runCommand) startFallbackServer(address string) error {
 	return nil
 }
 
-func commandStopped(err error) bool {
+func (*runCommand) commandStopped(err error) bool {
 	var exitErr *exec.ExitError
 	if !errors.As(err, &exitErr) {
 		return false
