@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 func templateManifest() Manifest {
@@ -174,6 +174,16 @@ func TestCapabilityTextEmbedding(t *testing.T) {
 	err := manifest.validate("test")
 	if err != nil {
 		t.Fatalf("text-embedding is a valid capability, got error: %v", err)
+	}
+}
+
+func TestCapabilityDecision(t *testing.T) {
+	manifest := templateManifest()
+	manifest.Capabilities = []string{"decision"}
+
+	err := manifest.validate("test")
+	if err != nil {
+		t.Fatalf("decision is a valid capability, got error: %v", err)
 	}
 }
 

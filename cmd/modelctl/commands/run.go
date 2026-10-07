@@ -20,8 +20,7 @@ type runCommand struct {
 	*common.Context
 
 	// flags
-	waitForComponents bool
-	shareProvider     string
+	shareProvider string
 }
 
 func Run(ctx *common.Context) *cobra.Command {
@@ -37,7 +36,7 @@ func Run(ctx *common.Context) *cobra.Command {
 			"double dashes (--) from the run command and its flags. ",
 		Example: "  modelctl run env\n" +
 			"  modelctl run -- echo \"Hello World!\"\n" +
-			"  modelctl run --wait-for-components -- python3 -m http.server",
+			"  modelctl run --share-provider -- python3 -m http.server",
 		Hidden:            true,
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: cobra.NoFileCompletions,
@@ -45,9 +44,6 @@ func Run(ctx *common.Context) *cobra.Command {
 	}
 
 	// flags
-	// --wait-for-components
-	cobraCmd.Flags().BoolVar(&cmd.waitForComponents, "wait-for-components", false, "wait for engine components to be installed before running")
-	cobraCmd.Flags().MarkDeprecated("wait-for-components", "\"run\" always waits for components.")
 	// --share-provider [path]
 	cobraCmd.Flags().StringVar(&cmd.shareProvider, "share-provider", "", "write provider env file to a shared directory")
 	cobraCmd.Flags().Lookup("share-provider").NoOptDefVal = cmd.defaultProviderDirectoryPath()
@@ -134,18 +130,44 @@ func (cmd *runCommand) writeShareProviderEnv() error {
 	}
 
 	providerEnvPath := filepath.Join(cmd.shareProvider, "provider.env")
-	content := "SNAP_NAME=" + snap.SnapName() + "\n"
-	content += "SNAP_INSTANCE_NAME=" + snap.InstanceName() + "\n"
+	var content strings.Builder
+
+	content.WriteString("SNAP_NAME=")
+	content.WriteString(snap.SnapName())
+	content.WriteString("\n")
+
+	content.WriteString("SNAP_INSTANCE_NAME=")
+	content.WriteString(snap.InstanceName())
+	content.WriteString("\n")
 
 	baseURL, err := common.OpenAiBaseUrl(cmd.Context)
-	if err != nil && !errors.Is(err, common.ErrNoOpenAiServer) {
+	if err != nil && !errors.Is(err, common.ErrNoOpenAiServer) && !errors.Is(err, common.ErrOpenAiServerNoUrl) {
 		return fmt.Errorf("getting OpenAI base URL: %v", err)
 	} else if err == nil {
-		content += "OPENAI_BASE_URL=" + baseURL + "\n"
+		content.WriteString("OPENAI_BASE_URL=")
+		content.WriteString(baseURL)
+		content.WriteString("\n")
+	}
+
+	runtime, err := common.CurrentRuntimeManifest(cmd.Context)
+	if err != nil && !errors.Is(err, common.ErrEngineNoRuntime) {
+		return fmt.Errorf("getting current runtime manifest: %v", err)
+	}
+	for _, server := range runtime.Servers {
+		if server.IsUnixProtocol() {
+			if server.Namespace != "" {
+				content.WriteString(strings.ReplaceAll(strings.ToUpper(server.Namespace), "-", "_"))
+				content.WriteString("_")
+			}
+			content.WriteString("UNIX_SOCKET")
+			content.WriteString("=")
+			content.WriteString(server.UnixSocketName())
+			content.WriteString("\n")
+		}
 	}
 
 	tmpPath := providerEnvPath + ".tmp"
-	if err := os.WriteFile(tmpPath, []byte(content), 0o644); err != nil {
+	if err := os.WriteFile(tmpPath, []byte(content.String()), 0o644); err != nil {
 		return fmt.Errorf("writing provider env file: %v", err)
 	}
 	if err := os.Rename(tmpPath, providerEnvPath); err != nil {
