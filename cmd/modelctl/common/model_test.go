@@ -280,30 +280,34 @@ func TestScoreModelsAgainstEngineRequiredMemoryOverflow(t *testing.T) {
 	tests := []struct {
 		name          string
 		diskSize      string
-		cacheMemory   string
+		modelMemory   string
 		runtimeMemory string
 		wantMemory    uint64
 		wantOverflow  bool
 	}{
 		{
-			name: "cache overflow", diskSize: "9223372036854775808",
-			cacheMemory: "9223372036854775808", runtimeMemory: "1", wantOverflow: true,
+			name: "model memory overflow", diskSize: "1G",
+			modelMemory: "18446744071562066945", runtimeMemory: "1023", wantOverflow: true,
 		},
 		{
-			name: "runtime overflow", diskSize: "9223372036854775808",
-			cacheMemory: "1", runtimeMemory: "9223372036854775808", wantOverflow: true,
+			name: "runtime memory overflow", diskSize: "1G",
+			modelMemory: "1", runtimeMemory: "18446744071562066944", wantOverflow: true,
 		},
 		{
-			name: "overhead overflow", diskSize: "18446744073709549568",
-			cacheMemory: "1", runtimeMemory: "1", wantOverflow: true,
+			name: "overhead overflow", diskSize: "1G",
+			modelMemory: "18446744071562067967", runtimeMemory: "1", wantOverflow: true,
 		},
 		{
-			name: "maximum valid total", diskSize: "18446744071562065920",
-			cacheMemory: "1024", runtimeMemory: "1023", wantMemory: math.MaxUint64,
+			name: "near-maximum valid total", diskSize: "1G",
+			modelMemory: "18446744071562063872", runtimeMemory: "1023", wantMemory: 18446744073709548543,
 		},
 		{
 			name: "normal total", diskSize: "1G",
-			cacheMemory: "500M", runtimeMemory: "200M", wantMemory: 3*1024*1024*1024 + 700*1024*1024,
+			modelMemory: "500M", runtimeMemory: "200M", wantMemory: 2*1024*1024*1024 + 700*1024*1024,
+		},
+		{
+			name: "disk size fallback", diskSize: "1G",
+			runtimeMemory: "200M", wantMemory: 3*1024*1024*1024 + 200*1024*1024,
 		},
 	}
 	for _, test := range tests {
@@ -314,7 +318,7 @@ func TestScoreModelsAgainstEngineRequiredMemoryOverflow(t *testing.T) {
 			writeEngineYAML(t, enginesDir, "my-engine", "name: my-engine\nruntime: my-runtime\nmodel:\n  options:\n    - my-model\n")
 			ctx := &Context{EnginesDir: enginesDir, RuntimesDir: runtimeDir}
 			manifests := map[string]models.Manifest{
-				"my-model": {Name: "my-model", DiskSize: test.diskSize, RequiredMemory: test.cacheMemory},
+				"my-model": {Name: "my-model", DiskSize: test.diskSize, RequiredMemory: test.modelMemory},
 			}
 			scoredModels, err := ScoreModelsAgainstEngine(ctx, engines.Manifest{Runtime: "my-runtime"}, manifests, getTestMachine())
 			if test.wantOverflow {
@@ -343,8 +347,8 @@ func TestSelectModelScoreOverflow(t *testing.T) {
 	modelsDir := t.TempDir()
 	enginesDir := t.TempDir()
 	runtimeDir := t.TempDir()
-	writeModelYAML(t, modelsDir, "small", "name: small\ndisk-size: 1G\nrequired-memory: 0\n")
-	writeModelYAML(t, modelsDir, "large", "name: large\ndisk-size: 9223372036854775808\nrequired-memory: 0\n")
+	writeModelYAML(t, modelsDir, "small", "name: small\ndisk-size: 1G\n")
+	writeModelYAML(t, modelsDir, "large", "name: large\ndisk-size: 9223372036854775808\n")
 	writeRuntimeYAML(t, runtimeDir, "my-runtime", "name: my-runtime\nrequired-memory: 0\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n")
 	writeEngineYAML(t, enginesDir, "my-engine", "name: my-engine\nruntime: my-runtime\nmodel:\n  options:\n    - small\n    - large\n")
 	ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir, RuntimesDir: runtimeDir}

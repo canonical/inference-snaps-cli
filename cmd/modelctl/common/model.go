@@ -207,18 +207,18 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 			return nil, fmt.Errorf("parsing disk size for model %q: %w", modelID, err)
 		}
 
-		var kvCache uint64
+		var requiredMemory uint64
 		if manifest.RequiredMemory != "" {
-			kvCache, err = utils.StringToBytes(manifest.RequiredMemory)
+			requiredMemory, err = utils.StringToBytes(manifest.RequiredMemory)
 			if err != nil {
-				return nil, fmt.Errorf("parsing kv cache for model %q: %w", modelID, err)
+				return nil, fmt.Errorf("parsing required memory for model %q: %w", modelID, err)
 			}
 		} else {
-			kvCache = 500 * 1024 * 1024 // 500 MB
+			requiredMemory = size
 		}
 
 		// 2GB for squashfs and OS
-		requiredMemory, ok := utils.CheckedAddUint64(size, kvCache, runtimeMemory, 2*1024*1024*1024)
+		requiredMemory, ok := utils.CheckedAddUint64(requiredMemory, runtimeMemory, 2*1024*1024*1024)
 		if !ok {
 			return nil, fmt.Errorf("required memory for model %q overflows uint64", modelID)
 		}

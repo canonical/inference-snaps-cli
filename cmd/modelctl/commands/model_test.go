@@ -99,7 +99,7 @@ func Example_modelCommand_printModelDetailsYaml() {
 	// capabilities:
 	//     - text
 	// disk-size: 6G
-	// required-memory: 8.7G
+	// required-memory: 8.2G
 	// components:
 	//     - model-4b-it-int4-fq-ov
 	// compatible-engines:
@@ -162,7 +162,7 @@ func Example_modelCommand_printModelDetailsJson() {
 	//     "text"
 	//   ],
 	//   "disk-size": "6G",
-	//   "required-memory": "8.7G",
+	//   "required-memory": "8.2G",
 	//   "components": [
 	//     "model-4b-it-int4-fq-ov"
 	//   ],
@@ -228,7 +228,7 @@ func Example_modelCommand_printModelDetailsIncompatible() {
 	// capabilities:
 	//     - text
 	// disk-size: 6G
-	// required-memory: 8.7G
+	// required-memory: 8.2G
 	// components:
 	//     - model-4b-it-int4-fq-ov
 	// compatible-engines:

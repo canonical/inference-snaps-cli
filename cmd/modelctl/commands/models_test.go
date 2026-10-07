@@ -86,10 +86,10 @@ func TestGetModelsTable(t *testing.T) {
 	tableStr, err := cmd.getModelsTable(*modelsList)
 
 	expectedTable := `NAME                 CAPABILITIES               DISK  MEMORY 
-26b-q4-k-m-gguf      text                       6G    8.7G   
-30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G    8.7G   
+26b-q4-k-m-gguf      text                       6G    8.2G   
+30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G    8.2G   
 30m-q4-k-m-gguf      text, vision, audio, tool  1M    2.2G   
-4b-it-int4-fq-ov*    text                       6G    8.7G   
+4b-it-int4-fq-ov*    text                       6G    8.2G   
 `
 
 	if tableStr != expectedTable {
@@ -110,10 +110,10 @@ func TestGetModelsTableAllModels(t *testing.T) {
 	}
 
 	expectedTable := `NAME                 CAPABILITIES               DISK  MEMORY   ENGINES                                                  
-26b-q4-k-m-gguf      text                       6G    8.7G     arm-neon, cpu, cpu-avx1, cpu-avx2, cpu-avx512, cuda-gen… 
-30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G    8.7G     cpu, cuda-generic, cuda-no-vram, rocm-generic            
+26b-q4-k-m-gguf      text                       6G    8.2G     arm-neon, cpu, cpu-avx1, cpu-avx2, cpu-avx512, cuda-gen… 
+30b-a3b-q4-k-m-gguf  text, vision, audio, tool  6G    8.2G     cpu, cuda-generic, cuda-no-vram, rocm-generic            
 30m-q4-k-m-gguf      text, vision, audio, tool  1M    2.2G     cpu                                                      
-4b-it-int4-fq-ov*    text                       6G    8.7G     intel-cpu, intel-gpu, intel-npu                          
+4b-it-int4-fq-ov*    text                       6G    8.2G     intel-cpu, intel-gpu, intel-npu                          
 `
 
 	if tableStr != expectedTable {
@@ -176,7 +176,7 @@ func Example_printModelsJson() {
 	//         "text"
 	//       ],
 	//       "disk-size": "6G",
-	//       "required-memory": "8.7G",
+	//       "required-memory": "8.2G",
 	//       "components": [
 	//         "model-4b-it-int4-fq-ov"
 	//       ],
@@ -217,7 +217,7 @@ func Example_printAllModelsJson() {
 	//         "text"
 	//       ],
 	//       "disk-size": "6G",
-	//       "required-memory": "8.7G",
+	//       "required-memory": "8.2G",
 	//       "components": [
 	//         "model-26b-a4b-q4-k-m-gguf",
 	//         "mmproj-26b-bf16-gguf"
@@ -247,7 +247,7 @@ func Example_printAllModelsJson() {
 	//         "tool"
 	//       ],
 	//       "disk-size": "6G",
-	//       "required-memory": "8.7G",
+	//       "required-memory": "8.2G",
 	//       "components": [
 	//         "model-30b-a3b-q4-k-m-gguf-1-of-6",
 	//         "model-30b-a3b-q4-k-m-gguf-2-of-6",
@@ -297,7 +297,7 @@ func Example_printAllModelsJson() {
 	//         "text"
 	//       ],
 	//       "disk-size": "6G",
-	//       "required-memory": "8.7G",
+	//       "required-memory": "8.2G",
 	//       "components": [
 	//         "model-4b-it-int4-fq-ov"
 	//       ],
