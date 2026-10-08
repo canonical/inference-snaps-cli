@@ -17,7 +17,7 @@ env:
 
 jobs:
   unit-test:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Checkout code
@@ -25,7 +25,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v7
         with:
-          go-version: '1.26.x'
+          go-version: '1.27.x'
 
       - name: Run tests
         run: go test -v ./...
@@ -49,7 +49,7 @@ jobs:
         id: snapcraft
 
       - name: Upload snap artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.SNAP_NAME }}-${{ runner.arch }}
           path: |
@@ -75,7 +75,7 @@ jobs:
           sudo snap refresh snapd || sudo snap install snapd
 
       - name: Download snap artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ env.SNAP_NAME }}-${{ runner.arch }}
 
@@ -95,11 +95,11 @@ jobs:
   publish:
     needs: [ smoke-test ]
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Download snap artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: ${{ env.SNAP_NAME }}-*
           path: artifacts
