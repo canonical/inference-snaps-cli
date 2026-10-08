@@ -11,6 +11,7 @@ var (
 	ErrNoOpenAiServer                = errors.New("no OpenAI server available")
 	ErrOpenAiServerNoUrl             = errors.New("openai server has no URL")
 	ErrInsufficientDiskSpaceForModel = errors.New("insufficient disk space for the selected model")
+	ErrPromptUnanswerable            = errors.New("cannot read a response: stdin is closed or unreadable; use --assume-yes for unattended runs")
 )
 
 // Strings that are commonly used in error chains, but should not be used as error types
