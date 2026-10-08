@@ -45,17 +45,28 @@ func fmtBytesShortUnit(value float64, unit string) string {
 }
 
 // FmtBytesShort converts bytes to a printable string with a short unit (e.g. 1K, 1.5M, 2G)
-func FmtBytesShort(bytes uint64) string {
-	if bytes >= 1024*1024*1024*1024 {
-		return fmtBytesShortUnit(float64(bytes)/1024/1024/1024/1024, "T")
-	} else if bytes >= 1024*1024*1024 {
-		return fmtBytesShortUnit(float64(bytes)/1024/1024/1024, "G")
-	} else if bytes >= 1024*1024 {
-		return fmtBytesShortUnit(float64(bytes)/1024/1024, "M")
-	} else if bytes >= 1024 {
-		return fmtBytesShortUnit(float64(bytes)/1024, "K")
+func FmtBytesShort(bytes any) string {
+	switch b := bytes.(type) {
+	case uint64:
+		if b >= 1024*1024*1024*1024 {
+			return fmtBytesShortUnit(float64(b)/1024/1024/1024/1024, "T")
+		} else if b >= 1024*1024*1024 {
+			return fmtBytesShortUnit(float64(b)/1024/1024/1024, "G")
+		} else if b >= 1024*1024 {
+			return fmtBytesShortUnit(float64(b)/1024/1024, "M")
+		} else if b >= 1024 {
+			return fmtBytesShortUnit(float64(b)/1024, "K")
+		}
+		return fmt.Sprintf("%d", b)
+	case int:
+		return FmtBytesShort(uint64(b))
+	case int64:
+		return FmtBytesShort(uint64(b))
+	case float64:
+		return FmtBytesShort(uint64(b))
+	default:
+		return ""
 	}
-	return fmt.Sprintf("%d", bytes)
 }
 
 // StringToBytes parses a size string into a byte count. Only numbers

@@ -428,7 +428,7 @@ func TestAvailableMemory(t *testing.T) {
 				DeviceId:             0x4637,
 				SubvendorId:          new(uint16(0x103C)),
 				SubdeviceId:          new(uint16(0x89C6)),
-				AdditionalProperties: map[string]string{
+				AdditionalProperties: map[string]any{
 					"vram":              "10737418240", // 10 GiB
 					"microarchitecture": "gfx1153",
 				},
@@ -443,7 +443,7 @@ func TestAvailableMemory(t *testing.T) {
 				DeviceId:             0x4637,
 				SubvendorId:          new(uint16(0x103C)),
 				SubdeviceId:          new(uint16(0x89C6)),
-				AdditionalProperties: map[string]string{
+				AdditionalProperties: map[string]any{
 					"vram":              "107374182400", // 100 GiB
 					"microarchitecture": "gfx1152",
 				},
@@ -458,8 +458,8 @@ func TestAvailableMemory(t *testing.T) {
 				DeviceId:             0x4637,
 				SubvendorId:          new(uint16(0x103C)),
 				SubdeviceId:          new(uint16(0x89C6)),
-				AdditionalProperties: map[string]string{
-					"vram":               "[N/A]", // 10 GiB
+				AdditionalProperties: map[string]any{
+					"vram":               nil, // 10 GiB
 					"compute-capability": "6.7",
 				},
 			},

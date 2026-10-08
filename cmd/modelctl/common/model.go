@@ -349,11 +349,11 @@ func availableMemory(machine *machine.Machine, engineManifest engines.Manifest) 
 	}
 
 	vram, found := bestDevice.AdditionalProperties["vram"]
-	if !found || vram == "[N/A]" {
+	if !found || vram == nil {
 		// assuming unified memory
 		return systemMemory, nil
 	}
-	vramVal, err := strconv.ParseUint(vram, 10, 64)
+	vramVal, err := strconv.ParseUint(vram.(string), 10, 64)
 	if err != nil {
 		return 0, fmt.Errorf("parsing vram %q of pci device %s: %w", vram, bestDevice.Slot, err)
 	}
