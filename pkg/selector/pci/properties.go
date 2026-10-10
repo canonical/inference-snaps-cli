@@ -47,8 +47,8 @@ func checkVram(manifestDevice engines.Device, hostPciDevice pci.Device) error {
 	if err != nil {
 		return err
 	}
-	if vram, ok := hostPciDevice.AdditionalProperties["vram"]; ok {
-		vramAvailable, err := utils.StringToBytes(vram)
+	if vram, ok := hostPciDevice.AdditionalProperties["vram"]; ok && vram != nil {
+		vramAvailable, err := utils.StringToBytes(vram.(string))
 		if err != nil {
 			return fmt.Errorf("parsing vram: %v", err)
 		}
@@ -84,7 +84,7 @@ func checkComputeCapability(constraintRequired string, hostPciDevice pci.Device)
 	}
 
 	if cc, ok := hostPciDevice.AdditionalProperties["compute-capability"]; ok {
-		version, err := semver.NewVersion(cc)
+		version, err := semver.NewVersion(cc.(string))
 		if err != nil {
 			return fmt.Errorf("parsing compute-capability %q: %v", cc, err)
 		}

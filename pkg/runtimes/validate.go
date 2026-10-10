@@ -123,6 +123,12 @@ func (manifest Manifest) validate(expectedRuntimeName string) error {
 		return err
 	}
 
+	if manifest.RequiredMemory != "" {
+		if _, err := utils.StringToBytes(manifest.RequiredMemory); err != nil {
+			return fmt.Errorf("invalid memory %q: %w", manifest.RequiredMemory, err)
+		}
+	}
+
 	return nil
 }
 

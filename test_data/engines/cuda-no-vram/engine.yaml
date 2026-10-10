@@ -1,0 +1,26 @@
+name: cuda-no-vram
+description: Nvidia GPUs using CUDA. All major CUDA versions are targeted.
+summary: CUDA engine without VRAM requirement
+vendor: Canonical Ltd
+devices:
+  anyof:
+    - type: cpu
+      architecture: amd64
+      flags: [sse4_2, f16c, fma, avx, avx2]
+    - type: cpu
+      architecture: arm64
+  allof:    
+    - type: gpu
+      bus: pci
+      vendor-id: 0x10de # Nvidia Corporation
+
+runtime: llama-cpp-cuda
+
+model:
+  default: 26b-q4-k-m-gguf
+  options:
+    - 26b-q4-k-m-gguf
+    - 30b-a3b-q4-k-m-gguf
+
+configurations:
+  sleep-idle-seconds: 600

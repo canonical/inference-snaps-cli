@@ -95,7 +95,6 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 		if err := cmd.migrateConfig(); err != nil {
 			return err
 		}
-
 		err := cmd.fixActiveEngine()
 		if errors.Is(err, common.ErrNoActiveEngine) { // If no engine is active, there's nothing to fix
 			return nil
@@ -221,7 +220,7 @@ func (cmd *useEngineCommand) switchEngineWithMachine(engineName string, machine 
 	// Active model is not changed when autoselecting a new engine. SelectModel will respect the preferred model if possible.
 	if len(newEngineManifest.Model.Options) > 0 && machine != nil {
 		var scoredModels []models.ScoredManifest
-		newModelID, scoredModels, err = common.SelectModel(cmd.Context, newEngineManifest.Model.Options, newModelID, machine)
+		newModelID, scoredModels, err = common.SelectModel(cmd.Context, *newEngineManifest, newModelID, machine)
 		if cmd.auto {
 			cmd.printScoredModels(scoredModels, newModelID)
 		}
@@ -351,16 +350,49 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 	if !slices.Contains(engineManifest.Model.Options, activeModelId) {
 		activeModelId = engineManifest.Model.Default
 	}
-	err = cmd.Cache.SetActiveModel(activeModelId)
-	if err != nil {
-		return fmt.Errorf("setting active model: %v", err)
-	}
 
 	var modelManifest *models.Manifest
 	if activeModelId != "" {
 		modelManifest, err = models.LoadManifest(cmd.ModelsDir, activeModelId)
 		if err != nil {
 			return fmt.Errorf("loading active model manifest: %v", err)
+		}
+	}
+
+	observable, err := cmd.Snap.HardwareObservable()
+	if err != nil {
+		return fmt.Errorf("checking hardware observability: %v", err)
+	}
+	if observable && modelManifest != nil {
+		machine, _, err := machine.Get(host.Real(), true, true)
+		if err != nil {
+			return fmt.Errorf("getting machine info: %v", err)
+		}
+		scoredModel, err := common.GetScoredModel(cmd.Context, *engineManifest, *modelManifest, machine)
+		if err != nil {
+			return fmt.Errorf("scoring active model: %v", err)
+		}
+		if scoredModel.CompatibilityReport.Compatible {
+			err = cmd.Cache.SetActiveModel(activeModelId)
+			if err != nil {
+				return fmt.Errorf("setting active model: %v", err)
+			}
+		} else {
+			modelManifest = nil
+			err = cmd.Cache.SetActiveModel("")
+			if err != nil {
+				return fmt.Errorf("clearing active model: %v", err)
+			}
+		}
+	} else if modelManifest != nil {
+		err = cmd.Cache.SetActiveModel(activeModelId)
+		if err != nil {
+			return fmt.Errorf("setting active model: %v", err)
+		}
+	} else {
+		err = cmd.Cache.SetActiveModel("")
+		if err != nil {
+			return fmt.Errorf("clearing active model: %v", err)
 		}
 	}
 
@@ -386,15 +418,22 @@ func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManif
 	var compatibleModels []string
 	fmt.Println("Selecting a compatible model:")
 	for _, model := range scoredModels {
-		if model.CompatibilityReport.CompatibleDisk {
+		if model.CompatibilityReport.Compatible {
 			compatibleModels = append(compatibleModels, model.Name)
 			fmt.Printf("✔ %s\n", model.Name)
 		} else {
 			report := model.CompatibilityReport
-			fmt.Printf("✘ %s: requires %s disk space, has %s\n",
-				model.Name,
-				utils.FmtBytesShort(report.RequiredDiskSpace),
-				utils.FmtBytesShort(report.AvailableDiskSpace))
+			if !report.CompatibleDisk {
+				fmt.Printf("✘ %s: requires %s disk space, has %s\n",
+					model.Name,
+					utils.FmtBytesShort(report.RequiredDiskSpace),
+					utils.FmtBytesShort(report.AvailableDiskSpace))
+			} else if !report.CompatibleMemory {
+				fmt.Printf("✘ %s: requires %s memory, has %s\n",
+					model.Name,
+					utils.FmtBytesShort(report.RequiredMemory),
+					utils.FmtBytesShort(report.AvailableMemory))
+			}
 		}
 	}
 	if slices.Contains(compatibleModels, newModelID) {

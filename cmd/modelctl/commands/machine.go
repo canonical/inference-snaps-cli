@@ -126,7 +126,7 @@ type ApusysDeviceDetails struct {
 
 type PciAdditionalDeviceProperties struct {
 	Microarchitecture string `json:"microarchitecture,omitempty" yaml:"microarchitecture,omitempty"`
-	Vram              uint64 `json:"vram,omitempty" yaml:"vram,omitempty"`
+	Vram              any    `json:"vram" yaml:"vram"`
 	ComputeCapability string `json:"compute-capability,omitempty" yaml:"compute-capability,omitempty"`
 }
 
@@ -251,18 +251,25 @@ func NewMachineDetails(info *machine.Machine) *MachineDetails {
 	return v
 }
 
-func newPciAdditionalDeviceProperties(props map[string]string) *PciAdditionalDeviceProperties {
+func newPciAdditionalDeviceProperties(props map[string]any) *PciAdditionalDeviceProperties {
 	if len(props) == 0 {
 		return nil
 	}
 
-	ap := &PciAdditionalDeviceProperties{
-		Microarchitecture: props["microarchitecture"],
-		ComputeCapability: props["compute-capability"],
+	ap := &PciAdditionalDeviceProperties{}
+	if v, ok := props["microarchitecture"].(string); ok {
+		ap.Microarchitecture = v
+	}
+	if v, ok := props["compute-capability"].(string); ok {
+		ap.ComputeCapability = v
 	}
 	if v, ok := props["vram"]; ok {
-		if n, err := strconv.ParseUint(v, 10, 64); err == nil {
-			ap.Vram = n
+		if s, ok := v.(string); ok {
+			if n, err := strconv.ParseUint(s, 10, 64); err == nil {
+				ap.Vram = n
+			}
+		} else {
+			ap.Vram = nil
 		}
 	}
 	if *ap == (PciAdditionalDeviceProperties{}) {

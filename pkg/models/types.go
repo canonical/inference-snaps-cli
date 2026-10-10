@@ -23,9 +23,14 @@ const (
 )
 
 type CompatibilityReport struct {
+	Compatible         bool
 	CompatibleDisk     bool
 	RequiredDiskSpace  uint64
 	AvailableDiskSpace uint64
+	CompatibleMemory   bool
+	RequiredMemory     uint64
+	AvailableMemory    uint64
+	CompatibleEngines  []string
 }
 
 type ScoredManifest struct {
@@ -40,11 +45,12 @@ type Manifest struct {
 
 	Description  string   `json:"description" yaml:"description"`
 	ModelCardUrl string   `json:"model-card-url" yaml:"model-card-url"`
-	Format       string   `json:"format" yaml:"format"`
+	Format       string   `json:"format,omitempty" yaml:"format,omitempty"`
 	Quantization string   `json:"quantization" yaml:"quantization"`
 	Capabilities []string `json:"capabilities" yaml:"capabilities"`
 
-	DiskSize string `json:"disk-size" yaml:"disk-size"`
+	DiskSize       string `json:"disk-size" yaml:"disk-size"`
+	RequiredMemory string `json:"required-memory,omitempty" yaml:"required-memory,omitempty"`
 
 	Components []string `json:"components" yaml:"components"`
 

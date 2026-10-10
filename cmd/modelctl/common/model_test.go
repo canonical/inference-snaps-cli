@@ -1,14 +1,51 @@
 package common
 
 import (
+	"math"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
 	"github.com/canonical/lscompute/pkg/machine"
+	"github.com/canonical/lscompute/pkg/machine/cpu"
+	"github.com/canonical/lscompute/pkg/machine/device/pci"
 	"github.com/canonical/lscompute/pkg/machine/disk"
+	"github.com/canonical/lscompute/pkg/machine/memory"
 )
+
+func getTestMachine() *machine.Machine {
+	return &machine.Machine{
+		CPUs: []cpu.CPU{{
+			Architecture:   "amd64",
+			ManufacturerId: "GenuineIntel",
+			Flags:          []string{"fpu", "vme", "de"},
+		}},
+		Memory: memory.Memory{TotalRam: 67012501504, TotalSwap: 0},
+		Disk: []disk.Disk{{
+			Total:     1006451294208,
+			Available: 943543738368,
+			Path:      "/var/lib/snapd/snaps",
+		}},
+		PCIDevices: []pci.Device{{
+			Bus:                  "pci",
+			Slot:                 "0000:00:00.0",
+			BusNumber:            0x0,
+			DeviceClass:          0x600,
+			ProgrammingInterface: new(uint8(0)),
+			VendorId:             0x8086,
+			DeviceId:             0x4637,
+			SubvendorId:          new(uint16(0x103C)),
+			SubdeviceId:          new(uint16(0x89C6)),
+			FriendlyNames: pci.FriendlyNames{
+				VendorName:    "Intel Corporation",
+				SubvendorName: "Hewlett-Packard Company",
+			}},
+		}}
+}
 
 // writeModelYAML creates a model manifest at modelsDir/<name>/model.yaml with the given content.
 func writeModelYAML(t *testing.T, modelsDir, name, content string) {
@@ -65,6 +102,7 @@ func TestGetModelManifestByNameOrAlias(t *testing.T) {
 		activeEngine string
 		modelYAML    string // empty means don't write a model manifest
 		engineYAML   string // empty means don't write an engine manifest
+		runtimeYAML  string // empty means don't write a runtime manifest
 		query        string
 		wantName     string // non-empty: expect this Name in the returned manifest
 		wantAlias    string // non-empty: expect this Alias in the returned manifest
@@ -74,7 +112,8 @@ func TestGetModelManifestByNameOrAlias(t *testing.T) {
 			name:         "found by alias",
 			activeEngine: "my-engine",
 			modelYAML:    "name: my-model-id\nalias: my-model\ndisk-size: 1G\n",
-			engineYAML:   "name: my-engine\nmodel:\n  options:\n    - my-model-id\n",
+			engineYAML:   "name: my-engine\nruntime: my-runtime\nmodel:\n  options:\n    - my-model-id\n",
+			runtimeYAML:  "name: my-runtime\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n",
 			query:        "my-model",
 			wantName:     "my-model-id",
 		},
@@ -82,7 +121,8 @@ func TestGetModelManifestByNameOrAlias(t *testing.T) {
 			name:         "found by name",
 			activeEngine: "my-engine",
 			modelYAML:    "name: my-model-id\nalias: my-model\ndisk-size: 1G\n",
-			engineYAML:   "name: my-engine\nmodel:\n  options:\n    - my-model-id\n",
+			engineYAML:   "name: my-engine\nruntime: my-runtime\nmodel:\n  options:\n    - my-model-id\n",
+			runtimeYAML:  "name: my-runtime\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n",
 			query:        "my-model-id",
 			wantAlias:    "my-model",
 		},
@@ -97,6 +137,7 @@ func TestGetModelManifestByNameOrAlias(t *testing.T) {
 			activeEngine: "my-engine",
 			modelYAML:    "id: other-model-id\nname: other-model\ndisk-size: 1G\n",
 			engineYAML:   "name: my-engine\nmodel:\n  options:\n    - some-other-model-id\n",
+			runtimeYAML:  "name: my-runtime\n",
 			query:        "other-model",
 			wantErr:      true,
 		},
@@ -104,6 +145,7 @@ func TestGetModelManifestByNameOrAlias(t *testing.T) {
 			name:         "model does not exist",
 			activeEngine: "my-engine",
 			engineYAML:   "name: my-engine\nmodel:\n  options: []\n",
+			runtimeYAML:  "name: my-runtime\n",
 			query:        "nonexistent-model",
 			wantErr:      true,
 		},
@@ -113,6 +155,7 @@ func TestGetModelManifestByNameOrAlias(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			modelsDir := t.TempDir()
 			enginesDir := t.TempDir()
+			runtimeDir := t.TempDir()
 
 			if tc.modelYAML != "" {
 				writeModelYAML(t, modelsDir, "my-model", tc.modelYAML)
@@ -120,14 +163,16 @@ func TestGetModelManifestByNameOrAlias(t *testing.T) {
 			if tc.engineYAML != "" {
 				writeEngineYAML(t, enginesDir, "my-engine", tc.engineYAML)
 			}
-
+			if tc.runtimeYAML != "" {
+				writeRuntimeYAML(t, runtimeDir, "my-runtime", tc.runtimeYAML)
+			}
 			cache := storage.NewMockCache()
 			if err := cache.SetActiveEngine(tc.activeEngine); err != nil {
 				t.Fatalf("SetActiveEngine: %v", err)
 			}
-			ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir, Cache: cache}
+			ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir, RuntimesDir: runtimeDir, Cache: cache}
 
-			manifest, err := GetModelManifestByNameOrAlias(ctx, tc.query)
+			manifest, err := GetModelManifestByNameOrAlias(ctx, tc.query, getTestMachine())
 
 			if tc.wantErr {
 				if err == nil {
@@ -151,12 +196,19 @@ func TestGetModelManifestByNameOrAlias(t *testing.T) {
 func TestGetAllModels(t *testing.T) {
 	modelsDir := t.TempDir()
 	enginesDir := t.TempDir()
+	runtimeDir := t.TempDir()
 	writeModelYAML(t, modelsDir, "model1", "name: model1\nalias: m1\ndisk-size: 1G\n")
 	writeModelYAML(t, modelsDir, "model2", "name: model2\nalias: m2\ndisk-size: 2G\n")
+	writeRuntimeYAML(t, runtimeDir, "my-runtime", "name: my-runtime\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n")
+	writeEngineYAML(t, enginesDir, "my-engine", "name: my-engine\nruntime: my-runtime\nmodel:\n  options:\n    - model1\n")
 
-	ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir}
+	cache := storage.NewMockCache()
+	if err := cache.SetActiveEngine("my-engine"); err != nil {
+		t.Fatalf("SetActiveEngine: %v", err)
+	}
+	ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir, RuntimesDir: runtimeDir, Cache: cache}
 
-	models, err := GetAllModels(ctx)
+	models, err := GetAllModels(ctx, getTestMachine())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -175,18 +227,24 @@ func TestGetAllModels(t *testing.T) {
 func TestGetAllModelsWithEngines(t *testing.T) {
 	modelsDir := t.TempDir()
 	enginesDir := t.TempDir()
+	runtimeDir := t.TempDir()
 
 	writeModelYAML(t, modelsDir, "model1", "name: model1\nalias: m1\ndisk-size: 1G\n")
 	writeModelYAML(t, modelsDir, "model2", "name: model2\nalias: m2\ndisk-size: 2G\n")
 	writeModelYAML(t, modelsDir, "model3", "name: model3\nalias: m3\ndisk-size: 3G\n")
 	writeModelYAML(t, modelsDir, "model4", "name: model4\nalias: m4\ndisk-size: 4G\n")
+	writeRuntimeYAML(t, runtimeDir, "my-runtime", "name: my-runtime\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n")
 
-	writeEngineYAML(t, enginesDir, "engine1", "name: engine1\nmodel:\n  options:\n    - model1\n    - model3\n")
-	writeEngineYAML(t, enginesDir, "engine2", "name: engine2\nmodel:\n  options:\n    - model1\n    - model2\n")
+	writeEngineYAML(t, enginesDir, "engine1", "name: engine1\nruntime: my-runtime\nmodel:\n  options:\n    - model1\n    - model3\n")
+	writeEngineYAML(t, enginesDir, "engine2", "name: engine2\nruntime: my-runtime\nmodel:\n  options:\n    - model1\n    - model2\n")
 
-	ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir}
+	cache := storage.NewMockCache()
+	if err := cache.SetActiveEngine("engine1"); err != nil {
+		t.Fatalf("SetActiveEngine: %v", err)
+	}
+	ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir, RuntimesDir: runtimeDir, Cache: cache}
 
-	modelsWithEngines, err := GetAllModels(ctx)
+	modelsWithEngines, err := GetAllModels(ctx, getTestMachine())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -218,6 +276,114 @@ func TestGetAllModelsWithEngines(t *testing.T) {
 	}
 }
 
+func TestScoreModelsAgainstEngineRequiredMemoryOverflow(t *testing.T) {
+	tests := []struct {
+		name          string
+		diskSize      string
+		modelMemory   string
+		runtimeMemory string
+		wantMemory    uint64
+		wantOverflow  bool
+	}{
+		{
+			name: "model memory overflow", diskSize: "1G",
+			modelMemory: "18446744071562066945", runtimeMemory: "1023", wantOverflow: true,
+		},
+		{
+			name: "runtime memory overflow", diskSize: "1G",
+			modelMemory: "1", runtimeMemory: "18446744071562066944", wantOverflow: true,
+		},
+		{
+			name: "overhead overflow", diskSize: "1G",
+			modelMemory: "18446744071562067967", runtimeMemory: "1", wantOverflow: true,
+		},
+		{
+			name: "near-maximum valid total", diskSize: "1G",
+			modelMemory: "18446744071562063872", runtimeMemory: "1023", wantMemory: 18446744073709548543,
+		},
+		{
+			name: "normal total", diskSize: "1G",
+			modelMemory: "500M", runtimeMemory: "200M", wantMemory: 2*1024*1024*1024 + 700*1024*1024,
+		},
+		{
+			name: "disk size fallback", diskSize: "1G",
+			runtimeMemory: "200M", wantMemory: 3*1024*1024*1024 + 200*1024*1024,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			runtimeDir := t.TempDir()
+			enginesDir := t.TempDir()
+			writeRuntimeYAML(t, runtimeDir, "my-runtime", "name: my-runtime\nrequired-memory: "+test.runtimeMemory+"\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n")
+			writeEngineYAML(t, enginesDir, "my-engine", "name: my-engine\nruntime: my-runtime\nmodel:\n  options:\n    - my-model\n")
+			ctx := &Context{EnginesDir: enginesDir, RuntimesDir: runtimeDir}
+			manifests := map[string]models.Manifest{
+				"my-model": {Name: "my-model", DiskSize: test.diskSize, RequiredMemory: test.modelMemory},
+			}
+			scoredModels, err := ScoreModelsAgainstEngine(ctx, engines.Manifest{Runtime: "my-runtime"}, manifests, getTestMachine())
+			if test.wantOverflow {
+				if err == nil || !strings.Contains(err.Error(), `required memory for model "my-model" overflows uint64`) {
+					t.Fatalf("expected required memory overflow error, got %v", err)
+				}
+				if scoredModels != nil {
+					t.Fatalf("expected no scored models on overflow, got %v", scoredModels)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(scoredModels) != 1 {
+				t.Fatalf("expected one scored model, got %d", len(scoredModels))
+			}
+			if got := scoredModels[0].CompatibilityReport.RequiredMemory; got != test.wantMemory {
+				t.Errorf("required memory = %d, want %d", got, test.wantMemory)
+			}
+		})
+	}
+}
+
+func TestSelectModelScoreOverflow(t *testing.T) {
+	modelsDir := t.TempDir()
+	enginesDir := t.TempDir()
+	runtimeDir := t.TempDir()
+	writeModelYAML(t, modelsDir, "small", "name: small\ndisk-size: 1G\n")
+	writeModelYAML(t, modelsDir, "large", "name: large\ndisk-size: 9223372036854775808\n")
+	writeRuntimeYAML(t, runtimeDir, "my-runtime", "name: my-runtime\nrequired-memory: 0\nservers:\n  openai:\n    protocol: http\n    base-path: /v1\n")
+	writeEngineYAML(t, enginesDir, "my-engine", "name: my-engine\nruntime: my-runtime\nmodel:\n  options:\n    - small\n    - large\n")
+	ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir, RuntimesDir: runtimeDir}
+	engine, err := engines.LoadManifest(enginesDir, "my-engine")
+	if err != nil {
+		t.Fatalf("loading engine: %v", err)
+	}
+	hostMachine := getTestMachine()
+	hostMachine.Memory.TotalRam = math.MaxUint64
+	hostMachine.Disk[0].Available = math.MaxUint64
+
+	selected, scoredModels, err := SelectModel(ctx, *engine, "", hostMachine)
+	if err != nil {
+		t.Fatalf("selecting model: %v", err)
+	}
+	if selected != "large" {
+		t.Errorf("selected model = %q, want large", selected)
+	}
+	if len(scoredModels) != 2 {
+		t.Fatalf("expected two scored models, got %d", len(scoredModels))
+	}
+	for _, model := range scoredModels {
+		if !model.CompatibilityReport.Compatible {
+			t.Errorf("model %q should be compatible", model.Name)
+		}
+		wantScore := uint64(4 * 1024 * 1024 * 1024)
+		if model.Name == "large" {
+			wantScore = math.MaxUint64
+		}
+		if model.Score != wantScore {
+			t.Errorf("model %q score = %d, want %d", model.Name, model.Score, wantScore)
+		}
+	}
+}
+
 func TestAvailableDiskSpace(t *testing.T) {
 	machine := new(machine.Machine{})
 	machine.Disk = []disk.Disk{
@@ -235,5 +401,109 @@ func TestAvailableDiskSpace(t *testing.T) {
 	}
 	if diskSpace != 1024 {
 		t.Errorf("expected positive available disk space, got: %d", diskSpace)
+	}
+}
+
+func TestAvailableMemory(t *testing.T) {
+	machine := machine.Machine{
+		CPUs: []cpu.CPU{{
+			Architecture:   "amd64",
+			ManufacturerId: "GenuineIntel",
+			Flags:          []string{"fpu", "vme", "de"},
+		}},
+		Memory: memory.Memory{TotalRam: 67012501504, TotalSwap: 0}, // 64 GiB RAM, no swap
+		Disk: []disk.Disk{{
+			Total:     1006451294208, // ~937 GiB
+			Available: 943543738368,  // ~878 GiB
+			Path:      "/var/lib/snapd/snaps",
+		}},
+		PCIDevices: []pci.Device{
+			{
+				Bus:                  "pci",
+				Slot:                 "0000:00:00.0",
+				BusNumber:            0x0,
+				DeviceClass:          0x380,
+				ProgrammingInterface: new(uint8(0)),
+				VendorId:             0x1002, //amd
+				DeviceId:             0x4637,
+				SubvendorId:          new(uint16(0x103C)),
+				SubdeviceId:          new(uint16(0x89C6)),
+				AdditionalProperties: map[string]any{
+					"vram":              "10737418240", // 10 GiB
+					"microarchitecture": "gfx1153",
+				},
+			},
+			{
+				Bus:                  "pci",
+				Slot:                 "0000:00:00.0",
+				BusNumber:            0x0,
+				DeviceClass:          0x380,
+				ProgrammingInterface: new(uint8(0)),
+				VendorId:             0x1002, //amd
+				DeviceId:             0x4637,
+				SubvendorId:          new(uint16(0x103C)),
+				SubdeviceId:          new(uint16(0x89C6)),
+				AdditionalProperties: map[string]any{
+					"vram":              "107374182400", // 100 GiB
+					"microarchitecture": "gfx1152",
+				},
+			},
+			{
+				Bus:                  "pci",
+				Slot:                 "0000:00:00.0",
+				BusNumber:            0x0,
+				DeviceClass:          0x380,
+				ProgrammingInterface: new(uint8(0)),
+				VendorId:             0x10de, // nvidia
+				DeviceId:             0x4637,
+				SubvendorId:          new(uint16(0x103C)),
+				SubdeviceId:          new(uint16(0x89C6)),
+				AdditionalProperties: map[string]any{
+					"vram":               nil, // 10 GiB
+					"compute-capability": "6.7",
+				},
+			},
+		},
+	}
+
+	//test that the vram is computed for the correct device
+	engine, err := engines.LoadManifest("../../../test_data/engines", "rocm-generic")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	memoryAvailable, err := availableMemory(&machine, *engine)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if memoryAvailable != 107374182400 {
+		t.Errorf("expected 107374182400 available memory, got: %d", memoryAvailable)
+	}
+
+	// test that vram is ignored if engine is not gpu capable
+	engine, err = engines.LoadManifest("../../../test_data/engines", "cpu")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	memoryAvailable, err = availableMemory(&machine, *engine)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if memoryAvailable != 67012501504 {
+		t.Errorf("expected 67012501504 available memory, got: %d", memoryAvailable)
+	}
+
+	// test that system memory is returned when nvidia-smi return "[N/A]" for the VRAM
+	engine, err = engines.LoadManifest("../../../test_data/engines", "cuda-generic")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	memoryAvailable, err = availableMemory(&machine, *engine)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if memoryAvailable != 67012501504 {
+		t.Errorf("expected 67012501504 available memory, got: %d", memoryAvailable)
 	}
 }

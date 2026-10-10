@@ -8,6 +8,8 @@ import (
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
+	"github.com/canonical/lscompute/pkg/machine"
+	"github.com/canonical/lscompute/pkg/machine/host"
 	"github.com/spf13/cobra"
 )
 
@@ -75,20 +77,24 @@ func (cmd *useModelCommand) run(_ *cobra.Command, args []string) error {
 		return common.ErrPermissionDenied
 	}
 
+	machine, _, err := machine.Get(host.Real(), true, true)
+	if err != nil {
+		return fmt.Errorf("fetching machine: %v", err)
+	}
+
 	if len(args) == 1 {
-		return cmd.switchModel(args[0])
+		return cmd.switchModel(args[0], machine)
 	} else {
 		return fmt.Errorf("model name not specified")
 	}
 }
 
-func (cmd *useModelCommand) switchModel(modelNameOrAlias string) error {
+func (cmd *useModelCommand) switchModel(modelNameOrAlias string, machine *machine.Machine) error {
 
-	modelManifest, err := common.GetModelManifestByNameOrAlias(cmd.Context, modelNameOrAlias)
+	modelManifest, err := common.GetModelManifestByNameOrAlias(cmd.Context, modelNameOrAlias, machine)
 	if err != nil {
 		return err
 	}
-
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
 		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
@@ -99,7 +105,7 @@ func (cmd *useModelCommand) switchModel(modelNameOrAlias string) error {
 		return fmt.Errorf("%s: %w", "loading engine manifest", err)
 	}
 
-	cancelledByUser, err := common.InstallMissingComponents(cmd.Context, cmd.assumeYes, engineManifest, modelManifest)
+	cancelledByUser, err := common.InstallMissingComponents(cmd.Context, cmd.assumeYes, engineManifest, &modelManifest.Manifest)
 	if err != nil {
 		return fmt.Errorf("installing missing components: %v", err)
 	}

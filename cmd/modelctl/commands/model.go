@@ -9,6 +9,8 @@ import (
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
+	"github.com/canonical/lscompute/pkg/machine"
+	"github.com/canonical/lscompute/pkg/machine/host"
 	"github.com/spf13/cobra"
 	"go.yaml.in/yaml/v4"
 )
@@ -109,11 +111,20 @@ func (cmd *modelCommand) showCurrentModel() error {
 }
 
 func (cmd *modelCommand) model(modelNameOrAlias string) error {
-	modelDetails, err := common.GetModelDetailsByNameOrAlias(cmd.Context, modelNameOrAlias)
+	machine, _, err := machine.Get(host.Real(), true, true)
 	if err != nil {
-		return err
+		return fmt.Errorf("getting machine info: %v", err)
 	}
 
+	scoredModelDetails, err := common.GetModelManifestByNameOrAlias(cmd.Context, modelNameOrAlias, machine)
+	if err != nil {
+		return fmt.Errorf("scoring model: %v", err)
+	}
+
+	modelDetails, err := common.NewModelDetails(scoredModelDetails)
+	if err != nil {
+		return fmt.Errorf("creating model details: %v", err)
+	}
 	err = cmd.printModelDetails(modelDetails)
 	if err != nil {
 		return fmt.Errorf("printing model details: %v", err)
@@ -121,16 +132,16 @@ func (cmd *modelCommand) model(modelNameOrAlias string) error {
 	return nil
 }
 
-func (cmd *modelCommand) printModelDetails(modelDetails *common.ModelDetails) error {
+func (cmd *modelCommand) printModelDetails(scoredModel common.ModelDetails) error {
 	switch cmd.format {
 	case "json":
-		jsonString, err := json.MarshalIndent(modelDetails, "", "  ")
+		jsonString, err := json.MarshalIndent(scoredModel, "", "  ")
 		if err != nil {
 			return fmt.Errorf("json: %s", err)
 		}
 		fmt.Printf("%s\n", jsonString)
 	case "yaml", "":
-		modelYaml, err := yaml.Marshal(modelDetails)
+		modelYaml, err := yaml.Marshal(scoredModel)
 		if err != nil {
 			return fmt.Errorf("yaml: %s", err)
 		}

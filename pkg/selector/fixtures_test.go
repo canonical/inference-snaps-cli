@@ -195,7 +195,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						DeviceName:    "GP108M [GeForce MX250]",
 						SubvendorName: "Hewlett-Packard Company",
 					},
-					AdditionalProperties: map[string]string{
+					AdditionalProperties: map[string]any{
 						"compute-capability": "6.1",
 						"vram":               "2147483648",
 					},
@@ -340,7 +340,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						DeviceName:    "Meteor Lake-P [Intel Graphics]",
 						SubvendorName: "Hewlett-Packard Company",
 					},
-					AdditionalProperties: map[string]string{
+					AdditionalProperties: map[string]any{
 						"vram": "30592884736",
 					},
 				},
@@ -427,7 +427,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						DeviceName:    "Navi 23 WKS-XM [Radeon PRO W6600M]",
 						SubvendorName: "Hewlett-Packard Company",
 					},
-					AdditionalProperties: map[string]string{
+					AdditionalProperties: map[string]any{
 						"microarchitecture": "gfx1032",
 						"vram":              "8573157376",
 					},
@@ -467,7 +467,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						DeviceName:    "IvyBridge GT2 [HD Graphics 4000]",
 						SubvendorName: "Gigabyte Technology Co., Ltd",
 					},
-					AdditionalProperties: map[string]string{
+					AdditionalProperties: map[string]any{
 						"vram": "17179869184",
 					},
 				},
@@ -486,7 +486,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						DeviceName:    "GP102 [GeForce GTX 1080 Ti]",
 						SubvendorName: "NVIDIA Corporation",
 					},
-					AdditionalProperties: map[string]string{
+					AdditionalProperties: map[string]any{
 						"compute-capability": "6.1",
 						"vram":               "11811160064",
 					},
@@ -506,7 +506,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						DeviceName:    "DG2 [Arc A580]",
 						SubvendorName: "ASRock Incorporation",
 					},
-					AdditionalProperties: map[string]string{
+					AdditionalProperties: map[string]any{
 						"vram": "8096681984",
 					},
 				},
@@ -580,7 +580,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						DeviceName:    "DG2 [Arc A580]",
 						SubvendorName: "ASRock Incorporation",
 					},
-					AdditionalProperties: map[string]string{
+					AdditionalProperties: map[string]any{
 						"vram": "8096681984",
 					},
 				},
@@ -655,7 +655,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						DeviceName:    "Battlemage G21 [Arc B580]",
 						SubvendorName: "Intel Corporation",
 					},
-					AdditionalProperties: map[string]string{
+					AdditionalProperties: map[string]any{
 						"vram": "12168933376",
 					},
 				},
@@ -750,7 +750,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						DeviceName:    "Raptor Lake-S UHD Graphics",
 						SubvendorName: "CLEVO/KAPOK Computer",
 					},
-					AdditionalProperties: map[string]string{
+					AdditionalProperties: map[string]any{
 						"vram": "31002615808",
 					},
 				},
@@ -769,7 +769,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						DeviceName:    "AD107M [GeForce RTX 4050 Max-Q / Mobile]",
 						SubvendorName: "CLEVO/KAPOK Computer",
 					},
-					AdditionalProperties: map[string]string{
+					AdditionalProperties: map[string]any{
 						"compute-capability": "8.9",
 						"vram":               "6439305216",
 					},
@@ -809,7 +809,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						DeviceName:    "CometLake-U GT2 [UHD Graphics]",
 						SubvendorName: "Dell",
 					},
-					AdditionalProperties: map[string]string{
+					AdditionalProperties: map[string]any{
 						"vram": "14482374656",
 					},
 				},
@@ -905,7 +905,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						DeviceName:    "Krackan [Radeon 840M / 860M Graphics]",
 						SubvendorName: "Lenovo",
 					},
-					AdditionalProperties: map[string]string{
+					AdditionalProperties: map[string]any{
 						"microarchitecture": "gfx1152",
 						"vram":              "8589934592",
 					},
