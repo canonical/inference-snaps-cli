@@ -96,7 +96,7 @@ func TestModelStatus_NonExistentModel(t *testing.T) {
 	}
 }
 
-func TestGetModelManifestByNameOrAlias(t *testing.T) {
+func TestGetModelManifestByName(t *testing.T) {
 	tests := []struct {
 		name         string
 		activeEngine string
@@ -172,7 +172,14 @@ func TestGetModelManifestByNameOrAlias(t *testing.T) {
 			}
 			ctx := &Context{ModelsDir: modelsDir, EnginesDir: enginesDir, RuntimesDir: runtimeDir, Cache: cache}
 
-			manifest, err := GetModelManifestByNameOrAlias(ctx, tc.query, getTestMachine())
+			modelName, err := GetModelNameFromNameOrAlias(ctx, tc.query)
+			if err != nil {
+				if tc.wantErr {
+					return
+				}
+				t.Fatalf("unexpected error: %v", err)
+			}
+			manifest, err := GetModelManifestByName(ctx, modelName, getTestMachine())
 
 			if tc.wantErr {
 				if err == nil {
@@ -287,27 +294,23 @@ func TestScoreModelsAgainstEngineRequiredMemoryOverflow(t *testing.T) {
 	}{
 		{
 			name: "model memory overflow", diskSize: "1G",
-			modelMemory: "18446744071562066945", runtimeMemory: "1023", wantOverflow: true,
+			modelMemory: "18446744073709549568", runtimeMemory: "2048", wantOverflow: true,
 		},
 		{
 			name: "runtime memory overflow", diskSize: "1G",
-			modelMemory: "1", runtimeMemory: "18446744071562066944", wantOverflow: true,
-		},
-		{
-			name: "overhead overflow", diskSize: "1G",
-			modelMemory: "18446744071562067967", runtimeMemory: "1", wantOverflow: true,
+			modelMemory: "2048", runtimeMemory: "18446744073709549568", wantOverflow: true,
 		},
 		{
 			name: "near-maximum valid total", diskSize: "1G",
-			modelMemory: "18446744071562063872", runtimeMemory: "1023", wantMemory: 18446744073709548543,
+			modelMemory: "18446744071562063872", runtimeMemory: "1023", wantMemory: 18446744071562064895,
 		},
 		{
 			name: "normal total", diskSize: "1G",
-			modelMemory: "500M", runtimeMemory: "200M", wantMemory: 2*1024*1024*1024 + 700*1024*1024,
+			modelMemory: "500M", runtimeMemory: "200M", wantMemory: 700 * 1024 * 1024,
 		},
 		{
 			name: "disk size fallback", diskSize: "1G",
-			runtimeMemory: "200M", wantMemory: 3*1024*1024*1024 + 200*1024*1024,
+			runtimeMemory: "200M", wantMemory: 1*1024*1024*1024 + 200*1024*1024,
 		},
 	}
 	for _, test := range tests {
@@ -374,7 +377,7 @@ func TestSelectModelScoreOverflow(t *testing.T) {
 		if !model.CompatibilityReport.Compatible {
 			t.Errorf("model %q should be compatible", model.Name)
 		}
-		wantScore := uint64(4 * 1024 * 1024 * 1024)
+		wantScore := uint64(2 * 1024 * 1024 * 1024)
 		if model.Name == "large" {
 			wantScore = math.MaxUint64
 		}

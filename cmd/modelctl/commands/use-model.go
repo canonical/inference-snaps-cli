@@ -91,7 +91,11 @@ func (cmd *useModelCommand) run(_ *cobra.Command, args []string) error {
 
 func (cmd *useModelCommand) switchModel(modelNameOrAlias string, machine *machine.Machine) error {
 
-	modelManifest, err := common.GetModelManifestByNameOrAlias(cmd.Context, modelNameOrAlias, machine)
+	modelName, err := common.GetModelNameFromNameOrAlias(cmd.Context, modelNameOrAlias)
+	if err != nil {
+		return fmt.Errorf("getting model name from alias: %v", err)
+	}
+	modelManifest, err := common.GetModelManifestByName(cmd.Context, modelName, machine)
 	if err != nil {
 		return err
 	}

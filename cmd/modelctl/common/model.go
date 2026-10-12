@@ -17,7 +17,23 @@ import (
 	"github.com/canonical/lscompute/pkg/machine/device/pci"
 )
 
-func GetModelManifestByNameOrAlias(ctx *Context, modelName string, machine *machine.Machine) (*models.ScoredManifest, error) {
+const minimumRuntimeRequiredMemory uint64 = 2 * 1024 * 1024 * 1024 // 2 GB
+
+func GetModelNameFromNameOrAlias(ctx *Context, nameOrAlias string) (string, error) {
+	allModelManifests, err := models.LoadManifests(ctx.ModelsDir)
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", LoadingModelManifests, err)
+	}
+
+	for _, modelManifest := range allModelManifests {
+		if modelManifest.Name == nameOrAlias || modelManifest.Alias == nameOrAlias {
+			return modelManifest.Name, nil
+		}
+	}
+
+	return "", fmt.Errorf("model %q does not exist", nameOrAlias)
+}
+func GetModelManifestByName(ctx *Context, modelName string, machine *machine.Machine) (*models.ScoredManifest, error) {
 	if modelName == "" {
 		return nil, fmt.Errorf("model name must not be empty")
 	}
@@ -44,7 +60,7 @@ func GetModelManifestByNameOrAlias(ctx *Context, modelName string, machine *mach
 	var manifest *models.Manifest
 	for _, modelManifest := range allModelManifests {
 		if slices.Contains(engineManifest.Model.Options, modelManifest.Name) &&
-			(modelManifest.Name == modelName || modelManifest.Alias == modelName) {
+			(modelManifest.Name == modelName) {
 			manifest = &modelManifest
 			break
 		}
@@ -53,7 +69,7 @@ func GetModelManifestByNameOrAlias(ctx *Context, modelName string, machine *mach
 	// If the provided name is not one of the active engine's models, warn the user it is not compatible
 	if manifest == nil {
 		for _, modelManifest := range allModelManifests {
-			if modelManifest.Name == modelName || modelManifest.Alias == modelName {
+			if modelManifest.Name == modelName {
 				return nil, fmt.Errorf("model %q is not compatible with the active engine", modelName)
 			}
 		}
@@ -179,7 +195,7 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 		return nil, err
 	}
 
-	var runtimeMemory uint64 = 200 * 1024 * 1024 // 200 MB
+	runtimeMemory := minimumRuntimeRequiredMemory
 	if engineManifest.Runtime != "" {
 		runtimeManifest, err := runtimes.LoadManifest(ctx.RuntimesDir, engineManifest.Runtime)
 		if err != nil {
@@ -218,7 +234,7 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 		}
 
 		// 2GB for squashfs and OS
-		requiredMemory, ok := utils.CheckedAddUint64(requiredMemory, runtimeMemory, 2*1024*1024*1024)
+		requiredMemory, ok := utils.CheckedAddUint64(requiredMemory, runtimeMemory)
 		if !ok {
 			return nil, fmt.Errorf("required memory for model %q overflows uint64", modelID)
 		}

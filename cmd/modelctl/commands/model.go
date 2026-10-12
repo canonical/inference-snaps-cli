@@ -116,7 +116,11 @@ func (cmd *modelCommand) model(modelNameOrAlias string) error {
 		return fmt.Errorf("getting machine info: %v", err)
 	}
 
-	scoredModelDetails, err := common.GetModelManifestByNameOrAlias(cmd.Context, modelNameOrAlias, machine)
+	modelName, err := common.GetModelNameFromNameOrAlias(cmd.Context, modelNameOrAlias)
+	if err != nil {
+		return fmt.Errorf("getting model name from alias: %v", err)
+	}
+	scoredModelDetails, err := common.GetModelManifestByName(cmd.Context, modelName, machine)
 	if err != nil {
 		return fmt.Errorf("scoring model: %v", err)
 	}
