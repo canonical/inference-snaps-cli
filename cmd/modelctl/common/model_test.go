@@ -474,12 +474,15 @@ func TestAvailableMemory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	memoryAvailable, err := availableMemory(&machine, *engine)
+	memoryAvailable, isVram, err := availableMemory(&machine, *engine)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if memoryAvailable != 107374182400 {
 		t.Errorf("expected 107374182400 available memory, got: %d", memoryAvailable)
+	}
+	if !isVram {
+		t.Errorf("expected isVram to be true, got: %v", isVram)
 	}
 
 	// test that vram is ignored if engine is not gpu capable
@@ -488,25 +491,31 @@ func TestAvailableMemory(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	memoryAvailable, err = availableMemory(&machine, *engine)
+	memoryAvailable, isVram, err = availableMemory(&machine, *engine)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if memoryAvailable != 67012501504 {
 		t.Errorf("expected 67012501504 available memory, got: %d", memoryAvailable)
+	}
+	if isVram {
+		t.Errorf("expected isVram to be false, got: %v", isVram)
 	}
 
 	// test that system memory is returned when nvidia-smi return "[N/A]" for the VRAM
-	engine, err = engines.LoadManifest("../../../test_data/engines", "cuda-generic")
+	engine, err = engines.LoadManifest("../../../test_data/engines", "cuda-no-vram")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	memoryAvailable, err = availableMemory(&machine, *engine)
+	memoryAvailable, isVram, err = availableMemory(&machine, *engine)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if memoryAvailable != 67012501504 {
 		t.Errorf("expected 67012501504 available memory, got: %d", memoryAvailable)
+	}
+	if !isVram {
+		t.Errorf("expected isVram to be true, got: %v", isVram)
 	}
 }

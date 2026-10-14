@@ -189,7 +189,7 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 		return nil, err
 	}
 
-	availableMemory, err := availableMemory(machine, engineManifest)
+	availableMemory, isVram, err := availableMemory(machine, engineManifest)
 	if err != nil {
 		return nil, err
 	}
@@ -244,6 +244,7 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 			AvailableDiskSpace: availableDiskSpace,
 			RequiredMemory:     requiredMemory,
 			AvailableMemory:    availableMemory,
+			IsVram:             isVram,
 		}
 		report.CompatibleMemory = report.RequiredMemory <= availableMemory
 		report.Compatible = report.CompatibleDisk && report.CompatibleMemory
@@ -336,9 +337,9 @@ func availableDiskSpace(machine *machine.Machine) (uint64, error) {
 	return 0, fmt.Errorf("disk information unavailable for %s", constants.SnapStoragePath)
 }
 
-func availableMemory(machine *machine.Machine, engineManifest engines.Manifest) (uint64, error) {
+func availableMemory(machine *machine.Machine, engineManifest engines.Manifest) (uint64, bool, error) {
 	systemMemory := machine.Memory.TotalRam
-
+	isVram := false
 	var gpuDevices []engines.Device
 	for _, device := range slices.Concat(engineManifest.Devices.Allof, engineManifest.Devices.Anyof) {
 		if device.Type == "gpu" && (device.Bus == "" || device.Bus == "pci") {
@@ -346,7 +347,7 @@ func availableMemory(machine *machine.Machine, engineManifest engines.Manifest) 
 		}
 	}
 	if len(gpuDevices) == 0 {
-		return systemMemory, nil
+		return systemMemory, isVram, nil
 	}
 
 	// Use the host GPU that best satisfies the engine, mirroring engine selection scoring
@@ -360,17 +361,22 @@ func availableMemory(machine *machine.Machine, engineManifest engines.Manifest) 
 		}
 	}
 	if bestDevice == nil {
-		return systemMemory, nil
+		return systemMemory, isVram, nil
 	}
 
 	vram, found := bestDevice.AdditionalProperties["vram"]
-	if !found || vram == nil {
+	if !found {
+		isVram = false
+		return systemMemory, isVram, nil
+	} else if vram == nil {
 		// assuming unified memory
-		return systemMemory, nil
+		isVram = true
+		return systemMemory, isVram, nil
 	}
 	vramValue, ok := vram.(uint64)
 	if !ok {
-		return 0, fmt.Errorf("parsing vram %q for pci device %s", vram, bestDevice.Slot)
+		return 0, false, fmt.Errorf("parsing vram %q for pci device %s", vram, bestDevice.Slot)
 	}
-	return vramValue, nil
+	isVram = true
+	return vramValue, isVram, nil
 }

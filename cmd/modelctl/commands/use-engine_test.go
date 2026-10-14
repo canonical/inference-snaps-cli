@@ -212,7 +212,7 @@ func ExampleUseEngine_autoSelectEngine() {
 	// • cpu-exptl: experimental, score=10
 	// ✔ cpu: compatible, score=10
 	// Selected engine: cpu
-	// Selecting a compatible model:
+	// Selecting a model for the "cpu" engine:
 	// ✔ 30m-q4-k-m-gguf
 	// ✔ 26b-q4-k-m-gguf
 	// ✔ 30b-a3b-q4-k-m-gguf
@@ -268,7 +268,7 @@ func ExampleUseEngine_printIncompatibleModels() {
 	}
 
 	// Output:
-	// Selecting a compatible model:
+	// Selecting a model for the "cpu" engine:
 	// ✘ 30m-q4-k-m-gguf: requires 1M disk space, has 0
 	// ✘ 26b-q4-k-m-gguf: requires 6G disk space, has 0
 	// ✘ 30b-a3b-q4-k-m-gguf: requires 6G disk space, has 0

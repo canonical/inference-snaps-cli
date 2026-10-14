@@ -222,7 +222,7 @@ func (cmd *useEngineCommand) switchEngineWithMachine(engineName string, machine 
 		var scoredModels []models.ScoredManifest
 		newModelID, scoredModels, err = common.SelectModel(cmd.Context, *newEngineManifest, newModelID, machine)
 		if cmd.auto {
-			cmd.printScoredModels(scoredModels, newModelID)
+			cmd.printScoredModels(scoredModels, newModelID, engineName)
 		}
 		if err != nil && err != common.ErrInsufficientDiskSpaceForModel {
 			return fmt.Errorf("selecting model: %v", err)
@@ -407,12 +407,12 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 	return nil
 }
 
-func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManifest, newModelID string) {
+func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManifest, newModelID string, engineName string) {
 	if len(scoredModels) == 0 {
 		return
 	}
 	var compatibleModels []string
-	fmt.Println("Selecting a compatible model:")
+	fmt.Printf("Selecting a model for the \"%s\" engine:\n", engineName)
 	for _, model := range scoredModels {
 		if model.CompatibilityReport.Compatible {
 			compatibleModels = append(compatibleModels, model.Name)
@@ -425,8 +425,15 @@ func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManif
 					utils.FmtBytesShort(report.RequiredDiskSpace),
 					utils.FmtBytesShort(report.AvailableDiskSpace))
 			} else if !report.CompatibleMemory {
-				fmt.Printf("✘ %s: requires %s memory, has %s\n",
+				var memoryType string
+				if report.IsVram {
+					memoryType = "VRAM"
+				} else {
+					memoryType = "memory"
+				}
+				fmt.Printf("✘ %s: requires %s %s, has %s\n",
 					model.Name,
+					memoryType,
 					utils.FmtBytesShort(report.RequiredMemory),
 					utils.FmtBytesShort(report.AvailableMemory))
 			}
@@ -440,7 +447,13 @@ func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManif
 func (cmd *useEngineCommand) verboseIncompatibilityReasons(report engines.CompatibilityReport) []string {
 	var reasons []string
 	if !report.CompatibleMemory {
-		reasons = append(reasons, fmt.Sprintf("requires %s memory, has %s (RAM + swap)", utils.FmtBytes(report.RequiredMemory), utils.FmtBytes(report.TotalRAM+report.TotalSwap)))
+		var memoryType string
+		if report.RequiredMemory.IsVram {
+			memoryType = "VRAM"
+		} else {
+			memoryType = "memory"
+		}
+		reasons = append(reasons, fmt.Sprintf("requires %s %s, has %s", utils.FmtBytes(report.RequiredMemory.Memory), memoryType, utils.FmtBytes(report.TotalRAM+report.TotalSwap)))
 	}
 	if !report.CompatibleDisk {
 		reasons = append(reasons, fmt.Sprintf("requires %s disk space, has %s", utils.FmtBytes(report.RequiredDiskSpace), utils.FmtBytes(report.AvailableDiskSpace)))

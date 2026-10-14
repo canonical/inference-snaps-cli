@@ -1,6 +1,8 @@
 package common
 
 import (
+	"fmt"
+
 	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
 )
@@ -55,7 +57,13 @@ func NewModelDetails(manifest *models.ScoredManifest) (ModelDetails, error) {
 func (m *ModelDetails) fillIncompatibilityIssues(report models.CompatibilityReport) {
 	var issues []string
 	if !report.CompatibleMemory {
-		issues = append(issues, "insufficient memory")
+		var memoryType string
+		if report.IsVram {
+			memoryType = "VRAM"
+		} else {
+			memoryType = "memory"
+		}
+		issues = append(issues, fmt.Sprintf("insufficient %s", memoryType))
 	}
 	if !report.CompatibleDisk {
 		issues = append(issues, "insufficient disk space")

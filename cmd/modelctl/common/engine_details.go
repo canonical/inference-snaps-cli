@@ -1,6 +1,8 @@
 package common
 
 import (
+	"fmt"
+
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 )
 
@@ -22,7 +24,13 @@ func NewEngineDetails(scoredManifest engines.ScoredManifest) EngineDetails {
 func (e *EngineDetails) fillIncompatibilityIssues(report engines.CompatibilityReport) {
 	var issues []string
 	if !report.CompatibleMemory {
-		issues = append(issues, "insufficient memory")
+		var memoryType string
+		if report.RequiredMemory.IsVram {
+			memoryType = "VRAM"
+		} else {
+			memoryType = "memory"
+		}
+		issues = append(issues, fmt.Sprintf("insufficient %s", memoryType))
 	}
 	if !report.CompatibleDisk {
 		issues = append(issues, "insufficient disk space")
