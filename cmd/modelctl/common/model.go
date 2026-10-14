@@ -368,9 +368,9 @@ func availableMemory(machine *machine.Machine, engineManifest engines.Manifest) 
 		// assuming unified memory
 		return systemMemory, nil
 	}
-	vramPtr, ok := vram.(*uint64)
+	vramValue, ok := vram.(uint64)
 	if !ok {
-		return 0, fmt.Errorf("converting vram %q of pci device %s", vram, bestDevice.Slot)
+		return 0, fmt.Errorf("parsing vram %q for pci device %s", vram, bestDevice.Slot)
 	}
-	return *vramPtr, nil
+	return vramValue, nil
 }

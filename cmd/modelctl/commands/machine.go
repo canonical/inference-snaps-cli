@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
@@ -268,12 +267,12 @@ func newPciAdditionalDeviceProperties(props map[string]any) *PciAdditionalDevice
 		ap.ComputeCapability = v
 	}
 	if v, ok := props["vram"]; ok {
-		if s, ok := v.(string); ok {
-			if n, err := strconv.ParseUint(s, 10, 64); err == nil {
-				ap.Vram = n
+		if v != nil {
+			if s, ok := v.(uint64); ok {
+				ap.Vram = s
+			} else {
+				ap.Vram = nil
 			}
-		} else {
-			ap.Vram = nil
 		}
 	}
 	if *ap == (PciAdditionalDeviceProperties{}) {

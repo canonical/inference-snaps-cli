@@ -197,7 +197,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 					},
 					AdditionalProperties: map[string]any{
 						"compute-capability": "6.1",
-						"vram":               new(uint64(2147483648)),
+						"vram":               uint64(2147483648),
 					},
 				},
 			},
@@ -341,7 +341,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						SubvendorName: "Hewlett-Packard Company",
 					},
 					AdditionalProperties: map[string]any{
-						"vram": new(uint64(30592884736)),
+						"vram": uint64(30592884736),
 					},
 				},
 				{
@@ -429,7 +429,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 					},
 					AdditionalProperties: map[string]any{
 						"microarchitecture": "gfx1032",
-						"vram":              new(uint64(8573157376)),
+						"vram":              uint64(8573157376),
 					},
 				},
 			},
@@ -468,7 +468,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						SubvendorName: "Gigabyte Technology Co., Ltd",
 					},
 					AdditionalProperties: map[string]any{
-						"vram": new(uint64(17179869184)),
+						"vram": uint64(17179869184),
 					},
 				},
 				{
@@ -488,7 +488,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 					},
 					AdditionalProperties: map[string]any{
 						"compute-capability": "6.1",
-						"vram":               new(uint64(11811160064)),
+						"vram":               uint64(11811160064),
 					},
 				},
 				{
@@ -507,7 +507,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						SubvendorName: "ASRock Incorporation",
 					},
 					AdditionalProperties: map[string]any{
-						"vram": new(uint64(8096681984)),
+						"vram": uint64(8096681984),
 					},
 				},
 			},
@@ -581,7 +581,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						SubvendorName: "ASRock Incorporation",
 					},
 					AdditionalProperties: map[string]any{
-						"vram": new(uint64(8096681984)),
+						"vram": uint64(8096681984),
 					},
 				},
 			},
@@ -656,7 +656,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						SubvendorName: "Intel Corporation",
 					},
 					AdditionalProperties: map[string]any{
-						"vram": new(uint64(12168933376)),
+						"vram": uint64(12168933376),
 					},
 				},
 			},
@@ -751,7 +751,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						SubvendorName: "CLEVO/KAPOK Computer",
 					},
 					AdditionalProperties: map[string]any{
-						"vram": new(uint64(31002615808)),
+						"vram": uint64(31002615808),
 					},
 				},
 				{
@@ -771,7 +771,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 					},
 					AdditionalProperties: map[string]any{
 						"compute-capability": "8.9",
-						"vram":               new(uint64(6439305216)),
+						"vram":               uint64(6439305216),
 					},
 				},
 			},
@@ -810,7 +810,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 						SubvendorName: "Dell",
 					},
 					AdditionalProperties: map[string]any{
-						"vram": new(uint64(14482374656)),
+						"vram": uint64(14482374656),
 					},
 				},
 			},
@@ -907,7 +907,7 @@ func machineFixture(name string) (*machine.Machine, error) {
 					},
 					AdditionalProperties: map[string]any{
 						"microarchitecture": "gfx1152",
-						"vram":              new(uint64(8589934592)),
+						"vram":              uint64(8589934592),
 					},
 				},
 			},

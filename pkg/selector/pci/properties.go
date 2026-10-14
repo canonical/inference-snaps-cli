@@ -48,11 +48,10 @@ func checkVram(manifestDevice engines.Device, hostPciDevice pci.Device) error {
 		return err
 	}
 	if vram, ok := hostPciDevice.AdditionalProperties["vram"]; ok && vram != nil {
-		vramPointer, ok := vram.(*uint64)
+		vramAvailable, ok := vram.(uint64)
 		if !ok {
-			return fmt.Errorf("parsing vram: %v", err)
+			return fmt.Errorf("parsing vram: %v", vram)
 		}
-		vramAvailable := *vramPointer
 		if vramAvailable >= vramRequired {
 			return nil
 		} else {

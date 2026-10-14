@@ -1,0 +1,7 @@
+*~
+*.log
+.idea
+coverage.out
+prime
+squashfs-root
+*.snap
