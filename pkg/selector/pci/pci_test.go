@@ -63,7 +63,7 @@ func TestCheckGpuVram(t *testing.T) {
 		SubvendorId: nil,
 		SubdeviceId: nil,
 		AdditionalProperties: map[string]any{
-			"vram": "5000000000",
+			"vram": new(uint64(5000000000)),
 		},
 	}
 
