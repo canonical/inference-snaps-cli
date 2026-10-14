@@ -10,16 +10,16 @@ type ModelDetails struct {
 	Alias string `json:"alias,omitempty" yaml:"alias,omitempty"`
 
 	Description  string   `json:"description" yaml:"description"`
-	ModelCardUrl string   `json:"model-card-url" yaml:"model-card-url"`
+	ModelCardUrl string   `json:"model-card-url,omitempty" yaml:"model-card-url,omitempty"`
 	Format       string   `json:"format,omitempty" yaml:"format,omitempty"`
-	Quantization string   `json:"quantization" yaml:"quantization"`
-	Capabilities []string `json:"capabilities" yaml:"capabilities"`
+	Quantization string   `json:"quantization,omitempty" yaml:"quantization,omitempty"`
+	Capabilities []string `json:"capabilities,omitempty" yaml:"capabilities,omitempty"`
 
 	DiskSize string `json:"disk-size" yaml:"disk-size"`
 
 	RequiredMemory string `json:"required-memory,omitempty" yaml:"required-memory,omitempty"`
 
-	Components []string `json:"components" yaml:"components"`
+	Components []string `json:"components,omitempty" yaml:"components,omitempty"`
 
 	CompatibleEngines []string `json:"compatible-engines,omitempty" yaml:"compatible-engines,omitempty"`
 
