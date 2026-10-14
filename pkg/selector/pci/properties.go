@@ -48,10 +48,11 @@ func checkVram(manifestDevice engines.Device, hostPciDevice pci.Device) error {
 		return err
 	}
 	if vram, ok := hostPciDevice.AdditionalProperties["vram"]; ok && vram != nil {
-		vramAvailable, err := utils.StringToBytes(vram.(string))
-		if err != nil {
+		vramPointer, ok := vram.(*uint64)
+		if !ok {
 			return fmt.Errorf("parsing vram: %v", err)
 		}
+		vramAvailable := *vramPointer
 		if vramAvailable >= vramRequired {
 			return nil
 		} else {
@@ -84,7 +85,11 @@ func checkComputeCapability(constraintRequired string, hostPciDevice pci.Device)
 	}
 
 	if cc, ok := hostPciDevice.AdditionalProperties["compute-capability"]; ok {
-		version, err := semver.NewVersion(cc.(string))
+		ccString, ok := cc.(string)
+		if !ok {
+			return fmt.Errorf("invalid compute-capability type: %T", cc)
+		}
+		version, err := semver.NewVersion(ccString)
 		if err != nil {
 			return fmt.Errorf("parsing compute-capability %q: %v", cc, err)
 		}

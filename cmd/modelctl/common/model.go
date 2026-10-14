@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 	"slices"
-	"strconv"
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/constants"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
@@ -369,9 +368,9 @@ func availableMemory(machine *machine.Machine, engineManifest engines.Manifest) 
 		// assuming unified memory
 		return systemMemory, nil
 	}
-	vramVal, err := strconv.ParseUint(vram.(string), 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("parsing vram %q of pci device %s: %w", vram, bestDevice.Slot, err)
+	vramPtr, ok := vram.(*uint64)
+	if !ok {
+		return 0, fmt.Errorf("converting vram %q of pci device %s", vram, bestDevice.Slot)
 	}
-	return vramVal, nil
+	return *vramPtr, nil
 }

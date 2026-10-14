@@ -131,13 +131,17 @@ type PciAdditionalDeviceProperties struct {
 }
 
 func (a PciAdditionalDeviceProperties) MarshalYAML() (any, error) {
+	vramOutput := a.Vram
+	if a.Vram != nil {
+		vramOutput = utils.FmtBytesShort(a.Vram.(uint64))
+	}
 	return struct {
 		Microarchitecture string `yaml:"microarchitecture,omitempty"`
 		Vram              any    `yaml:"vram,omitempty"`
 		ComputeCapability string `yaml:"compute-capability,omitempty"`
 	}{
 		Microarchitecture: a.Microarchitecture,
-		Vram:              utils.FmtBytesShort(a.Vram),
+		Vram:              vramOutput,
 		ComputeCapability: a.ComputeCapability,
 	}, nil
 }

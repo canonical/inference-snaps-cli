@@ -373,25 +373,21 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 			return fmt.Errorf("scoring active model: %v", err)
 		}
 		if scoredModel.CompatibilityReport.Compatible {
-			err = cmd.Cache.SetActiveModel(activeModelId)
-			if err != nil {
+			if err := cmd.Cache.SetActiveModel(activeModelId); err != nil {
 				return fmt.Errorf("setting active model: %v", err)
 			}
 		} else {
 			modelManifest = nil
-			err = cmd.Cache.SetActiveModel("")
-			if err != nil {
+			if err := cmd.Cache.SetActiveModel(""); err != nil {
 				return fmt.Errorf("clearing active model: %v", err)
 			}
 		}
 	} else if modelManifest != nil {
-		err = cmd.Cache.SetActiveModel(activeModelId)
-		if err != nil {
+		if err := cmd.Cache.SetActiveModel(activeModelId); err != nil {
 			return fmt.Errorf("setting active model: %v", err)
 		}
 	} else {
-		err = cmd.Cache.SetActiveModel("")
-		if err != nil {
+		if err := cmd.Cache.SetActiveModel(""); err != nil {
 			return fmt.Errorf("clearing active model: %v", err)
 		}
 	}
