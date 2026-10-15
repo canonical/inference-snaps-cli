@@ -433,8 +433,8 @@ func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManif
 				}
 				fmt.Printf("✘ %s: requires %s %s, has %s\n",
 					model.Name,
-					memoryType,
 					utils.FmtBytesShort(report.RequiredMemory),
+					memoryType,
 					utils.FmtBytesShort(report.AvailableMemory))
 			}
 		}
@@ -453,7 +453,7 @@ func (cmd *useEngineCommand) verboseIncompatibilityReasons(report engines.Compat
 		} else {
 			memoryType = "memory"
 		}
-		reasons = append(reasons, fmt.Sprintf("requires %s %s, has %s", utils.FmtBytes(report.RequiredMemory.Memory), memoryType, utils.FmtBytes(report.TotalRAM+report.TotalSwap)))
+		reasons = append(reasons, fmt.Sprintf("requires %s %s, has %s", utils.FmtBytes(report.RequiredMemory.Memory), memoryType, utils.FmtBytes(report.AvailableMemory)))
 	}
 	if !report.CompatibleDisk {
 		reasons = append(reasons, fmt.Sprintf("requires %s disk space, has %s", utils.FmtBytes(report.RequiredDiskSpace), utils.FmtBytes(report.AvailableDiskSpace)))

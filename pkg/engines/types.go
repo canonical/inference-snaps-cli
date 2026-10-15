@@ -11,6 +11,7 @@ type RequiredMemory struct {
 type CompatibilityReport struct {
 	CompatibleMemory bool
 	RequiredMemory   RequiredMemory
+	AvailableMemory  uint64
 	TotalRAM         uint64
 	TotalSwap        uint64
 
