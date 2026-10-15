@@ -1,5 +1,0 @@
-package responses
-
-// ToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion is the
-// network policy used by the auto container variant of a Code Interpreter tool.
-type ToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion = ResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp
