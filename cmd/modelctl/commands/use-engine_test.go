@@ -207,16 +207,15 @@ func ExampleUseEngine_autoSelectEngine() {
 
 	// Output:
 	// Evaluating engines for optimal hardware compatibility:
-	// ✘ not-compatible-engine: not compatible
+	// ✘ not-compatible-engine
 	//   - required device not found
 	// • cpu-exptl: experimental, score=10
-	// ✔ cpu: compatible, score=10
-	// Selected engine: cpu
+	// ✔ cpu: score=10: best match
+	//
 	// Selecting a model for the "cpu" engine:
 	// ✔ 30m-q4-k-m-gguf
-	// ✔ 26b-q4-k-m-gguf
+	// ✔ 26b-q4-k-m-gguf: best match
 	// ✔ 30b-a3b-q4-k-m-gguf
-	// Selected model: 26b-q4-k-m-gguf
 	// Engine changed to "cpu".
 	// Model changed to "26b-q4-k-m-gguf".
 	// [mock] Restarting all services
@@ -269,9 +268,15 @@ func ExampleUseEngine_printIncompatibleModels() {
 
 	// Output:
 	// Selecting a model for the "cpu" engine:
-	// ✘ 30m-q4-k-m-gguf: requires 1M disk space, has 0
-	// ✘ 26b-q4-k-m-gguf: requires 6G disk space, has 0
-	// ✘ 30b-a3b-q4-k-m-gguf: requires 6G disk space, has 0
+	// ✘ 30m-q4-k-m-gguf
+	//   - requires 2.1G memory, has 1K
+	//   - requires 1M disk space, has 0
+	// ✘ 26b-q4-k-m-gguf
+	//   - requires 8.3G memory, has 1K
+	//   - requires 6G disk space, has 0
+	// ✘ 30b-a3b-q4-k-m-gguf
+	//   - requires 9G memory, has 1K
+	//   - requires 6G disk space, has 0
 	// Engine changed to "cpu".
 	// [mock] Restarting all services
 }

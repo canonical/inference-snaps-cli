@@ -220,7 +220,7 @@ func Example_printAllModelsJson() {
 	//         "text"
 	//       ],
 	//       "disk-size": "6G",
-	//       "required-memory": "8G",
+	//       "required-memory": "8.3G",
 	//       "components": [
 	//         "model-26b-a4b-q4-k-m-gguf",
 	//         "mmproj-26b-bf16-gguf"
@@ -250,7 +250,7 @@ func Example_printAllModelsJson() {
 	//         "tool"
 	//       ],
 	//       "disk-size": "6G",
-	//       "required-memory": "8G",
+	//       "required-memory": "9G",
 	//       "components": [
 	//         "model-30b-a3b-q4-k-m-gguf-1-of-6",
 	//         "model-30b-a3b-q4-k-m-gguf-2-of-6",
