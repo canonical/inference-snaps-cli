@@ -16,6 +16,9 @@ import (
 	"github.com/canonical/lscompute/pkg/machine/device/pci"
 )
 
+// The minimum runtime required memory takes into account OS memory requirement.
+// 2GB are calculated taking as reference Ubuntu minimum memory requirement (1.5GB).
+// Those extra 500MB take into account overhead for the runtime and a small safety margin
 const minimumRuntimeRequiredMemory uint64 = 2 * 1024 * 1024 * 1024 // 2 GB
 
 func GetModelNameFromNameOrAlias(ctx *Context, nameOrAlias string) (string, error) {
