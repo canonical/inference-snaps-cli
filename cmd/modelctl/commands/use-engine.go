@@ -142,6 +142,10 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 
 func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.ScoredManifest, machine *machine.Machine) error {
 	selectedEngine, selectionErr := selector.TopEngine(scoredEngines)
+	selectedEngineName := ""
+	if selectionErr == nil && selectedEngine != nil {
+		selectedEngineName = selectedEngine.Name
+	}
 
 	fmt.Printf("Evaluating engines for optimal hardware compatibility:\n")
 	for _, engine := range scoredEngines {
@@ -158,7 +162,7 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 		} else if engine.IsExperimental() {
 			fmt.Printf("• %s: experimental, score=%d\n", engine.Name, engine.Score)
 		} else {
-			if engine.Name == selectedEngine.Name {
+			if engine.Name == selectedEngineName {
 				fmt.Printf("✔ %s: score=%d: best match\n", engine.Name, engine.Score)
 			} else {
 				fmt.Printf("✔ %s: score=%d\n", engine.Name, engine.Score)
@@ -176,11 +180,9 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 		}
 		// otherwise continue with standard auto selection
 	}
-
 	if selectionErr != nil {
 		return fmt.Errorf("finding top engine: %v", selectionErr)
 	}
-
 	if err := cmd.switchEngineWithMachine(selectedEngine.Name, machine); err != nil {
 		return fmt.Errorf("use engine: %s", err)
 	}
