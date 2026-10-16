@@ -195,6 +195,7 @@ func checkType(requiredType string, pciDevice pci.Device) bool {
 	/*
 		Base class 0x12 = Processing Accelerator - Intel Lunar Lake NPU identifies as this class
 		Base class 0x0B = Processor, Sub class 0x40 = Co-Processor - Hailo PCI devices identify as this class
+		Base class 0x11 = Signal processing controller - AMD XDNA NPUs identify as this class, see isAmdXdna
 	*/
 	if requiredType == "npu" || requiredType == "tpu" {
 		if pciDevice.DeviceClass&0xFF00 == 0x1200 {
@@ -205,9 +206,29 @@ func checkType(requiredType string, pciDevice pci.Device) bool {
 			// Coprocessor
 			return true
 		}
+		if isAmdXdna(pciDevice) {
+			return true
+		}
 	}
 
 	return false
+}
+
+// amdXdnaDeviceIds are the AMD XDNA NPU device IDs under vendor 0x1022 (the amdxdna kernel driver's supported set).
+var amdXdnaDeviceIds = map[uint16]bool{
+	0x1502: true, // XDNA 1 (Phoenix/Hawk Point)
+	0x17f0: true, // XDNA 2 (Strix/Krackan/Strix Halo)
+}
+
+// isAmdXdna reports whether the device is an AMD XDNA NPU.
+//
+// XDNA NPUs identify as class 0x1180 (Signal processing controller), not as a processing accelerator. That class is
+// generic: other devices share it, e.g. the AMD sensor fusion hub (0x1022:0x164a). The class is therefore only
+// accepted together with the vendor and device ID of a known XDNA NPU.
+func isAmdXdna(pciDevice pci.Device) bool {
+	return pciDevice.DeviceClass&0xFF00 == 0x1100 &&
+		pciDevice.VendorId == 0x1022 &&
+		amdXdnaDeviceIds[pciDevice.DeviceId]
 }
 
 func checkSnapConnection(connection string) (bool, error) {
