@@ -323,6 +323,9 @@ func (cmd *useEngineCommand) switchEngineAndModel(newEngineName string, newModel
 
 	// Ask if the user wants to restart
 	if !cmd.noRestart {
+		if !cmd.assumeYes {
+			fmt.Println()
+		}
 		return common.PromptRestartToApplyChanges(cmd.Context, cmd.assumeYes)
 	}
 
@@ -441,7 +444,7 @@ func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManif
 		outputString = strings.Replace(outputString, modelLine, strings.TrimSuffix(modelLine, "\n")+": best match\n", 1)
 		break
 	}
-	fmt.Print(outputString)
+	fmt.Print(outputString + "\n")
 }
 func (cmd *useEngineCommand) verboseModelIncompatibilityReasons(report models.CompatibilityReport) []string {
 	var reasons []string

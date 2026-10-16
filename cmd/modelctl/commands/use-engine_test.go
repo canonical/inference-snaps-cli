@@ -216,6 +216,7 @@ func ExampleUseEngine_autoSelectEngine() {
 	// ✔ 30m-q4-k-m-gguf
 	// ✔ 26b-q4-k-m-gguf: best match
 	// ✔ 30b-a3b-q4-k-m-gguf
+	//
 	// Engine changed to "cpu".
 	// Model changed to "26b-q4-k-m-gguf".
 	// [mock] Restarting all services
@@ -277,6 +278,7 @@ func ExampleUseEngine_printIncompatibleModels() {
 	// ✘ 30b-a3b-q4-k-m-gguf
 	//   - requires 9G memory, has 1K
 	//   - requires 6G disk space, has 0
+	//
 	// Engine changed to "cpu".
 	// [mock] Restarting all services
 }
