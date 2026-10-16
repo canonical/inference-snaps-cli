@@ -4,9 +4,14 @@ import (
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
 )
 
+type RequiredMemory struct {
+	Memory uint64
+	IsVram bool
+}
 type CompatibilityReport struct {
 	CompatibleMemory bool
-	RequiredMemory   uint64
+	RequiredMemory   RequiredMemory
+	AvailableMemory  uint64
 	TotalRAM         uint64
 	TotalSwap        uint64
 

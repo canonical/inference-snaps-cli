@@ -7,6 +7,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/canonical/lscompute/pkg/machine"
+	"github.com/canonical/lscompute/pkg/machine/host"
+
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/fatih/color"
@@ -79,7 +82,12 @@ func (cmd *modelsCommand) run(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("%s: %w", common.LoadingEngineManifest, err)
 	}
 
-	allModels, err := common.GetAllModels(cmd.Context)
+	machine, _, err := machine.Get(host.Real(), true, true)
+	if err != nil {
+		return fmt.Errorf("fetching machine: %v", err)
+	}
+
+	allModels, err := common.GetAllModels(cmd.Context, machine)
 	if err != nil {
 		return fmt.Errorf("getting all models: %w", err)
 	}
@@ -267,8 +275,12 @@ func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error
 	if err != nil {
 		return "", fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
+	machine, _, err := machine.Get(host.Real(), true, true)
+	if err != nil {
+		return "", fmt.Errorf("fetching machine: %v", err)
+	}
 
-	allModels, err := common.GetAllModels(cmd.Context)
+	allModels, err := common.GetAllModels(cmd.Context, machine)
 	if err != nil {
 		return "", fmt.Errorf("getting all models: %w", err)
 	}

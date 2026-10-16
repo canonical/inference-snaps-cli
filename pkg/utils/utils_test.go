@@ -1,9 +1,35 @@
 package utils
 
 import (
+	"math"
 	"os"
 	"testing"
 )
+
+func TestCheckedAddUint64(t *testing.T) {
+	tests := []struct {
+		name   string
+		values []uint64
+		want   uint64
+		wantOK bool
+	}{
+		{name: "empty", wantOK: true},
+		{name: "zero", values: []uint64{0, 0}, wantOK: true},
+		{name: "multiple values", values: []uint64{1, 2, 3, 4}, want: 10, wantOK: true},
+		{name: "maximum plus zero", values: []uint64{math.MaxUint64, 0}, want: math.MaxUint64, wantOK: true},
+		{name: "maximum total", values: []uint64{math.MaxUint64 - 2, 1, 1}, want: math.MaxUint64, wantOK: true},
+		{name: "two value overflow", values: []uint64{math.MaxUint64, 1}},
+		{name: "later overflow", values: []uint64{math.MaxUint64 - 2, 1, 2}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, ok := CheckedAddUint64(test.values...)
+			if got != test.want || ok != test.wantOK {
+				t.Errorf("CheckedAddUint64(%v) = (%d, %t), want (%d, %t)", test.values, got, ok, test.want, test.wantOK)
+			}
+		})
+	}
+}
 
 func TestStringToBytes(t *testing.T) {
 	tests := []struct {

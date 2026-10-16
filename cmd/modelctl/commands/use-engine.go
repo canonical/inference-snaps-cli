@@ -3,6 +3,7 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"os"
 	"slices"
 
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
@@ -95,7 +96,6 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 		if err := cmd.migrateConfig(); err != nil {
 			return err
 		}
-
 		err := cmd.fixActiveEngine()
 		if errors.Is(err, common.ErrNoActiveEngine) { // If no engine is active, there's nothing to fix
 			return nil
@@ -141,15 +141,20 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 }
 
 func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.ScoredManifest, machine *machine.Machine) error {
+	selectedEngine, selectionErr := selector.TopEngine(scoredEngines)
+	selectedEngineName := ""
+	if selectionErr == nil && selectedEngine != nil {
+		selectedEngineName = selectedEngine.Name
+	}
 
-	fmt.Println("Evaluating engines for optimal hardware compatibility:")
+	fmt.Printf("Evaluating engines for optimal hardware compatibility:\n")
 	for _, engine := range scoredEngines {
 		if engine.Score == 0 {
-			fmt.Printf("✘ %s: not compatible\n", engine.Name)
+			fmt.Printf("✘ %s\n", engine.Name)
 
 			// Only print incompatibility reasons if verbose flag is set
 			if cmd.Verbose {
-				reasons := cmd.verboseIncompatibilityReasons(engine.CompatibilityReport)
+				reasons := cmd.verboseEngineIncompatibilityReasons(engine.CompatibilityReport)
 				for _, reason := range reasons {
 					fmt.Printf("  - %s\n", reason)
 				}
@@ -157,7 +162,11 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 		} else if engine.IsExperimental() {
 			fmt.Printf("• %s: experimental, score=%d\n", engine.Name, engine.Score)
 		} else {
-			fmt.Printf("✔ %s: compatible, score=%d\n", engine.Name, engine.Score)
+			if engine.Name == selectedEngineName {
+				fmt.Printf("✔ %s: score=%d: best match\n", engine.Name, engine.Score)
+			} else {
+				fmt.Printf("✔ %s: score=%d\n", engine.Name, engine.Score)
+			}
 		}
 	}
 
@@ -171,16 +180,10 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 		}
 		// otherwise continue with standard auto selection
 	}
-
-	selectedEngine, err := selector.TopEngine(scoredEngines)
-	if err != nil {
-		return fmt.Errorf("finding top engine: %v", err)
+	if selectionErr != nil {
+		return fmt.Errorf("finding top engine: %v", selectionErr)
 	}
-
-	fmt.Printf("Selected engine: %s\n", selectedEngine.Name)
-
-	err = cmd.switchEngineWithMachine(selectedEngine.Name, machine)
-	if err != nil {
+	if err := cmd.switchEngineWithMachine(selectedEngine.Name, machine); err != nil {
 		return fmt.Errorf("use engine: %s", err)
 	}
 
@@ -221,12 +224,15 @@ func (cmd *useEngineCommand) switchEngineWithMachine(engineName string, machine 
 	// Active model is not changed when autoselecting a new engine. SelectModel will respect the preferred model if possible.
 	if len(newEngineManifest.Model.Options) > 0 && machine != nil {
 		var scoredModels []models.ScoredManifest
-		newModelID, scoredModels, err = common.SelectModel(cmd.Context, newEngineManifest.Model.Options, newModelID, machine)
+		newModelID, scoredModels, err = common.SelectModel(cmd.Context, *newEngineManifest, newModelID, machine)
 		if cmd.auto {
-			cmd.printScoredModels(scoredModels, newModelID)
+			fmt.Println()
+			cmd.printScoredModels(scoredModels, newModelID, engineName)
 		}
 		if err != nil && err != common.ErrInsufficientDiskSpaceForModel {
 			return fmt.Errorf("selecting model: %v", err)
+		} else if newModelID == "" {
+			fmt.Fprintf(os.Stderr, "Warning: No model for %q fits system requirements. Pick a model or switch to another engine manually.\n", engineName)
 		}
 	}
 
@@ -308,6 +314,9 @@ func (cmd *useEngineCommand) switchEngineAndModel(newEngineName string, newModel
 		return fmt.Errorf("setting active model: %v", err)
 	}
 
+	if cmd.auto {
+		fmt.Println()
+	}
 	fmt.Printf("Engine changed to %q.\n", newEngineName)
 	if newModelID != "" && activeModelID != newModelID {
 		fmt.Printf("Model changed to %q.\n", newModelID)
@@ -315,6 +324,9 @@ func (cmd *useEngineCommand) switchEngineAndModel(newEngineName string, newModel
 
 	// Ask if the user wants to restart
 	if !cmd.noRestart {
+		if !cmd.assumeYes {
+			fmt.Println()
+		}
 		return common.PromptRestartToApplyChanges(cmd.Context, cmd.assumeYes)
 	}
 
@@ -351,16 +363,45 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 	if !slices.Contains(engineManifest.Model.Options, activeModelId) {
 		activeModelId = engineManifest.Model.Default
 	}
-	err = cmd.Cache.SetActiveModel(activeModelId)
-	if err != nil {
-		return fmt.Errorf("setting active model: %v", err)
-	}
 
 	var modelManifest *models.Manifest
 	if activeModelId != "" {
 		modelManifest, err = models.LoadManifest(cmd.ModelsDir, activeModelId)
 		if err != nil {
 			return fmt.Errorf("loading active model manifest: %v", err)
+		}
+	}
+
+	observable, err := cmd.Snap.HardwareObservable()
+	if err != nil {
+		return fmt.Errorf("checking hardware observability: %v", err)
+	}
+	if observable && modelManifest != nil {
+		machine, _, err := machine.Get(host.Real(), true, true)
+		if err != nil {
+			return fmt.Errorf("getting machine info: %v", err)
+		}
+		scoredModel, err := common.GetScoredModel(cmd.Context, *engineManifest, *modelManifest, machine)
+		if err != nil {
+			return fmt.Errorf("scoring active model: %v", err)
+		}
+		if scoredModel.CompatibilityReport.Compatible {
+			if err := cmd.Cache.SetActiveModel(activeModelId); err != nil {
+				return fmt.Errorf("setting active model: %v", err)
+			}
+		} else {
+			modelManifest = nil
+			if err := cmd.Cache.SetActiveModel(""); err != nil {
+				return fmt.Errorf("clearing active model: %v", err)
+			}
+		}
+	} else if modelManifest != nil {
+		if err := cmd.Cache.SetActiveModel(activeModelId); err != nil {
+			return fmt.Errorf("setting active model: %v", err)
+		}
+	} else {
+		if err := cmd.Cache.SetActiveModel(""); err != nil {
+			return fmt.Errorf("clearing active model: %v", err)
 		}
 	}
 
@@ -379,33 +420,53 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 	return nil
 }
 
-func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManifest, newModelID string) {
-	if len(scoredModels) == 0 {
-		return
-	}
-	var compatibleModels []string
-	fmt.Println("Selecting a compatible model:")
+func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManifest, newModelID string, engineName string) {
+	fmt.Printf("Selecting a model for the \"%s\" engine:\n", engineName)
 	for _, model := range scoredModels {
-		if model.CompatibilityReport.CompatibleDisk {
-			compatibleModels = append(compatibleModels, model.Name)
-			fmt.Printf("✔ %s\n", model.Name)
+		if model.CompatibilityReport.Compatible {
+			if model.Name == newModelID {
+				fmt.Printf("✔ %s: best match\n", model.Name)
+			} else {
+				fmt.Printf("✔ %s\n", model.Name)
+			}
 		} else {
-			report := model.CompatibilityReport
-			fmt.Printf("✘ %s: requires %s disk space, has %s\n",
-				model.Name,
-				utils.FmtBytesShort(report.RequiredDiskSpace),
-				utils.FmtBytesShort(report.AvailableDiskSpace))
+			fmt.Printf("✘ %s\n", model.Name)
+			if cmd.Verbose {
+				for _, reason := range cmd.verboseModelIncompatibilityReasons(model.CompatibilityReport) {
+					fmt.Printf("  - %s\n", reason)
+				}
+			}
 		}
-	}
-	if slices.Contains(compatibleModels, newModelID) {
-		fmt.Printf("Selected model: %s\n", newModelID)
 	}
 }
 
-func (cmd *useEngineCommand) verboseIncompatibilityReasons(report engines.CompatibilityReport) []string {
+func (cmd *useEngineCommand) verboseModelIncompatibilityReasons(report models.CompatibilityReport) []string {
 	var reasons []string
 	if !report.CompatibleMemory {
-		reasons = append(reasons, fmt.Sprintf("requires %s memory, has %s (RAM + swap)", utils.FmtBytes(report.RequiredMemory), utils.FmtBytes(report.TotalRAM+report.TotalSwap)))
+		var memoryType string
+		if report.IsVram {
+			memoryType = "VRAM"
+		} else {
+			memoryType = "memory"
+		}
+		reasons = append(reasons, fmt.Sprintf("requires %s %s, has %s", utils.FmtBytesShort(report.RequiredMemory), memoryType, utils.FmtBytesShort(report.AvailableMemory)))
+	}
+	if !report.CompatibleDisk {
+		reasons = append(reasons, fmt.Sprintf("requires %s disk space, has %s", utils.FmtBytesShort(report.RequiredDiskSpace), utils.FmtBytesShort(report.AvailableDiskSpace)))
+	}
+	return reasons
+}
+
+func (cmd *useEngineCommand) verboseEngineIncompatibilityReasons(report engines.CompatibilityReport) []string {
+	var reasons []string
+	if !report.CompatibleMemory {
+		var memoryType string
+		if report.RequiredMemory.IsVram {
+			memoryType = "VRAM"
+		} else {
+			memoryType = "memory"
+		}
+		reasons = append(reasons, fmt.Sprintf("requires %s %s, has %s", utils.FmtBytes(report.RequiredMemory.Memory), memoryType, utils.FmtBytes(report.AvailableMemory)))
 	}
 	if !report.CompatibleDisk {
 		reasons = append(reasons, fmt.Sprintf("requires %s disk space, has %s", utils.FmtBytes(report.RequiredDiskSpace), utils.FmtBytes(report.AvailableDiskSpace)))
