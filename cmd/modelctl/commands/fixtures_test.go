@@ -88,6 +88,10 @@ func machineFixture(name string) (*machine.Machine, error) {
 
 	case "low-disk-available-machine":
 		return &machine.Machine{
+			CPUs: []cpu.CPU{{
+				Architecture:   "amd64",
+				ManufacturerId: "GenuineIntel",
+			}},
 			Memory: memory.Memory{TotalRam: 1024 * 1024 * 1024 * 5, TotalSwap: 1024 * 1024 * 1024 * 5},
 			Disk: []disk.Disk{{
 				Total:     1006451294208,
@@ -98,6 +102,10 @@ func machineFixture(name string) (*machine.Machine, error) {
 
 	case "no-disk-available-machine":
 		return &machine.Machine{
+			CPUs: []cpu.CPU{{
+				Architecture:   "amd64",
+				ManufacturerId: "GenuineIntel",
+			}},
 			Memory: memory.Memory{TotalRam: 1024, TotalSwap: 0},
 			Disk: []disk.Disk{{
 				Total:     1006451294208,

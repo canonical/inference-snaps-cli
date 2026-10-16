@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"slices"
-	"strings"
 
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
@@ -144,32 +143,28 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.ScoredManifest, machine *machine.Machine) error {
 	selectedEngine, selectionErr := selector.TopEngine(scoredEngines)
 
-	var output strings.Builder
-	fmt.Fprintln(&output, "Evaluating engines for optimal hardware compatibility:")
+	fmt.Printf("Evaluating engines for optimal hardware compatibility:\n")
 	for _, engine := range scoredEngines {
 		if engine.Score == 0 {
-			fmt.Fprintf(&output, "✘ %s\n", engine.Name)
+			fmt.Printf("✘ %s\n", engine.Name)
 
 			// Only print incompatibility reasons if verbose flag is set
 			if cmd.Verbose {
 				reasons := cmd.verboseEngineIncompatibilityReasons(engine.CompatibilityReport)
 				for _, reason := range reasons {
-					fmt.Fprintf(&output, "  - %s\n", reason)
+					fmt.Printf("  - %s\n", reason)
 				}
 			}
 		} else if engine.IsExperimental() {
-			fmt.Fprintf(&output, "• %s: experimental, score=%d\n", engine.Name, engine.Score)
+			fmt.Printf("• %s: experimental, score=%d\n", engine.Name, engine.Score)
 		} else {
-			fmt.Fprintf(&output, "✔ %s: score=%d\n", engine.Name, engine.Score)
+			if engine.Name == selectedEngine.Name {
+				fmt.Printf("✔ %s: score=%d: best match\n", engine.Name, engine.Score)
+			} else {
+				fmt.Printf("✔ %s: score=%d\n", engine.Name, engine.Score)
+			}
 		}
 	}
-
-	outputString := output.String()
-	if selectionErr == nil {
-		engineLine := fmt.Sprintf("✔ %s: score=%d\n", selectedEngine.Name, selectedEngine.Score)
-		outputString = strings.Replace(outputString, engineLine, strings.TrimSuffix(engineLine, "\n")+": best match\n", 1)
-	}
-	fmt.Print(outputString + "\n")
 
 	if cmd.considerComponents {
 		ok, err := selectEngineForSeededComponents(cmd, scoredEngines, machine)
@@ -229,12 +224,13 @@ func (cmd *useEngineCommand) switchEngineWithMachine(engineName string, machine 
 		var scoredModels []models.ScoredManifest
 		newModelID, scoredModels, err = common.SelectModel(cmd.Context, *newEngineManifest, newModelID, machine)
 		if cmd.auto {
+			fmt.Println()
 			cmd.printScoredModels(scoredModels, newModelID, engineName)
 		}
 		if err != nil && err != common.ErrInsufficientDiskSpaceForModel {
 			return fmt.Errorf("selecting model: %v", err)
 		} else if newModelID == "" {
-			fmt.Fprintf(os.Stderr, "Warning: No model for %q fits system requirements. Pick a model or switch to another engine manually.\n\n", engineName)
+			fmt.Fprintf(os.Stderr, "Warning: No model for %q fits system requirements. Pick a model or switch to another engine manually.\n", engineName)
 		}
 	}
 
@@ -316,6 +312,9 @@ func (cmd *useEngineCommand) switchEngineAndModel(newEngineName string, newModel
 		return fmt.Errorf("setting active model: %v", err)
 	}
 
+	if cmd.auto {
+		fmt.Println()
+	}
 	fmt.Printf("Engine changed to %q.\n", newEngineName)
 	if newModelID != "" && activeModelID != newModelID {
 		fmt.Printf("Model changed to %q.\n", newModelID)
@@ -420,32 +419,25 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 }
 
 func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManifest, newModelID string, engineName string) {
-	var output strings.Builder
-	fmt.Fprintf(&output, "Selecting a model for the \"%s\" engine:\n", engineName)
+	fmt.Printf("Selecting a model for the \"%s\" engine:\n", engineName)
 	for _, model := range scoredModels {
 		if model.CompatibilityReport.Compatible {
-			fmt.Fprintf(&output, "✔ %s\n", model.Name)
+			if model.Name == newModelID {
+				fmt.Printf("✔ %s: best match\n", model.Name)
+			} else {
+				fmt.Printf("✔ %s\n", model.Name)
+			}
 		} else {
-			fmt.Fprintf(&output, "✘ %s\n", model.Name)
+			fmt.Printf("✘ %s\n", model.Name)
 			if cmd.Verbose {
 				for _, reason := range cmd.verboseModelIncompatibilityReasons(model.CompatibilityReport) {
-					fmt.Fprintf(&output, "  - %s\n", reason)
+					fmt.Printf("  - %s\n", reason)
 				}
 			}
 		}
 	}
-
-	outputString := output.String()
-	for _, model := range scoredModels {
-		if model.Name != newModelID || !model.CompatibilityReport.Compatible {
-			continue
-		}
-		modelLine := fmt.Sprintf("✔ %s\n", model.Name)
-		outputString = strings.Replace(outputString, modelLine, strings.TrimSuffix(modelLine, "\n")+": best match\n", 1)
-		break
-	}
-	fmt.Print(outputString + "\n")
 }
+
 func (cmd *useEngineCommand) verboseModelIncompatibilityReasons(report models.CompatibilityReport) []string {
 	var reasons []string
 	if !report.CompatibleMemory {

@@ -271,7 +271,8 @@ func newPciAdditionalDeviceProperties(props map[string]any) *PciAdditionalDevice
 			if s, ok := v.(uint64); ok {
 				ap.Vram = s
 			} else {
-				ap.Vram = nil
+				fmt.Fprintf(os.Stderr, "Warning: it was not possible to parse VRAM value.\n")
+
 			}
 		}
 	}
