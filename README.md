@@ -15,55 +15,49 @@ Configuration and engine management for inference snaps.
 ### Run tests
 
 ```bash
-go test -count 1 -failfast ./...
+make test
 ```
 
 ### Build binaries
 
-The CLIs included in this repo can be built using the following commands:
+The CLIs included in this repo can be built using the following command:
 
 ```bash
-go build ./cmd/modelctl
+make build
 ```
 
-### Build snap
+### Test snap
 
-To build a snap for these applications, run:
+The [modelctl-test](test_data/modelctl-test/) snap is used to develop and test the CLI in a snap environment.
+It bundles the CLI with test engines, runtimes, models, and a mock OpenAI server.
+
+The CLI is built on the host and staged into the snap project, together with the test data, before packing.
+This requires Go and Snapcraft.
+
+To build the snap and its components, run:
 
 ```bash
-snapcraft -v
+make snap
 ```
 
-Then install the snap and connect the required interfaces:
+To build, install, and connect the required interfaces, run:
 
 ```bash
-sudo snap install --dangerous ./stack-utils_*.snap ./stack-utils+*.comp
-sudo snap connect stack-utils:hardware-observe 
+make install
 ```
 
-> [!NOTE]
-> This snap is named `stack-utils` for historical reasons. It will be refactored in the future.
-
-## Installation
-
-```bash
-sudo snap install stack-utils
-sudo snap connect stack-utils:hardware-observe 
-sudo snap alias stack-utils inference-snaps-cli
-```
-
-To build and install from source, refer to [here](#build-snap).
+To remove build outputs, run `make clean`.
 
 ## Usage
 
-The following assumes use of the stack-utils snap to use the CLI.
+The following assumes use of the modelctl-test snap to use the CLI.
 
 ### Machine Info
 
 A summary of the current host machine can be obtained by running:
 
 ```
-inference-snaps-cli machine
+modelctl-test machine
 ```
 
 This prints a machine-readable summary of the host system. 
@@ -84,7 +78,7 @@ The result is printed as **JSON** to the standard output by default (use `--form
 Example:
 
 ```bash
-$ inference-snaps-cli machine --format=json | inference-snaps-cli debug select-engine --engines test_data/engines/
+$ modelctl-test machine --format=json | modelctl-test debug select-engine --engines test_data/engines/
 ❌ ampere - not compatible: required cpu device not found
 ❌ ampere-altra - not compatible: required cpu device not found
 ❌ arm-neon - not compatible: required device not found
