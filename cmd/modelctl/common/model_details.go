@@ -1,8 +1,6 @@
 package common
 
 import (
-	"fmt"
-
 	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/utils"
 )
@@ -20,6 +18,7 @@ type ModelDetails struct {
 	DiskSize string `json:"disk-size" yaml:"disk-size"`
 
 	RequiredMemory string `json:"required-memory,omitempty" yaml:"required-memory,omitempty"`
+	RequiredVram   string `json:"required-vram,omitempty" yaml:"required-vram,omitempty"`
 
 	Components []string `json:"components,omitempty" yaml:"components,omitempty"`
 
@@ -49,6 +48,9 @@ func NewModelDetails(manifest *models.ScoredManifest) (ModelDetails, error) {
 	}
 	modelDetails.DiskSize = utils.FmtBytesShort(diskSizeBytes)
 	modelDetails.RequiredMemory = utils.FmtBytesShort(manifest.CompatibilityReport.RequiredMemory)
+	if manifest.CompatibilityReport.RequiredVram > 0 {
+		modelDetails.RequiredVram = utils.FmtBytesShort(manifest.CompatibilityReport.RequiredVram)
+	}
 
 	modelDetails.fillIncompatibilityIssues(manifest.CompatibilityReport)
 	return modelDetails, nil
@@ -57,14 +59,13 @@ func NewModelDetails(manifest *models.ScoredManifest) (ModelDetails, error) {
 func (m *ModelDetails) fillIncompatibilityIssues(report models.CompatibilityReport) {
 	var issues []string
 	if !report.CompatibleMemory {
-		var memoryType string
-		if report.IsVram {
-			memoryType = "VRAM"
-		} else {
-			memoryType = "memory"
+		if report.AvailableVram < report.RequiredVram {
+			issues = append(issues, "insufficient VRAM")
+		} else if report.AvailableMemory < report.RequiredMemory {
+			issues = append(issues, "insufficient system memory")
 		}
-		issues = append(issues, fmt.Sprintf("insufficient %s", memoryType))
 	}
+
 	if !report.CompatibleDisk {
 		issues = append(issues, "insufficient disk space")
 	}

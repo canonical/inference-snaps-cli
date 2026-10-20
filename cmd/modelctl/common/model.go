@@ -192,7 +192,7 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 		return nil, err
 	}
 
-	availableMemory, isVram, err := availableMemory(machine, engineManifest)
+	systemMemory, vramMemory, isGpuUsed, err := availableMemory(machine, engineManifest)
 	if err != nil {
 		return nil, err
 	}
@@ -225,20 +225,28 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 			return nil, fmt.Errorf("parsing disk size for model %q: %w", modelID, err)
 		}
 
-		var requiredMemory uint64
+		var modelRequiredMemory uint64
 		if manifest.RequiredMemory != "" {
-			requiredMemory, err = utils.StringToBytes(manifest.RequiredMemory)
+			modelRequiredMemory, err = utils.StringToBytes(manifest.RequiredMemory)
 			if err != nil {
 				return nil, fmt.Errorf("parsing required memory for model %q: %w", modelID, err)
 			}
 		} else {
-			requiredMemory = size
+			modelRequiredMemory = size
 		}
 
+		var requiredMemory uint64 = 0
+		var requiredVram uint64 = 0
+		var ok bool
 		// 2GB for squashfs and OS
-		requiredMemory, ok := utils.CheckedAddUint64(requiredMemory, runtimeMemory)
-		if !ok {
-			return nil, fmt.Errorf("required memory for model %q overflows uint64", modelID)
+		if isGpuUsed {
+			requiredMemory = runtimeMemory
+			requiredVram = modelRequiredMemory
+		} else {
+			requiredMemory, ok = utils.CheckedAddUint64(modelRequiredMemory, runtimeMemory)
+			if !ok {
+				return nil, fmt.Errorf("required memory for model %q overflows uint64", modelID)
+			}
 		}
 
 		report := models.CompatibilityReport{
@@ -246,10 +254,11 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 			RequiredDiskSpace:  size,
 			AvailableDiskSpace: availableDiskSpace,
 			RequiredMemory:     requiredMemory,
-			AvailableMemory:    availableMemory,
-			IsVram:             isVram,
+			AvailableMemory:    systemMemory,
+			AvailableVram:      vramMemory,
+			RequiredVram:       requiredVram,
 		}
-		report.CompatibleMemory = report.RequiredMemory <= availableMemory
+		report.CompatibleMemory = report.RequiredMemory <= systemMemory && report.RequiredVram <= vramMemory
 		report.Compatible = report.CompatibleDisk && report.CompatibleMemory
 
 		score := uint64(0)
@@ -340,9 +349,9 @@ func availableDiskSpace(machine *machine.Machine) (uint64, error) {
 	return 0, fmt.Errorf("disk information unavailable for %s", constants.SnapStoragePath)
 }
 
-func availableMemory(machine *machine.Machine, engineManifest engines.Manifest) (uint64, bool, error) {
+func availableMemory(machine *machine.Machine, engineManifest engines.Manifest) (uint64, uint64, bool, error) {
 	systemMemory := machine.Memory.TotalRam
-	isVram := false
+	isGpuUsed := false
 	var gpuDevices []engines.Device
 	for _, device := range slices.Concat(engineManifest.Devices.Allof, engineManifest.Devices.Anyof) {
 		if device.Type == "gpu" && (device.Bus == "" || device.Bus == "pci") {
@@ -350,7 +359,7 @@ func availableMemory(machine *machine.Machine, engineManifest engines.Manifest) 
 		}
 	}
 	if len(gpuDevices) == 0 {
-		return systemMemory, isVram, nil
+		return systemMemory, 0, isGpuUsed, nil
 	}
 
 	// Use the host GPU that best satisfies the engine, mirroring engine selection scoring
@@ -364,22 +373,22 @@ func availableMemory(machine *machine.Machine, engineManifest engines.Manifest) 
 		}
 	}
 	if bestDevice == nil {
-		return systemMemory, isVram, nil
+		return systemMemory, 0, isGpuUsed, nil
 	}
 
 	vram, found := bestDevice.AdditionalProperties["vram"]
 	if !found {
-		isVram = false
-		return systemMemory, isVram, nil
+		isGpuUsed = false
+		return systemMemory, 0, isGpuUsed, nil
 	} else if vram == nil {
 		// assuming unified memory
-		isVram = true
-		return systemMemory, isVram, nil
+		isGpuUsed = true
+		return systemMemory, 0, isGpuUsed, nil
 	}
 	vramValue, ok := vram.(uint64)
 	if !ok {
-		return 0, false, fmt.Errorf("parsing vram %q for pci device %s", vram, bestDevice.Slot)
+		return 0, 0, false, fmt.Errorf("parsing vram %q for pci device %s", vram, bestDevice.Slot)
 	}
-	isVram = true
-	return vramValue, isVram, nil
+	isGpuUsed = true
+	return systemMemory, vramValue, isGpuUsed, nil
 }

@@ -237,6 +237,6 @@ func Example_modelCommand_printModelDetailsIncompatible() {
 	//     - intel-npu
 	// compatible: false
 	// compatibility-issues:
-	//     - insufficient memory
+	//     - insufficient system memory
 	//     - insufficient disk space
 }

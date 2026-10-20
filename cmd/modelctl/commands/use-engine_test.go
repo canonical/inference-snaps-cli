@@ -300,13 +300,13 @@ func ExampleUseEngine_autoSelectEngineTwiceWithWarning() {
 	//
 	// Selecting a model for the "cpu" engine:
 	// ✘ 30m-q4-k-m-gguf
-	//   - requires 2.1G memory, has 1K
+	//   - requires 2.1G system memory, has 1K
 	//   - requires 1M disk space, has 0
 	// ✘ 26b-q4-k-m-gguf
-	//   - requires 8.3G memory, has 1K
+	//   - requires 8.3G system memory, has 1K
 	//   - requires 6G disk space, has 0
 	// ✘ 30b-a3b-q4-k-m-gguf
-	//   - requires 9G memory, has 1K
+	//   - requires 9G system memory, has 1K
 	//   - requires 6G disk space, has 0
 	// Warning: No model for "cpu" fits system requirements. Pick a model or switch to another engine manually.
 	//
@@ -320,13 +320,13 @@ func ExampleUseEngine_autoSelectEngineTwiceWithWarning() {
 	//
 	// Selecting a model for the "cpu" engine:
 	// ✘ 30m-q4-k-m-gguf
-	//   - requires 2.1G memory, has 1K
+	//   - requires 2.1G system memory, has 1K
 	//   - requires 1M disk space, has 0
 	// ✘ 26b-q4-k-m-gguf
-	//   - requires 8.3G memory, has 1K
+	//   - requires 8.3G system memory, has 1K
 	//   - requires 6G disk space, has 0
 	// ✘ 30b-a3b-q4-k-m-gguf
-	//   - requires 9G memory, has 1K
+	//   - requires 9G system memory, has 1K
 	//   - requires 6G disk space, has 0
 	// Warning: No model for "cpu" fits system requirements. Pick a model or switch to another engine manually.
 }
@@ -379,13 +379,13 @@ func ExampleUseEngine_printIncompatibleModels() {
 	// Output:
 	// Selecting a model for the "cpu" engine:
 	// ✘ 30m-q4-k-m-gguf
-	//   - requires 2.1G memory, has 1K
+	//   - requires 2.1G system memory, has 1K
 	//   - requires 1M disk space, has 0
 	// ✘ 26b-q4-k-m-gguf
-	//   - requires 8.3G memory, has 1K
+	//   - requires 8.3G system memory, has 1K
 	//   - requires 6G disk space, has 0
 	// ✘ 30b-a3b-q4-k-m-gguf
-	//   - requires 9G memory, has 1K
+	//   - requires 9G system memory, has 1K
 	//   - requires 6G disk space, has 0
 	//
 	// Engine changed to "cpu".

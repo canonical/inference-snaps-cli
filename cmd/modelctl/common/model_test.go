@@ -9,6 +9,7 @@ import (
 
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/models"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/snap"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
 	"github.com/canonical/lscompute/pkg/machine"
 	"github.com/canonical/lscompute/pkg/machine/cpu"
@@ -474,15 +475,15 @@ func TestAvailableMemory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	memoryAvailable, isVram, err := availableMemory(&machine, *engine)
+	systemMemory, vramMemory, isGpuUsed, err := availableMemory(&machine, *engine)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if memoryAvailable != 107374182400 {
-		t.Errorf("expected 107374182400 available memory, got: %d", memoryAvailable)
+	if vramMemory != 107374182400 {
+		t.Errorf("expected 107374182400 available vram, got: %d", vramMemory)
 	}
-	if !isVram {
-		t.Errorf("expected isVram to be true, got: %v", isVram)
+	if !isGpuUsed {
+		t.Errorf("expected isGpuUsed to be true, got: %v", isGpuUsed)
 	}
 
 	// test that vram is ignored if engine is not gpu capable
@@ -491,15 +492,15 @@ func TestAvailableMemory(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	memoryAvailable, isVram, err = availableMemory(&machine, *engine)
+	systemMemory, vramMemory, isGpuUsed, err = availableMemory(&machine, *engine)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if memoryAvailable != 67012501504 {
-		t.Errorf("expected 67012501504 available memory, got: %d", memoryAvailable)
+	if systemMemory != 67012501504 {
+		t.Errorf("expected 67012501504 available memory, got: %d", systemMemory)
 	}
-	if isVram {
-		t.Errorf("expected isVram to be false, got: %v", isVram)
+	if isGpuUsed {
+		t.Errorf("expected isGpuUsed to be false, got: %v", isGpuUsed)
 	}
 
 	// test that system memory is returned when nvidia-smi return "[N/A]" for the VRAM
@@ -508,14 +509,80 @@ func TestAvailableMemory(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	memoryAvailable, isVram, err = availableMemory(&machine, *engine)
+	systemMemory, vramMemory, isGpuUsed, err = availableMemory(&machine, *engine)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if memoryAvailable != 67012501504 {
-		t.Errorf("expected 67012501504 available memory, got: %d", memoryAvailable)
+	if systemMemory != 67012501504 {
+		t.Errorf("expected 67012501504 available system memory, got: %d", systemMemory)
 	}
-	if !isVram {
-		t.Errorf("expected isVram to be true, got: %v", isVram)
+	if !isGpuUsed {
+		t.Errorf("expected isGpuUsed to be true, got: %v", isGpuUsed)
+	}
+}
+
+func TestScoreModelsAgainstEngine(t *testing.T) {
+	context := &Context{
+		EnginesDir:  "../../../test_data/engines",
+		RuntimesDir: "../../../test_data/runtimes",
+		ModelsDir:   "../../../test_data/models",
+		Cache:       storage.NewMockCache(),
+		Config:      storage.NewMockConfig(),
+		Snap:        snap.Mock(),
+	}
+
+	machine := machine.Machine{
+		CPUs: []cpu.CPU{{
+			Architecture:   "amd64",
+			ManufacturerId: "GenuineIntel",
+			Flags:          []string{"fpu", "vme", "de"},
+		}},
+		Memory: memory.Memory{TotalRam: 67012501504, TotalSwap: 0}, // 64 GiB RAM, no swap
+		Disk: []disk.Disk{{
+			Total:     1006451294208, // ~937 GiB
+			Available: 943543738368,  // ~878 GiB
+			Path:      "/var/lib/snapd/snaps",
+		}},
+		PCIDevices: []pci.Device{
+			{
+				Bus:                  "pci",
+				Slot:                 "0000:00:00.0",
+				BusNumber:            0x0,
+				DeviceClass:          0x380,
+				ProgrammingInterface: new(uint8(0)),
+				VendorId:             0x1002, //amd
+				DeviceId:             0x4637,
+				SubvendorId:          new(uint16(0x103C)),
+				SubdeviceId:          new(uint16(0x89C6)),
+				AdditionalProperties: map[string]any{
+					"vram":              uint64(6.5 * 1024 * 1024 * 1024), // 6.5 GiB
+					"microarchitecture": "gfx1152",
+				},
+			},
+		},
+	}
+
+	engine, err := engines.LoadManifest("../../../test_data/engines", "rocm-generic")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	modelManifests, err := models.LoadManifests("../../../test_data/models")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	modelManifestsMap := make(map[string]models.Manifest)
+	for _, model := range modelManifests {
+		modelManifestsMap[model.Name] = model
+	}
+	scoredModels, err := ScoreModelsAgainstEngine(context, *engine, modelManifestsMap, &machine)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	for _, scoredManifest := range scoredModels {
+		if scoredManifest.Name == "26b-q4-k-m-gguf" {
+			if !scoredManifest.CompatibilityReport.Compatible {
+				t.Errorf("expected model 26b-q4-k-m-gguf to be compatible, got: %+v", scoredManifest.CompatibilityReport)
+			}
+		}
 	}
 }

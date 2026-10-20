@@ -30,7 +30,8 @@ type CompatibilityReport struct {
 	CompatibleMemory   bool
 	RequiredMemory     uint64
 	AvailableMemory    uint64
-	IsVram             bool
+	RequiredVram       uint64
+	AvailableVram      uint64
 	CompatibleEngines  []string
 }
 
