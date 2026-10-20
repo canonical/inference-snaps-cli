@@ -192,7 +192,7 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 		return nil, err
 	}
 
-	systemMemory, vramMemory, isGpuUsed, err := availableMemory(machine, engineManifest)
+	systemMemory, vramMemory, isGpuUsed, err := getTotalMemory(machine, engineManifest)
 	if err != nil {
 		return nil, err
 	}
@@ -254,8 +254,8 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 			RequiredDiskSpace:  size,
 			AvailableDiskSpace: availableDiskSpace,
 			RequiredMemory:     requiredMemory,
-			AvailableMemory:    systemMemory,
-			AvailableVram:      vramMemory,
+			TotalMemory:        systemMemory,
+			TotalVram:          vramMemory,
 			RequiredVram:       requiredVram,
 		}
 		report.CompatibleMemory = report.RequiredMemory <= systemMemory && report.RequiredVram <= vramMemory
@@ -349,7 +349,7 @@ func availableDiskSpace(machine *machine.Machine) (uint64, error) {
 	return 0, fmt.Errorf("disk information unavailable for %s", constants.SnapStoragePath)
 }
 
-func availableMemory(machine *machine.Machine, engineManifest engines.Manifest) (uint64, uint64, bool, error) {
+func getTotalMemory(machine *machine.Machine, engineManifest engines.Manifest) (uint64, uint64, bool, error) {
 	systemMemory := machine.Memory.TotalRam
 	isGpuUsed := false
 	var gpuDevices []engines.Device

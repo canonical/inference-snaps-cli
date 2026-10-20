@@ -443,10 +443,10 @@ func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManif
 func (cmd *useEngineCommand) verboseModelIncompatibilityReasons(report models.CompatibilityReport) []string {
 	var reasons []string
 	if !report.CompatibleMemory {
-		if report.AvailableVram < report.RequiredVram {
-			reasons = append(reasons, fmt.Sprintf("requires %s VRAM, has %s", utils.FmtBytesShort(report.RequiredVram), utils.FmtBytesShort(report.AvailableVram)))
-		} else if report.AvailableMemory < report.RequiredMemory {
-			reasons = append(reasons, fmt.Sprintf("requires %s system memory, has %s", utils.FmtBytesShort(report.RequiredMemory), utils.FmtBytesShort(report.AvailableMemory)))
+		if report.TotalVram < report.RequiredVram {
+			reasons = append(reasons, fmt.Sprintf("requires %s VRAM, has %s", utils.FmtBytesShort(report.RequiredVram), utils.FmtBytesShort(report.TotalVram)))
+		} else if report.TotalMemory < report.RequiredMemory {
+			reasons = append(reasons, fmt.Sprintf("requires %s system memory, has %s", utils.FmtBytesShort(report.RequiredMemory), utils.FmtBytesShort(report.TotalMemory)))
 
 		}
 	}
@@ -465,7 +465,7 @@ func (cmd *useEngineCommand) verboseEngineIncompatibilityReasons(report engines.
 		} else {
 			memoryType = "memory"
 		}
-		reasons = append(reasons, fmt.Sprintf("requires %s %s, has %s", utils.FmtBytes(report.RequiredMemory.Memory), memoryType, utils.FmtBytes(report.AvailableMemory)))
+		reasons = append(reasons, fmt.Sprintf("requires %s %s, has %s", utils.FmtBytes(report.RequiredMemory.Memory), memoryType, utils.FmtBytes(report.TotalMemory)))
 	}
 	if !report.CompatibleDisk {
 		reasons = append(reasons, fmt.Sprintf("requires %s disk space, has %s", utils.FmtBytes(report.RequiredDiskSpace), utils.FmtBytes(report.AvailableDiskSpace)))

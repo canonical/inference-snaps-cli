@@ -29,9 +29,9 @@ type CompatibilityReport struct {
 	AvailableDiskSpace uint64
 	CompatibleMemory   bool
 	RequiredMemory     uint64
-	AvailableMemory    uint64
+	TotalMemory        uint64
 	RequiredVram       uint64
-	AvailableVram      uint64
+	TotalVram          uint64
 	CompatibleEngines  []string
 }
 

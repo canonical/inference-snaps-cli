@@ -59,9 +59,9 @@ func NewModelDetails(manifest *models.ScoredManifest) (ModelDetails, error) {
 func (m *ModelDetails) fillIncompatibilityIssues(report models.CompatibilityReport) {
 	var issues []string
 	if !report.CompatibleMemory {
-		if report.AvailableVram < report.RequiredVram {
+		if report.TotalVram < report.RequiredVram {
 			issues = append(issues, "insufficient VRAM")
-		} else if report.AvailableMemory < report.RequiredMemory {
+		} else if report.TotalMemory < report.RequiredMemory {
 			issues = append(issues, "insufficient system memory")
 		}
 	}

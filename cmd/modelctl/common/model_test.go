@@ -408,7 +408,7 @@ func TestAvailableDiskSpace(t *testing.T) {
 	}
 }
 
-func TestAvailableMemory(t *testing.T) {
+func TestGetTotalMemory(t *testing.T) {
 	machine := machine.Machine{
 		CPUs: []cpu.CPU{{
 			Architecture:   "amd64",
@@ -475,7 +475,7 @@ func TestAvailableMemory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	systemMemory, vramMemory, isGpuUsed, err := availableMemory(&machine, *engine)
+	systemMemory, vramMemory, isGpuUsed, err := getTotalMemory(&machine, *engine)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -492,7 +492,7 @@ func TestAvailableMemory(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	systemMemory, vramMemory, isGpuUsed, err = availableMemory(&machine, *engine)
+	systemMemory, vramMemory, isGpuUsed, err = getTotalMemory(&machine, *engine)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -509,7 +509,7 @@ func TestAvailableMemory(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	systemMemory, vramMemory, isGpuUsed, err = availableMemory(&machine, *engine)
+	systemMemory, vramMemory, isGpuUsed, err = getTotalMemory(&machine, *engine)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
