@@ -266,17 +266,29 @@ func TestGetAllModelsWithEngines(t *testing.T) {
 			if len(modelWithEngines.CompatibleEngines) != 2 || modelWithEngines.CompatibleEngines[0] != "engine1" || modelWithEngines.CompatibleEngines[1] != "engine2" {
 				t.Errorf("model1 should be compatible with engine1 and engine2, got: %v", modelWithEngines.CompatibleEngines)
 			}
+			if !modelWithEngines.Compatible || len(modelWithEngines.CompatibilityIssues) != 0 {
+				t.Errorf("model1 should be compatible with active engine, got: %+v", modelWithEngines)
+			}
 		case "model2":
 			if len(modelWithEngines.CompatibleEngines) != 1 || modelWithEngines.CompatibleEngines[0] != "engine2" {
 				t.Errorf("model2 should be compatible with engine2, got: %v", modelWithEngines.CompatibleEngines)
+			}
+			if modelWithEngines.Compatible || len(modelWithEngines.CompatibilityIssues) != 1 || modelWithEngines.CompatibilityIssues[0] != "unsupported by active engine" {
+				t.Errorf("model2 should be incompatible with active engine, got: %+v", modelWithEngines)
 			}
 		case "model3":
 			if len(modelWithEngines.CompatibleEngines) != 1 || modelWithEngines.CompatibleEngines[0] != "engine1" {
 				t.Errorf("model3 should be compatible with engine1, got: %v", modelWithEngines.CompatibleEngines)
 			}
+			if !modelWithEngines.Compatible || len(modelWithEngines.CompatibilityIssues) != 0 {
+				t.Errorf("model3 should be compatible with active engine, got: %+v", modelWithEngines)
+			}
 		case "model4":
 			if len(modelWithEngines.CompatibleEngines) != 0 {
 				t.Errorf("model4 should not be compatible with any engines, got: %v", modelWithEngines.CompatibleEngines)
+			}
+			if modelWithEngines.Compatible || len(modelWithEngines.CompatibilityIssues) != 1 || modelWithEngines.CompatibilityIssues[0] != "unsupported by active engine" {
+				t.Errorf("model4 should be incompatible with active engine, got: %+v", modelWithEngines)
 			}
 		default:
 			t.Errorf("unexpected model name: %s", modelWithEngines.Name)
@@ -475,15 +487,15 @@ func TestGetTotalMemory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	systemMemory, vramMemory, isGpuUsed, err := getTotalMemory(&machine, *engine)
+	systemMemory, vramMemory, isVramUsed, err := getTotalMemory(&machine, *engine)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if vramMemory != 107374182400 {
 		t.Errorf("expected 107374182400 available vram, got: %d", vramMemory)
 	}
-	if !isGpuUsed {
-		t.Errorf("expected isGpuUsed to be true, got: %v", isGpuUsed)
+	if !isVramUsed {
+		t.Errorf("expected isVramUsed to be true, got: %v", isVramUsed)
 	}
 
 	// test that vram is ignored if engine is not gpu capable
@@ -492,15 +504,15 @@ func TestGetTotalMemory(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	systemMemory, vramMemory, isGpuUsed, err = getTotalMemory(&machine, *engine)
+	systemMemory, vramMemory, isVramUsed, err = getTotalMemory(&machine, *engine)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if systemMemory != 67012501504 {
 		t.Errorf("expected 67012501504 available memory, got: %d", systemMemory)
 	}
-	if isGpuUsed {
-		t.Errorf("expected isGpuUsed to be false, got: %v", isGpuUsed)
+	if isVramUsed {
+		t.Errorf("expected isVramUsed to be false, got: %v", isVramUsed)
 	}
 
 	// test that system memory is returned when nvidia-smi return "[N/A]" for the VRAM
@@ -509,15 +521,15 @@ func TestGetTotalMemory(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	systemMemory, vramMemory, isGpuUsed, err = getTotalMemory(&machine, *engine)
+	systemMemory, vramMemory, isVramUsed, err = getTotalMemory(&machine, *engine)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if systemMemory != 67012501504 {
 		t.Errorf("expected 67012501504 available system memory, got: %d", systemMemory)
 	}
-	if !isGpuUsed {
-		t.Errorf("expected isGpuUsed to be true, got: %v", isGpuUsed)
+	if isVramUsed {
+		t.Errorf("expected isVramUsed to be false, got: %v", isVramUsed)
 	}
 }
 
@@ -559,6 +571,21 @@ func TestScoreModelsAgainstEngine(t *testing.T) {
 					"microarchitecture": "gfx1152",
 				},
 			},
+			{
+				Bus:                  "pci",
+				Slot:                 "0000:00:00.0",
+				BusNumber:            0x0,
+				DeviceClass:          0x380,
+				ProgrammingInterface: new(uint8(0)),
+				VendorId:             0x10de, // nvidia
+				DeviceId:             0x4637,
+				SubvendorId:          new(uint16(0x103C)),
+				SubdeviceId:          new(uint16(0x89C6)),
+				AdditionalProperties: map[string]any{
+					"vram":               nil,
+					"compute-capability": "6.7",
+				},
+			},
 		},
 	}
 
@@ -575,6 +602,30 @@ func TestScoreModelsAgainstEngine(t *testing.T) {
 		modelManifestsMap[model.Name] = model
 	}
 	scoredModels, err := ScoreModelsAgainstEngine(context, *engine, modelManifestsMap, &machine)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	for _, scoredManifest := range scoredModels {
+		if scoredManifest.Name == "26b-q4-k-m-gguf" {
+			if !scoredManifest.CompatibilityReport.Compatible {
+				t.Errorf("expected model 26b-q4-k-m-gguf to be compatible, got: %+v", scoredManifest.CompatibilityReport)
+			}
+		}
+	}
+
+	engine, err = engines.LoadManifest("../../../test_data/engines", "cuda-generic")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	modelManifests, err = models.LoadManifests("../../../test_data/models")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	modelManifestsMap = make(map[string]models.Manifest)
+	for _, model := range modelManifests {
+		modelManifestsMap[model.Name] = model
+	}
+	scoredModels, err = ScoreModelsAgainstEngine(context, *engine, modelManifestsMap, &machine)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

@@ -27,6 +27,23 @@ func GetModelNameFromNameOrAlias(ctx *Context, nameOrAlias string) (string, erro
 		return "", fmt.Errorf("%s: %w", LoadingModelManifests, err)
 	}
 
+	activeEngine, err := ctx.Cache.GetActiveEngine()
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", LookingUpActiveEngine, err)
+	}
+	if activeEngine == "" {
+		return "", ErrNoActiveEngine
+	}
+	engineManifest, err := engines.LoadManifest(ctx.EnginesDir, activeEngine)
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", LoadingEngineManifest, err)
+	}
+	for _, modelManifest := range allModelManifests {
+		if slices.Contains(engineManifest.Model.Options, modelManifest.Name) &&
+			(modelManifest.Name == nameOrAlias || modelManifest.Alias == nameOrAlias) {
+			return modelManifest.Name, nil
+		}
+	}
 	for _, modelManifest := range allModelManifests {
 		if modelManifest.Name == nameOrAlias || modelManifest.Alias == nameOrAlias {
 			return modelManifest.Name, nil
@@ -162,6 +179,9 @@ func GetAllModels(ctx *Context, machine *machine.Machine) ([]ModelDetails, error
 		if err != nil {
 			return nil, fmt.Errorf("creating model details for %s: %w", manifest.Name, err)
 		}
+		if !slices.Contains(modelDetails.CompatibleEngines, activeEngine) {
+			modelDetails.CompatibilityIssues = append(modelDetails.CompatibilityIssues, "unsupported by active engine")
+		}
 		allModelsDetails = append(allModelsDetails, modelDetails)
 	}
 	slices.SortFunc(allModelsDetails, func(a, b ModelDetails) int {
@@ -192,7 +212,7 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 		return nil, err
 	}
 
-	systemMemory, vramMemory, isGpuUsed, err := getTotalMemory(machine, engineManifest)
+	systemMemory, vramMemory, isVramUsed, err := getTotalMemory(machine, engineManifest)
 	if err != nil {
 		return nil, err
 	}
@@ -239,13 +259,20 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 		var requiredVram uint64 = 0
 		var ok bool
 		// 2GB for squashfs and OS
-		if isGpuUsed {
+		if isVramUsed {
 			requiredMemory = runtimeMemory
 			requiredVram = modelRequiredMemory
 		} else {
 			requiredMemory, ok = utils.CheckedAddUint64(modelRequiredMemory, runtimeMemory)
 			if !ok {
 				return nil, fmt.Errorf("required memory for model %q overflows uint64", modelID)
+			}
+		}
+
+		compatibleEngines := []string{}
+		for _, engineManifest := range engineManifests {
+			if slices.Contains(engineManifest.Model.Options, manifest.Name) {
+				compatibleEngines = append(compatibleEngines, engineManifest.Name)
 			}
 		}
 
@@ -257,12 +284,13 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 			TotalMemory:        systemMemory,
 			TotalVram:          vramMemory,
 			RequiredVram:       requiredVram,
+			CompatibleEngines:  compatibleEngines,
 		}
 		report.CompatibleMemory = report.RequiredMemory <= systemMemory && report.RequiredVram <= vramMemory
-		report.Compatible = report.CompatibleDisk && report.CompatibleMemory
+		report.Compatible = slices.Contains(report.CompatibleEngines, engineManifest.Name) && report.CompatibleDisk && report.CompatibleMemory
 
 		score := uint64(0)
-		if report.CompatibleDisk && report.CompatibleMemory {
+		if report.Compatible {
 			score, ok = utils.CheckedAddUint64(report.RequiredDiskSpace, report.RequiredMemory)
 			if !ok {
 				score = math.MaxUint64
@@ -273,13 +301,6 @@ func ScoreModelsAgainstEngine(ctx *Context, engineManifest engines.Manifest, mod
 			Score:               score,
 			CompatibilityReport: report,
 		}
-		compatibleEngines := []string{}
-		for _, engineManifest := range engineManifests {
-			if slices.Contains(engineManifest.Model.Options, manifest.Name) {
-				compatibleEngines = append(compatibleEngines, engineManifest.Name)
-			}
-		}
-		scoredModelManifest.CompatibilityReport.CompatibleEngines = compatibleEngines
 		scoredModels = append(scoredModels, scoredModelManifest)
 	}
 	return scoredModels, nil
@@ -351,7 +372,7 @@ func availableDiskSpace(machine *machine.Machine) (uint64, error) {
 
 func getTotalMemory(machine *machine.Machine, engineManifest engines.Manifest) (uint64, uint64, bool, error) {
 	systemMemory := machine.Memory.TotalRam
-	isGpuUsed := false
+	isVramUsed := false
 	var gpuDevices []engines.Device
 	for _, device := range slices.Concat(engineManifest.Devices.Allof, engineManifest.Devices.Anyof) {
 		if device.Type == "gpu" && (device.Bus == "" || device.Bus == "pci") {
@@ -359,7 +380,7 @@ func getTotalMemory(machine *machine.Machine, engineManifest engines.Manifest) (
 		}
 	}
 	if len(gpuDevices) == 0 {
-		return systemMemory, 0, isGpuUsed, nil
+		return systemMemory, 0, isVramUsed, nil
 	}
 
 	// Use the host GPU that best satisfies the engine, mirroring engine selection scoring
@@ -373,22 +394,18 @@ func getTotalMemory(machine *machine.Machine, engineManifest engines.Manifest) (
 		}
 	}
 	if bestDevice == nil {
-		return systemMemory, 0, isGpuUsed, nil
+		return systemMemory, 0, isVramUsed, nil
 	}
 
 	vram, found := bestDevice.AdditionalProperties["vram"]
-	if !found {
-		isGpuUsed = false
-		return systemMemory, 0, isGpuUsed, nil
-	} else if vram == nil {
-		// assuming unified memory
-		isGpuUsed = true
-		return systemMemory, 0, isGpuUsed, nil
+	if !found || vram == nil {
+		isVramUsed = false
+		return systemMemory, 0, isVramUsed, nil
 	}
 	vramValue, ok := vram.(uint64)
 	if !ok {
 		return 0, 0, false, fmt.Errorf("parsing vram %q for pci device %s", vram, bestDevice.Slot)
 	}
-	isGpuUsed = true
-	return systemMemory, vramValue, isGpuUsed, nil
+	isVramUsed = true
+	return systemMemory, vramValue, isVramUsed, nil
 }

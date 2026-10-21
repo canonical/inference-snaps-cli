@@ -385,7 +385,12 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 		if err != nil {
 			return fmt.Errorf("scoring active model: %v", err)
 		}
-		if scoredModel.CompatibilityReport.Compatible {
+		missingComponents, err := common.MissingComponents(modelManifest.Components)
+		if err != nil {
+			return fmt.Errorf("checking installed model components: %v", err)
+		}
+		if scoredModel.CompatibilityReport.CompatibleMemory &&
+			(scoredModel.CompatibilityReport.CompatibleDisk || len(missingComponents) == 0) {
 			if err := cmd.Cache.SetActiveModel(activeModelId); err != nil {
 				return fmt.Errorf("setting active model: %v", err)
 			}

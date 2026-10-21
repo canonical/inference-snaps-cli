@@ -235,7 +235,10 @@ func Example_printAllModelsJson() {
 	//         "cuda-no-vram",
 	//         "rocm-generic"
 	//       ],
-	//       "compatible": true
+	//       "compatible": false,
+	//       "compatibility-issues": [
+	//         "unsupported by active engine"
+	//       ]
 	//     },
 	//     {
 	//       "name": "30b-a3b-q4-k-m-gguf",
@@ -265,7 +268,10 @@ func Example_printAllModelsJson() {
 	//         "cuda-no-vram",
 	//         "rocm-generic"
 	//       ],
-	//       "compatible": true
+	//       "compatible": false,
+	//       "compatibility-issues": [
+	//         "unsupported by active engine"
+	//       ]
 	//     },
 	//     {
 	//       "name": "30m-q4-k-m-gguf",
@@ -287,7 +293,10 @@ func Example_printAllModelsJson() {
 	//       "compatible-engines": [
 	//         "cpu"
 	//       ],
-	//       "compatible": true
+	//       "compatible": false,
+	//       "compatibility-issues": [
+	//         "unsupported by active engine"
+	//       ]
 	//     },
 	//     {
 	//       "name": "4b-it-int4-fq-ov",
