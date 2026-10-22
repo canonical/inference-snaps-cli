@@ -12,6 +12,8 @@ var (
 	ErrOpenAiServerNoUrl             = errors.New("openai server has no URL")
 	ErrInsufficientDiskSpaceForModel = errors.New("insufficient disk space for the selected model")
 	ErrInsufficientMemoryForModel    = errors.New("insufficient memory for the selected model")
+	ErrGettingVramForGpuDevice       = errors.New("getting vram for needed GPU device")
+	ErrSystemMemoryUnavailable       = errors.New("system memory information unavailable")
 )
 
 // Strings that are commonly used in error chains, but should not be used as error types

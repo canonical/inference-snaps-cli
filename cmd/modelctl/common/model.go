@@ -249,7 +249,7 @@ func ScoreModels(modelOptions []string, manifests map[string]models.Manifest, ma
 
 	enginesRequiredGpus := GetEnginesRequiredGpus(activeEngineManifest)
 	vRam, isUnifiedMemory, err := getDeviceTotalVram(machine, enginesRequiredGpus)
-	if err != nil {
+	if err != nil && err != ErrGettingVramForGpuDevice {
 		return nil, err
 	}
 
@@ -377,7 +377,7 @@ func getDeviceTotalVram(machine *machine.Machine, gpuDevices []engines.Device) (
 		}
 	}
 	if bestDevice == nil && len(gpuDevices) > 0 {
-		return 0, isUnifiedMemory, fmt.Errorf("getting vram for needed GPU device")
+		return 0, isUnifiedMemory, ErrGettingVramForGpuDevice
 	} else if bestDevice == nil {
 		return 0, isUnifiedMemory, nil
 	}
@@ -398,7 +398,7 @@ func getDeviceTotalVram(machine *machine.Machine, gpuDevices []engines.Device) (
 
 func getSystemMemory(machine *machine.Machine) (uint64, error) {
 	if machine.Memory.TotalRam == 0 {
-		return 0, fmt.Errorf("system memory information unavailable")
+		return 0, ErrSystemMemoryUnavailable
 	}
 	return machine.Memory.TotalRam, nil
 }
