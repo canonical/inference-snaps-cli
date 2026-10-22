@@ -59,18 +59,18 @@ func NewModelDetails(manifest *models.Manifest) (ModelDetails, error) {
 	modelDetails.Components = manifest.Components
 
 	// Change disk size to largest possible unit representation
-	diskSizeBytes, err := utils.StringToBytes(manifest.DiskSize)
+	diskSize, err := utils.NormalizeFormattedBytes(manifest.DiskSize)
 	if err != nil {
 		return modelDetails, ErrInsufficientDiskSpaceForModel
 	}
-	modelDetails.DiskSize = utils.FmtBytesShort(diskSizeBytes)
+	modelDetails.DiskSize = diskSize
 
 	if manifest.RequiredMemory != "" {
-		requiredMemoryBytes, err := utils.StringToBytes(manifest.RequiredMemory)
+		requiredMemory, err := utils.NormalizeFormattedBytes(manifest.RequiredMemory)
 		if err != nil {
 			return modelDetails, err
 		}
-		modelDetails.RequiredMemory = utils.FmtBytesShort(requiredMemoryBytes)
+		modelDetails.RequiredMemory = requiredMemory
 	}
 
 	return modelDetails, nil
@@ -247,9 +247,9 @@ func ScoreModels(modelOptions []string, manifests map[string]models.Manifest, ma
 		return nil, err
 	}
 
-	enginesRequiredGpus := GetEnginesRequiredGpus(activeEngineManifest)
-	vRam, isUnifiedMemory, err := getDeviceTotalVram(machine, enginesRequiredGpus)
-	if err != nil && err != ErrGettingVramForGpuDevice {
+	enginesRequiredGpus := GetEngineGpuDevices(activeEngineManifest)
+	vRam, isUnifiedMemory, err := getTopGpuVram(machine, enginesRequiredGpus)
+	if err != nil {
 		return nil, err
 	}
 
@@ -260,14 +260,14 @@ func ScoreModels(modelOptions []string, manifests map[string]models.Manifest, ma
 			return nil, fmt.Errorf("model manifest not found: %s", modelID)
 		}
 
-		size, err := utils.StringToBytes(manifest.DiskSize)
+		diskSize, err := utils.StringToBytes(manifest.DiskSize)
 		if err != nil {
 			return nil, fmt.Errorf("parsing disk size for model %q: %w", modelID, err)
 		}
 
 		var modelRequiredMemory uint64
 		if manifest.RequiredMemory == "" {
-			modelRequiredMemory = size
+			modelRequiredMemory = diskSize
 		} else {
 			modelRequiredMemory, err = utils.StringToBytes(manifest.RequiredMemory)
 			if err != nil {
@@ -284,8 +284,8 @@ func ScoreModels(modelOptions []string, manifests map[string]models.Manifest, ma
 		}
 
 		report := models.CompatibilityReport{
-			CompatibleDisk:     size <= availableDiskSpace,
-			RequiredDiskSpace:  size,
+			CompatibleDisk:     diskSize <= availableDiskSpace,
+			RequiredDiskSpace:  diskSize,
 			AvailableDiskSpace: availableDiskSpace,
 			RequiredMemory:     requiredMemory,
 			TotalMemory:        systemMemory,
@@ -295,7 +295,7 @@ func ScoreModels(modelOptions []string, manifests map[string]models.Manifest, ma
 
 		score := uint64(0)
 		if report.Compatible() {
-			score = size
+			score = diskSize
 		}
 
 		scoredModels = append(scoredModels, models.ScoredManifest{
@@ -364,7 +364,7 @@ func availableDiskSpace(machine *machine.Machine) (uint64, error) {
 	return 0, fmt.Errorf("disk information unavailable for %s", constants.SnapStoragePath)
 }
 
-func getDeviceTotalVram(machine *machine.Machine, gpuDevices []engines.Device) (uint64, bool, error) {
+func getTopGpuVram(machine *machine.Machine, gpuDevices []engines.Device) (uint64, bool, error) {
 	isUnifiedMemory := false
 
 	var bestDevice *pci.Device
@@ -376,9 +376,7 @@ func getDeviceTotalVram(machine *machine.Machine, gpuDevices []engines.Device) (
 			bestScore = score
 		}
 	}
-	if bestDevice == nil && len(gpuDevices) > 0 {
-		return 0, isUnifiedMemory, ErrGettingVramForGpuDevice
-	} else if bestDevice == nil {
+	if bestDevice == nil {
 		return 0, isUnifiedMemory, nil
 	}
 	vram, ok := bestDevice.AdditionalProperties["vram"]

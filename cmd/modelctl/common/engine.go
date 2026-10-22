@@ -262,10 +262,9 @@ func ScoreEnginesWithSpinner(ctx *Context) ([]engines.ScoredManifest, *machine.M
 	return scoredEngines, machineInfo, err
 }
 
-func GetEnginesRequiredGpus(engineManifest engines.Manifest) (gpuDevices []engines.Device) {
-	gpuDevices = []engines.Device{}
+func GetEngineGpuDevices(engineManifest engines.Manifest) (gpuDevices []engines.Device) {
 	for _, device := range slices.Concat(engineManifest.Devices.Allof, engineManifest.Devices.Anyof) {
-		if device.Type == "gpu" && (device.Bus == "" || device.Bus == "pci") {
+		if device.Type == "gpu" {
 			gpuDevices = append(gpuDevices, device)
 		}
 	}

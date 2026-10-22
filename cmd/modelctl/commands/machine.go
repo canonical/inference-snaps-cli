@@ -124,19 +124,19 @@ type ApusysDeviceDetails struct {
 }
 
 type PciAdditionalDeviceProperties struct {
-	Microarchitecture string `json:"microarchitecture,omitempty" yaml:"microarchitecture,omitempty"`
-	Vram              any    `json:"vram" yaml:"vram"`
-	ComputeCapability string `json:"compute-capability,omitempty" yaml:"compute-capability,omitempty"`
+	Microarchitecture string  `json:"microarchitecture,omitempty" yaml:"microarchitecture,omitempty"`
+	Vram              *uint64 `json:"vram" yaml:"vram"`
+	ComputeCapability string  `json:"compute-capability,omitempty" yaml:"compute-capability,omitempty"`
 }
 
 func (a PciAdditionalDeviceProperties) MarshalYAML() (any, error) {
-	vramOutput := a.Vram
+	var vramOutput string
 	if a.Vram != nil {
-		vramOutput = utils.FmtBytesShort(a.Vram.(uint64))
+		vramOutput = utils.FmtBytesShort(*a.Vram)
 	}
 	return struct {
 		Microarchitecture string `yaml:"microarchitecture,omitempty"`
-		Vram              any    `yaml:"vram,omitempty"`
+		Vram              string `yaml:"vram,omitempty"`
 		ComputeCapability string `yaml:"compute-capability,omitempty"`
 	}{
 		Microarchitecture: a.Microarchitecture,
@@ -269,10 +269,10 @@ func newPciAdditionalDeviceProperties(props map[string]any) *PciAdditionalDevice
 	if v, ok := props["vram"]; ok {
 		if v != nil {
 			if s, ok := v.(uint64); ok {
-				ap.Vram = s
+				ap.Vram = &s
 			} else {
 				fmt.Fprintf(os.Stderr, "Warning: it was not possible to parse VRAM value: expected uint64, got %T (%v).\n", v, v)
-
+				ap.Vram = nil
 			}
 		}
 	}

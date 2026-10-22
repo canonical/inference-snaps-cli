@@ -116,7 +116,7 @@ func ExampleUseEngine_printMemoryIncompatibleModels() {
 
 	// Output:
 	// Selecting a compatible model:
-	// ✔ fits, best match
+	// ✔ fits: best match
 	// ✘ exceeds-ram
 	// ✘ exceeds-vram
 }
@@ -223,7 +223,7 @@ func ExampleUseEngine_autoSelectEngine() {
 	// Output:
 	// Evaluating engines for optimal hardware compatibility:
 	// ✘ not-compatible-engine
-	// ✔ cpu-exptl: experimental
+	// ✔ cpu-exptl
 	// ✔ cpu: best match
 	//
 	// Selecting a compatible model:
