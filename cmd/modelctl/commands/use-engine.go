@@ -142,9 +142,9 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 }
 
 func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.ScoredManifest, machine *machine.Machine) error {
-	selectedEngine, selectionErr := selector.TopEngine(scoredEngines)
-	if selectionErr != nil {
-		return selectionErr
+	selectedEngine, err := selector.TopEngine(scoredEngines)
+	if err != nil {
+		return err
 	}
 	selectedEngineName := ""
 	if selectedEngine != nil {
