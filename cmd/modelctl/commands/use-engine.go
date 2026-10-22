@@ -323,6 +323,10 @@ func (cmd *useEngineCommand) switchEngineAndModel(newEngineName string, newModel
 		return fmt.Errorf("setting active model: %v", err)
 	}
 
+	// add a newline in two cases, when auto selection is enabled or when no model could be selected and warning is printed
+	if cmd.auto || newModelID == "" {
+		fmt.Printf("\n")
+	}
 	fmt.Printf("Engine changed to %q.\n", newEngineName)
 	if newModelID != "" && activeModelID != newModelID {
 		fmt.Printf("Model changed to %q.\n", newModelID)
@@ -330,6 +334,9 @@ func (cmd *useEngineCommand) switchEngineAndModel(newEngineName string, newModel
 
 	// Ask if the user wants to restart
 	if !cmd.noRestart {
+		if !cmd.assumeYes {
+			fmt.Println()
+		}
 		return common.PromptRestartToApplyChanges(cmd.Context, cmd.assumeYes)
 	}
 
@@ -403,17 +410,22 @@ func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManif
 	for _, model := range scoredModels {
 		if model.CompatibilityReport.CompatibleDisk {
 			compatibleModels = append(compatibleModels, model.Name)
-			fmt.Printf("✔ %s\n", model.Name)
+			fmt.Printf("✔ %s", model.Name)
+			if model.Name == newModelID {
+				fmt.Printf(", best match")
+			}
+			fmt.Println()
 		} else {
 			report := model.CompatibilityReport
-			fmt.Printf("✘ %s: requires %s disk space, has %s\n",
-				model.Name,
-				utils.FmtBytesShort(report.RequiredDiskSpace),
-				utils.FmtBytesShort(report.AvailableDiskSpace))
+			if cmd.Verbose {
+				fmt.Printf("✘ %s: requires %s disk space, has %s\n",
+					model.Name,
+					utils.FmtBytesShort(report.RequiredDiskSpace),
+					utils.FmtBytesShort(report.AvailableDiskSpace))
+			} else {
+				fmt.Printf("✘ %s\n", model.Name)
+			}
 		}
-	}
-	if slices.Contains(compatibleModels, newModelID) {
-		fmt.Printf("Selected model: %s\n", newModelID)
 	}
 }
 
