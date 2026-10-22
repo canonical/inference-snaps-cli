@@ -165,9 +165,9 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 			}
 		} else if engine.IsExperimental() {
 			if cmd.Verbose {
-				fmt.Printf("✔ %s: score=%d\n", engine.Name, engine.Score)
+				fmt.Printf("✔ %s: experimental, score=%d\n", engine.Name, engine.Score)
 			} else {
-				fmt.Printf("✔ %s\n", engine.Name)
+				fmt.Printf("✔ %s: experimental\n", engine.Name)
 			}
 		} else {
 			if cmd.Verbose {

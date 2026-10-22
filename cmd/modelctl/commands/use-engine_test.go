@@ -223,7 +223,7 @@ func ExampleUseEngine_autoSelectEngine() {
 	// Output:
 	// Evaluating engines for optimal hardware compatibility:
 	// ✘ not-compatible-engine
-	// ✔ cpu-exptl
+	// ✔ cpu-exptl: experimental
 	// ✔ cpu: best match
 	//
 	// Selecting a compatible model:
