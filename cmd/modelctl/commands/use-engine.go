@@ -143,8 +143,11 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 
 func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.ScoredManifest, machine *machine.Machine) error {
 	selectedEngine, selectionErr := selector.TopEngine(scoredEngines)
+	if selectionErr != nil {
+		return selectionErr
+	}
 	selectedEngineName := ""
-	if selectionErr == nil && selectedEngine != nil {
+	if selectedEngine != nil {
 		selectedEngineName = selectedEngine.Name
 	}
 
@@ -164,16 +167,19 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 			if cmd.Verbose {
 				fmt.Printf("✔ %s: score=%d\n", engine.Name, engine.Score)
 			} else {
-				fmt.Printf("✔ %s\n", engine.Name)
+				fmt.Printf("✔ %s: experimental\n", engine.Name)
 			}
 		} else {
 			if cmd.Verbose {
 				fmt.Printf("✔ %s: score=%d", engine.Name, engine.Score)
+				if engine.Name == selectedEngineName {
+					fmt.Print(", best match")
+				}
 			} else {
 				fmt.Printf("✔ %s", engine.Name)
-			}
-			if engine.Name == selectedEngineName {
-				fmt.Print(", best match")
+				if engine.Name == selectedEngineName {
+					fmt.Print(": best match")
+				}
 			}
 			fmt.Println()
 		}
@@ -188,9 +194,6 @@ func (cmd *useEngineCommand) autoSelectScoredEngine(scoredEngines []engines.Scor
 			return nil
 		}
 		// otherwise continue with standard auto selection
-	}
-	if selectionErr != nil {
-		return fmt.Errorf("finding top engine: %v", selectionErr)
 	}
 	if err := cmd.switchEngineWithMachine(selectedEngine.Name, machine); err != nil {
 		return fmt.Errorf("use engine: %s", err)
@@ -412,7 +415,7 @@ func (cmd *useEngineCommand) printScoredModels(scoredModels []models.ScoredManif
 			compatibleModels = append(compatibleModels, model.Name)
 			fmt.Printf("✔ %s", model.Name)
 			if model.Name == newModelID {
-				fmt.Printf(", best match")
+				fmt.Printf(": best match")
 			}
 			fmt.Println()
 		} else {
