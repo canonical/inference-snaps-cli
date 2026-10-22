@@ -285,7 +285,7 @@ func ExampleUseEngine_autoSelectEngineVerbose() {
 	// Selecting a compatible model:
 	// ✘ 30m-q4-k-m-gguf: requires 1M disk space, has 0
 	// ✘ 26b-q4-k-m-gguf: requires 6G disk space, has 0
-	// ✘ 30b-a3b-q4-k-m-gguf: requires 6G disk space, has 0
+	// ✘ 30b-a3b-q4-k-m-gguf: requires 5.9T disk space, has 0
 	//
 	// Engine changed to "cpu".
 	// [mock] Restarting all services
@@ -340,7 +340,8 @@ func ExampleUseEngine_printIncompatibleModels() {
 	// Selecting a compatible model:
 	// ✘ 30m-q4-k-m-gguf: requires 1M disk space, has 0
 	// ✘ 26b-q4-k-m-gguf: requires 6G disk space, has 0
-	// ✘ 30b-a3b-q4-k-m-gguf: requires 6G disk space, has 0
+	// ✘ 30b-a3b-q4-k-m-gguf: requires 5.9T disk space, has 0
+	//
 	// Engine changed to "cpu".
 	// [mock] Restarting all services
 }
