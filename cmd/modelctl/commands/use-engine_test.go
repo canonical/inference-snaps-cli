@@ -298,7 +298,7 @@ func ExampleUseEngine_autoSelectEngineVerbose() {
 	// Evaluating engines for optimal hardware compatibility:
 	// ✘ not-compatible-engine
 	//   - required device not found
-	// ✔ cpu-exptl: score=10
+	// ✔ cpu-exptl: experimental, score=10
 	// ✔ cpu: score=10, best match
 	//
 	// Selecting a compatible model:
