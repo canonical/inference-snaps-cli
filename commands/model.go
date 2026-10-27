@@ -6,7 +6,7 @@ import (
 	"slices"
 	"strings"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/engines"
 	"github.com/canonical/inference-snaps-cli/v2/internal/models"
 	"github.com/canonical/lscompute/pkg/machine"
@@ -16,22 +16,22 @@ import (
 )
 
 type modelCommand struct {
-	*icmd.Context
+	*common.Context
 
 	// flags
 	format string
 }
 
-func Model(ctx *icmd.Context) *cobra.Command {
+func Model(ctx *common.Context) *cobra.Command {
 	return newModelCmd(ctx, "model [<model>]", "")
 }
 
 // TODO: remove when we fully migrate to "model" command
-func ShowModel(ctx *icmd.Context) *cobra.Command {
+func ShowModel(ctx *common.Context) *cobra.Command {
 	return newModelCmd(ctx, "show-model", `use "model" instead`)
 }
 
-func newModelCmd(ctx *icmd.Context, use, deprecated string) *cobra.Command {
+func newModelCmd(ctx *common.Context, use, deprecated string) *cobra.Command {
 	var cmd modelCommand
 	cmd.Context = ctx
 
@@ -102,10 +102,10 @@ func (cmd *modelCommand) validateArgs(_ *cobra.Command, args []string, toComplet
 func (cmd *modelCommand) showCurrentModel() error {
 	currentModel, err := cmd.Cache.GetActiveModel()
 	if err != nil {
-		return fmt.Errorf("%s: %w", icmd.LookingUpActiveModel, err)
+		return fmt.Errorf("%s: %w", common.LookingUpActiveModel, err)
 	}
 	if currentModel == "" {
-		return icmd.ErrNoActiveModel
+		return common.ErrNoActiveModel
 	}
 	return cmd.model(currentModel)
 }
@@ -115,7 +115,7 @@ func (cmd *modelCommand) model(modelNameOrAlias string) error {
 	if err != nil {
 		return fmt.Errorf("getting machine info: %v", err)
 	}
-	modelDetails, err := icmd.GetModelDetailsByNameOrAlias(cmd.Context, modelNameOrAlias, machine)
+	modelDetails, err := common.GetModelDetailsByNameOrAlias(cmd.Context, modelNameOrAlias, machine)
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (cmd *modelCommand) model(modelNameOrAlias string) error {
 	return nil
 }
 
-func (cmd *modelCommand) printModelDetails(modelDetails *icmd.ModelDetails) error {
+func (cmd *modelCommand) printModelDetails(modelDetails *common.ModelDetails) error {
 	switch cmd.format {
 	case "json":
 		jsonString, err := json.MarshalIndent(modelDetails, "", "  ")

@@ -3,19 +3,19 @@ package debug
 import (
 	"fmt"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/spf13/cobra"
 )
 
 type chatCommand struct {
-	*icmd.Context
+	*common.Context
 
 	// flags
 	baseUrl   string
 	modelName string
 }
 
-func ChatCommand(ctx *icmd.Context) *cobra.Command {
+func ChatCommand(ctx *common.Context) *cobra.Command {
 	var cmd chatCommand
 	cmd.Context = ctx
 
@@ -40,6 +40,6 @@ func (cmd *chatCommand) run(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("the --base-url parameter is required")
 	}
 
-	chatClient := icmd.ChatClient(cmd.baseUrl, cmd.modelName, cmd.Verbose)
+	chatClient := common.ChatClient(cmd.baseUrl, cmd.modelName, cmd.Verbose)
 	return chatClient.Start()
 }

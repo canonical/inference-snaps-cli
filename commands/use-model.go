@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"slices"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/engines"
 	"github.com/canonical/inference-snaps-cli/v2/internal/models"
 	"github.com/canonical/inference-snaps-cli/v2/internal/utils"
@@ -12,14 +12,14 @@ import (
 )
 
 type useModelCommand struct {
-	*icmd.Context
+	*common.Context
 
 	// flags
 	assumeYes bool
 	noRestart bool
 }
 
-func UseModel(ctx *icmd.Context) *cobra.Command {
+func UseModel(ctx *common.Context) *cobra.Command {
 	var cmd useModelCommand
 	cmd.Context = ctx
 
@@ -72,7 +72,7 @@ func (cmd *useModelCommand) validateArgs(_ *cobra.Command, args []string, toComp
 
 func (cmd *useModelCommand) run(_ *cobra.Command, args []string) error {
 	if !utils.IsRootUser() {
-		return icmd.ErrPermissionDenied
+		return common.ErrPermissionDenied
 	}
 
 	if len(args) == 1 {
@@ -84,14 +84,14 @@ func (cmd *useModelCommand) run(_ *cobra.Command, args []string) error {
 
 func (cmd *useModelCommand) switchModel(modelNameOrAlias string) error {
 
-	modelManifest, err := icmd.GetModelManifestByNameOrAlias(cmd.Context, modelNameOrAlias)
+	modelManifest, err := common.GetModelManifestByNameOrAlias(cmd.Context, modelNameOrAlias)
 	if err != nil {
 		return err
 	}
 
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("%s: %w", icmd.LookingUpActiveEngine, err)
+		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
 
 	engineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngine)
@@ -99,7 +99,7 @@ func (cmd *useModelCommand) switchModel(modelNameOrAlias string) error {
 		return fmt.Errorf("%s: %w", "loading engine manifest", err)
 	}
 
-	cancelledByUser, err := icmd.InstallMissingComponents(cmd.Context, cmd.assumeYes, engineManifest, modelManifest)
+	cancelledByUser, err := common.InstallMissingComponents(cmd.Context, cmd.assumeYes, engineManifest, modelManifest)
 	if err != nil {
 		return fmt.Errorf("installing missing components: %v", err)
 	}
@@ -110,7 +110,7 @@ func (cmd *useModelCommand) switchModel(modelNameOrAlias string) error {
 
 	activeModelId, err := cmd.Cache.GetActiveModel()
 	if err != nil {
-		return fmt.Errorf("%s: %w", icmd.LookingUpActiveModel, err)
+		return fmt.Errorf("%s: %w", common.LookingUpActiveModel, err)
 	}
 
 	if activeModelId == modelManifest.Name {
@@ -126,7 +126,7 @@ func (cmd *useModelCommand) switchModel(modelNameOrAlias string) error {
 
 	// Ask if the user wants to restart
 	if !cmd.noRestart {
-		return icmd.PromptRestartToApplyChanges(cmd.Context, cmd.assumeYes)
+		return common.PromptRestartToApplyChanges(cmd.Context, cmd.assumeYes)
 	}
 
 	return nil

@@ -5,7 +5,7 @@ import (
 	"slices"
 	"testing"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/engines"
 	"github.com/canonical/inference-snaps-cli/v2/internal/selector"
 	"github.com/canonical/inference-snaps-cli/v2/internal/storage"
@@ -35,7 +35,7 @@ func prepareTestData() (*enginesCommand, *outputEngines, error) {
 
 	// cmd.printEnginesTable needs to call `cmd.Cache.GetActiveEngine()` to get the current active engine
 	// We therefore need to pass in the cache as context to `cmd`
-	ctx := &icmd.Context{
+	ctx := &common.Context{
 		EnginesDir: "",
 		Cache:      cache,
 		Config:     nil,
@@ -44,7 +44,7 @@ func prepareTestData() (*enginesCommand, *outputEngines, error) {
 
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return nil, nil, fmt.Errorf("%s: %v", icmd.LookingUpActiveEngine, err)
+		return nil, nil, fmt.Errorf("%s: %v", common.LookingUpActiveEngine, err)
 	}
 
 	enginesList := outputEngines{
@@ -52,14 +52,14 @@ func prepareTestData() (*enginesCommand, *outputEngines, error) {
 	}
 
 	for _, se := range scoredEngines {
-		enginesList.Engines = append(enginesList.Engines, icmd.NewEngineDetails(se))
+		enginesList.Engines = append(enginesList.Engines, common.NewEngineDetails(se))
 	}
 
 	return &cmd, &enginesList, nil
 }
 
 func filterEnginesByName(engines *outputEngines, nameWhitelist []string) {
-	var filteredEngines = make([]icmd.EngineDetails, 0, len(nameWhitelist))
+	var filteredEngines = make([]common.EngineDetails, 0, len(nameWhitelist))
 	for _, ed := range engines.Engines {
 		if slices.Contains(nameWhitelist, ed.Name) {
 			filteredEngines = append(filteredEngines, ed)

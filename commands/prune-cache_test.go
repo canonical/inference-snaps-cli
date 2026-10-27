@@ -6,7 +6,7 @@ import (
 	"slices"
 	"testing"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/storage"
 	"github.com/creack/pty"
 )
@@ -128,7 +128,7 @@ func makePruneCmd(dirs pruneTestDirs, activeEngine, activeModel string) pruneCac
 	cache := storage.NewMockCache()
 	_ = cache.SetActiveEngine(activeEngine)
 	_ = cache.SetActiveModel(activeModel)
-	return pruneCacheCommand{Context: &icmd.Context{
+	return pruneCacheCommand{Context: &common.Context{
 		EnginesDir:  dirs.enginesDir,
 		RuntimesDir: dirs.runtimesDir,
 		ModelsDir:   dirs.modelsDir,

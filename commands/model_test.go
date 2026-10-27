@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/models"
 	"github.com/canonical/inference-snaps-cli/v2/internal/storage"
 )
@@ -14,13 +14,13 @@ func TestModelUnsupportedFormatResultsInError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not load model manifest: %v", err)
 	}
-	modelDetails, err := icmd.NewModelDetails(manifest)
+	modelDetails, err := common.NewModelDetails(manifest)
 	if err != nil {
 		t.Fatalf("could not build model details: %v", err)
 	}
 
 	cmd := modelCommand{
-		Context: &icmd.Context{EnginesDir: "../test_data/engines"},
+		Context: &common.Context{EnginesDir: "../test_data/engines"},
 		format:  "invalid-format",
 	}
 	err = cmd.printModelDetails(&modelDetails)
@@ -36,7 +36,7 @@ func Example_modelCommand_printModelDetailsYaml() {
 		panic(fmt.Sprintf("failed to set active engine: %v", err))
 	}
 
-	ctx := &icmd.Context{
+	ctx := &common.Context{
 		ModelsDir:   "../test_data/models",
 		EnginesDir:  "../test_data/engines",
 		RuntimesDir: "../test_data/runtimes",
@@ -46,7 +46,7 @@ func Example_modelCommand_printModelDetailsYaml() {
 	if err != nil {
 		panic(fmt.Sprintf("could not create machine fixture: %v", err))
 	}
-	modelDetails, err := icmd.GetModelDetailsByNameOrAlias(ctx, "4b-it-int4-fq-ov", machine)
+	modelDetails, err := common.GetModelDetailsByNameOrAlias(ctx, "4b-it-int4-fq-ov", machine)
 	if err != nil {
 		panic(fmt.Sprintf("failed to load model details: %v", err))
 	}
@@ -80,7 +80,7 @@ func Example_modelCommand_printModelDetailsJson() {
 		panic(fmt.Sprintf("failed to set active engine: %v", err))
 	}
 
-	ctx := &icmd.Context{
+	ctx := &common.Context{
 		ModelsDir:  "../test_data/models",
 		EnginesDir: "../test_data/engines",
 		Cache:      cache,
@@ -89,7 +89,7 @@ func Example_modelCommand_printModelDetailsJson() {
 	if err != nil {
 		panic(fmt.Sprintf("could not create machine fixture: %v", err))
 	}
-	modelDetails, err := icmd.GetModelDetailsByNameOrAlias(ctx, "4b-it-int4-fq-ov", machine)
+	modelDetails, err := common.GetModelDetailsByNameOrAlias(ctx, "4b-it-int4-fq-ov", machine)
 	if err != nil {
 		panic(fmt.Sprintf("failed to load model details: %v", err))
 	}

@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"os/exec"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/spf13/cobra"
 )
 
 type webUiCommand struct {
-	*icmd.Context
+	*common.Context
 }
 
-func WebUi(ctx *icmd.Context) *cobra.Command {
+func WebUi(ctx *common.Context) *cobra.Command {
 	var cmd webUiCommand
 	cmd.Context = ctx
 
@@ -30,12 +30,12 @@ func WebUi(ctx *icmd.Context) *cobra.Command {
 
 func (cmd *webUiCommand) run(_ *cobra.Command, _ []string) error {
 	// Having all the components installed is not required, but it provides good feedback
-	if err := icmd.WaitForComponents(cmd.Context); err != nil {
+	if err := common.WaitForComponents(cmd.Context); err != nil {
 		return fmt.Errorf("waiting for component: %s", err)
 	}
 
 	// Get web ui url
-	url, err := icmd.UiServerHttpUrl(cmd.Context)
+	url, err := common.UiServerHttpUrl(cmd.Context)
 	if err != nil {
 		return fmt.Errorf("getting webui server url: %s", err)
 	}
@@ -53,24 +53,24 @@ func (cmd *webUiCommand) run(_ *cobra.Command, _ []string) error {
 			return fmt.Errorf("%s: service not found", service)
 		}
 		if uiServerStatus == "inactive" {
-			return fmt.Errorf("%s not active\n\n%s", service, icmd.SuggestStartService(service))
+			return fmt.Errorf("%s not active\n\n%s", service, common.SuggestStartService(service))
 		}
 	}
 
 	// Wait until the openai server endpoint is ready to accept chat prompts. This should be handled in the webui in the future.
-	chatBaseUrl, err := icmd.OpenAiBaseUrl(cmd.Context)
+	chatBaseUrl, err := common.OpenAiBaseUrl(cmd.Context)
 	if err != nil {
 		return fmt.Errorf("getting OpenAI base URL: %v", err)
 	}
 
-	chatClient := icmd.ChatClient(chatBaseUrl, "", cmd.Verbose)
+	chatClient := common.ChatClient(chatBaseUrl, "", cmd.Verbose)
 	err = chatClient.WaitChatServerReady() // prints same spinner as used for chat
 	if err != nil {
 		return err
 	}
 
 	fmt.Printf("Web UI is available at %s\n", url)
-	if icmd.PromptlnEnter("open it in your browser") {
+	if common.PromptlnEnter("open it in your browser") {
 		// Use desktop portal to open URL in default browser
 		err = exec.Command("xdg-open", url).Start()
 		if err != nil {

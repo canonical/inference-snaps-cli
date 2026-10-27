@@ -11,7 +11,7 @@ import (
 	"strings"
 	"syscall"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/constants"
 	"github.com/canonical/inference-snaps-cli/v2/internal/fallbackserver"
 	"github.com/canonical/inference-snaps-cli/v2/internal/snap"
@@ -21,14 +21,14 @@ import (
 )
 
 type runCommand struct {
-	*icmd.Context
+	*common.Context
 
 	// flags
 	shareProvider  string
 	fallbackServer bool
 }
 
-func Run(ctx *icmd.Context) *cobra.Command {
+func Run(ctx *common.Context) *cobra.Command {
 	var cmd runCommand
 	cmd.Context = ctx
 
@@ -64,12 +64,12 @@ func (cmd *runCommand) run(_ *cobra.Command, args []string) error {
 	}
 
 	// Components are required for loading the engine environment
-	if err := icmd.WaitForComponents(cmd.Context); err != nil {
+	if err := common.WaitForComponents(cmd.Context); err != nil {
 		return fmt.Errorf("waiting for component: %s", err)
 	}
 
-	clean, err := icmd.LoadEngineEnvironment(cmd.Context)
-	if errors.Is(err, icmd.ErrNoActiveModel) {
+	clean, err := common.LoadEngineEnvironment(cmd.Context)
+	if errors.Is(err, common.ErrNoActiveModel) {
 		return cmd.fallback(err)
 	}
 	if err != nil {
@@ -114,8 +114,8 @@ func (cmd *runCommand) fallback(commandErr error) error {
 	fmt.Fprintf(os.Stderr, "Error: %v\n", commandErr)
 
 	// For now only serve a fallback server if the engine defines an openai endpoint
-	baseUrl, err := icmd.OpenAiBaseUrl(cmd.Context)
-	if err != nil && errors.Is(err, icmd.ErrNoOpenAiServer) {
+	baseUrl, err := common.OpenAiBaseUrl(cmd.Context)
+	if err != nil && errors.Is(err, common.ErrNoOpenAiServer) {
 		return commandErr
 	} else if err != nil {
 		return fmt.Errorf("getting OpenAI base URL: %v", err)
@@ -151,12 +151,12 @@ func (*runCommand) listenAddress(baseURL string) (string, error) {
 func (cmd *runCommand) startFallbackServer(address string) error {
 	servedErrorMessage := "Inference server failed to start. Please check the logs for more information."
 
-	statusStr, err := icmd.SnapStatus(cmd.Context)
+	statusStr, err := common.SnapStatus(cmd.Context)
 	if err != nil {
 		switch {
-		case errors.Is(err, icmd.ErrNoActiveEngine):
+		case errors.Is(err, common.ErrNoActiveEngine):
 			servedErrorMessage = "No active engine is set. Please set an active engine and try again."
-		case errors.Is(err, icmd.ErrNoActiveModel):
+		case errors.Is(err, common.ErrNoActiveModel):
 			servedErrorMessage = "No active model is set. Please set an active model and try again."
 		default:
 			return fmt.Errorf("getting status: %v", err)
@@ -242,11 +242,11 @@ func (cmd *runCommand) writeShareProviderEnv() error {
 	content.WriteString(snap.InstanceName())
 	content.WriteString("\n")
 
-	baseURL, err := icmd.OpenAiBaseUrl(cmd.Context)
-	if err != nil && !errors.Is(err, icmd.ErrNoOpenAiServer) && !errors.Is(err, icmd.ErrOpenAiServerNoUrl) {
+	baseURL, err := common.OpenAiBaseUrl(cmd.Context)
+	if err != nil && !errors.Is(err, common.ErrNoOpenAiServer) && !errors.Is(err, common.ErrOpenAiServerNoUrl) {
 		return fmt.Errorf("getting OpenAI base URL: %v", err)
 	} else if err == nil {
-		baseURL, err = icmd.ReportedURL(baseURL)
+		baseURL, err = common.ReportedURL(baseURL)
 		if err != nil {
 			return fmt.Errorf("formatting OpenAI base URL: %w", err)
 		}
@@ -255,8 +255,8 @@ func (cmd *runCommand) writeShareProviderEnv() error {
 		content.WriteString("\n")
 	}
 
-	runtime, err := icmd.CurrentRuntimeManifest(cmd.Context)
-	if err != nil && !errors.Is(err, icmd.ErrEngineNoRuntime) {
+	runtime, err := common.CurrentRuntimeManifest(cmd.Context)
+	if err != nil && !errors.Is(err, common.ErrEngineNoRuntime) {
 		return fmt.Errorf("getting current runtime manifest: %v", err)
 	}
 	for _, server := range runtime.Servers {

@@ -6,13 +6,13 @@ import (
 	"runtime/debug"
 	"strings"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/spf13/cobra"
 	"go.yaml.in/yaml/v4"
 )
 
 type versionCommand struct {
-	*icmd.Context
+	*common.Context
 
 	// flags
 	format string
@@ -23,7 +23,7 @@ type versionModel struct {
 	Cli  string `json:"cli"`
 }
 
-func Version(ctx *icmd.Context) *cobra.Command {
+func Version(ctx *common.Context) *cobra.Command {
 	var cmd versionCommand
 	cmd.Context = ctx
 

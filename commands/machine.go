@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/utils"
 	"github.com/canonical/lscompute/pkg/machine"
 	"github.com/canonical/lscompute/pkg/machine/host"
@@ -283,22 +283,22 @@ func newPciAdditionalDeviceProperties(props map[string]any) *PciAdditionalDevice
 }
 
 type machineCommand struct {
-	*icmd.Context
+	*common.Context
 
 	// flags
 	format string
 }
 
-func Machine(ctx *icmd.Context) *cobra.Command {
+func Machine(ctx *common.Context) *cobra.Command {
 	return newMachineCmd(ctx, "machine", "")
 }
 
 // TODO: remove when we fully migrate to "machine" command
-func ShowMachine(ctx *icmd.Context) *cobra.Command {
+func ShowMachine(ctx *common.Context) *cobra.Command {
 	return newMachineCmd(ctx, "show-machine", `use "machine" instead`)
 }
 
-func newMachineCmd(ctx *icmd.Context, use, deprecated string) *cobra.Command {
+func newMachineCmd(ctx *common.Context, use, deprecated string) *cobra.Command {
 	var cmd machineCommand
 	cmd.Context = ctx
 
@@ -366,7 +366,7 @@ func (cmd *machineCommand) printMachineYaml(md MachineDetails) error {
 }
 
 func (cmd *machineCommand) fetchMachineWithSpinner() (*machine.Machine, error) {
-	stopProgress := icmd.StartProgressSpinner("Gathering machine information")
+	stopProgress := common.StartProgressSpinner("Gathering machine information")
 	hwInfo, warnings, err := machine.Get(host.Real(), true, true)
 	stopProgress()
 

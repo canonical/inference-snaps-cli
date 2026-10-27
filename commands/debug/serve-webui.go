@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/models"
 	"github.com/canonical/inference-snaps-cli/v2/internal/webui"
 	"github.com/spf13/cobra"
 )
 
 type serveWebUiCommand struct {
-	*icmd.Context
+	*common.Context
 
 	// flags
 	baseUrl string
@@ -20,7 +20,7 @@ type serveWebUiCommand struct {
 	htmlDir string
 }
 
-func ServeWebUiCommand(ctx *icmd.Context) *cobra.Command {
+func ServeWebUiCommand(ctx *common.Context) *cobra.Command {
 	var cmd serveWebUiCommand
 	cmd.Context = ctx
 

@@ -3,15 +3,15 @@ package commands
 import (
 	"fmt"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/spf13/cobra"
 )
 
 type chatCommand struct {
-	*icmd.Context
+	*common.Context
 }
 
-func Chat(ctx *icmd.Context) *cobra.Command {
+func Chat(ctx *common.Context) *cobra.Command {
 	var cmd chatCommand
 	cmd.Context = ctx
 
@@ -28,7 +28,7 @@ func Chat(ctx *icmd.Context) *cobra.Command {
 }
 
 func (cmd *chatCommand) run(_ *cobra.Command, _ []string) error {
-	chatBaseUrl, err := icmd.OpenAiBaseUrl(cmd.Context)
+	chatBaseUrl, err := common.OpenAiBaseUrl(cmd.Context)
 	if err != nil {
 		return fmt.Errorf("getting OpenAI base URL: %v", err)
 	}
@@ -45,11 +45,11 @@ func (cmd *chatCommand) run(_ *cobra.Command, _ []string) error {
 		}
 		if status == "inactive" {
 			return fmt.Errorf("server not active\n\n%s",
-				icmd.SuggestStartServer())
+				common.SuggestStartServer())
 		}
 	}
 
-	chatClient := icmd.ChatClient(chatBaseUrl, "", cmd.Verbose)
+	chatClient := common.ChatClient(chatBaseUrl, "", cmd.Verbose)
 
 	return chatClient.Start()
 }

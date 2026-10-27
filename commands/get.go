@@ -3,16 +3,16 @@ package commands
 import (
 	"fmt"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/spf13/cobra"
 	"go.yaml.in/yaml/v4"
 )
 
 type getCommand struct {
-	*icmd.Context
+	*common.Context
 }
 
-func Get(ctx *icmd.Context) *cobra.Command {
+func Get(ctx *common.Context) *cobra.Command {
 	var cmd getCommand
 	cmd.Context = ctx
 
@@ -41,7 +41,7 @@ func (cmd *getCommand) completeKey(_ *cobra.Command, args []string, toComplete s
 		return nil, cobra.ShellCompDirectiveError
 	}
 
-	return icmd.CompleteConfigKeys(cmd.Config, toComplete, false, nil), cobra.ShellCompDirectiveDefault
+	return common.CompleteConfigKeys(cmd.Config, toComplete, false, nil), cobra.ShellCompDirectiveDefault
 }
 
 func (cmd *getCommand) getValue(key string) error {
@@ -51,7 +51,7 @@ func (cmd *getCommand) getValue(key string) error {
 	}
 
 	if len(value) == 0 {
-		return fmt.Errorf("key %q is not found\n\n%s", key, icmd.SuggestKeyNotFound(key))
+		return fmt.Errorf("key %q is not found\n\n%s", key, common.SuggestKeyNotFound(key))
 	}
 
 	if len(value) == 1 {

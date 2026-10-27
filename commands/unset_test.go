@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/snap"
 	"github.com/canonical/inference-snaps-cli/v2/internal/storage"
 )
@@ -15,7 +15,7 @@ func TestUnsetValueRemovesUserConfigWithoutRestart(t *testing.T) {
 	cmd := unsetCommand{
 		noRestart: false,
 		assumeYes: true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			Config: config,
 			Snap:   snap.Mock(),
 		},
@@ -42,7 +42,7 @@ func TestUnsetKeyToDefaultValue(t *testing.T) {
 	cmd := unsetCommand{
 		noRestart: true,
 		assumeYes: true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			Config: config,
 			Snap:   snap.Mock(),
 		},
@@ -69,7 +69,7 @@ func TestUnsetNonexistentKey(t *testing.T) {
 	cmd := unsetCommand{
 		noRestart: true,
 		assumeYes: true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			Config: config,
 			Snap:   snap.Mock(),
 		},
@@ -96,7 +96,7 @@ func ExampleUnset_noRestartWhenFinalValueUnchanged() {
 	config.Set("api.port", "8080", storage.UserConfig) // same as package value
 	cmd := unsetCommand{
 		assumeYes: true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			Config: config,
 			Snap:   snap.Mock(),
 		},
@@ -115,7 +115,7 @@ func ExampleUnset_restartWhenFinalValueChanged() {
 	config.Set("api.port", "9999", storage.UserConfig)
 	cmd := unsetCommand{
 		assumeYes: true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			Config: config,
 			Snap:   snap.Mock(),
 		},

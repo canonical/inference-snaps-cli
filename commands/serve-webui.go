@@ -3,21 +3,21 @@ package commands
 import (
 	"fmt"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/models"
 	"github.com/canonical/inference-snaps-cli/v2/internal/webui"
 	"github.com/spf13/cobra"
 )
 
 type serveWebUiCommand struct {
-	*icmd.Context
+	*common.Context
 
 	// flags
 	port int
 	host string // bind address
 }
 
-func ServeWebUi(ctx *icmd.Context) *cobra.Command {
+func ServeWebUi(ctx *common.Context) *cobra.Command {
 	var cmd serveWebUiCommand
 	cmd.Context = ctx
 
@@ -41,16 +41,16 @@ func (cmd *serveWebUiCommand) serveWebUi(_ *cobra.Command, args []string) error 
 	staticDir := args[0]
 
 	// Components are required to get the OpenAI endpoint
-	if err := icmd.WaitForComponents(cmd.Context); err != nil {
+	if err := common.WaitForComponents(cmd.Context); err != nil {
 		return fmt.Errorf("waiting for component: %s", err)
 	}
 
-	baseURL, err := icmd.OpenAiBaseUrl(cmd.Context)
+	baseURL, err := common.OpenAiBaseUrl(cmd.Context)
 	if err != nil {
 		return fmt.Errorf("getting OpenAI base URL: %v", err)
 	}
 
-	baseURL, err = icmd.ReportedURL(baseURL)
+	baseURL, err = common.ReportedURL(baseURL)
 	if err != nil {
 		return fmt.Errorf("formatting OpenAI base URL: %w", err)
 	}
@@ -60,7 +60,7 @@ func (cmd *serveWebUiCommand) serveWebUi(_ *cobra.Command, args []string) error 
 		return fmt.Errorf("getting active engine: %v", err)
 	}
 	if activeEngineName == "" {
-		return icmd.ErrNoActiveEngine
+		return common.ErrNoActiveEngine
 	}
 
 	activeModelId, err := cmd.Cache.GetActiveModel()

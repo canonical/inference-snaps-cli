@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
 	"github.com/olekukonko/tablewriter/renderer"
@@ -17,27 +17,27 @@ import (
 )
 
 type enginesCommand struct {
-	*icmd.Context
+	*common.Context
 
 	// flags
 	format string
 }
 
 type outputEngines struct {
-	ActiveEngine string               `json:"active-engine"`
-	Engines      []icmd.EngineDetails `json:"engines"`
+	ActiveEngine string                 `json:"active-engine"`
+	Engines      []common.EngineDetails `json:"engines"`
 }
 
-func Engines(ctx *icmd.Context) *cobra.Command {
+func Engines(ctx *common.Context) *cobra.Command {
 	return newEnginesCmd(ctx, "engines", "")
 }
 
 // TODO: remove when we fully migrate to "engines" command
-func ListEngines(ctx *icmd.Context) *cobra.Command {
+func ListEngines(ctx *common.Context) *cobra.Command {
 	return newEnginesCmd(ctx, "list-engines", `use "engines" instead`)
 }
 
-func newEnginesCmd(ctx *icmd.Context, use, deprecated string) *cobra.Command {
+func newEnginesCmd(ctx *common.Context, use, deprecated string) *cobra.Command {
 	var cmd enginesCommand
 	cmd.Context = ctx
 
@@ -63,14 +63,14 @@ func newEnginesCmd(ctx *icmd.Context, use, deprecated string) *cobra.Command {
 }
 
 func (cmd *enginesCommand) run(_ *cobra.Command, _ []string) error {
-	scoredEngines, _, err := icmd.ScoreEnginesWithSpinner(cmd.Context)
+	scoredEngines, _, err := common.ScoreEnginesWithSpinner(cmd.Context)
 	if err != nil {
 		return fmt.Errorf("scoring engines: %v", err)
 	}
 
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("%s: %w", icmd.LookingUpActiveEngine, err)
+		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
 
 	enginesList := outputEngines{
@@ -78,7 +78,7 @@ func (cmd *enginesCommand) run(_ *cobra.Command, _ []string) error {
 	}
 
 	for _, se := range scoredEngines {
-		enginesList.Engines = append(enginesList.Engines, icmd.NewEngineDetails(se))
+		enginesList.Engines = append(enginesList.Engines, common.NewEngineDetails(se))
 	}
 
 	switch cmd.format {

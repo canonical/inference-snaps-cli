@@ -6,13 +6,13 @@ import (
 	"os"
 	"path/filepath"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/snap"
 	"github.com/canonical/inference-snaps-cli/v2/internal/storage"
 )
 
 // createTestContextForStatus creates a test context for Example tests
-func createTestContextForStatus(addModel bool) *icmd.Context {
+func createTestContextForStatus(addModel bool) *common.Context {
 	testDataDir := "../test_data"
 	enginesDir := filepath.Join(testDataDir, "engines")
 	runtimesDir := filepath.Join(testDataDir, "runtimes")
@@ -46,7 +46,7 @@ func createTestContextForStatus(addModel bool) *icmd.Context {
 		}
 	}
 
-	return &icmd.Context{
+	return &common.Context{
 		EnginesDir:  enginesDir,
 		RuntimesDir: runtimesDir,
 		ModelsDir:   modelsDir,

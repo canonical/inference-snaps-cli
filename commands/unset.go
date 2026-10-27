@@ -3,14 +3,14 @@ package commands
 import (
 	"fmt"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/storage"
 	"github.com/canonical/inference-snaps-cli/v2/internal/utils"
 	"github.com/spf13/cobra"
 )
 
 type unsetCommand struct {
-	*icmd.Context
+	*common.Context
 
 	// flags
 	packageConfig bool
@@ -19,7 +19,7 @@ type unsetCommand struct {
 	noRestart     bool
 }
 
-func Unset(ctx *icmd.Context) *cobra.Command {
+func Unset(ctx *common.Context) *cobra.Command {
 	var cmd unsetCommand
 	cmd.Context = ctx
 
@@ -40,7 +40,7 @@ func Unset(ctx *icmd.Context) *cobra.Command {
 
 func (cmd *unsetCommand) run(_ *cobra.Command, args []string) error {
 	if !utils.IsRootUser() {
-		return icmd.ErrPermissionDenied
+		return common.ErrPermissionDenied
 	}
 
 	return cmd.unsetValue(args[0])
@@ -51,7 +51,7 @@ func (cmd *unsetCommand) completeKey(_ *cobra.Command, args []string, toComplete
 		return nil, cobra.ShellCompDirectiveError
 	}
 
-	return icmd.CompleteConfigKeys(cmd.Config, toComplete, false, nil), cobra.ShellCompDirectiveDefault
+	return common.CompleteConfigKeys(cmd.Config, toComplete, false, nil), cobra.ShellCompDirectiveDefault
 }
 
 func (cmd *unsetCommand) unsetValue(key string) error {
@@ -61,7 +61,7 @@ func (cmd *unsetCommand) unsetValue(key string) error {
 	}
 	currVal, found := currValMap[key]
 	if !found {
-		return fmt.Errorf("key %q is not found\n\n%s", key, icmd.SuggestKeyNotFound(key))
+		return fmt.Errorf("key %q is not found\n\n%s", key, common.SuggestKeyNotFound(key))
 	}
 
 	err = cmd.Config.Unset(key, storage.UserConfig)
@@ -80,7 +80,7 @@ func (cmd *unsetCommand) unsetValue(key string) error {
 	}
 
 	if !cmd.noRestart {
-		return icmd.PromptRestartToApplyChanges(cmd.Context, cmd.assumeYes)
+		return common.PromptRestartToApplyChanges(cmd.Context, cmd.assumeYes)
 	}
 	return nil
 }

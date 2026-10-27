@@ -3,13 +3,13 @@ package main
 import (
 	"testing"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/storage"
 	"github.com/spf13/cobra"
 )
 
-func testCtx() *icmd.Context {
-	return &icmd.Context{
+func testCtx() *common.Context {
+	return &common.Context{
 		Cache:  storage.NewMockCache(),
 		Config: storage.NewMockConfig(),
 	}

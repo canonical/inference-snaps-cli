@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/engines"
 	"github.com/canonical/inference-snaps-cli/v2/internal/selector"
 	"github.com/canonical/lscompute/pkg/machine"
@@ -17,7 +17,7 @@ import (
 )
 
 type selectCommand struct {
-	*icmd.Context
+	*common.Context
 
 	// flags
 	format     string
@@ -26,11 +26,11 @@ type selectCommand struct {
 }
 
 type EngineSelection struct {
-	Engines   []icmd.EngineDetails `json:"engines"`
-	TopEngine string               `json:"top-engine"`
+	Engines   []common.EngineDetails `json:"engines"`
+	TopEngine string                 `json:"top-engine"`
 }
 
-func SelectCommand(ctx *icmd.Context) *cobra.Command {
+func SelectCommand(ctx *common.Context) *cobra.Command {
 	var cmd selectCommand
 	cmd.Context = ctx
 
@@ -78,7 +78,7 @@ func (cmd *selectCommand) run(_ *cobra.Command, args []string) error {
 
 	// Print summary on STDERR
 	for _, engine := range scoredEngines {
-		engineDetails := icmd.NewEngineDetails(engine)
+		engineDetails := common.NewEngineDetails(engine)
 		engineSelection.Engines = append(engineSelection.Engines, engineDetails)
 
 		if engine.Score == 0 {

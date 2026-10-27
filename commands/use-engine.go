@@ -6,7 +6,7 @@ import (
 	"os"
 	"slices"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/engines"
 	"github.com/canonical/inference-snaps-cli/v2/internal/models"
 	"github.com/canonical/inference-snaps-cli/v2/internal/runtimes"
@@ -18,7 +18,7 @@ import (
 )
 
 type useEngineCommand struct {
-	*icmd.Context
+	*common.Context
 
 	// flags
 	auto               bool
@@ -29,7 +29,7 @@ type useEngineCommand struct {
 	considerComponents bool
 }
 
-func UseEngine(ctx *icmd.Context) *cobra.Command {
+func UseEngine(ctx *common.Context) *cobra.Command {
 	var cmd useEngineCommand
 	cmd.Context = ctx
 
@@ -72,7 +72,7 @@ func (cmd *useEngineCommand) validateArgs(_ *cobra.Command, args []string, toCom
 
 func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 	if !utils.IsRootUser() {
-		return icmd.ErrPermissionDenied
+		return common.ErrPermissionDenied
 	}
 
 	if cmd.fallback != "" && !cmd.auto && !cmd.fix {
@@ -98,7 +98,7 @@ func (cmd *useEngineCommand) run(_ *cobra.Command, args []string) error {
 		}
 
 		err := cmd.fixActiveEngine()
-		if errors.Is(err, icmd.ErrNoActiveEngine) { // If no engine is active, there's nothing to fix
+		if errors.Is(err, common.ErrNoActiveEngine) { // If no engine is active, there's nothing to fix
 			return nil
 		}
 		return err
@@ -133,7 +133,7 @@ func (cmd *useEngineCommand) autoSelectEngine() error {
 		return cmd.switchEngine(cmd.fallback)
 	}
 
-	scoredEngines, machine, err := icmd.ScoreEnginesWithSpinner(cmd.Context)
+	scoredEngines, machine, err := common.ScoreEnginesWithSpinner(cmd.Context)
 	if err != nil {
 		return fmt.Errorf("scoring engines: %v", err)
 	}
@@ -236,12 +236,12 @@ func (cmd *useEngineCommand) switchEngineWithMachine(engineName string, machine 
 	// Active model is not changed when autoselecting a new engine. SelectModel will respect the preferred model if possible.
 	if len(newEngineManifest.Model.Options) > 0 && machine != nil {
 		var scoredModels []models.ScoredManifest
-		newModelID, scoredModels, err = icmd.SelectModel(cmd.Context, *newEngineManifest, newModelID, machine)
+		newModelID, scoredModels, err = common.SelectModel(cmd.Context, *newEngineManifest, newModelID, machine)
 		if cmd.auto {
 			fmt.Println()
 			cmd.printScoredModels(scoredModels, newModelID)
 		}
-		if err != nil && err != icmd.ErrInsufficientDiskSpaceForModel && err != icmd.ErrInsufficientMemoryForModel {
+		if err != nil && err != common.ErrInsufficientDiskSpaceForModel && err != common.ErrInsufficientMemoryForModel {
 			return fmt.Errorf("selecting model: %v", err)
 		} else if newModelID == "" {
 			fmt.Fprintf(os.Stderr, "Warning: No model for %q fits system requirements. Pick a model or switch to another engine manually.\n", engineName)
@@ -257,7 +257,7 @@ func (cmd *useEngineCommand) switchEngineAndModel(newEngineName string, newModel
 
 	activeEngineName, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("%s: %w", icmd.LookingUpActiveEngine, err)
+		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
 
 	activeModelID, err := cmd.Cache.GetActiveModel()
@@ -292,7 +292,7 @@ func (cmd *useEngineCommand) switchEngineAndModel(newEngineName string, newModel
 	}
 
 	// Check for missing components
-	cancelledByUser, err := icmd.InstallMissingComponents(cmd.Context, cmd.assumeYes, newEngineManifest, newModelManifest)
+	cancelledByUser, err := common.InstallMissingComponents(cmd.Context, cmd.assumeYes, newEngineManifest, newModelManifest)
 	if err != nil {
 		return fmt.Errorf("installing missing components: %v", err)
 	}
@@ -307,7 +307,7 @@ func (cmd *useEngineCommand) switchEngineAndModel(newEngineName string, newModel
 
 	// Unset active engine's configurations
 	if activeEngineName != "" {
-		err = icmd.UnsetEngineConfig(activeEngineName, true, cmd.Context)
+		err = common.UnsetEngineConfig(activeEngineName, true, cmd.Context)
 		if err != nil {
 			return fmt.Errorf("un-setting engine configurations: %v", err)
 		}
@@ -317,7 +317,7 @@ func (cmd *useEngineCommand) switchEngineAndModel(newEngineName string, newModel
 		return fmt.Errorf("setting active engine: %v", err)
 	}
 
-	if err = icmd.SetEngineConfig(newEngineManifest, cmd.Context); err != nil {
+	if err = common.SetEngineConfig(newEngineManifest, cmd.Context); err != nil {
 		return fmt.Errorf("setting new engine configurations: %v", err)
 	}
 
@@ -340,7 +340,7 @@ func (cmd *useEngineCommand) switchEngineAndModel(newEngineName string, newModel
 		if !cmd.assumeYes {
 			fmt.Println()
 		}
-		return icmd.PromptRestartToApplyChanges(cmd.Context, cmd.assumeYes)
+		return common.PromptRestartToApplyChanges(cmd.Context, cmd.assumeYes)
 	}
 
 	return nil
@@ -353,10 +353,10 @@ func (cmd *useEngineCommand) switchEngineAndModel(newEngineName string, newModel
 func (cmd *useEngineCommand) fixActiveEngine() error {
 	activeEngineName, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("%s: %w", icmd.LookingUpActiveEngine, err)
+		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
 	if activeEngineName == "" {
-		return icmd.ErrNoActiveEngine
+		return common.ErrNoActiveEngine
 	}
 
 	// If active engine no longer exists, auto select another one
@@ -371,7 +371,7 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 	// Check if the model is supported, otherwise switch to the default
 	activeModelId, err := cmd.Cache.GetActiveModel()
 	if err != nil {
-		return fmt.Errorf("%s: %w", icmd.LookingUpActiveModel, err)
+		return fmt.Errorf("%s: %w", common.LookingUpActiveModel, err)
 	}
 	if !slices.Contains(engineManifest.Model.Options, activeModelId) {
 		activeModelId = engineManifest.Model.Default
@@ -390,14 +390,14 @@ func (cmd *useEngineCommand) fixActiveEngine() error {
 	}
 
 	// Make sure all components are correctly installed and engine is configured
-	if _, err = icmd.InstallMissingComponents(cmd.Context, cmd.assumeYes, engineManifest, modelManifest); err != nil {
+	if _, err = common.InstallMissingComponents(cmd.Context, cmd.assumeYes, engineManifest, modelManifest); err != nil {
 		return fmt.Errorf("installing missing components: %v", err)
 	}
 
-	if err = icmd.UnsetEngineConfig(activeEngineName, false, cmd.Context); err != nil {
+	if err = common.UnsetEngineConfig(activeEngineName, false, cmd.Context); err != nil {
 		return fmt.Errorf("un-setting engine configurations: %v", err)
 	}
-	if err = icmd.SetEngineConfig(engineManifest, cmd.Context); err != nil {
+	if err = common.SetEngineConfig(engineManifest, cmd.Context); err != nil {
 		return fmt.Errorf("setting engine configurations: %v", err)
 	}
 
@@ -493,7 +493,7 @@ func selectEngineForSeededComponents(cmd *useEngineCommand, scoredEngines []engi
 		return false, err
 	}
 
-	installedComponents, err := icmd.InstalledComponents()
+	installedComponents, err := common.InstalledComponents()
 	if err != nil {
 		return false, err
 	}

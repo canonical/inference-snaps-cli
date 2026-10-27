@@ -1,11 +1,11 @@
 package debug
 
 import (
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/spf13/cobra"
 )
 
-func DebugCommand(ctx *icmd.Context) *cobra.Command {
+func DebugCommand(ctx *common.Context) *cobra.Command {
 	debugCmd := &cobra.Command{
 		Use:    "debug",
 		Long:   "Developer/debugging commands",

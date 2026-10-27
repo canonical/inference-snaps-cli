@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/engines"
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
@@ -17,7 +17,7 @@ import (
 )
 
 type modelsCommand struct {
-	*icmd.Context
+	*common.Context
 
 	// flags
 	format string
@@ -25,20 +25,20 @@ type modelsCommand struct {
 }
 
 type outputModels struct {
-	ActiveModel string              `json:"active-model"`
-	Models      []icmd.ModelDetails `json:"models"`
+	ActiveModel string                `json:"active-model"`
+	Models      []common.ModelDetails `json:"models"`
 }
 
-func Models(ctx *icmd.Context) *cobra.Command {
+func Models(ctx *common.Context) *cobra.Command {
 	return newModelsCmd(ctx, "models", "")
 }
 
 // TODO: remove when we fully migrate to "models" command
-func ListModels(ctx *icmd.Context) *cobra.Command {
+func ListModels(ctx *common.Context) *cobra.Command {
 	return newModelsCmd(ctx, "list-models", `use "models" instead`)
 }
 
-func newModelsCmd(ctx *icmd.Context, use, deprecated string) *cobra.Command {
+func newModelsCmd(ctx *common.Context, use, deprecated string) *cobra.Command {
 	var cmd modelsCommand
 	cmd.Context = ctx
 
@@ -71,15 +71,15 @@ func newModelsCmd(ctx *icmd.Context, use, deprecated string) *cobra.Command {
 func (cmd *modelsCommand) run(_ *cobra.Command, _ []string) error {
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("%s: %w", icmd.LookingUpActiveEngine, err)
+		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
 
 	engineManifest, err := engines.LoadManifest(cmd.EnginesDir, activeEngine)
 	if err != nil {
-		return fmt.Errorf("%s: %w", icmd.LoadingEngineManifest, err)
+		return fmt.Errorf("%s: %w", common.LoadingEngineManifest, err)
 	}
 
-	allModels, err := icmd.GetAllModels(cmd.Context)
+	allModels, err := common.GetAllModels(cmd.Context)
 	if err != nil {
 		return fmt.Errorf("getting all models: %w", err)
 	}
@@ -88,7 +88,7 @@ func (cmd *modelsCommand) run(_ *cobra.Command, _ []string) error {
 	if cmd.all {
 		modelsList.Models = allModels
 	} else {
-		allModelsByName := make(map[string]icmd.ModelDetails, len(allModels))
+		allModelsByName := make(map[string]common.ModelDetails, len(allModels))
 		for _, model := range allModels {
 			allModelsByName[model.Name] = model
 		}
@@ -104,7 +104,7 @@ func (cmd *modelsCommand) run(_ *cobra.Command, _ []string) error {
 
 	activeModel, err := cmd.Cache.GetActiveModel()
 	if err != nil {
-		return fmt.Errorf("%s: %w", icmd.LookingUpActiveModel, err)
+		return fmt.Errorf("%s: %w", common.LookingUpActiveModel, err)
 	}
 	modelsList.ActiveModel = activeModel
 
@@ -265,17 +265,17 @@ func (cmd *modelsCommand) getModelsTable(modelsList outputModels) (string, error
 
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", icmd.LookingUpActiveEngine, err)
+		return "", fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
 
-	allModels, err := icmd.GetAllModels(cmd.Context)
+	allModels, err := common.GetAllModels(cmd.Context)
 	if err != nil {
 		return "", fmt.Errorf("getting all models: %w", err)
 	}
 
 	incompatibleModelsCount := len(allModels) - len(tableRows[1:])
 	if incompatibleModelsCount != 0 {
-		hint := icmd.SuggestListModels(incompatibleModelsCount, activeEngine)
+		hint := common.SuggestListModels(incompatibleModelsCount, activeEngine)
 		return tableOutput.String() + "\n" + hint + "\n", nil
 	}
 	return tableOutput.String(), nil

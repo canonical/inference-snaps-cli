@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/engines"
 	"github.com/canonical/inference-snaps-cli/v2/internal/models"
 	"github.com/canonical/inference-snaps-cli/v2/internal/selector"
@@ -38,7 +38,7 @@ func newUseEngineCmd() *useEngineCommand {
 	return &useEngineCommand{
 		assumeYes: true,
 		noRestart: true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			EnginesDir:  "../test_data/engines",
 			RuntimesDir: "../test_data/runtimes",
 			ModelsDir:   "../test_data/models",
@@ -82,7 +82,7 @@ func ExampleUseEngine_noRestartWhenEngineAndModelUnchanged() {
 	config := storage.NewMockConfig()
 	cmd := useEngineCommand{
 		assumeYes: true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			EnginesDir:  "../test_data/engines",
 			RuntimesDir: "../test_data/runtimes",
 			ModelsDir:   "../test_data/models",
@@ -107,7 +107,7 @@ func ExampleUseEngine_noRestartWhenEngineAndModelUnchanged() {
 }
 
 func ExampleUseEngine_printMemoryIncompatibleModels() {
-	cmd := useEngineCommand{Context: &icmd.Context{}}
+	cmd := useEngineCommand{Context: &common.Context{}}
 	cmd.printScoredModels([]models.ScoredManifest{
 		{Manifest: models.Manifest{Name: "fits"}, CompatibilityReport: models.CompatibilityReport{CompatibleDisk: true, RequiredMemory: 4, TotalMemory: 8}},
 		{Manifest: models.Manifest{Name: "exceeds-ram"}, CompatibilityReport: models.CompatibilityReport{CompatibleDisk: true, RequiredMemory: 16, TotalMemory: 8}},
@@ -142,7 +142,7 @@ func ExampleUseEngine_restartWhenEngineChanged() {
 	config := storage.NewMockConfig()
 	cmd := useEngineCommand{
 		assumeYes: true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			EnginesDir:  "../test_data/engines",
 			RuntimesDir: "../test_data/runtimes",
 			ModelsDir:   "../test_data/models",
@@ -172,7 +172,7 @@ func ExampleUseEngine_autoSelectEngine() {
 	cmd := useEngineCommand{
 		assumeYes: true,
 		auto:      true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			EnginesDir:  "../test_data/engines",
 			RuntimesDir: "../test_data/runtimes",
 			ModelsDir:   "../test_data/models",
@@ -242,7 +242,7 @@ func ExampleUseEngine_autoSelectEngineVerbose() {
 	cmd := useEngineCommand{
 		assumeYes: true,
 		auto:      true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			EnginesDir:  "../test_data/engines",
 			RuntimesDir: "../test_data/runtimes",
 			ModelsDir:   "../test_data/models",
@@ -322,7 +322,7 @@ func ExampleUseEngine_printIncompatibleModels() {
 	cmd := useEngineCommand{
 		assumeYes: true,
 		auto:      true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			EnginesDir:  "../test_data/engines",
 			RuntimesDir: "../test_data/runtimes",
 			ModelsDir:   "../test_data/models",
@@ -520,7 +520,7 @@ func TestSwitchEngineWithMachineInfo_noDiskNoModel(t *testing.T) {
 func TestFixActiveEngine_noActiveEngine(t *testing.T) {
 	cache := storage.NewMockCache()
 	cmd := useEngineCommand{
-		Context: &icmd.Context{
+		Context: &common.Context{
 			EnginesDir: "../test_data/engines",
 			Cache:      cache,
 			Snap:       snap.Mock(),
@@ -528,7 +528,7 @@ func TestFixActiveEngine_noActiveEngine(t *testing.T) {
 	}
 
 	err := cmd.fixActiveEngine()
-	if !errors.Is(err, icmd.ErrNoActiveEngine) {
+	if !errors.Is(err, common.ErrNoActiveEngine) {
 		t.Errorf("expected no active engine error, got %v", err)
 	}
 }
@@ -537,7 +537,7 @@ func TestAutoSelectEngine_fallbackToEngine(t *testing.T) {
 
 	cache := storage.NewMockCache()
 	cmd := useEngineCommand{
-		Context: &icmd.Context{
+		Context: &common.Context{
 			EnginesDir: "../test_data/engines",
 			Cache:      cache,
 			Snap:       snap.Mock(),
@@ -565,7 +565,7 @@ func TestFixActiveEngine_fallbackWhenActiveEngineMissing(t *testing.T) {
 	cache.SetActiveEngine("missing-engine")
 
 	cmd := useEngineCommand{
-		Context: &icmd.Context{
+		Context: &common.Context{
 			EnginesDir: "../test_data/engines",
 			Cache:      cache,
 			Config:     storage.NewMockConfig(),

@@ -5,20 +5,20 @@ import (
 	"fmt"
 	"strings"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/spf13/cobra"
 	"go.yaml.in/yaml/v4"
 )
 
 type statusCommand struct {
-	*icmd.Context
+	*common.Context
 
 	// flags
 	format            string
 	waitForComponents bool
 }
 
-func Status(ctx *icmd.Context) *cobra.Command {
+func Status(ctx *common.Context) *cobra.Command {
 	var cmd statusCommand
 	cmd.Context = ctx
 
@@ -49,12 +49,12 @@ func (cmd *statusCommand) run(_ *cobra.Command, _ []string) error {
 	var err error
 
 	if cmd.waitForComponents {
-		if err := icmd.WaitForComponents(cmd.Context); err != nil {
+		if err := common.WaitForComponents(cmd.Context); err != nil {
 			return fmt.Errorf("waiting for component: %s", err)
 		}
 	}
 
-	stopProgress := icmd.StartProgressSpinner("Getting status")
+	stopProgress := common.StartProgressSpinner("Getting status")
 	defer stopProgress()
 
 	switch cmd.format {
@@ -81,8 +81,8 @@ func (cmd *statusCommand) run(_ *cobra.Command, _ []string) error {
 }
 
 func (cmd *statusCommand) statusYaml() (string, error) {
-	statusStr, err := icmd.SnapStatus(cmd.Context)
-	if err != nil && err != icmd.ErrNoActiveModel {
+	statusStr, err := common.SnapStatus(cmd.Context)
+	if err != nil && err != common.ErrNoActiveModel {
 		return "", fmt.Errorf("getting status: %v", err)
 	}
 	yamlStr, err := yaml.Marshal(statusStr)
@@ -93,8 +93,8 @@ func (cmd *statusCommand) statusYaml() (string, error) {
 }
 
 func (cmd *statusCommand) statusJson() (string, error) {
-	statusStr, err := icmd.SnapStatus(cmd.Context)
-	if err != nil && err != icmd.ErrNoActiveModel {
+	statusStr, err := common.SnapStatus(cmd.Context)
+	if err != nil && err != common.ErrNoActiveModel {
 		return "", fmt.Errorf("getting status: %v", err)
 	}
 	jsonStr, err := json.MarshalIndent(statusStr, "", "  ")

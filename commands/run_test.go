@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/snap"
 	"github.com/canonical/inference-snaps-cli/v2/internal/storage"
 )
@@ -63,7 +63,7 @@ func TestListenAddress(t *testing.T) {
 	}
 }
 
-func testRunContext(t *testing.T, runtimeYAML string) *icmd.Context {
+func testRunContext(t *testing.T, runtimeYAML string) *common.Context {
 	t.Helper()
 
 	base := t.TempDir()
@@ -95,7 +95,7 @@ func testRunContext(t *testing.T, runtimeYAML string) *icmd.Context {
 		t.Fatalf("setting active engine: %v", err)
 	}
 
-	return &icmd.Context{
+	return &common.Context{
 		EnginesDir:  enginesDir,
 		RuntimesDir: runtimesDir,
 		Cache:       cache,
@@ -104,7 +104,7 @@ func testRunContext(t *testing.T, runtimeYAML string) *icmd.Context {
 	}
 }
 
-func activateTestModel(t *testing.T, ctx *icmd.Context) {
+func activateTestModel(t *testing.T, ctx *common.Context) {
 	t.Helper()
 
 	modelsDir := t.TempDir()
@@ -127,7 +127,7 @@ func TestProcessEnvConfigs(t *testing.T) {
 	mockConfig.Set("env.other", "123", storage.UserConfig)
 	mockConfig.Set("other.ignored", "ignored", storage.UserConfig)
 	cmd := runCommand{
-		Context: &icmd.Context{
+		Context: &common.Context{
 			Config: mockConfig,
 		},
 	}
@@ -591,7 +591,7 @@ func TestRunFallbackPrintsCommandError(t *testing.T) {
 	os.Stderr = writer
 
 	cmd := runCommand{
-		Context:        &icmd.Context{Cache: storage.NewMockCache()},
+		Context:        &common.Context{Cache: storage.NewMockCache()},
 		fallbackServer: true,
 	}
 	if err := cmd.fallback(errors.New("command failed")); err == nil {

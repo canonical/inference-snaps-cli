@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/engines"
 	"github.com/canonical/inference-snaps-cli/v2/internal/models"
 	"github.com/canonical/inference-snaps-cli/v2/internal/runtimes"
@@ -12,10 +12,10 @@ import (
 )
 
 type validateCommand struct {
-	*icmd.Context
+	*common.Context
 }
 
-func ValidateCommand(ctx *icmd.Context) *cobra.Command {
+func ValidateCommand(ctx *common.Context) *cobra.Command {
 	var cmd validateCommand
 	cmd.Context = ctx
 

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/storage"
 )
 
@@ -20,14 +20,14 @@ func prepareModelsTestData() (*modelsCommand, *outputModels, error) {
 		return nil, nil, fmt.Errorf("error setting active engine name: %v", err)
 	}
 
-	ctx := &icmd.Context{
+	ctx := &common.Context{
 		ModelsDir:  "../test_data/models",
 		EnginesDir: "../test_data/engines",
 		Cache:      cache,
 		Config:     nil,
 	}
 
-	allModels, err := icmd.GetAllModels(ctx)
+	allModels, err := common.GetAllModels(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error getting all models with engines: %v", err)
 	}
@@ -36,7 +36,7 @@ func prepareModelsTestData() (*modelsCommand, *outputModels, error) {
 
 	activeModel, err := cmd.Cache.GetActiveModel()
 	if err != nil {
-		return nil, nil, fmt.Errorf("%s: %v", icmd.LookingUpActiveModel, err)
+		return nil, nil, fmt.Errorf("%s: %v", common.LookingUpActiveModel, err)
 	}
 
 	modelsList := outputModels{
@@ -145,7 +145,7 @@ func Example_printModelsJson() {
 	}
 
 	// Use only the 4b-it-int4-fq-ov model to keep output concise
-	var filtered []icmd.ModelDetails
+	var filtered []common.ModelDetails
 	for _, m := range modelsList.Models {
 		if m.Name == "4b-it-int4-fq-ov" {
 			filtered = append(filtered, m)

@@ -5,14 +5,14 @@ import (
 	"regexp"
 	"strings"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/storage"
 	"github.com/canonical/inference-snaps-cli/v2/internal/utils"
 	"github.com/spf13/cobra"
 )
 
 type setCommand struct {
-	*icmd.Context
+	*common.Context
 
 	// flags
 	packageConfig bool
@@ -21,7 +21,7 @@ type setCommand struct {
 	noRestart     bool
 }
 
-func Set(ctx *icmd.Context) *cobra.Command {
+func Set(ctx *common.Context) *cobra.Command {
 	var cmd setCommand
 	cmd.Context = ctx
 
@@ -51,7 +51,7 @@ func Set(ctx *icmd.Context) *cobra.Command {
 
 func (cmd *setCommand) run(_ *cobra.Command, args []string) error {
 	if !utils.IsRootUser() {
-		return icmd.ErrPermissionDenied
+		return common.ErrPermissionDenied
 	}
 
 	return cmd.set(args)
@@ -127,7 +127,7 @@ func (cmd *setCommand) setUserConfigs(keyValues map[string]string) error {
 	// Restart if configurations were changed
 	if anyChange {
 		if !cmd.noRestart {
-			return icmd.PromptRestartToApplyChanges(cmd.Context, cmd.assumeYes)
+			return common.PromptRestartToApplyChanges(cmd.Context, cmd.assumeYes)
 		}
 	}
 
@@ -203,7 +203,7 @@ func (cmd *setCommand) getCurrentValue(key string) (string, bool, error) {
 	}
 	currVal, found := currValMap[key]
 	if !found && !strings.HasPrefix(key, storage.EnvKeyPrefix) {
-		return "", false, fmt.Errorf("key %q is not found\n\n%s", key, icmd.SuggestKeyNotFound(key))
+		return "", false, fmt.Errorf("key %q is not found\n\n%s", key, common.SuggestKeyNotFound(key))
 	}
 
 	if !found {
@@ -215,7 +215,7 @@ func (cmd *setCommand) getCurrentValue(key string) (string, bool, error) {
 
 func (cmd *setCommand) restartToApply() error {
 	if !cmd.noRestart {
-		return icmd.PromptRestartToApplyChanges(cmd.Context, cmd.assumeYes)
+		return common.PromptRestartToApplyChanges(cmd.Context, cmd.assumeYes)
 	}
 	return nil
 }

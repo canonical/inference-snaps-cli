@@ -5,29 +5,29 @@ import (
 	"fmt"
 	"strings"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/engines"
 	"github.com/spf13/cobra"
 	"go.yaml.in/yaml/v4"
 )
 
 type engineCommand struct {
-	*icmd.Context
+	*common.Context
 
 	// flags
 	format string
 }
 
-func Engine(ctx *icmd.Context) *cobra.Command {
+func Engine(ctx *common.Context) *cobra.Command {
 	return newEngineCmd(ctx, "engine [<engine>]", "")
 }
 
 // TODO: remove when we fully migrate to "engine" command
-func ShowEngine(ctx *icmd.Context) *cobra.Command {
+func ShowEngine(ctx *common.Context) *cobra.Command {
 	return newEngineCmd(ctx, "show-engine", `use "engine" instead`)
 }
 
-func newEngineCmd(ctx *icmd.Context, use, deprecated string) *cobra.Command {
+func newEngineCmd(ctx *common.Context, use, deprecated string) *cobra.Command {
 	var cmd engineCommand
 	cmd.Context = ctx
 
@@ -85,16 +85,16 @@ func (cmd *engineCommand) validateArgs(_ *cobra.Command, args []string, toComple
 func (cmd *engineCommand) showCurrentEngine() error {
 	currentEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return fmt.Errorf("%s: %w", icmd.LookingUpActiveEngine, err)
+		return fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
 	if currentEngine == "" {
-		return icmd.ErrNoActiveEngine
+		return common.ErrNoActiveEngine
 	}
 	return cmd.engine(currentEngine)
 }
 
 func (cmd *engineCommand) engine(engineName string) error {
-	scoredEngines, _, err := icmd.ScoreEnginesWithSpinner(cmd.Context)
+	scoredEngines, _, err := common.ScoreEnginesWithSpinner(cmd.Context)
 	if err != nil {
 		return fmt.Errorf("scoring engines: %v", err)
 	}
@@ -117,7 +117,7 @@ func (cmd *engineCommand) engine(engineName string) error {
 }
 
 func (cmd *engineCommand) printEngineManifest(engine engines.ScoredManifest) error {
-	var output icmd.EngineDetails = icmd.NewEngineDetails(engine)
+	var output common.EngineDetails = common.NewEngineDetails(engine)
 
 	switch cmd.format {
 	case "json":

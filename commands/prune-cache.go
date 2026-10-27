@@ -5,7 +5,7 @@ import (
 	"os"
 	"slices"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/engines"
 	"github.com/canonical/inference-snaps-cli/v2/internal/models"
 	"github.com/canonical/inference-snaps-cli/v2/internal/runtimes"
@@ -15,13 +15,13 @@ import (
 )
 
 type pruneCacheCommand struct {
-	*icmd.Context
+	*common.Context
 
 	// flags
 	engine string
 }
 
-func PruneCache(ctx *icmd.Context) *cobra.Command {
+func PruneCache(ctx *common.Context) *cobra.Command {
 	var cmd pruneCacheCommand
 	cmd.Context = ctx
 
@@ -39,7 +39,7 @@ func PruneCache(ctx *icmd.Context) *cobra.Command {
 
 func (cmd *pruneCacheCommand) run(_ *cobra.Command, _ []string) error {
 	if !utils.IsRootUser() {
-		return icmd.ErrPermissionDenied
+		return common.ErrPermissionDenied
 	}
 
 	var err error
@@ -71,12 +71,12 @@ func (cmd *pruneCacheCommand) run(_ *cobra.Command, _ []string) error {
 }
 
 func (cmd *pruneCacheCommand) unusedComponentsAll() ([]string, error) {
-	allInstalledComponents, err := icmd.InstalledComponents()
+	allInstalledComponents, err := common.InstalledComponents()
 	if err != nil {
 		return nil, fmt.Errorf("getting installed components: %w", err)
 	}
 
-	requiredComponents, err := icmd.ComponentsRequiredByCurrentSelection(cmd.Context)
+	requiredComponents, err := common.ComponentsRequiredByCurrentSelection(cmd.Context)
 	if err != nil {
 		return nil, fmt.Errorf("getting required components: %w", err)
 	}
@@ -95,14 +95,14 @@ func (cmd *pruneCacheCommand) unusedComponentsAll() ([]string, error) {
 func (cmd *pruneCacheCommand) unusedComponentsEngine(engineName string) ([]string, error) {
 	activeEngine, err := cmd.Cache.GetActiveEngine()
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", icmd.LookingUpActiveEngine, err)
+		return nil, fmt.Errorf("%s: %w", common.LookingUpActiveEngine, err)
 	}
 
 	if activeEngine == engineName {
 		return nil, fmt.Errorf("cannot prune active engine")
 	}
 
-	requiredComponents, err := icmd.ComponentsRequiredByCurrentSelection(cmd.Context)
+	requiredComponents, err := common.ComponentsRequiredByCurrentSelection(cmd.Context)
 	if err != nil {
 		return nil, fmt.Errorf("getting required components: %w", err)
 	}
@@ -137,7 +137,7 @@ func (cmd *pruneCacheCommand) unusedComponentsEngine(engineName string) ([]strin
 	for _, engineComponent := range engineComponents {
 		if !slices.Contains(requiredComponents, engineComponent) && // only remove if not required by current active engine and model
 			!slices.Contains(unusedComponents, engineComponent) { // prevent same components from being listed multiple times
-			componentInstalled, err := icmd.ComponentInstalled(engineComponent)
+			componentInstalled, err := common.ComponentInstalled(engineComponent)
 			if err != nil {
 				return nil, err
 			}
@@ -169,7 +169,7 @@ func (cmd *pruneCacheCommand) printComponentsAndConfirm(componentsToRemove []str
 
 	if utils.IsTerminalOutput() {
 		fmt.Println()
-		if !icmd.PromptYN("Continue removing components?", false) {
+		if !common.PromptYN("Continue removing components?", false) {
 			fmt.Println("Cancelled. No changes applied.")
 			return false, nil
 		}

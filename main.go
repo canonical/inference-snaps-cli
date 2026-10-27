@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 
 	"github.com/canonical/inference-snaps-cli/v2/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/commands/debug"
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
 	"github.com/canonical/inference-snaps-cli/v2/internal/snap"
 	"github.com/canonical/inference-snaps-cli/v2/internal/storage"
 	"github.com/spf13/cobra"
@@ -17,7 +17,7 @@ import (
 func main() {
 	s := snap.New()
 	snapDir := s.Dir()
-	ctx := &icmd.Context{
+	ctx := &common.Context{
 		EnginesDir:  filepath.Join(snapDir, "engines"),
 		RuntimesDir: filepath.Join(snapDir, "runtimes"),
 		ModelsDir:   filepath.Join(snapDir, "models"),
@@ -47,7 +47,7 @@ func main() {
 			rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 				helpFunc(cmd, args)
 				if cmd == rootCmd {
-					fmt.Printf("\n%s\n", icmd.SuggestServiceManagement())
+					fmt.Printf("\n%s\n", common.SuggestServiceManagement())
 				}
 			})
 		}
@@ -134,18 +134,18 @@ func newRootCmd(instanceName string) *cobra.Command {
 	return rootCmd
 }
 
-func registerCommands(rootCmd *cobra.Command, ctx *icmd.Context) error {
+func registerCommands(rootCmd *cobra.Command, ctx *common.Context) error {
 	addCommandGroup(rootCmd, "basic", "Basic Commands:",
 		commands.Status(ctx),
 		// Chat is added conditionally
 	)
-	if icmd.ChatEnabled() {
+	if common.ChatEnabled() {
 		err := appendCommandToGroup(rootCmd, "basic", commands.Chat(ctx))
 		if err != nil {
 			return err
 		}
 	}
-	if icmd.WebUiEnabled() {
+	if common.WebUiEnabled() {
 		err := appendCommandToGroup(rootCmd, "basic", commands.WebUi(ctx))
 		if err != nil {
 			return err

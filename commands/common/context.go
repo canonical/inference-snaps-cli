@@ -1,4 +1,4 @@
-package commands
+package common
 
 import (
 	"github.com/canonical/inference-snaps-cli/v2/internal/snap"

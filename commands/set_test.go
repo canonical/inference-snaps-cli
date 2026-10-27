@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	icmd "github.com/canonical/inference-snaps-cli/v2/internal/commands"
+	"github.com/canonical/inference-snaps-cli/v2/commands/common"
 	"github.com/canonical/inference-snaps-cli/v2/internal/snap"
 	"github.com/canonical/inference-snaps-cli/v2/internal/storage"
 )
@@ -213,7 +213,7 @@ func TestSetValueSuccessForUserConfig(t *testing.T) {
 	mockConfig.Set("api.endpoint", "https://old.example.com", storage.UserConfig)
 	cmd := setCommand{
 		noRestart: true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			Config: mockConfig,
 			Snap:   snap.Mock(),
 		},
@@ -238,7 +238,7 @@ func TestSetValueRejectsUnknownKeys(t *testing.T) {
 	config := storage.NewMockConfig()
 	cmd := setCommand{
 		noRestart: true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			Config: config,
 			Snap:   snap.Mock(),
 		},
@@ -260,7 +260,7 @@ func TestSetNoPromptIfValueNotChanged(t *testing.T) {
 	config.Set("api.endpoint", "https://old.example.com", storage.UserConfig)
 	cmd := setCommand{
 		noRestart: true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			Config: config,
 			Snap:   snap.Mock(),
 		},
@@ -293,7 +293,7 @@ func TestSetValuesRejectsUnknownKeysAtomically(t *testing.T) {
 	config.Set("api.port", "8080", storage.UserConfig)
 	cmd := setCommand{
 		noRestart: true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			Config: config,
 			Snap:   snap.Mock(),
 		},
@@ -324,7 +324,7 @@ func TestSetAcceptsUnknownEnvKeys(t *testing.T) {
 	config := storage.NewMockConfig()
 	cmd := setCommand{
 		noRestart: true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			Config: config,
 			Snap:   snap.Mock(),
 		},
@@ -347,7 +347,7 @@ func TestSetAcceptsUnknownEnvKeys(t *testing.T) {
 
 func TestSet(t *testing.T) {
 	cmd := setCommand{
-		Context: &icmd.Context{
+		Context: &common.Context{
 			Config: storage.NewMockConfig(),
 			Snap:   snap.Mock(),
 		},
@@ -391,7 +391,7 @@ func ExampleSet_assumeYesRestartServices() {
 	config.Set("api.endpoint", "https://old.example.com", storage.UserConfig)
 	cmd := setCommand{
 		assumeYes: true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			Config: config,
 			Snap:   snap.Mock(),
 		},
@@ -410,7 +410,7 @@ func ExampleSet_noRestartWhenFinalValueUnchanged() {
 	config.Set("api.port", "8080", storage.UserConfig)
 	cmd := setCommand{
 		assumeYes: true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			Config: config,
 			Snap:   snap.Mock(),
 		},
@@ -429,7 +429,7 @@ func ExampleSet_restartWhenFinalValueChanged() {
 	config.Set("api.port", "8080", storage.UserConfig)
 	cmd := setCommand{
 		assumeYes: true,
-		Context: &icmd.Context{
+		Context: &common.Context{
 			Config: config,
 			Snap:   snap.Mock(),
 		},
