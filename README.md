@@ -33,7 +33,7 @@ make build
 
 ### Test snap
 
-The [modelctl-test](test_data/modelctl-test/) snap is used to develop and test the CLI in a snap environment.
+The [modelctl-test](test_data/snap/) snap is used to develop and test the CLI in a snap environment.
 It bundles the CLI with test engines, runtimes, models, and a mock OpenAI server.
 
 The CLI is built on the host and staged into the snap project, together with the test data, before packing.

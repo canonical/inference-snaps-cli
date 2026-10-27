@@ -14,7 +14,7 @@ concurrency:
 
 env:
   SNAP_NAME: modelctl-test
-  SNAP_DIR: test_data/modelctl-test
+  SNAP_DIR: test_data
 
 jobs:
   unit-test:

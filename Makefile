@@ -1,5 +1,4 @@
-SNAP_NAME := modelctl-test
-SNAP_DIR  := test_data/$(SNAP_NAME)
+SNAP_DIR  := test_data
 STAGE_DIR := $(SNAP_DIR)/build
 
 GO_BUILD := go build
@@ -19,14 +18,13 @@ stage:
 	mkdir -p $(STAGE_DIR)/cli/bin $(STAGE_DIR)/completer
 	$(GO_BUILD) -o $(STAGE_DIR)/cli/bin/modelctl ./cmd/modelctl
 	cp completer/snap.bash $(STAGE_DIR)/completer/
-	cp -r test_data/engines test_data/runtimes test_data/models test_data/mock-openai-server $(STAGE_DIR)/
 	git describe --always --dirty > $(STAGE_DIR)/version
 
 snap: stage dev/build.sh
-	cd $(SNAP_DIR) && ../../dev/build.sh
+	cd $(SNAP_DIR) && ../dev/build.sh
 
 install: dev/build.sh
-	cd $(SNAP_DIR) && ../../dev/install.sh
+	cd $(SNAP_DIR) && ../dev/install.sh
 
 clean:
 	cd $(SNAP_DIR) && snapcraft clean

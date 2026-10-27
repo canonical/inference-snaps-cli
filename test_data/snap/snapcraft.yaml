@@ -72,19 +72,19 @@ parts:
 
   engines:
     plugin: dump
-    source: build/engines
+    source: engines
     organize:
       "*": engines/
 
   runtimes:
     plugin: dump
-    source: build/runtimes
+    source: runtimes
     organize:
       "*": runtimes/
 
   models:
     plugin: dump
-    source: build/models
+    source: models
     organize:
       "*": models/
 
@@ -163,7 +163,7 @@ parts:
 
   mock-openai-server:
     plugin: dump
-    source: build/mock-openai-server
+    source: mock-openai-server
     organize:
       "*": bin/mock-openai-server/
 
