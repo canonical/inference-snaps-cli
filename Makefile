@@ -25,10 +25,11 @@ stage:
 snap: stage dev/build.sh
 	cd $(SNAP_DIR) && ../../dev/build.sh
 
-install: snap
+install: dev/build.sh
 	cd $(SNAP_DIR) && ../../dev/install.sh
 
 clean:
+	cd $(SNAP_DIR) && snapcraft clean
 	rm -rf modelctl $(STAGE_DIR) $(SNAP_DIR)/*.snap $(SNAP_DIR)/*.comp
 
 dev/build.sh:

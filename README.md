@@ -12,6 +12,11 @@ Configuration and engine management for inference snaps.
 
 ## Development
 
+### Prerequisites
+
+- [Go](https://go.dev/doc/install)
+- [Snapcraft](https://ubuntu.com/docs/snapcraft/9/how-to/set-up-snapcraft/), including LXD for building the snap
+
 ### Run tests
 
 ```bash
@@ -32,7 +37,6 @@ The [modelctl-test](test_data/modelctl-test/) snap is used to develop and test t
 It bundles the CLI with test engines, runtimes, models, and a mock OpenAI server.
 
 The CLI is built on the host and staged into the snap project, together with the test data, before packing.
-This requires Go and Snapcraft.
 
 To build the snap and its components, run:
 
@@ -40,13 +44,15 @@ To build the snap and its components, run:
 make snap
 ```
 
-To build, install, and connect the required interfaces, run:
+To install the latest build and connect the required interfaces, run:
 
 ```bash
 make install
 ```
 
-To remove build outputs, run `make clean`.
+Note: this does not rebuild the snap. Run `make snap` first after making changes.
+
+To remove build outputs and the Snapcraft build container, run `make clean`.
 
 ## Usage
 
