@@ -3,7 +3,7 @@ STAGE_DIR := $(SNAP_DIR)/build
 
 GO_BUILD := go build
 
-.PHONY: all build test stage snap install clean
+.PHONY: all build test docs-cli stage snap install clean
 
 all: build
 
@@ -12,6 +12,10 @@ build:
 
 test:
 	go test -count 1 -failfast ./...
+
+docs-cli:
+	rm -rf docs/reference/cli
+	go run ./internal/tools/docgen -out docs/reference/cli
 
 stage:
 	rm -rf $(STAGE_DIR)
