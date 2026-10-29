@@ -3,6 +3,7 @@ package main
 import (
 	"testing"
 
+	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/commands"
 	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
 	"github.com/spf13/cobra"
@@ -17,8 +18,8 @@ func testCtx() *common.Context {
 
 func setupRoot(t *testing.T) *cobra.Command {
 	t.Helper()
-	root := newRootCmd("modelctl")
-	if err := registerCommands(root, testCtx()); err != nil {
+	root, err := commands.NewRootCmd(testCtx(), commands.RootOptions{Name: "modelctl"})
+	if err != nil {
 		t.Fatalf("registering commands: %v", err)
 	}
 	return root
