@@ -15,7 +15,8 @@ type engineCommand struct {
 	*common.Context
 
 	// flags
-	format string
+	format    string
+	noScoring bool
 }
 
 func Engine(ctx *common.Context) *cobra.Command {
@@ -51,6 +52,12 @@ func newEngineCmd(ctx *common.Context, use, deprecated string) *cobra.Command {
 		"format",
 		"yaml",
 		fmt.Sprintf("output format (%s)", strings.Join(supportedFormats, ", ")),
+	)
+	cobraCmd.Flags().BoolVar(
+		&cmd.noScoring,
+		"no-scoring",
+		false,
+		"skip hardware scoring and print the engine without score or compatibility results",
 	)
 
 	return cobraCmd
@@ -94,22 +101,30 @@ func (cmd *engineCommand) showCurrentEngine() error {
 }
 
 func (cmd *engineCommand) engine(engineName string) error {
-	scoredEngines, _, err := common.ScoreEnginesWithSpinner(cmd.Context)
-	if err != nil {
-		return fmt.Errorf("scoring engines: %v", err)
-	}
-
 	var scoredManifest engines.ScoredManifest
-	for i := range scoredEngines {
-		if scoredEngines[i].Name == engineName {
-			scoredManifest = scoredEngines[i]
+	if cmd.noScoring {
+		manifest, err := engines.LoadManifest(cmd.EnginesDir, engineName)
+		if err != nil {
+			return fmt.Errorf("loading engine manifest: %w", err)
+		}
+		scoredManifest.Manifest = *manifest
+	} else {
+		scoredEngines, _, err := common.ScoreEnginesWithSpinner(cmd.Context)
+		if err != nil {
+			return fmt.Errorf("scoring engines: %v", err)
+		}
+
+		for i := range scoredEngines {
+			if scoredEngines[i].Name == engineName {
+				scoredManifest = scoredEngines[i]
+			}
+		}
+		if scoredManifest.Name != engineName {
+			return fmt.Errorf(`engine "%s" does not exist`, engineName)
 		}
 	}
-	if scoredManifest.Name != engineName {
-		return fmt.Errorf(`engine "%s" does not exist`, engineName)
-	}
 
-	err = cmd.printEngineManifest(scoredManifest)
+	err := cmd.printEngineManifest(scoredManifest)
 	if err != nil {
 		return fmt.Errorf("printing engine manifest: %v", err)
 	}
@@ -117,7 +132,12 @@ func (cmd *engineCommand) engine(engineName string) error {
 }
 
 func (cmd *engineCommand) printEngineManifest(engine engines.ScoredManifest) error {
-	var output common.EngineDetails = common.NewEngineDetails(engine)
+	var output any
+	if cmd.noScoring {
+		output = engine.Manifest
+	} else {
+		output = common.NewEngineDetails(engine)
+	}
 
 	switch cmd.format {
 	case "json":

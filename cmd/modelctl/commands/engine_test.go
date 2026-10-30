@@ -1,12 +1,134 @@
 package commands
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/canonical/inference-snaps-cli/v2/cmd/modelctl/common"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/engines"
 	"github.com/canonical/inference-snaps-cli/v2/pkg/selector"
+	"github.com/canonical/inference-snaps-cli/v2/pkg/storage"
+	"github.com/spf13/cobra"
+	"go.yaml.in/yaml/v4"
 )
+
+func TestEngineNoScoring(t *testing.T) {
+	for _, newCmd := range []struct {
+		name string
+		new  func(*common.Context) *cobra.Command
+	}{
+		{"engine", Engine},
+		{"show-engine", ShowEngine},
+	} {
+		for _, format := range []string{"yaml", "json"} {
+			for _, active := range []bool{false, true} {
+				t.Run(fmt.Sprintf("%s/%s/active=%t", newCmd.name, format, active), func(t *testing.T) {
+					cache := storage.NewMockCache()
+					if err := cache.SetActiveEngine("cuda-generic"); err != nil {
+						t.Fatal(err)
+					}
+					ctx := &common.Context{
+						EnginesDir: "../../../test_data/engines",
+						Cache:      cache,
+					}
+					cmd := newCmd.new(ctx)
+					args := []string{"--no-scoring", "--format=" + format}
+					if !active {
+						args = append(args, "cuda-generic")
+					}
+					cmd.SetArgs(args)
+
+					output, err := os.CreateTemp(t.TempDir(), "output")
+					if err != nil {
+						t.Fatal(err)
+					}
+					defer output.Close()
+					originalStdout := os.Stdout
+					os.Stdout = output
+					t.Cleanup(func() { os.Stdout = originalStdout })
+					if err := cmd.Execute(); err != nil {
+						t.Fatal(err)
+					}
+					os.Stdout = originalStdout
+					data, err := os.ReadFile(output.Name())
+					if err != nil {
+						t.Fatal(err)
+					}
+
+					manifest, err := engines.LoadManifest(ctx.EnginesDir, "cuda-generic")
+					if err != nil {
+						t.Fatal(err)
+					}
+					var expected []byte
+					if format == "json" {
+						expected, err = json.MarshalIndent(manifest, "", "  ")
+						expected = append(expected, '\n')
+					} else {
+						expected, err = yaml.Marshal(manifest)
+					}
+					if err != nil {
+						t.Fatal(err)
+					}
+					if string(data) != string(expected) {
+						t.Fatalf("expected unscored manifest:\n%s\ngot:\n%s", expected, data)
+					}
+				})
+			}
+		}
+	}
+}
+
+func TestEngineNoScoringErrors(t *testing.T) {
+	t.Run("missing engine", func(t *testing.T) {
+		cmd := engineCommand{
+			Context:   &common.Context{EnginesDir: t.TempDir()},
+			noScoring: true,
+		}
+		if err := cmd.engine("missing"); !errors.Is(err, engines.ErrManifestNotFound) {
+			t.Fatalf("expected missing manifest error, got %v", err)
+		}
+	})
+	t.Run("invalid manifest", func(t *testing.T) {
+		dir := t.TempDir()
+		if err := os.Mkdir(filepath.Join(dir, "invalid"), 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "invalid", engines.ManifestFilename), []byte("name: ["), 0644); err != nil {
+			t.Fatal(err)
+		}
+		cmd := engineCommand{
+			Context:   &common.Context{EnginesDir: dir},
+			noScoring: true,
+		}
+		if err := cmd.engine("invalid"); err == nil || !strings.Contains(err.Error(), "loading engine manifest") {
+			t.Fatalf("expected manifest loading error, got %v", err)
+		}
+	})
+	t.Run("no active engine", func(t *testing.T) {
+		cmd := engineCommand{
+			Context:   &common.Context{Cache: storage.NewMockCache()},
+			noScoring: true,
+		}
+		if err := cmd.run(nil, nil); !errors.Is(err, common.ErrNoActiveEngine) {
+			t.Fatalf("expected no active engine error, got %v", err)
+		}
+	})
+	t.Run("unsupported format", func(t *testing.T) {
+		cmd := engineCommand{
+			Context:   &common.Context{EnginesDir: "../../../test_data/engines"},
+			noScoring: true,
+			format:    "invalid",
+		}
+		if err := cmd.engine("cuda-generic"); err == nil || !strings.Contains(err.Error(), "unknown format") {
+			t.Fatalf("expected unsupported format error, got %v", err)
+		}
+	})
+}
 
 func TestInfoLong(t *testing.T) {
 	engine, err := engines.LoadManifest("../../../test_data/engines", "intel-gpu")
